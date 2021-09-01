@@ -1,0 +1,52 @@
+@import '../../../../styles/custom_variables';
+
+.options-modal {
+  max-width: 1000px !important;
+  width: calc(100% - 1rem) !important;
+}
+
+.options-content {
+  height: 350px;
+
+  & .options-left-content {
+    border-right: 1px solid $light-gray;
+    width: 30%;
+  }
+
+  & .options-right-content {
+    width: 70%;
+  }
+
+  .option {
+    border: none;
+    width: 100%;
+    text-align: left;
+    background-color: unset;
+    font-weight: 400;
+
+    &.selected {
+      background-color: rgba(0, 0, 0, 0.04);
+      color: $blue;
+      font-weight: 500;
+    }
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.06);
+    }
+
+    &:active {
+      background-color: rgba(0, 0, 0, 0.04) !important;
+    }
+
+    &:focus {
+      background-color: rgba(0, 0, 0, 0.04) !important;
+    }
+  }
+}
+
+.status-icon {
+  font-size: 2px;
+  font-weight: bold;
+  width: 1rem !important;
+  height: 1rem !important;
+}

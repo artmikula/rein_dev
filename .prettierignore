@@ -1,0 +1,5 @@
+# Ignore artifacts:
+build
+src/shared/authorization/*
+src/serviceWorker.js
+src/service-worker.js

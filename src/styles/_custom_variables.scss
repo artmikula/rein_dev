@@ -1,0 +1,38 @@
+// Colors
+$blue: rgb(0, 120, 212) !default;
+$dark-blue: #005ba1 !default;
+$light-blue: #e9ecef !default;
+$lighter-gray: #e5e5e5 !default;
+$link-color: $blue !default;
+$light-gray: #f0f0f0 !default;
+$white: white !default;
+$shadow-color: rgba(0, 0, 0, 0.1) !default;
+$range-gradient-color: linear-gradient(90deg, rgba(9,121,58,0) 0%, rgba(4,180,184,1) 100%);
+$range-border-color: #04AA6D;
+$metric-gradient-blue: linear-gradient(311deg, #17a2b8 60%, rgba(23, 163, 184, 0.7) 62%);
+$metric-gradient-purple: linear-gradient(311deg, #8D5393 60%, rgba(140, 83, 147, 0.7) 62%);
+
+$colors: ( 'blue': $blue, );
+$theme-colors: ( 'primary': $blue, 'light-gray': $light-gray, );
+// Components
+// Modals
+// Padding applied to the modal body
+$modal-header-padding-y: 0.1rem !default;
+$modal-header-padding-x: 1rem !default;
+$modal-header-padding: $modal-header-padding-y $modal-header-padding-x !default; // Keep this for backwards compatibility
+// Font family
+$font-family-base: Roboto;
+
+// Navbar
+$navbar-height: 42px;
+
+$pagination-bg: transparent;
+$pagination-disabled-bg: transparent;
+$pagination-border-width: 0;
+$modal-header-border-width: 0.5px;
+$modal-content-border-width: 0.5px;
+$input-border-width: 0.2px;
+
+//range
+$form-range-track-height: .5rem;
+$form-range-track-cursor: pointer;

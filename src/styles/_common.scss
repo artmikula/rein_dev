@@ -1,0 +1,73 @@
+body {
+  background-color: $light-gray;
+}
+
+.scrollbar-sm {
+  @include scrollbars(7px, lightgray);
+}
+
+.bg-white-not-important {
+  background-color: $white;
+}
+
+.bg-light-gray {
+  background-color: $light-gray !important;
+}
+
+.text-orange {
+  color: $orange !important;
+}
+
+.font-weight-500 {
+  font-weight: 500 !important;
+}
+
+.full-vh-screen {
+  min-height: calc(100vh - #{$navbar-height}* 1.5);
+}
+
+.full-vh-screen-without-navbar {
+  min-height: 100vh;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-move {
+  cursor: move;
+}
+
+.icon-btn {
+  border-radius: 50%;
+
+  &:hover {
+    background-color: $light-gray !important;
+  }
+
+  &:focus {
+    box-shadow: none;
+  }
+}
+
+.item-hover {
+  &:hover {
+    background-color: $light-gray;
+  }
+}
+
+.box-shadow {
+  box-shadow: 0 2px 4px $shadow-color;
+}
+
+.box-shadow {
+  box-shadow: 0 2px 4px $shadow-color;
+}
+
+.text-14 {
+  font-size: 14px;
+}
+
+.text-12 {
+  font-size: 12px;
+}

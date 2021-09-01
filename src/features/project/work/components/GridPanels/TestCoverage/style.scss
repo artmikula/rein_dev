@@ -1,0 +1,23 @@
+$test-chart-width: 52px;
+
+.test-coverage-container {
+  min-height: 100%;
+  height: auto;
+  text-align: center;
+  font-size: x-small;
+
+  .test-coverage-unit {
+    width: $test-chart-width;
+    text-align: center;
+  }
+
+  .test-coverage-item {
+    width: $test-chart-width;
+    min-width: $test-chart-width;
+  }
+
+  .divider {
+    width: 35px;
+    height: 1px;
+  }
+}

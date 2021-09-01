@@ -1,0 +1,76 @@
+.icons-img {
+  width: 24px;
+  height: 24px;
+  background-image: url('/img/icons.png');
+  background-size: 180px;
+  background-repeat: no-repeat;
+  border-radius: 50%;
+}
+
+button.icons-img {
+  box-shadow: none !important;
+}
+
+.icon-btn {
+  cursor: pointer;
+}
+
+.icon-save {
+  background-position: -1px -1px;
+}
+.icon-btn.icon-save {
+  background-position: -1px -26px;
+}
+.icon-btn.icon-save:hover {
+  background-position: -1px -1px;
+}
+
+.icon-open {
+  background-position: -33px -2px;
+}
+.icon-btn.icon-open {
+  background-position: -33px -29px;
+}
+.icon-btn.icon-open:hover {
+  background-position: -33px -2px;
+}
+
+.icon-add {
+  background-position: -61px -1px;
+}
+.icon-btn.icon-add {
+  background-position: -61px -29px;
+}
+.icon-btn.icon-add:hover {
+  background-position: -61px -2px;
+}
+
+.icon-aline {
+  background-position: -92px -2px;
+}
+.icon-btn.icon-aline {
+  background-position: -92px -29px;
+}
+.icon-btn.icon-aline:hover {
+  background-position: -92px -2px;
+}
+
+.icon-zoom-in {
+  background-position: -122px -2px;
+}
+.icon-btn.icon-zoom-in {
+  background-position: -122px -29px;
+}
+.icon-btn.icon-zoom-in:hover {
+  background-position: -122px -2px;
+}
+
+.icon-zoom-out {
+  background-position: -153px -2px;
+}
+.icon-btn.icon-zoom-out {
+  background-position: -153px -29px;
+}
+.icon-btn.icon-zoom-out:hover {
+  background-position: -153px -2px;
+}

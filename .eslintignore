@@ -1,0 +1,17 @@
+# /node_modules/* and /bower_components/* ignored by default
+
+# Ignore built files except build/index.js
+build/*
+src/styles/*
+src/vendors/*
+src/features/shared/authorization/*
+tools/*
+node_modules/*
+src/serviceWorker.js
+src/service-worker.js
+
+# cytoscape edgehandles lib
+src/features/project/work/components/GridPanels/Graph/lib/edgehandles
+src/features/project/work/components/GridPanels/Graph/lib/cytoscapejs
+src/features/project/work/components/GridPanels/Graph/lib/p5
+

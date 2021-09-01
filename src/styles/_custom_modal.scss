@@ -1,0 +1,37 @@
+.modal-title {
+  margin-bottom: 0;
+  line-height: $modal-title-line-height;
+  color: $white;
+  font-weight: normal;
+  font-size: .8rem;
+}
+
+.modal-content {
+  border: unset;
+}
+
+.modal-header {
+  align-items: center;
+  background-color: theme-color("primary");
+  border-color: $info;
+
+  &.text-warning {
+    color: #f0ad4e !important;
+  }
+
+  .close {
+    align-self: stretch;
+    border-top-right-radius: $border-radius;
+    color: $white;
+    &:hover,
+    &:focus,
+    &:active {
+      box-shadow: none;
+      opacity: 1 !important;
+    }
+  }
+}
+
+.modal-footer {
+  padding: 0.5rem 0.75rem;
+}

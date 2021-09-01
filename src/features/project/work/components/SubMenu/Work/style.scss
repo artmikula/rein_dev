@@ -1,0 +1,28 @@
+@import '../../../../../../styles/custom_variables';
+
+.work-link {
+  color: black;
+  text-decoration: none;
+
+  & .thumb {
+    height: 35px;
+    max-width: 35px;
+    min-width: 35px;
+    line-height: 35px;
+    text-align: center;
+    background-color: $light-blue;
+    border: 1px solid white;
+    border-radius: 4px;
+  }
+
+  &:hover {
+    text-decoration: none;
+    color: black;
+  }
+
+  & .work-name {
+    white-space: normal;
+    max-height: 48px;
+    overflow: hidden;
+  }
+}

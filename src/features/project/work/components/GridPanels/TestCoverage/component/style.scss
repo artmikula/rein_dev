@@ -1,0 +1,202 @@
+.range-container {
+  $input-height: 22px;
+  overflow: hidden;
+  min-height: 100px;
+
+  &.disabled {
+    .unit:hover {
+      cursor:default;
+    }
+    .value:hover {
+      cursor:default;
+    }
+    input[type='range'] {
+      cursor:default;
+    }
+  }
+
+  .unit {
+    top: 8px;
+    color: #bababa;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .value {
+    color: white;
+    width: 25px;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    box-sizing: border-box;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    z-index: 2;
+  }
+
+  .number-input {
+    width: $input-height + 1px;
+    height: $input-height;
+    outline: none;
+    padding: 0;
+    background: white;
+    z-index: 2;
+    -moz-appearance: textfield;
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+
+  .range-up {
+    height: 0;
+    display: none;
+    position: absolute;
+    top: 0px;
+    width: 21px;
+    border-radius: 0.25rem;
+    background-color: #eaeaea;
+    border: solid 1px #0d7fd6;
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: 1px;
+      width: 7px;
+      height: 7px;
+      border-right: 2px solid rgba(0, 0, 0, 0.4);
+      border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+      transform: rotate(-135deg);
+      left: 6px;
+    }
+  }
+
+  .range-down {
+    height: 0;
+    display: none;
+    position: absolute;
+    bottom: 0px;
+    width: 23px;
+    border-radius: 0.25rem;
+    background-color: rgba(0, 120, 212, 0.8);
+    border: solid 1px #fff;
+    &::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      width: 7px;
+      height: 7px;
+      border-right: 2px solid rgba(255, 255, 255, 0.9);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.9);
+      transform: rotate(45deg);
+      left: 7px;
+    }
+  }
+
+  input[type='range'] {
+    -webkit-appearance: none;
+    border-radius: 0.25rem;
+    outline: none;
+    -webkit-transition: 0.2s;
+    transition: opacity 0.2s;
+    transform: rotate(270deg);
+    transform-origin: center;
+    height: $input-height;
+    cursor: pointer;
+    &::before {
+      content: '%';
+      top: 4px;
+      right: 5px;
+      color: #bababa;
+      position: absolute;
+      transform: rotate(-270deg);
+    }
+    /* Chrome, Opera, Safari, Edge */
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 5px;
+      height: $input-height;
+      border-top-right-radius: 0.25rem;
+      border-bottom-right-radius: 0.25rem;
+      background: unset;
+      cursor: pointer;
+    }
+    /* firefox */
+    &::-moz-range-thumb {
+      width: 5px;
+      height: $input-height;
+      border-top-right-radius: 0.25rem;
+      border-bottom-right-radius: 0.25rem;
+      background: unset;
+      cursor: pointer;
+    }
+  }
+}
+$disable-color: #aeb5bd;
+.planning-button {
+  $planning-button-width: 24px;
+  $planning-button-padding: 3px;
+  width: $planning-button-width;
+  display: flex;
+  justify-content: center;
+  min-height: $planning-button-width * 2;
+  padding: $planning-button-padding;
+  border-radius: $planning-button-width;
+  background: white;
+  border: 1px solid $disable-color;
+  font-size: small;
+  transition: all 0.2s 0.1s ease-in-out;
+
+  &:hover {
+    border-color: var(--primary);
+  }
+
+  &.enable {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .status {
+    width: $planning-button-width - $planning-button-padding * 2 - 2px;
+    height: $planning-button-width - $planning-button-padding * 2 - 2px;
+    border-radius: 50%;
+    font-size: small;
+    background-color: $disable-color;
+    transition: all 0.2s 0.1s ease-in-out;
+    &.enable {
+      background-color: white;
+      margin-top: $planning-button-width;
+    }
+  }
+}
+
+.test-coverage-button {
+  $button-width: 30px;
+  width: $button-width;
+  min-height: $button-width;
+  color: $disable-color;
+  padding: 0;
+  transition-property: color;
+  transition-duration: 300ms;
+  background-color: transparent;
+  border: 1px solid $disable-color;
+
+  &.enable {
+    color: #0078d4;
+  }
+
+  & .bi::before {
+    font-weight: bold !important;
+    font-size: 1.2rem;
+  }
+
+  &:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+}

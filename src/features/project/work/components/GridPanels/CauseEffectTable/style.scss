@@ -1,0 +1,72 @@
+.cause-effect-table {
+  $col-padding: 4px;
+
+  th,
+  td {
+    font-size: small !important;
+  }
+
+  thead {
+    td {
+      border-bottom-width: 1px !important;
+    }
+  }
+
+  .merged-row {
+    color: var(--danger);
+    text-decoration: line-through;
+  }
+
+  .cause-effect-wrapper {
+    position: relative;
+    min-width: 70px;
+    padding: 0;
+  }
+  .cause-effect-cell {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: inline-flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    ._cause-effect-id {
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      word-break: break-word;
+      min-width: $col-padding * 10;
+      padding: $col-padding $col-padding * 2;
+    }
+
+    .cause-id {
+      @extend ._cause-effect-id;
+      color: var(--white);
+      background-color: var(--primary);
+    }
+
+    .effect-id {
+      @extend ._cause-effect-id;
+      color: var(--white);
+      background-color: var(--success);
+    }
+
+    .merged-id {
+      @extend ._cause-effect-id;
+      background-color: var(--light-gray);
+    }
+  }
+
+  .delete-icon {
+    color: #808080;
+  }
+  
+  tbody tr:hover {
+    .delete-icon {
+      color: #dc3545;
+    } 
+  }
+}

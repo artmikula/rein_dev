@@ -1,0 +1,105 @@
+div.vertical-line {
+  width: 0px;
+  height: 80%;
+  border-left: 1px inset;
+}
+
+.scenario-case-table {
+  $col-padding: 4px;
+  thead {
+    font-weight: 500;
+    td {
+      border-bottom-width: 1px !important;
+    }
+  }
+  tr {
+    td {
+      padding: $col-padding $col-padding * 2;
+      font-size: small !important;
+      text-align: center;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      &:last-child {
+        min-width: 110px;
+        text-align: left;
+      }
+    }
+    .treeview {
+      text-align: initial;
+      ul {
+        margin: 0;
+        padding: 0;
+        li {
+          list-style-type: none;
+          position: relative;
+          margin: 0;
+          padding-top: 9px;
+          padding-left: 20px;
+          &::before,
+          &::after {
+            content: "";
+            position: absolute;
+            left: 5px;
+            right: auto;
+          }
+          &::before {
+            border-left: 1px dashed #999;
+            border-bottom: 1px dashed #999;
+            top: -3px;
+            height: 23px;
+            width: 13px;
+          }
+          &::after {
+            border-left: 1px dashed #999;
+            top: 19px;
+            width: 1px;
+            height: 7px;
+          }
+          &:last-child::after {
+            content: none;
+          }
+          .treeview__square {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border: 1px solid;
+            margin-right: 3px;
+            padding: 0;
+          }
+        }
+      }
+      & > ul {
+        padding: 0 $col-padding * 2;
+        & > li {
+          padding: 0;
+          &::before,
+          &::after {
+            content: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+.auto-complete {
+  min-width: 250px;
+  .css-yk16xz-control,
+  .css-1pahdxg-control {
+    min-height: auto;
+  }
+  .css-tlfecz-indicatorContainer,
+  .css-g1d714-ValueContainer,
+  .css-1gtu0rj-indicatorContainer {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+.filter-wrapper {
+  label {
+    word-break: keep-all;
+  }
+}

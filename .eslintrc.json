@@ -1,0 +1,140 @@
+{
+  "parser": "babel-eslint",
+  "plugins": [ "jest", "prettier" ],
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es6": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true,
+      "classes": true,
+      "defaultParams": true
+    }
+  },
+  "extends": [ "airbnb", "eslint:recommended", "plugin:jest/recommended", "plugin:prettier/recommended", "prettier" ],
+  "overrides": [
+    {
+      "files": [ "src/**/*.test.js" ],
+      "env": {
+        "jest/globals": true
+      },
+      "rules": {
+        "max-lines": "off"
+      }
+    }
+  ],
+  "rules": {
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto"
+      }
+    ],
+    "class-methods-use-this": [ "off" ],
+    "comma-dangle": [ "error", "always-multiline" ],
+    "curly": [ "error", "all" ],
+    "func-names": "off",
+    "global-require": "off",
+    "guard-for-in": "warn",
+    "import/extensions": "off",
+    "import/no-unresolved": "off",
+    "import/no-named-as-default": "warn",
+    "import/no-extraneous-dependencies": "off",
+    "import/prefer-default-export": "warn",
+    "max-len": [
+      "warn",
+      {
+        "code": 120,
+        "tabWidth": 2,
+        "ignoreUrls": true,
+        "ignoreTrailingComments": true
+      }
+    ],
+    "max-lines": "warn",
+    "no-console": "off",
+    "no-plusplus": "off",
+    "no-shadow": "off",
+    "no-script-url": "warn",
+    "no-undef": "warn",
+    "no-underscore-dangle": [
+      "off",
+      {
+        "allowAfterThis": true
+      }
+    ],
+    "no-unused-vars": "warn",
+    "no-restricted-syntax": "warn",
+    "object-curly-spacing": "warn",
+    "object-curly-newline": "off",
+    "padded-blocks": "off",
+    "jsx-a11y/label-has-for": "off",
+    "jsx-a11y/anchor-is-valid": [
+      "warn",
+      {
+        "aspects": [ "invalidHref" ]
+      }
+    ],
+    "react/no-array-index-key": "off",
+    "react/jsx-no-undef": "warn",
+    "react/prop-types": [
+      "warn",
+      {
+        "ignore": [ "classes", "location", "history", "theme", "cancel", "updateCancelTokens", "children" ]
+      }
+    ],
+    "react/jsx-no-target-blank": "warn",
+    "react/jsx-closing-bracket-location": "warn",
+    "react/jsx-curly-spacing": [
+      "warn",
+      {
+        "when": "never",
+        "children": true
+      }
+    ],
+    "react/jsx-filename-extension": [
+      "error",
+      {
+        "extensions": [ ".js" ]
+      }
+    ],
+    "react/jsx-tag-spacing": [
+      "warn",
+      {
+        "beforeSelfClosing": "always"
+      }
+    ],
+    "react/jsx-no-bind": "warn",
+    "react/no-multi-comp": [
+      "warn",
+      {
+        "ignoreStateless": false
+      }
+    ],
+    "react/no-unescaped-entities": "warn",
+    "react/state-in-constructor": "off",
+    "react/jsx-props-no-spreading": "off",
+    "react/no-unused-prop-types": "warn",
+    "react/prefer-stateless-function": "off",
+    "react/prefer-es6-class": "warn",
+    "react/sort-comp": "warn",
+    "react/sort-prop-types": "off",
+    "react/jsx-sort-props": "off",
+    "react/forbid-component-props": "warn",
+    "react/jsx-wrap-multilines": [
+      "error",
+      {
+        "declaration": false,
+        "assignment": false
+      }
+    ],
+    "jest/no-disabled-tests": "warn",
+    "jest/no-focused-tests": "error",
+    "jest/no-identical-title": "error",
+    "jest/prefer-to-have-length": "warn",
+    "jest/valid-expect": "error"
+  }
+}

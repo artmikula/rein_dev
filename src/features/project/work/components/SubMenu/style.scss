@@ -1,0 +1,44 @@
+@import '../../../../../styles//custom_variables';
+
+.sub-menu {
+  width: calc(100vw - 16px);
+  max-width: 500px;
+  min-height: 300px;
+  max-height: 400px;
+  overflow: auto;
+  border-color: $lighter-gray;
+  border-radius: inherit;
+  background-color: white;
+
+  &.only-actions {
+    max-width: 350px;
+    min-height: unset;
+  }
+
+  .sub-menu-actions {
+    padding: 0 1px;
+  }
+
+  .sub-menu-content {
+    width: 70%;
+    border-left: 1px solid gray;
+
+    .search-input {
+      outline: none;
+    }
+
+    .recents {
+      padding: 0 2px 0 1px;
+    }
+  }
+}
+
+@media all and (max-width: 576px) {
+  .sub-menu {
+    margin-left: 8px;
+    margin-right: 8px;
+    position: fixed !important;
+    top: 40px;
+    left: 0;
+  }
+}

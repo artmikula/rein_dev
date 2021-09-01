@@ -1,0 +1,17 @@
+#graph_container_id {
+  height: 100%;
+}
+
+.context-menu {
+  width: 250px;
+}
+
+.context-menu-item {
+  &:hover {
+    background-color: #e9ecef !important;
+  }
+}
+
+.inspection {
+  max-width: 300px;
+}

@@ -1,0 +1,17 @@
+.alert-modal {
+  .modal-header {
+    background-color: var(--primary);
+    color: white;
+  }
+  .modal-title {
+    font-weight: bold;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+
+    & i {
+      font-size: 1.3rem;
+      line-height: 1.3rem;
+    }
+  }
+}

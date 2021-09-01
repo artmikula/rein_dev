@@ -1,0 +1,63 @@
+@import '../../../../../../../styles/custom_variables';
+
+.similarity-slider-container {
+  width: 100%;
+}
+
+.similarity-slider-step {
+  background-color: black;
+  width: 1px;
+  margin: 0 4.5px;
+  height: 10px;
+}
+
+.similarity-slider {
+  -webkit-appearance: none; /* Override default CSS styles */
+  appearance: none;
+  width: 100%; /* Full-width */
+  height: 12px; /* Specified height */
+  outline: none; /* Remove outline */
+  -webkit-transition: 0.2s; /* 0.2 seconds transition on hover */
+  transition: opacity 0.2s;
+  margin-top: 10px;
+  opacity: 0.8;
+
+  &:disabled {
+    background: $lighter-gray !important;
+  }
+
+  &:disabled {
+    &::-webkit-slider-thumb {
+      background: $lighter-gray !important;
+      cursor: not-allowed;
+    }
+
+    &::-moz-range-thumb {
+      background: $lighter-gray !important;
+      cursor: not-allowed;
+    }
+  }
+
+  &:hover {
+    opacity: 1;
+    cursor: pointer;
+  }
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 30px;
+    background: $blue;
+    cursor: pointer;
+    box-shadow: red;
+    border: none;
+  }
+
+  &::-moz-range-thumb {
+    width: 10px;
+    height: 30px;
+    background: $blue;
+    cursor: pointer;
+  }
+}

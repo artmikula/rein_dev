@@ -1,0 +1,9 @@
+.page-item {
+  &.active .page-link {
+    z-index: 3;
+    color: $pagination-color;
+    background-color: transparent;
+    border-color: transparent;
+    text-decoration: underline;
+  }
+}

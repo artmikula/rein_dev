@@ -1,0 +1,46 @@
+.input-number {
+  width: fit-content;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  align-items: center;
+
+  & input {
+    min-width: 35px;
+    max-width: 50px;
+  }
+
+  & input:focus {
+    outline: none;
+  }
+
+  & input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  & .up,
+  & .down {
+    i {
+      font-size: smaller;
+      line-height: 0;
+    }
+  }
+
+  & input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  & .up:not(:disabled):hover,
+  & .down:not(:disabled):hover {
+    cursor: pointer;
+    background-color: #d0d0d0;
+  }
+
+  & .up:not(:disabled):active,
+  & .down:not(:disabled):active {
+    cursor: pointer;
+    background-color: #c0c0c0;
+  }
+}

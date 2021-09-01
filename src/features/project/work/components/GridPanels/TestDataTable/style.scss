@@ -1,0 +1,41 @@
+.test-data-table {
+  thead {
+    td {
+      border-bottom-width: 1px !important;
+    }
+  }
+  tbody {
+    font-weight: lighter;
+  }
+  th,
+  td {
+    text-align: center;
+    font-size: small !important;
+    vertical-align: inherit !important;
+  }
+  .test-data-type {
+    min-width: 103px;
+  }
+  .test-data-input {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0.6rem;
+    margin-bottom: 0;
+    select, input {
+      height: 100%;
+      border: none;
+      border-radius: 0;
+      cursor: pointer;
+      font-size: small;
+      font-weight: lighter;
+      background-color: transparent;
+      color: inherit;
+      &:focus {
+        border: none;
+        box-shadow: none;
+      }
+    }
+  }
+}

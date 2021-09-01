@@ -1,0 +1,38 @@
+$btn-primary-bg-color: rgba(0, 120, 212, 0.2);
+$btn-secondary-bg-color: rgba(108, 117, 125, 0.2);
+$btn-primary-color: #0078d4;
+$btn-secondary-color: #6c757d;
+
+.btn {
+  &.btn-outline-primary {
+    color: $btn-primary-color !important;
+
+    &:hover {
+      background-color: $btn-primary-bg-color;
+    }
+
+    &:focus {
+      background-color: $btn-primary-bg-color !important;
+    }
+
+    &:active {
+      background-color: $btn-primary-bg-color !important;
+    }
+  }
+
+  &.btn-outline-secondary {
+    color: $btn-secondary-color !important;
+
+    &:hover {
+      background-color: $btn-secondary-bg-color;
+    }
+
+    &:focus {
+      background-color: $btn-secondary-bg-color !important;
+    }
+
+    &:active {
+      background-color: $btn-secondary-bg-color !important;
+    }
+  }
+}

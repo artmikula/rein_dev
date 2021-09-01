@@ -1,0 +1,114 @@
+@import '../../../../../../styles/custom_variables';
+
+.metric-area {
+  width: 70%;
+  min-width: 350px;
+  .metric-wrapper {
+    display: flex;
+    text-align: center;
+    & > div {
+      margin-right: 10px;
+    }
+    .metric-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .gradient-block {
+        min-width: 58px;
+        height: 30px;
+        color: $white;
+        border-radius: 5px;
+
+        &.blue {
+          background: $metric-gradient-blue;
+        }
+
+        &.purple {
+          background: $metric-gradient-purple;
+        }
+      }
+
+      .metric-unit {
+        font-size: x-small;
+        align-self: flex-end;
+        padding: 5px;
+      }
+    }
+    label {
+      font-size: x-small;
+      margin-top: 0.4rem;
+      margin-bottom: 0;
+    }
+  }
+  .slider {
+    -webkit-appearance: none;
+    width: 100%;
+    min-width: 100px;
+    height: 30px;
+    background: $range-gradient-color;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: 0.2s;
+    transition: opacity 0.2s;
+    border: 4px solid $range-border-color;
+    border-radius: 20px;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    &::-moz-range-thumb {
+      opacity: 0;
+    }
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 5px;
+      height: 25px;
+      border-top-right-radius: 5px;
+      border-bottom-right-radius: 5px;
+      background: unset;
+      cursor: pointer;
+    }
+  }
+  .conotation {
+    float: left;
+    margin-top: 0.3rem;
+    font-weight: 500;
+
+    &.min {
+      margin-left: 0.6rem;
+    }
+
+    &.max {
+      margin-left: -1rem;
+    }
+  }
+  .conotation-container {
+    z-index: 1;
+    margin-top: -5px;
+    border: 3px solid $white;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7);
+
+    .conotation-value {
+      width: 30px;
+      height: 30px;
+      font-size: 10px;
+      margin: 2px;
+      padding-bottom: 1px;
+      background: transparent;
+      cursor: pointer;
+      color: $range-border-color;
+      border: 3px solid $white;
+      border-radius: 50%;
+    }
+  }
+}
+.chart-area {
+  width: 30%;
+  min-width: 170px;
+  padding-left: 20px;
+}
