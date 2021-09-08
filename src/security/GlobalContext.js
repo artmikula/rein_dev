@@ -14,9 +14,8 @@ class GlobalProvider extends Component {
     this.setState({ authenticated });
   };
 
-  setAuthContext = (newContext) => {
-    console.log(newContext);
-    this.setState({ authContext: newContext });
+  setAuthContext = (authContext) => {
+    this.setState({ ...authContext });
   };
 
   getToken = () => {
