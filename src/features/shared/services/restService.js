@@ -1,40 +1,36 @@
 import axios from 'axios';
-import authService from '../authorization/AuthorizeService';
 
 class RestService {
+  _token = '';
+
   config = (token, customHeader = {}) => {
     return {
       headers: { Authorization: `Bearer ${token}`, ...customHeader },
     };
   };
 
+  setToken(jwt) {
+    this._token = jwt;
+  }
+
   async getAsync(url) {
-    const token = await authService.getAccessToken();
-    return axios.get(url, this.config(token));
+    return axios.get(url, this.config(this._token));
   }
 
   async postAsync(url, data = {}) {
-    const token = await authService.getAccessToken();
-
-    return axios.post(url, data, this.config(token, { 'Content-Type': 'application/json' }));
+    return axios.post(url, data, this.config(this._token, { 'Content-Type': 'application/json' }));
   }
 
   async putAsync(url, data = {}) {
-    const token = await authService.getAccessToken();
-
-    return axios.put(url, data, this.config(token, { 'Content-Type': 'application/json' }));
+    return axios.put(url, data, this.config(this._token, { 'Content-Type': 'application/json' }));
   }
 
   async deleteAsync(url) {
-    const token = await authService.getAccessToken();
-
-    return axios.delete(url, this.config(token));
+    return axios.delete(url, this.config(this._token));
   }
 
   async patchAsync(url, data = {}) {
-    const token = await authService.getAccessToken();
-
-    return axios.patch(url, data, this.config(token, { 'Content-Type': 'application/json' }));
+    return axios.patch(url, data, this.config(this._token, { 'Content-Type': 'application/json' }));
   }
 }
 

@@ -1,0 +1,8 @@
+{
+  "realm": "reinceta",
+  "auth-server-url": "https://rein-ceta-portal.azurewebsites.net/auth/",
+  "ssl-required": "external",
+  "resource": "rein_ceta_ui_local",
+  "public-client": true,
+  "confidential-port": 0
+}

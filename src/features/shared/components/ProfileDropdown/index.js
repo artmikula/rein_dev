@@ -1,6 +1,6 @@
 import React from 'react';
 import { DropdownMenu, DropdownToggle, UncontrolledDropdown } from 'reactstrap';
-import { LoginMenu } from '../../authorization/LoginMenu';
+import { LoginMenu } from './LoginMenu';
 
 export default function ProfileDropdown() {
   return (

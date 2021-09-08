@@ -51,9 +51,11 @@
     "reactstrap": "^8.4.1",
     "rimraf": "^2.7.1",
     "sass": "^1.32.12",
-    "yup": "^0.32.9"
+    "yup": "^0.32.9",
+    "keycloak-js": "15.0.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.15.0",
     "@redux-devtools/core": "^3.9.0",
     "@testing-library/jest-dom": "^5.11.6",
     "@testing-library/react": "^11.2.2",
@@ -61,6 +63,7 @@
     "@types/cytoscape": "^3.14.15",
     "@types/cytoscape-edgehandles": "^3.6.0",
     "ajv": "^6.9.1",
+    "babel-eslint": "^10.1.0",
     "cross-env": "^7.0.3",
     "dotenv-cli": "^4.0.0",
     "eslint": "^7.25.0",
@@ -87,8 +90,8 @@
     ]
   },
   "scripts": {
-    "start": "rimraf ./build && react-app-rewired start",
-    "build": "react-app-rewired build",
+    "start": "react-app-rewired start",
+    "build": "cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
     "test": "cross-env CI=true react-app-rewired test --env=jsdom",
     "eject": "react-scripts eject",
     "lint": "eslint ./src/"
