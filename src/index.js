@@ -3,21 +3,16 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { Log } from 'oidc-client';
+import { GlobalProvider } from 'security/GlobalContext';
 import App from './App';
 import store from './app/store';
-import * as serviceWorker from './serviceWorker';
 import Language from './features/shared/languages/Language';
 import cookiesHelper from './features/shared/lib/cookiesHelper';
-
-import authService from './features/shared/authorization/AuthorizeService';
 
 const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 
 const cookieValue = cookiesHelper.getCulture();
-
-Log.logger = console;
 
 if (cookieValue) {
   if (cookieValue.indexOf('en-') > -1) {
@@ -45,12 +40,12 @@ if (cookieValue) {
   }
 }
 
-authService.signinSilentCallback();
-
 ReactDOM.render(
   <Provider store={store}>
     <BrowserRouter basename={baseUrl}>
-      <App />
+      <GlobalProvider>
+        <App />
+      </GlobalProvider>
     </BrowserRouter>
   </Provider>,
   rootElement
