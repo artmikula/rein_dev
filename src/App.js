@@ -1,7 +1,6 @@
-import React, { Component, Suspense } from 'react';
+import React, { Component } from 'react';
 import { Route } from 'react-router';
 import Auth from 'security/Auth';
-import Loading from 'features/shared/components/Loading';
 import { Layout } from './features/shared/components';
 import Landing from './features/project/Landing';
 import ProjectList from './features/project/ProjectList';
