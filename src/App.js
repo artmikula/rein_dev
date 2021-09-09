@@ -24,7 +24,6 @@ export default class App extends Component {
   render() {
     return (
       <Auth>
-        <Suspense fallback={<Loading />} />
         <Layout>
           <Route exact path="/" component={Landing} />
           <Route exact path="/projects" component={ProjectList} />

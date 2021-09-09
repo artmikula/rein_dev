@@ -3,7 +3,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { Log } from 'oidc-client';
 import { GlobalProvider } from 'security/GlobalContext';
 import App from './App';
 import store from './app/store';
@@ -14,8 +13,6 @@ const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 
 const cookieValue = cookiesHelper.getCulture();
-
-Log.logger = console;
 
 if (cookieValue) {
   if (cookieValue.indexOf('en-') > -1) {
