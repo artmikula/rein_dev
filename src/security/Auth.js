@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Keycloak from 'keycloak-js';
-import GlobalContext from 'security/GlobalContext';
+
+import GlobalContext from './GlobalContext';
 
 class Auth extends Component {
   componentDidMount() {

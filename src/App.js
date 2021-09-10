@@ -11,6 +11,8 @@ import confirm from './features/shared/components/Confirm';
 import modal from './features/shared/components/CustomModal';
 import option from './features/shared/components/Options';
 
+import CheckIn from './security/CheckIn';
+
 export default class App extends Component {
   constructor(props) {
     super(props);
@@ -23,11 +25,13 @@ export default class App extends Component {
   render() {
     return (
       <Auth>
-        <Layout>
-          <Route exact path="/" component={Landing} />
-          <Route exact path="/projects" component={ProjectList} />
-          <Route exact path="/project/:projectId/work/:workId" component={Workspace} />
-        </Layout>
+        <CheckIn>
+          <Layout>
+            <Route exact path="/" component={Landing} />
+            <Route exact path="/projects" component={ProjectList} />
+            <Route exact path="/project/:projectId/work/:workId" component={Workspace} />
+          </Layout>
+        </CheckIn>
       </Auth>
     );
   }
