@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Route } from 'react-router';
 import Auth from 'security/Auth';
+import ValidateLicense from 'security/ValidateLicense';
 import { Layout } from './features/shared/components';
 import Landing from './features/project/Landing';
 import ProjectList from './features/project/ProjectList';
@@ -26,11 +27,13 @@ export default class App extends Component {
     return (
       <Auth>
         <CheckIn>
-          <Layout>
-            <Route exact path="/" component={Landing} />
-            <Route exact path="/projects" component={ProjectList} />
-            <Route exact path="/project/:projectId/work/:workId" component={Workspace} />
-          </Layout>
+          <ValidateLicense>
+            <Layout>
+              <Route exact path="/" component={Landing} />
+              <Route exact path="/projects" component={ProjectList} />
+              <Route exact path="/project/:projectId/work/:workId" component={Workspace} />
+            </Layout>
+          </ValidateLicense>
         </CheckIn>
       </Auth>
     );

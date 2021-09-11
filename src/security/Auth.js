@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Keycloak from 'keycloak-js';
+import { Container } from 'reactstrap';
 
 import GlobalContext from './GlobalContext';
 
@@ -47,13 +48,21 @@ class Auth extends Component {
       }
 
       return (
-        <div>
-          <input value="click here to login" onClick={() => authContext.login()} />
-        </div>
+        <Container fluid className="p-0">
+          <div>
+            <input value="click here to login" onClick={() => authContext.login()} />
+          </div>
+        </Container>
       );
     }
 
-    return <div> Loading.... </div>;
+    return (
+      <Container fluid className="p-0">
+        <div className="spinner-border text-primary" role="status">
+          <span className="sr-only/" />
+        </div>
+      </Container>
+    );
   }
 }
 

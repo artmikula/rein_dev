@@ -30,7 +30,11 @@ class CheckIn extends Component {
       return { ...children };
     }
 
-    return <div>check in ....</div>;
+    return (
+      <div className="spinner-border text-primary" role="status">
+        <span className="sr-only/" />
+      </div>
+    );
   }
 }
 
