@@ -44,7 +44,13 @@ class ValidateLicense extends Component {
 
       RestService.putAsync('/licensee', { key: licenseKey })
         .then((response) => {
-          this.setState({ validating: false, isValid: response.data.isValid });
+          const { isValid, message } = response.data;
+
+          if (isValid === false && message.length > 0) {
+            alert(message);
+          } else {
+            this.setState({ validating: false, isValid: response.data.isValid });
+          }
         })
         .catch((error) => {
           console.log(error);
