@@ -2,7 +2,6 @@ import React, { Component, Fragment } from 'react';
 import { DropdownItem } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import Language from '../../languages/Language';
-import { data } from 'jquery';
 
 export class LoginMenu extends Component {
   render() {
