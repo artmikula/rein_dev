@@ -2,8 +2,9 @@ import restServiceHelper from '../../shared/lib/restServiceHelper';
 import restService from '../../shared/services/restService';
 
 class ProjectService {
-  async listAsync(page = 1, pageSize = 5, filter = '') {
-    const url = `api/project?page=${page}&pageSize=${pageSize}&filter=${filter}`;
+  async listAsync(token, page = 1, pageSize = 5, filter = '') {
+    const url = `/project?page=${page}&pageSize=${pageSize}&filter=${filter}`;
+    restService.setToken(token);
     const response = await restService.getAsync(url);
     return response.data;
   }
@@ -14,9 +15,10 @@ class ProjectService {
     return response.data;
   }
 
-  async createAsync(data) {
-    const url = `api/project`;
+  async createAsync(token, data) {
+    const url = `/project`;
     try {
+      restService.setToken(token);
       const response = await restService.postAsync(url, data);
       return restServiceHelper.handleResponse(response);
     } catch (error) {

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import { Card, Container, Pagination, PaginationItem, PaginationLink, Table } from 'reactstrap';
 import Language from 'features/shared/languages/Language';
+import GlobalContext from 'security/GlobalContext';
 import { ModalForm } from '../shared/components';
 import toLocalTime from '../shared/lib/utils';
 import ProjectLayout from './components/ProjectLayout';
@@ -46,7 +47,8 @@ class ProjectList extends Component {
   async componentDidMount() {
     const { location } = this.props;
     const currentPage = this._getPage(location);
-    const data = await projectService.listAsync(currentPage);
+    const { getToken } = this.context;
+    const data = await projectService.listAsync(getToken(), currentPage);
     this.setState({
       projects: data.items,
       totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
@@ -261,5 +263,7 @@ class ProjectList extends Component {
     );
   }
 }
+
+ProjectList.contextType = GlobalContext;
 
 export default withRouter(ProjectList);
