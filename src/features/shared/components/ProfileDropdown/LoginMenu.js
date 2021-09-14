@@ -1,9 +1,10 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import { DropdownItem } from 'reactstrap';
 import { Link } from 'react-router-dom';
+import GlobalContext from 'security/GlobalContext';
 import Language from '../../languages/Language';
 
-export class LoginMenu extends Component {
+class LoginMenu extends Component {
   render() {
     const { authenticated } = this.context;
 
@@ -58,3 +59,7 @@ export class LoginMenu extends Component {
     );
   }
 }
+
+LoginMenu.contextType = GlobalContext;
+
+export default LoginMenu;

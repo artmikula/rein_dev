@@ -18,8 +18,14 @@ class CheckIn extends Component {
 
       RestService.setToken(token);
 
-      RestService.postAsync('/check-in');
-      this.setState({ checkedIn: true });
+      RestService.postAsync('/check-in')
+        .then(() => {
+          this.setState({ checkedIn: true });
+        })
+        .catch((error) => {
+          console.log(error);
+          alert('There is an error on api connection Please contact administrator.');
+        });
     }
   }
 
