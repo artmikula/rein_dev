@@ -59,11 +59,12 @@ class ProjectList extends Component {
     const { isRefresh } = this.state;
     const preLocation = prevProps.location;
     const { location } = this.props;
+    const { getToken } = this.context;
     const prevPage = this._getPage(preLocation);
     const currentPage = this._getPage(location);
 
     if (prevPage !== currentPage || isRefresh) {
-      const data = await projectService.listAsync(currentPage);
+      const data = await projectService.listAsync(getToken(), currentPage);
       this._updateState({
         projects: data.items,
         totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
@@ -84,8 +85,9 @@ class ProjectList extends Component {
   _confirmDelete = async () => {
     const { selectedId } = this.state;
     const { history, location } = this.props;
+    const { getToken } = this.context;
     const currentPage = this._getPage(location);
-    await projectService.deleteAsync(selectedId);
+    await projectService.deleteAsync(getToken(), selectedId);
     history.push(`/projects?page=${currentPage}`);
     this.setState({
       isRefresh: true,
@@ -108,8 +110,9 @@ class ProjectList extends Component {
   _handleSubmitEditProject = async (values, { setErrors, setSubmitting }) => {
     const { selectedId } = this.state;
     const { history, location } = this.props;
+    const { getToken } = this.context;
     const currentPage = this._getPage(location);
-    const result = await projectService.updateAsync(selectedId, values);
+    const result = await projectService.updateAsync(getToken(), selectedId, values);
     setSubmitting(false);
     if (result.error) {
       const { Name } = result.error.response.data;
@@ -139,7 +142,8 @@ class ProjectList extends Component {
 
   _goToWorkPage = async (projectId) => {
     const { history } = this.props;
-    const data = await workService.listAsync(projectId, 1, 1);
+    const { getToken } = this.context;
+    const data = await workService.listAsync(getToken(), projectId, 1, 1);
     if (data.items.length > 0) {
       history.push(`/project/${projectId}/work/${data.items[0].id}`);
     }

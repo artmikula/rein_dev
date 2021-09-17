@@ -10,6 +10,7 @@ import { DEFAULT_LAYOUTS, DEFAULT_LAYOUTS_SINGLE, STRING, VIEW_MODE, WORK_FORM_N
 import LocalStorage from 'features/shared/lib/localStorage';
 import ProjectLayout from 'features/project/components/ProjectLayout';
 import Language from 'features/shared/languages/Language';
+import GlobalContext from 'security/GlobalContext';
 import CreateForm from './components';
 import GridPanels from './components/GridPanels';
 import MenuContainer from './components/Menu/MenuContainer';
@@ -36,6 +37,7 @@ class Workspace extends Component {
   async componentDidMount() {
     const { match } = this.props;
     const { projectId, workId } = match.params;
+
     await this._getWorkById(projectId, workId);
 
     const { history } = this.props;
@@ -58,7 +60,8 @@ class Workspace extends Component {
 
   _getWorkById = async (projectId, workId) => {
     const { setWork } = this.props;
-    const result = await workService.getAsync(projectId, workId);
+    const { getToken } = this.context;
+    const result = await workService.getAsync(getToken(), projectId, workId);
     if (result.data) {
       this.setState({ workData: result.data });
       setWork(result.data);
@@ -162,9 +165,10 @@ class Workspace extends Component {
     const { match } = this.props;
     const { params } = match;
     const { projectId, workId } = params;
+    const { getToken } = this.context;
 
     if (workData.name !== values.name) {
-      const result = await workService.updateAsync(projectId, workId, values);
+      const result = await workService.updateAsync(getToken(), projectId, workId, values);
       setSubmitting(false);
       if (!result.error) {
         await this._getWorkById(projectId, workId);
@@ -276,6 +280,8 @@ Workspace.propTypes = {
     }),
   }).isRequired,
 };
+
+Workspace.contextType = GlobalContext;
 
 const mapDispatchToProps = { setWork };
 export default connect(null, mapDispatchToProps)(Workspace);

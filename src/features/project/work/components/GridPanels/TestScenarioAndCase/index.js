@@ -45,28 +45,29 @@ class TestScenarioAndCase extends Component {
       if (isRefreshPage) {
         const testScenarioResult = await testScenarioService.getListAsync(projectId, workId);
         this._setColumns(graphNodeResult.data);
+        if (testScenarioResult.data) {
+          const testCases = [];
+          testScenarioResult.data.forEach((testScenario) => {
+            testScenario.testCases.forEach((testCase) => {
+              const testDatas = JSON.parse(testCase.testDatas).map((x) => {
+                const result = {
+                  graphNodeId: x.GraphNodeId,
+                  data: x.Data,
+                };
+                return result;
+              });
 
-        const testCases = [];
-        testScenarioResult.data.forEach((testScenario) => {
-          testScenario.testCases.forEach((testCase) => {
-            const testDatas = JSON.parse(testCase.testDatas).map((x) => {
-              const result = {
-                graphNodeId: x.GraphNodeId,
-                data: x.Data,
-              };
-              return result;
-            });
-
-            testCases.push({
-              ...testCase,
-              testScenario: { ...testScenario },
-              testDatas,
-              results: JSON.parse(testCase.results),
+              testCases.push({
+                ...testCase,
+                testScenario: { ...testScenario },
+                testDatas,
+                results: JSON.parse(testCase.results),
+              });
             });
           });
-        });
 
-        this._setRows(testCases, testScenarioResult.data);
+          this._setRows(testCases, testScenarioResult.data);
+        }
       } else {
         let scenarioAndGraphNodes = null;
         if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
@@ -248,6 +249,10 @@ class TestScenarioAndCase extends Component {
   };
 
   _setRows(testCases = [], scenarios = []) {
+    if (!testCases || !scenarios) {
+      return;
+    }
+
     const { columns } = this.state;
     const rows = scenarios.map((scenario) => ({
       ...scenario,

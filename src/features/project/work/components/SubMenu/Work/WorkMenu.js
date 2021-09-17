@@ -13,6 +13,7 @@ import debounce from 'lodash.debounce';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
+import GlobalContext from 'security/GlobalContext';
 import WorkLink from './WorkLink';
 
 class WorkMenu extends Component {
@@ -53,7 +54,8 @@ class WorkMenu extends Component {
   _confirmDelete = () => {
     const { match, history } = this.props;
     const { projectId, workId } = match.params;
-    workService.deleteAsync(projectId, workId).then(() => {
+    const { getToken } = this.context;
+    workService.deleteAsync(getToken(), projectId, workId).then(() => {
       history.push(`/project/${projectId}/works`);
     });
   };
@@ -213,5 +215,7 @@ const mapStateToProps = (state) => ({
   work: state.work,
 });
 const mapDispatchToProps = { setGeneratingReport };
+
+WorkMenu.contextType = GlobalContext;
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(WorkMenu));
