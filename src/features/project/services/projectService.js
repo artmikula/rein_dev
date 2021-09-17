@@ -9,8 +9,8 @@ class ProjectService {
     return response.data;
   }
 
-  async getAsync(id) {
-    const url = `api/project/${id}`;
+  async getAsync(token, id) {
+    const url = `/project/${id}`;
     const response = await restService.getAsync(url);
     return response.data;
   }
@@ -26,9 +26,10 @@ class ProjectService {
     }
   }
 
-  async updateAsync(id, data) {
-    const url = `api/project/${id}`;
+  async updateAsync(token, id, data) {
+    const url = `/project/${id}`;
     try {
+      restService.setToken(token);
       const response = await restService.putAsync(url, data);
       return restServiceHelper.handleResponse(response);
     } catch (error) {
@@ -36,9 +37,10 @@ class ProjectService {
     }
   }
 
-  async importAsync(data) {
-    const url = `api/project/import`;
+  async importAsync(token, data) {
+    const url = `/project/import`;
     try {
+      restService.setToken(token);
       const response = await restService.postAsync(url, data);
       return restServiceHelper.handleResponse(response);
     } catch (error) {
@@ -46,9 +48,10 @@ class ProjectService {
     }
   }
 
-  async deleteAsync(id) {
-    const url = `api/project/${id}`;
+  async deleteAsync(token, id) {
+    const url = `/project/${id}`;
     try {
+      restService.setToken(token);
       const response = await restService.deleteAsync(url);
       return restServiceHelper.handleResponse(response);
     } catch (error) {
@@ -56,6 +59,6 @@ class ProjectService {
     }
   }
 
-  exportAsync = async (id) => restServiceHelper.requestAsync(restService.postAsync(`api/project/${id}/export`));
+  exportAsync = async (id) => restServiceHelper.requestAsync(restService.postAsync(`project/${id}/export`));
 }
 export default new ProjectService();
