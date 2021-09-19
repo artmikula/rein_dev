@@ -19,6 +19,7 @@ import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
 import testBasisService from 'features/project/work/services/testBasisService';
 import { STRING, CLASSIFY } from 'features/shared/constants';
+import GlobalContext from 'security/GlobalContext';
 import DecoratedText from './DecoratedText';
 import ClassifyPopover from './ClassifyPopover';
 import StyleControlEditor from './StyleControlEditor';
@@ -98,13 +99,15 @@ class TestBasis extends Component {
   _createUpdateTestBasis = debounce((content) => {
     const { match } = this.props;
     const { projectId, workId } = match.params;
-    return testBasisService.createUpdateAsync(projectId, workId, { content });
+    const { getToken } = this.context;
+    return testBasisService.createUpdateAsync(getToken(), projectId, workId, { content });
   }, 500);
 
   _getTestBasis = async () => {
     const { match } = this.props;
     const { projectId, workId } = match.params;
-    const result = await testBasisService.getAsync(projectId, workId);
+    const { getToken } = this.context;
+    const result = await testBasisService.getAsync(getToken(), projectId, workId);
     if (result.data) {
       const { content } = result.data;
       const drawContent = JSON.parse(content);
@@ -301,4 +304,7 @@ TestBasis.defaultProps = {
   decoratedText: undefined,
   entityKey: undefined,
 };
+
+TestBasis.contextType = GlobalContext;
+
 export default withRouter(TestBasis);

@@ -8,6 +8,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import { Table } from 'reactstrap';
+import GlobalContext from 'security/GlobalContext';
 import CauseEffectRow from './CauseEffectRow';
 import AbbreviateConfirmContent from './components/AbbreviateConfirmContent';
 import './style.scss';
@@ -49,7 +50,8 @@ class CauseEffectTable extends Component {
   _listData = async () => {
     const { match } = this.props;
     const { projectId, workId } = match.params;
-    const result = await causeEffectService.listAsync(projectId, workId);
+    const { getToken } = this.context;
+    const result = await causeEffectService.listAsync(getToken(), projectId, workId);
     if (result.data) {
       this.setState({ listData: result.data });
     }
@@ -104,7 +106,8 @@ class CauseEffectTable extends Component {
     // call api add item
     const { match } = this.props;
     const { projectId, workId } = match.params;
-    const result = await causeEffectService.createAsync(projectId, workId, newItem);
+    const { getToken } = this.context;
+    const result = await causeEffectService.createAsync(getToken(), projectId, workId, newItem);
 
     if (result.error) {
       this._raiseEvent({ action: domainEvents.ACTION.NOTACCEPT, value: newItem });
@@ -149,7 +152,8 @@ class CauseEffectTable extends Component {
       window.alert(Language.get('cannotremovemergedefinition'));
       return false;
     }
-    const result = await causeEffectService.deleteAsync(projectId, workId, id);
+    const { getToken } = this.context;
+    const result = await causeEffectService.deleteAsync(getToken(), projectId, workId, id);
     if (result.error) {
       alert(Language.get('errorwhendeletedefinition'));
       return false;
@@ -194,8 +198,8 @@ class CauseEffectTable extends Component {
     }
     const { id } = listData[index];
     const newItem = { ...listData[index], ...value };
-
-    const result = await causeEffectService.updateAsync(projectId, workId, id, newItem);
+    const { getToken } = this.context;
+    const result = await causeEffectService.updateAsync(getToken(), projectId, workId, id, newItem);
     if (result.error) {
       this._raiseEvent({ action: domainEvents.ACTION.NOTACCEPT, value });
       CauseEffect.alertError(result.error);
@@ -288,4 +292,7 @@ class CauseEffectTable extends Component {
 CauseEffectTable.propTypes = {
   match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
 };
+
+CauseEffectTable.contextType = GlobalContext;
+
 export default withRouter(CauseEffectTable);
