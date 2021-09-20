@@ -1,7 +1,6 @@
+import Loading from 'features/shared/components/Loading';
 import React, { Component } from 'react';
-
 import RestService from '../features/shared/services/restService';
-
 import GlobalContext from './GlobalContext';
 
 class CheckIn extends Component {
@@ -36,11 +35,7 @@ class CheckIn extends Component {
       return { ...children };
     }
 
-    return (
-      <div className="spinner-border text-primary" role="status">
-        <span className="sr-only/" />
-      </div>
-    );
+    return <Loading />;
   }
 }
 
