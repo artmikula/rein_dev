@@ -60,6 +60,10 @@ class TestDataTable extends Component {
       const { message } = event;
       this._handleWorkMenuEvents(message);
     });
+    eventBus.subscribe(this, domainEvents.WORK_DATA_COLLECTION, (event) => {
+      const { message } = event;
+      this._handleDataCollectionRequest(message);
+    });
     TEST_DATA_SHORTCUT.forEach(({ code, shortcutKeys }) => {
       Mousetrap.bind(shortcutKeys.join('+'), (e) => {
         e.preventDefault();
@@ -72,6 +76,11 @@ class TestDataTable extends Component {
     eventBus.unsubscribe(this);
     Mousetrap.reset();
   }
+
+  _handleDataCollectionRequest = () => {
+    const { testDatas } = this.state;
+    this._raiseEvent({ action: domainEvents.ACTION.COLLECT_RESPONSE, value: testDatas });
+  };
 
   _raiseEvent = (message) => {
     eventBus.publish(domainEvents.TEST_DATA_DOMAINEVENT, message);
