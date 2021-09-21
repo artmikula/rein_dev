@@ -23,11 +23,7 @@ class CauseEffectTable extends Component {
 
   async componentDidMount() {
     await this._listData();
-    eventBus.subscribe(this, domainEvents.TESTBASIC_CLASSIFYASCAUSE_DOMAINEVENT, (event) => {
-      const { message } = event;
-      this._handleEvent(message);
-    });
-    eventBus.subscribe(this, domainEvents.TESTBASIC_CLASSIFYASEFFECT_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.TESTBASIC_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleEvent(message);
     });

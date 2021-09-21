@@ -38,7 +38,7 @@ class Workspace extends Component {
     this.workData = {
       testBasis: null,
       causeEffects: null,
-      graphNodes: null,
+      graph: null,
       testCoverages: null,
       testDatas: null,
       testScenariosAndCases: null,
@@ -63,23 +63,27 @@ class Workspace extends Component {
     });
 
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, (event) => {
-      this._handleWorkDataCollectionEvents(event.message);
+      this._handleWorkDataCollectionEvents('causeEffects', event.message);
     });
 
     eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, (event) => {
-      this._handleWorkDataCollectionEvents(event.message);
+      this._handleWorkDataCollectionEvents('testDatas', event.message);
     });
 
     eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
-      this._handleWorkDataCollectionEvents(event.message);
+      this._handleWorkDataCollectionEvents('testScenariosAndCases', event.message);
     });
 
     eventBus.subscribe(this, domainEvents.TEST_COVERAGE_ONCHANGE_DOMAINEVENT, (event) => {
-      this._handleWorkDataCollectionEvents(event.message);
+      this._handleWorkDataCollectionEvents('testCoverages', event.message);
     });
 
     eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, (event) => {
-      this._handleWorkDataCollectionEvents(event.message);
+      this._handleWorkDataCollectionEvents('graph', event.message);
+    });
+
+    eventBus.subscribe(this, domainEvents.TESTBASIC_DOMAINEVENT, (event) => {
+      this._handleWorkDataCollectionEvents('testBasis', event.message);
     });
   }
 
@@ -91,10 +95,11 @@ class Workspace extends Component {
     eventBus.publish(domainEvents.WORK_DATA_COLLECTION, { action: domainEvents.ACTION.COLLECT_REQUEST });
 
   _handleWorkDataCollectionEvents = (key, message) => {
-    const { action, data } = message;
+    const { action, value } = message;
 
     if (action === domainEvents.ACTION.COLLECT_RESPONSE) {
-      this.workData[key] = data;
+      this.workData[key] = value;
+      console.log('workData', this.workData);
     }
   };
 
@@ -232,6 +237,9 @@ class Workspace extends Component {
 
     return (
       <ProjectLayout menus={menus}>
+        <button onClick={this._raiseEvent} type="button">
+          collect data
+        </button>
         <div className="d-flex flex-wrap align-items-center justify-content-between border-bottom bg-white px-3 small position-relative">
           <span>
             <span className="text-muted">{Language.get('project')}: </span>

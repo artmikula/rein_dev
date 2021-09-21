@@ -1,27 +1,27 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { withRouter } from 'react-router-dom';
 import {
+  CompositeDecorator,
+  convertFromRaw,
+  convertToRaw,
   Editor,
   EditorState,
-  RichUtils,
-  CompositeDecorator,
   getVisibleSelectionRect,
-  convertToRaw,
-  convertFromRaw,
   Modifier,
+  RichUtils,
 } from 'draft-js';
 import 'draft-js/dist/Draft.css';
-import { v4 as uuidv4 } from 'uuid';
-import debounce from 'lodash.debounce';
 import TestBasisManager from 'features/project/work/biz/TestBasis';
+import testBasisService from 'features/project/work/services/testBasisService';
+import { STRING } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
-import testBasisService from 'features/project/work/services/testBasisService';
-import { STRING, CLASSIFY } from 'features/shared/constants';
+import debounce from 'lodash.debounce';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 import GlobalContext from 'security/GlobalContext';
-import DecoratedText from './DecoratedText';
+import { v4 as uuidv4 } from 'uuid';
 import ClassifyPopover from './ClassifyPopover';
+import DecoratedText from './DecoratedText';
 import StyleControlEditor from './StyleControlEditor';
 
 class TestBasis extends Component {
@@ -43,18 +43,29 @@ class TestBasis extends Component {
       const { message } = event;
       this._handleEventBus(message);
     });
+
+    eventBus.subscribe(this, domainEvents.WORK_DATA_COLLECTION, (event) => {
+      const { message } = event;
+      this._handleEventBus(message);
+    });
   }
 
   componentWillUnmount() {
     eventBus.unsubscribe(this);
   }
 
-  _saveTestBasis = (newEditorState) => {
+  _getTestBasisContent = (newEditorState) => {
     const { editorState } = this.state;
     const currentEditor = newEditorState || editorState;
-    const drawContentState = convertToRaw(currentEditor.getCurrentContent());
-    TestBasisManager.set(drawContentState);
-    this._createUpdateTestBasis(JSON.stringify(drawContentState));
+
+    return convertToRaw(currentEditor.getCurrentContent());
+  };
+
+  _saveTestBasis = (newEditorState) => {
+    const content = this._getTestBasisContent(newEditorState);
+
+    TestBasisManager.set(content);
+    this._createUpdateTestBasis(JSON.stringify(content));
   };
 
   _findEntities = (contentBlock, callback, contentState) => {
@@ -141,15 +152,15 @@ class TestBasis extends Component {
          * - You can add more data to the message if needed, sample type of action which is not accepted
          */
       }
+      if (action === domainEvents.ACTION.COLLECT_REQUEST) {
+        const content = this._getTestBasisContent();
+        this._raiseEventBus(domainEvents.ACTION.COLLECT_RESPONSE, { content });
+      }
     }
   };
 
   _raiseEventBus = (action, value) => {
-    let eventName = domainEvents.TESTBASIC_CLASSIFYASEFFECT_DOMAINEVENT;
-    if (value.type === CLASSIFY.CAUSE) {
-      eventName = domainEvents.TESTBASIC_CLASSIFYASCAUSE_DOMAINEVENT;
-    }
-    eventBus.publish(eventName, { action, value });
+    eventBus.publish(domainEvents.TESTBASIC_DOMAINEVENT, { action, value });
   };
   /* End event */
 
