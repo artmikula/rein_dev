@@ -72,6 +72,10 @@ class TestCoverage extends Component {
     eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
       this._handleWorkMenuEvents(event);
     });
+    eventBus.subscribe(this, domainEvents.WORK_DATA_COLLECTION, (event) => {
+      const { message } = event;
+      this._handleDataCollectionRequest(message);
+    });
     this._getData();
   }
 
@@ -82,6 +86,15 @@ class TestCoverage extends Component {
   isPlanDataChanging = () => {
     const { data, isPlanning } = this.state;
     return !isEqual(this.oldData, data) && isPlanning;
+  };
+
+  _handleDataCollectionRequest = () => {
+    const { data } = this.state;
+    this._raiseEvent(domainEvents.ACTION.COLLECT_RESPONSE, data);
+  };
+
+  _raiseEvent = (action, value) => {
+    eventBus.publish(domainEvents.TEST_COVERAGE_ONCHANGE_DOMAINEVENT, { action, value });
   };
 
   _calculate = async () => {
