@@ -32,6 +32,7 @@ import {
   convertNodeToUndirectConstraint,
   convertUndirectConstraintToEdges,
   convertUndirectConstraintToNode,
+  covertGraphStateToSavedData,
   getGraphSize,
   isDirectConstraint,
   separateEdges,
@@ -95,6 +96,9 @@ class Graph extends Component {
     eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
       this._handleWorkMenuEvents(event.message);
     });
+    eventBus.subscribe(this, domainEvents.WORK_DATA_COLLECTION, (event) => {
+      this._handleDataCollectionRequest(event.message);
+    });
     document.addEventListener('click', this._handleClick, false);
     // register shortcut
     GRAPH_SHORTCUT.forEach(({ code, shortcutKeys }) => {
@@ -112,6 +116,13 @@ class Graph extends Component {
 
   _raiseEvent = (message) => {
     eventBus.publish(domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, message);
+  };
+
+  _handleDataCollectionRequest = () => {
+    const currentState = this.graphManager.getState();
+    const data = covertGraphStateToSavedData(currentState);
+
+    this._raiseEvent({ action: domainEvents.ACTION.COLLECT_RESPONSE, value: data });
   };
 
   _addNodesAsync = async (addNodes) => {
