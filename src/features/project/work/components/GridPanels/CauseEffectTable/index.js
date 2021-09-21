@@ -35,6 +35,10 @@ class CauseEffectTable extends Component {
       const { message } = event;
       this._handleEvent(message);
     });
+    eventBus.subscribe(this, domainEvents.WORK_DATA_COLLECTION, (event) => {
+      const { message } = event;
+      this._handleEvent(message);
+    });
   }
 
   componentWillUnmount() {
@@ -234,10 +238,19 @@ class CauseEffectTable extends Component {
         case domainEvents.ACTION.REPORTWORK:
           this._handleWorkMenuEvent();
           break;
+        case domainEvents.ACTION.COLLECT_REQUEST:
+          this._handleDataCollectionRequest();
+          break;
         default:
           break;
       }
     }
+  };
+
+  _handleDataCollectionRequest = () => {
+    const { listData } = this.state;
+
+    this._raiseEvent({ action: domainEvents.ACTION.COLLECT_RESPONSE, value: listData });
   };
 
   _handleAcceptDeleteEvent = (items) => {
