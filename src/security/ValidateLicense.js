@@ -1,15 +1,14 @@
+import Loading from 'features/shared/components/Loading';
 import React, { Component } from 'react';
-
-import { Container, Card, Button, CardTitle, CardText } from 'reactstrap';
+import { Button, Card, CardText, CardTitle, Container } from 'reactstrap';
 import RestService from '../features/shared/services/restService';
-
 import GlobalContext from './GlobalContext';
 
 class ValidateLicense extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { validating: true, isValid: false, licenseKey: '' };
+    this.state = { validating: true, isValid: false, licenseKey: '', submitting: false };
   }
 
   componentDidMount() {
@@ -24,20 +23,19 @@ class ValidateLicense extends Component {
           this.setState({ validating: false, isValid: response.data.isValid });
         })
         .catch((error) => {
-          console.log(error);
           alert('There is an error on license validation! Please contact administrator.');
         });
     }
   }
 
   _submit() {
+    this.setState({ submitting: true });
+
     const { authenticated, getToken } = this.context;
 
     const { licenseKey } = this.state;
 
     if (authenticated && licenseKey.length > 0) {
-      console.log(licenseKey);
-
       const token = getToken();
 
       RestService.setToken(token);
@@ -53,15 +51,17 @@ class ValidateLicense extends Component {
           }
         })
         .catch((error) => {
-          console.log(error);
           alert('There is an error on license validation! Please contact administrator.');
-        });
+        })
+        .finally(() => this.setState({ submitting: false }));
     }
   }
 
   render() {
-    const { validating, isValid } = this.state;
+    const { validating, isValid, licenseKey, submitting } = this.state;
     const { children } = this.props;
+
+    const canSubmit = licenseKey.trim().length !== 0 && !submitting;
 
     if (validating === false && isValid === true) {
       return { ...children };
@@ -69,24 +69,34 @@ class ValidateLicense extends Component {
 
     if (validating === false && isValid === false) {
       return (
-        <Container fluid className="p-0">
-          <Card body>
-            <CardTitle tag="h5">Enter your licensee key</CardTitle>
+        <Container fluid className="p-0" style={{ maxWidth: '500px', width: '100%', margin: '48px auto' }}>
+          <Card body className="mx-2 py-4">
+            <CardTitle tag="h5" className="mb-2">
+              Enter your licensee key
+            </CardTitle>
             <CardText>
-              {' '}
-              <input type="text" onChange={(e) => this.setState({ licenseKey: e.target.value })} />
+              <input
+                type="text"
+                className="form-control small"
+                placeholder="License key"
+                onChange={(e) => this.setState({ licenseKey: e.target.value })}
+              />
             </CardText>
-            <Button onClick={() => this._submit()}>Submit</Button>
+            <Button
+              onClick={() => this._submit()}
+              color="primary"
+              className="mt-3 d-flex justify-content-center align-items-center"
+              disabled={!canSubmit}
+            >
+              {submitting && <span className="status-icon spinner-border" />}
+              <span className="ml-1">Submit</span>
+            </Button>
           </Card>
         </Container>
       );
     }
 
-    return (
-      <div className="spinner-border text-primary" role="status">
-        <span className="sr-only/" />
-      </div>
-    );
+    return <Loading />;
   }
 }
 

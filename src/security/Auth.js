@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import Loading from 'features/shared/components/Loading';
 import Keycloak from 'keycloak-js';
+import React, { Component } from 'react';
 import { Container } from 'reactstrap';
-
 import GlobalContext from './GlobalContext';
 
 class Auth extends Component {
@@ -58,9 +58,7 @@ class Auth extends Component {
 
     return (
       <Container fluid className="p-0">
-        <div className="spinner-border text-primary" role="status">
-          <span className="sr-only/" />
-        </div>
+        <Loading />
       </Container>
     );
   }
