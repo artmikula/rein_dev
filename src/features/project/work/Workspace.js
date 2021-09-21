@@ -1,21 +1,23 @@
+import ProjectLayout from 'features/project/components/ProjectLayout';
+import { setWork } from 'features/project/work/slices/workSlice';
+import { ModalForm } from 'features/shared/components';
+import alert from 'features/shared/components/Alert';
+import { DEFAULT_LAYOUTS, DEFAULT_LAYOUTS_SINGLE, STRING, VIEW_MODE, WORK_FORM_NAME } from 'features/shared/constants';
+import domainEvents from 'features/shared/domainEvents';
+import Language from 'features/shared/languages/Language';
+import eventBus from 'features/shared/lib/eventBus';
+import LocalStorage from 'features/shared/lib/localStorage';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { setWork } from 'features/project/work/slices/workSlice';
+import { Link } from 'react-router-dom';
 import { Button, UncontrolledTooltip } from 'reactstrap';
-import alert from 'features/shared/components/Alert';
-import { ModalForm } from 'features/shared/components';
-import { DEFAULT_LAYOUTS, DEFAULT_LAYOUTS_SINGLE, STRING, VIEW_MODE, WORK_FORM_NAME } from 'features/shared/constants';
-import LocalStorage from 'features/shared/lib/localStorage';
-import ProjectLayout from 'features/project/components/ProjectLayout';
-import Language from 'features/shared/languages/Language';
 import GlobalContext from 'security/GlobalContext';
 import CreateForm from './components';
+import AlertGenerateReport from './components/AlertGenerateReport';
 import GridPanels from './components/GridPanels';
 import MenuContainer from './components/Menu/MenuContainer';
 import workService from './services/workService';
-import AlertGenerateReport from './components/AlertGenerateReport';
 
 class Workspace extends Component {
   constructor(props) {
@@ -32,6 +34,15 @@ class Workspace extends Component {
       workData: {},
       openRenameWorkModal: false,
     };
+
+    this.workData = {
+      testBasis: null,
+      causeEffects: null,
+      graphNodes: null,
+      testCoverages: null,
+      testDatas: null,
+      testScenariosAndCases: null,
+    };
   }
 
   async componentDidMount() {
@@ -43,20 +54,49 @@ class Workspace extends Component {
     const { history } = this.props;
     this.unlisten = history.listen((location) => {
       const routes = location.pathname.split('/');
-
       const newWorkid = routes.pop();
-
       const newProjectId = routes.pop();
 
       if (projectId !== newProjectId || workId !== newWorkid) {
         window.location.reload();
       }
     });
+
+    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, (event) => {
+      this._handleWorkDataCollectionEvents(event.message);
+    });
+
+    eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, (event) => {
+      this._handleWorkDataCollectionEvents(event.message);
+    });
+
+    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
+      this._handleWorkDataCollectionEvents(event.message);
+    });
+
+    eventBus.subscribe(this, domainEvents.TEST_COVERAGE_ONCHANGE_DOMAINEVENT, (event) => {
+      this._handleWorkDataCollectionEvents(event.message);
+    });
+
+    eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, (event) => {
+      this._handleWorkDataCollectionEvents(event.message);
+    });
   }
 
   componentWillUnmount() {
     this.unlisten();
   }
+
+  _raiseEvent = () =>
+    eventBus.publish(domainEvents.WORK_DATA_COLLECTION, { action: domainEvents.ACTION.COLLECT_REQUEST });
+
+  _handleWorkDataCollectionEvents = (key, message) => {
+    const { action, data } = message;
+
+    if (action === domainEvents.ACTION.COLLECT_RESPONSE) {
+      this.workData[key] = data;
+    }
+  };
 
   _getWorkById = async (projectId, workId) => {
     const { setWork } = this.props;
