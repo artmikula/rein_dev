@@ -117,8 +117,10 @@ class Workspace extends Component {
     if (action === domainEvents.ACTION.COLLECT_RESPONSE) {
       this.workData[key] = value;
 
+      console.log('workData', this.workData);
+
       if (this._checkWorkData(this.workData)) {
-        console.log('workData', this.workData);
+        // TODO: sync data
       }
     }
   };
@@ -257,7 +259,7 @@ class Workspace extends Component {
 
     return (
       <ProjectLayout menus={menus}>
-        <button onClick={this._raiseEvent} type="button">
+        <button onClick={this._collectData} type="button">
           collect data
         </button>
         <div className="d-flex flex-wrap align-items-center justify-content-between border-bottom bg-white px-3 small position-relative">

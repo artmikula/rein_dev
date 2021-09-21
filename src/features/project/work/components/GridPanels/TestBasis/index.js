@@ -39,6 +39,7 @@ class TestBasis extends Component {
 
   async componentDidMount() {
     await this._getTestBasis();
+
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleEventBus(message);
@@ -142,6 +143,7 @@ class TestBasis extends Component {
   /* Events */
   _handleEventBus = async (message) => {
     const { action, type, value, receivers } = message;
+    console.log('testbasis _handleEventBus', action);
     if (receivers === undefined || receivers.includes(domainEvents.DES.TESTBASIS)) {
       if (action === domainEvents.ACTION.ACCEPTDELETE) {
         this._removeCauseEffect(value.definitionId);
