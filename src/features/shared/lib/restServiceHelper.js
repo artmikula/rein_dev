@@ -8,7 +8,6 @@ class RestServiceHelper {
   }
 
   handleError(error) {
-    console.log(error);
     if (error.response && error.response.data) {
       return { error: error.response.data };
     }

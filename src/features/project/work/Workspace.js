@@ -19,6 +19,15 @@ import GridPanels from './components/GridPanels';
 import MenuContainer from './components/Menu/MenuContainer';
 import workService from './services/workService';
 
+const workDataDefault = {
+  testBasis: null,
+  causeEffects: null,
+  graph: null,
+  testCoverages: null,
+  testDatas: null,
+  testScenariosAndCases: null,
+};
+
 class Workspace extends Component {
   constructor(props) {
     super(props);
@@ -35,14 +44,7 @@ class Workspace extends Component {
       openRenameWorkModal: false,
     };
 
-    this.workData = {
-      testBasis: null,
-      causeEffects: null,
-      graph: null,
-      testCoverages: null,
-      testDatas: null,
-      testScenariosAndCases: null,
-    };
+    this.workData = { ...workDataDefault };
   }
 
   async componentDidMount() {
@@ -91,15 +93,33 @@ class Workspace extends Component {
     this.unlisten();
   }
 
-  _raiseEvent = () =>
-    eventBus.publish(domainEvents.WORK_DATA_COLLECTION, { action: domainEvents.ACTION.COLLECT_REQUEST });
+  _raiseEvent = (message) => eventBus.publish(domainEvents.WORK_DATA_COLLECTION, message);
+
+  _checkWorkData = (workData) => {
+    const keys = Object.keys(workData);
+    for (let i = 0; i < keys.length; i++) {
+      if (this.workData[keys[i]] == null) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  _collectData = () => {
+    this.workData = { ...workDataDefault };
+    this._raiseEvent({ action: domainEvents.ACTION.COLLECT_REQUEST });
+  };
 
   _handleWorkDataCollectionEvents = (key, message) => {
     const { action, value } = message;
 
     if (action === domainEvents.ACTION.COLLECT_RESPONSE) {
       this.workData[key] = value;
-      console.log('workData', this.workData);
+
+      if (this._checkWorkData(this.workData)) {
+        console.log('workData', this.workData);
+      }
     }
   };
 
