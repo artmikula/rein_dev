@@ -153,7 +153,7 @@ class TestBasis extends Component {
          */
       }
       if (action === domainEvents.ACTION.COLLECT_REQUEST) {
-        const content = this._getTestBasisContent();
+        const content = JSON.stringify(this._getTestBasisContent());
         this._raiseEventBus(domainEvents.ACTION.COLLECT_RESPONSE, { content });
       }
     }
