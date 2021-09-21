@@ -86,7 +86,7 @@ class TestBasis extends Component {
           const { type, definition } = entityData;
           // update definition
           if (definition !== decoratedText) {
-            this._raiseEventBus(domainEvents.ACTION.UPDATE, newEntityData);
+            this._raiseEvent(domainEvents.ACTION.UPDATE, newEntityData);
             contentState.mergeEntityData(entityKey, newEntityData);
           }
           return <DecoratedText {...props} type={type} />;
@@ -154,12 +154,12 @@ class TestBasis extends Component {
       }
       if (action === domainEvents.ACTION.COLLECT_REQUEST) {
         const content = JSON.stringify(this._getTestBasisContent());
-        this._raiseEventBus(domainEvents.ACTION.COLLECT_RESPONSE, { content });
+        this._raiseEvent(domainEvents.ACTION.COLLECT_RESPONSE, { content });
       }
     }
   };
 
-  _raiseEventBus = (action, value) => {
+  _raiseEvent = (action, value) => {
     eventBus.publish(domainEvents.TESTBASIC_DOMAINEVENT, { action, value });
   };
   /* End event */
@@ -203,7 +203,7 @@ class TestBasis extends Component {
       // check if delete definition
       const removedEntities = TestBasisManager.findRemovedEntities(drawContent);
       removedEntities.forEach((item) => {
-        this._raiseEventBus(domainEvents.ACTION.REMOVE, { ...item });
+        this._raiseEvent(domainEvents.ACTION.REMOVE, { ...item });
       });
       this._saveTestBasis(newEditorState);
     }
@@ -268,12 +268,12 @@ class TestBasis extends Component {
       return;
     }
     if (previousType) {
-      this._raiseEventBus(domainEvents.ACTION.REMOVE, { ...this._selectedText, type: previousType });
+      this._raiseEvent(domainEvents.ACTION.REMOVE, { ...this._selectedText, type: previousType });
     }
     if (currentType) {
       const definitionId = uuidv4();
       await this._addCauseEffect({ ...this._selectedText, type: currentType, definitionId });
-      this._raiseEventBus(domainEvents.ACTION.ADD, { ...this._selectedText, type: currentType, definitionId });
+      this._raiseEvent(domainEvents.ACTION.ADD, { ...this._selectedText, type: currentType, definitionId });
     }
   };
   /* End Action */
