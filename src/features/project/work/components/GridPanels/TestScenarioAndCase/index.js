@@ -1,31 +1,31 @@
 /* eslint-disable max-lines */
+import Download from 'downloadjs';
+import testCaseHelper from 'features/project/work/biz/TestCase';
+import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
+import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
 import constraintService from 'features/project/work/services/constraintService';
 import graphLinkService from 'features/project/work/services/graphLinkService';
 import graphNodeService from 'features/project/work/services/graphNodeService';
+import testCaseService from 'features/project/work/services/testCaseService';
 import testDataService from 'features/project/work/services/testDataService';
 import testScenarioService from 'features/project/work/services/testScenarioService';
-import testCaseService from 'features/project/work/services/testCaseService';
+import { FILE_NAME, TEST_CASE_METHOD, TEST_CASE_SHORTCUT, TEST_CASE_SHORTCUT_CODE } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
+import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
+import { arrayToCsv } from 'features/shared/lib/utils';
 import Enumerable from 'linq';
 import debounce from 'lodash.debounce';
+import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
 import Select from 'react-select';
-import { FormGroup, Button, Input, Label, Table } from 'reactstrap';
-import Mousetrap from 'mousetrap';
-import Download from 'downloadjs';
-import { TEST_CASE_SHORTCUT_CODE, TEST_CASE_SHORTCUT, FILE_NAME, TEST_CASE_METHOD } from 'features/shared/constants';
-import { arrayToCsv } from 'features/shared/lib/utils';
-import testCaseHelper from 'features/project/work/biz/TestCase';
-import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
-import appConfig from 'features/shared/lib/appConfig';
-import './style.scss';
-import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
+import { Button, FormGroup, Input, Label, Table } from 'reactstrap';
 import { EXPORT_TYPE_NAME } from '../Graph/constants';
+import './style.scss';
 
 const options = [
   { value: 'chocolate', label: 'Chocolate' },
@@ -160,6 +160,9 @@ class TestScenarioAndCase extends Component {
     eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
       this._handleWorkMenuEvents(event);
     });
+    eventBus.subscribe(this, domainEvents.WORK_DATA_COLLECTION, (event) => {
+      this._handleDataCollectionRequest(event.message);
+    });
     TEST_CASE_SHORTCUT.forEach(({ code, shortcutKeys }) => {
       Mousetrap.bind(shortcutKeys.join('+'), (e) => {
         e.preventDefault();
@@ -180,7 +183,84 @@ class TestScenarioAndCase extends Component {
 
   handleChange = (selectedOption) => {
     this.setState({ selectedOption });
-    console.log(`Option selected:`, selectedOption);
+  };
+
+  _getScenarioData = async () => {
+    const { match } = this.props;
+    const { projectId, workId } = match.params;
+    const graphNodeResult = await graphNodeService.getListAsync(projectId, workId);
+    const graphLinkResult = await graphLinkService.getListAsync(projectId, workId);
+    const constraintResult = await constraintService.getListAsync(projectId, workId);
+    const testDataResult = await testDataService.listAsync(projectId, workId);
+
+    if (graphNodeResult.data && graphLinkResult.data && constraintResult.data && testDataResult.data) {
+      let scenarioAndGraphNodes = null;
+      if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
+        scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(
+          graphLinkResult.data,
+          constraintResult.data,
+          graphNodeResult.data
+        );
+      } else {
+        scenarioAndGraphNodes = MyersTechnique.buildTestScenario(
+          graphLinkResult.data,
+          constraintResult.data,
+          graphNodeResult.data
+        );
+      }
+
+      const testCases = testCaseHelper.updateTestCase(
+        scenarioAndGraphNodes.scenarios,
+        testDataResult.data,
+        graphNodeResult.data
+      );
+
+      return this._convertScenariosToSavedData(scenarioAndGraphNodes.scenarios, testCases);
+    }
+
+    return null;
+  };
+
+  _convertScenariosToSavedData = (scenarios, testCases) => {
+    const data = scenarios.map((x) => {
+      const scenario = {
+        ...x,
+        testAssertions: x.testAssertions.map((y) => {
+          const assertion = {
+            result: y.result,
+            graphNodeId: y.graphNode.id,
+            workId,
+          };
+          return assertion;
+        }),
+        testResults: x.testResults.map((y) => {
+          const testResult = {
+            ...y,
+            workId,
+          };
+          return testResult;
+        }),
+        testCases: testCases
+          .filter((e) => e.testScenarioId === x.id)
+          .map((y) => {
+            const testCase = {
+              ...y,
+              workId,
+            };
+
+            return testCase;
+          }),
+      };
+
+      return scenario;
+    });
+
+    return data;
+  };
+
+  _handleDataCollectionRequest = async () => {
+    const data = await this._getScenarioData();
+    this._raiseEvent({ action: domainEvents.ACTION.COLLECT_RESPONSE, value: data });
   };
 
   _raiseEvent = (message) => {
