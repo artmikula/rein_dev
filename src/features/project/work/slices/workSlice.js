@@ -7,6 +7,7 @@ export const workSlice = createSlice({
     version: '',
     projectName: '',
     generatingReport: false,
+    testBasis: null,
   },
   reducers: {
     setWorkName: (state, action) => {
@@ -21,9 +22,13 @@ export const workSlice = createSlice({
       const generatingReport = action.payload;
       return { ...state, generatingReport };
     },
+    setTestBasis: (state, action) => {
+      console.log('setTestBasis');
+      return { ...state, testBasis: action.payload };
+    },
   },
 });
 
-export const { setWorkName, setWork, setGeneratingReport } = workSlice.actions;
+export const { setWorkName, setWork, setGeneratingReport, setTestBasis } = workSlice.actions;
 
 export default workSlice.reducer;

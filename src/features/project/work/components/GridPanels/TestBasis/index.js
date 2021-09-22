@@ -11,12 +11,14 @@ import {
 import 'draft-js/dist/Draft.css';
 import TestBasisManager from 'features/project/work/biz/TestBasis';
 import testBasisService from 'features/project/work/services/testBasisService';
+import { setTestBasis } from 'features/project/work/slices/workSlice';
 import { STRING } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
 import debounce from 'lodash.debounce';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import GlobalContext from 'security/GlobalContext';
 import { v4 as uuidv4 } from 'uuid';
@@ -44,11 +46,6 @@ class TestBasis extends Component {
       const { message } = event;
       this._handleEventBus(message);
     });
-
-    eventBus.subscribe(this, domainEvents.WORK_DATA_COLLECTION, (event) => {
-      const { message } = event;
-      this._handleEventBus(message);
-    });
   }
 
   componentWillUnmount() {
@@ -63,10 +60,12 @@ class TestBasis extends Component {
   };
 
   _saveTestBasis = (newEditorState) => {
+    const { setTestBasis } = this.props;
     const content = this._getTestBasisContent(newEditorState);
 
     TestBasisManager.set(content);
-    this._createUpdateTestBasis(JSON.stringify(content));
+
+    setTestBasis(JSON.stringify(content));
   };
 
   _findEntities = (contentBlock, callback, contentState) => {
@@ -143,7 +142,6 @@ class TestBasis extends Component {
   /* Events */
   _handleEventBus = async (message) => {
     const { action, type, value, receivers } = message;
-    console.log('testbasis _handleEventBus', action);
     if (receivers === undefined || receivers.includes(domainEvents.DES.TESTBASIS)) {
       if (action === domainEvents.ACTION.ACCEPTDELETE) {
         this._removeCauseEffect(value.definitionId);
@@ -153,10 +151,6 @@ class TestBasis extends Component {
          * - handle not accepted when add,update or remove,
          * - You can add more data to the message if needed, sample type of action which is not accepted
          */
-      }
-      if (action === domainEvents.ACTION.COLLECT_REQUEST) {
-        const content = JSON.stringify(this._getTestBasisContent());
-        this._raiseEvent(domainEvents.ACTION.COLLECT_RESPONSE, { content });
       }
     }
   };
@@ -282,7 +276,9 @@ class TestBasis extends Component {
 
   render() {
     const { editorState, isOpenClassifyPopover } = this.state;
+    const { data } = this.props;
     const visibleSelectionRect = getVisibleSelectionRect(window);
+    console.log(data);
 
     return (
       <div className="h-100 p-4">
@@ -308,11 +304,13 @@ class TestBasis extends Component {
     );
   }
 }
+
 TestBasis.propTypes = {
   match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
   decoratedText: PropTypes.string,
   entityKey: PropTypes.string,
 };
+
 TestBasis.defaultProps = {
   decoratedText: undefined,
   entityKey: undefined,
@@ -320,4 +318,6 @@ TestBasis.defaultProps = {
 
 TestBasis.contextType = GlobalContext;
 
-export default withRouter(TestBasis);
+const mapDispatchToProps = { setTestBasis };
+
+export default connect(null, mapDispatchToProps)(withRouter(TestBasis));
