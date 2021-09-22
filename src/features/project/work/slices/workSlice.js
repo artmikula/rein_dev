@@ -21,7 +21,10 @@ export const workSlice = createSlice({
     version: '',
     projectName: '',
     generatingReport: false,
-    testBasis: '',
+    testBasis: {
+      content:
+        '{"blocks":[{"key":"6jveu","text":"","type":"unstyled","depth":0,"inlineStyleRanges":[],"entityRanges":[],"data":{}}],"entityMap":{}}',
+    },
     causeEffects: [],
     graph: {
       graphNodes: [],
@@ -47,7 +50,7 @@ export const workSlice = createSlice({
     },
     setTestBasis: (state, action) => {
       console.log('setTestBasis', action.payload);
-      return { ...state, testBasis: action.payload };
+      return { ...state, testBasis: { content: action.payload } };
     },
     setCauseEffects: (state, action) => {
       console.log('setCauseEffects', action.payload);

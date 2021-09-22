@@ -3,9 +3,7 @@ import { setWork } from 'features/project/work/slices/workSlice';
 import { ModalForm } from 'features/shared/components';
 import alert from 'features/shared/components/Alert';
 import { DEFAULT_LAYOUTS, DEFAULT_LAYOUTS_SINGLE, STRING, VIEW_MODE, WORK_FORM_NAME } from 'features/shared/constants';
-import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
-import eventBus from 'features/shared/lib/eventBus';
 import LocalStorage from 'features/shared/lib/localStorage';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -18,15 +16,6 @@ import AlertGenerateReport from './components/AlertGenerateReport';
 import GridPanels from './components/GridPanels';
 import MenuContainer from './components/Menu/MenuContainer';
 import workService from './services/workService';
-
-const workDataDefault = {
-  testBasis: null,
-  causeEffects: null,
-  graph: null,
-  testCoverages: null,
-  testDatas: null,
-  testScenariosAndCases: null,
-};
 
 class Workspace extends Component {
   constructor(props) {
@@ -43,8 +32,6 @@ class Workspace extends Component {
       workData: {},
       openRenameWorkModal: false,
     };
-
-    this.workData = { ...workDataDefault };
   }
 
   async componentDidMount() {
@@ -63,67 +50,11 @@ class Workspace extends Component {
         window.location.reload();
       }
     });
-
-    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, (event) => {
-      this._handleWorkDataCollectionEvents('causeEffects', event.message);
-    });
-
-    eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, (event) => {
-      this._handleWorkDataCollectionEvents('testDatas', event.message);
-    });
-
-    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
-      this._handleWorkDataCollectionEvents('testScenariosAndCases', event.message);
-    });
-
-    eventBus.subscribe(this, domainEvents.TEST_COVERAGE_ONCHANGE_DOMAINEVENT, (event) => {
-      this._handleWorkDataCollectionEvents('testCoverages', event.message);
-    });
-
-    eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, (event) => {
-      this._handleWorkDataCollectionEvents('graph', event.message);
-    });
-
-    eventBus.subscribe(this, domainEvents.TESTBASIC_DOMAINEVENT, (event) => {
-      this._handleWorkDataCollectionEvents('testBasis', event.message);
-    });
   }
 
   componentWillUnmount() {
     this.unlisten();
   }
-
-  _raiseEvent = (message) => eventBus.publish(domainEvents.WORK_DATA_COLLECTION, message);
-
-  _checkWorkData = (workData) => {
-    const keys = Object.keys(workData);
-    for (let i = 0; i < keys.length; i++) {
-      if (this.workData[keys[i]] == null) {
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  _collectData = () => {
-    this.workData = { ...workDataDefault };
-    this._raiseEvent({ action: domainEvents.ACTION.COLLECT_REQUEST });
-  };
-
-  _handleWorkDataCollectionEvents = (key, message) => {
-    const { action, value } = message;
-
-    if (action === domainEvents.ACTION.COLLECT_RESPONSE) {
-      this.workData[key] = value;
-
-      console.log('workData', this.workData);
-
-      if (this._checkWorkData(this.workData)) {
-        // TODO: sync data
-      }
-    }
-  };
 
   _getWorkById = async (projectId, workId) => {
     const { setWork } = this.props;
@@ -259,7 +190,7 @@ class Workspace extends Component {
 
     return (
       <ProjectLayout menus={menus}>
-        <button onClick={this._collectData} type="button">
+        <button onClick={() => console.log('sync data')} type="button">
           collect data
         </button>
         <div className="d-flex flex-wrap align-items-center justify-content-between border-bottom bg-white px-3 small position-relative">
