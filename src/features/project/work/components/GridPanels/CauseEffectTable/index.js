@@ -200,12 +200,6 @@ class CauseEffectTable extends Component {
     }
   };
 
-  _handleDataCollectionRequest = () => {
-    const { listData } = this.props;
-
-    this._raiseEvent({ action: domainEvents.ACTION.COLLECT_RESPONSE, value: listData });
-  };
-
   _handleAcceptDeleteEvent = (items) => {
     const { listData, setCauseEffects } = this.props;
     // get causeEffect need remove

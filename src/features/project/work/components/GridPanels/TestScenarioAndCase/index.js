@@ -160,9 +160,6 @@ class TestScenarioAndCase extends Component {
     eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
       this._handleWorkMenuEvents(event);
     });
-    eventBus.subscribe(this, domainEvents.WORK_DATA_COLLECTION, (event) => {
-      this._handleDataCollectionRequest(event.message);
-    });
     TEST_CASE_SHORTCUT.forEach(({ code, shortcutKeys }) => {
       Mousetrap.bind(shortcutKeys.join('+'), (e) => {
         e.preventDefault();
@@ -256,11 +253,6 @@ class TestScenarioAndCase extends Component {
     });
 
     return data;
-  };
-
-  _handleDataCollectionRequest = async () => {
-    const data = await this._getScenarioData();
-    this._raiseEvent({ action: domainEvents.ACTION.COLLECT_RESPONSE, value: data });
   };
 
   _raiseEvent = (message) => {
