@@ -31,16 +31,17 @@ class TestBasis extends Component {
     super(props);
     this._selectedText = {};
     this._isFocusEditor = false;
+    this.ready = false;
     this.state = {
       isOpenClassifyPopover: false,
       editorState: EditorState.createEmpty(this._compositeDecorator()),
       selectionState: {},
-      ready: false,
     };
   }
 
   async componentDidMount() {
-    await this._getTestBasis();
+    // TODO: set testBasis
+    this.ready = true;
 
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, (event) => {
       const { message } = event;
@@ -51,22 +52,6 @@ class TestBasis extends Component {
   componentWillUnmount() {
     eventBus.unsubscribe(this);
   }
-
-  _getTestBasisContent = (newEditorState) => {
-    const { editorState } = this.state;
-    const currentEditor = newEditorState || editorState;
-
-    return convertToRaw(currentEditor.getCurrentContent());
-  };
-
-  _saveTestBasis = (newEditorState) => {
-    const { setTestBasis } = this.props;
-    const content = this._getTestBasisContent(newEditorState);
-
-    TestBasisManager.set(content);
-
-    setTestBasis(JSON.stringify(content));
-  };
 
   _findEntities = (contentBlock, callback, contentState) => {
     contentBlock.findEntityRanges((character) => {
@@ -94,17 +79,24 @@ class TestBasis extends Component {
       },
     ]);
 
-  _updateTextDecorators = (drawContent) => {
-    let newEditorState;
-    if (drawContent) {
-      newEditorState = EditorState.createWithContent(convertFromRaw(drawContent));
-    }
-    this.setState((state) => ({
+  _updateEditorState = (editorState, state) => {
+    const { setTestBasis } = this.props;
+    const drawContent = convertToRaw(editorState.getCurrentContent());
+
+    TestBasisManager.set(drawContent);
+
+    setTestBasis(JSON.stringify(drawContent));
+
+    const newState = {
       isOpenClassifyPopover: false,
-      editorState: EditorState.set(newEditorState || state.editorState, {
+      selectionState: {},
+      ...state,
+      editorState: EditorState.set(editorState, {
         decorator: this._compositeDecorator(),
       }),
-    }));
+    };
+
+    this.setState(newState);
   };
 
   _createUpdateTestBasis = debounce((content) => {
@@ -114,28 +106,12 @@ class TestBasis extends Component {
     return testBasisService.createUpdateAsync(getToken(), projectId, workId, { content });
   }, 500);
 
-  _getTestBasis = async () => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { getToken } = this.context;
-    const result = await testBasisService.getAsync(getToken(), projectId, workId);
-    if (result.data) {
-      const { content } = result.data;
-      const drawContent = JSON.parse(content);
-      this._updateTextDecorators(drawContent);
-      TestBasisManager.set(drawContent);
-    }
-    setTimeout(() => {
-      this.setState({ ready: true });
-    }, 500);
-  };
-
   _removeCauseEffect = (definitionId) => {
-    const { ready } = this.state;
-    if (ready) {
-      const drawContentState = TestBasisManager.removeEntity(definitionId);
-      this._updateTextDecorators(drawContentState);
-      this._saveTestBasis();
+    if (this.ready) {
+      const drawContent = TestBasisManager.removeEntity(definitionId);
+      const editorState = EditorState.createWithContent(convertFromRaw(drawContent));
+
+      this._updateEditorState(editorState);
     }
   };
 
@@ -162,8 +138,8 @@ class TestBasis extends Component {
 
   /* Action */
   _handleChange = (newEditorState) => {
-    const { ready, editorState } = this.state;
-    if (!ready) {
+    const { editorState } = this.state;
+    if (!this.ready) {
       return;
     }
     const selectionState = newEditorState.getSelection();
@@ -201,25 +177,22 @@ class TestBasis extends Component {
       removedEntities.forEach((item) => {
         this._raiseEvent(domainEvents.ACTION.REMOVE, { ...item });
       });
-      this._saveTestBasis(newEditorState);
     }
-    this.setState({
-      editorState: newEditorState,
+
+    this._updateEditorState(newEditorState, {
       selectionState,
       isOpenClassifyPopover: selectedText.length > 0,
     });
   };
 
   _handleFocus = () => {
-    const { ready } = this.state;
-    if (ready) {
+    if (this.ready) {
       this._isFocusEditor = true;
     }
   };
 
   _handleKeyCommand = (command, editorState) => {
-    const { ready } = this.state;
-    if (ready) {
+    if (this.ready) {
       const newState = RichUtils.handleKeyCommand(editorState, command);
       if (newState) {
         this._handleChange(newState);
@@ -230,37 +203,35 @@ class TestBasis extends Component {
   };
 
   _toggleInlineStyle = (inlineStyle) => {
-    const { editorState, ready } = this.state;
-    if (ready) {
+    const { editorState } = this.state;
+    if (this.ready) {
       this._handleChange(RichUtils.toggleInlineStyle(editorState, inlineStyle));
     }
   };
 
   _toggleBlockType = (blockType) => {
-    const { editorState, ready } = this.state;
-    if (ready) {
+    const { editorState } = this.state;
+    if (this.ready) {
       this._handleChange(RichUtils.toggleBlockType(editorState, blockType));
     }
   };
 
   _addCauseEffect = async (data) => {
-    const { editorState, selectionState, ready } = this.state;
-    if (ready) {
+    const { editorState, selectionState } = this.state;
+    if (this.ready) {
       const contentState = editorState.getCurrentContent();
       const contentStateWithEntity = contentState.createEntity(STRING.DEFINITION, 'MUTABLE', data);
       const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
       const contentStateWithLink = Modifier.applyEntity(contentStateWithEntity, selectionState, entityKey);
       const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithLink });
-      await this.setState({ editorState: newEditorState, selectionState: {}, isOpenClassifyPopover: false });
-      this._updateTextDecorators();
-      this._saveTestBasis(newEditorState);
+
+      this._updateEditorState(newEditorState);
     }
   };
 
   _classifyText = async (currentType) => {
-    const { ready } = this.state;
     const { type: previousType } = this._selectedText;
-    if (!ready || previousType === currentType) {
+    if (!this.ready || previousType === currentType) {
       return;
     }
     if (previousType) {
@@ -276,9 +247,7 @@ class TestBasis extends Component {
 
   render() {
     const { editorState, isOpenClassifyPopover } = this.state;
-    const { data } = this.props;
     const visibleSelectionRect = getVisibleSelectionRect(window);
-    console.log(data);
 
     return (
       <div className="h-100 p-4">
@@ -318,6 +287,8 @@ TestBasis.defaultProps = {
 
 TestBasis.contextType = GlobalContext;
 
+const mapStateToProps = (state) => ({ testBasis: state.work.testBasis });
+
 const mapDispatchToProps = { setTestBasis };
 
-export default connect(null, mapDispatchToProps)(withRouter(TestBasis));
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestBasis));
