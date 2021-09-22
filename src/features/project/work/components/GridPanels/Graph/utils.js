@@ -241,7 +241,7 @@ export const convertNodeToGraphNode = (node) => {
 
 export const convertEdgeToGraphLink = (edge) => {
   const { source, target, ...others } = edge;
-  return { sourceId: source, targetId: target, ...others };
+  return { sourceId: source, targetId: target, source: { id: source }, target: { id: target }, ...others };
 };
 
 export const convertNodeToUndirectConstraint = (node) => {

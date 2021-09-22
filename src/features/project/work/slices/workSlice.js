@@ -1,4 +1,18 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { COVERAGE_ASPECT } from 'features/shared/constants';
+import { cloneDeep } from 'lodash';
+
+export const defaultTestCoverageData = {
+  [COVERAGE_ASPECT.TestCase]: { actualPercent: 0, planPercent: 0, denominator: 0 },
+  [COVERAGE_ASPECT.Cause]: { actualPercent: 0, planPercent: 0, denominator: 0 },
+  [COVERAGE_ASPECT.CauseTestData]: { actualPercent: 0, planPercent: 0, denominator: 0 },
+  [COVERAGE_ASPECT.Effect]: { actualPercent: 0, planPercent: 0, denominator: 0 },
+  [COVERAGE_ASPECT.ComplexLogicalRelation]: { actualPercent: 0, planPercent: 0, denominator: 0 },
+  [COVERAGE_ASPECT.Scenario]: { actualPercent: 0, planPercent: 0, denominator: 0 },
+  [COVERAGE_ASPECT.BaseScenario]: { actualPercent: 0, planPercent: 0, denominator: 0 },
+  [COVERAGE_ASPECT.ValidScenario]: { actualPercent: 0, planPercent: 0, denominator: 0 },
+  [COVERAGE_ASPECT.InvalidScenario]: { actualPercent: 0, planPercent: 0, denominator: 0 },
+};
 
 export const workSlice = createSlice({
   name: 'work',
@@ -14,6 +28,9 @@ export const workSlice = createSlice({
       graphLinks: [],
       constraints: [],
     },
+    testCoverages: cloneDeep(defaultTestCoverageData),
+    testDatas: [],
+    testScenariosAndCases: [],
   },
   reducers: {
     setWorkName: (state, action) => {
@@ -40,9 +57,14 @@ export const workSlice = createSlice({
       console.log('setGraph', action.payload);
       return { ...state, graph: action.payload };
     },
+    setTestCoverages: (state, action) => {
+      console.log('setTestCoverages', action.payload);
+      return { ...state, testCoverages: action.payload };
+    },
   },
 });
 
-export const { setWorkName, setWork, setGeneratingReport, setTestBasis, setCauseEffects, setGraph } = workSlice.actions;
+export const { setWorkName, setWork, setGeneratingReport, setTestBasis, setCauseEffects, setGraph, setTestCoverages } =
+  workSlice.actions;
 
 export default workSlice.reducer;
