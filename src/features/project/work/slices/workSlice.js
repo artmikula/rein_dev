@@ -9,6 +9,11 @@ export const workSlice = createSlice({
     generatingReport: false,
     testBasis: '',
     causeEffects: [],
+    graph: {
+      graphNodes: [],
+      graphLinks: [],
+      constraints: [],
+    },
   },
   reducers: {
     setWorkName: (state, action) => {
@@ -24,16 +29,20 @@ export const workSlice = createSlice({
       return { ...state, generatingReport };
     },
     setTestBasis: (state, action) => {
-      console.log('setTestBasis');
+      console.log('setTestBasis', action.payload);
       return { ...state, testBasis: action.payload };
     },
     setCauseEffects: (state, action) => {
-      console.log('setCauseEffects');
+      console.log('setCauseEffects', action.payload);
       return { ...state, causeEffects: action.payload };
+    },
+    setGraph: (state, action) => {
+      console.log('setGraph', action.payload);
+      return { ...state, graph: action.payload };
     },
   },
 });
 
-export const { setWorkName, setWork, setGeneratingReport, setTestBasis, setCauseEffects } = workSlice.actions;
+export const { setWorkName, setWork, setGeneratingReport, setTestBasis, setCauseEffects, setGraph } = workSlice.actions;
 
 export default workSlice.reducer;

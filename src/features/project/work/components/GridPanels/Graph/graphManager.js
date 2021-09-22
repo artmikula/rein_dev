@@ -17,7 +17,7 @@ import edgehandleSetup from './configs/edgehandles';
 import effectGroupSetup from './configs/effectGroup';
 import gridlinesSetup from './configs/gridlines';
 import inspectionSetup from './configs/inspection';
-import { DEFAULT_NODE_X, DEFAULT_SPACE, EFFECTTYPE, NODE_INPECTION_TEXT_KEY } from './constants';
+import { DEFAULT_NODE_X, DEFAULT_SPACE, NODE_INPECTION_TEXT_KEY } from './constants';
 import {
   convertGraphNodeToNode,
   createAngleNode,
@@ -127,7 +127,7 @@ class GraphManager {
         this.remove(edge);
       }
     });
-    this.onGraphChange(EFFECTTYPE.EFFECT);
+    this.onGraphChange();
   };
 
   _handleOperatorNodeTap = (e) => {
@@ -136,7 +136,7 @@ class GraphManager {
       node.data().node.data().targetType =
         node.data().node.data().targetType === OPERATOR_TYPE.OR ? OPERATOR_TYPE.AND : OPERATOR_TYPE.OR;
       this._drawOperator(node.data().node);
-      this.onGraphChange(EFFECTTYPE.EFFECT);
+      this.onGraphChange();
     }
   };
 
@@ -244,7 +244,7 @@ class GraphManager {
         inspectionNode.position(getIconPosition(e.target, GRAPH_NODE_TYPE.INSPECTION));
       }
 
-      this.onGraphChange(EFFECTTYPE.EFFECT);
+      this.onGraphChange();
     }
   };
 
@@ -269,12 +269,12 @@ class GraphManager {
           isNotRelation: addedEleData.isNotRelation,
         });
         this.draw(addedEle);
-        this.onGraphChange(EFFECTTYPE.EFFECT);
+        this.onGraphChange();
       } else {
         this.remove(addedEle);
       }
     } else {
-      this.onGraphChange(EFFECTTYPE.EFFECT);
+      this.onGraphChange();
     }
   };
 
@@ -352,7 +352,7 @@ class GraphManager {
         this._deleteRelatedUnconstraintNode(node);
         this.remove(node);
       });
-      this.onGraphChange(EFFECTTYPE.EFFECT);
+      this.onGraphChange();
     }
 
     if (edges.length > 0) {
@@ -363,7 +363,7 @@ class GraphManager {
           this.remove(edge);
         }
       });
-      this.onGraphChange(EFFECTTYPE.EFFECT);
+      this.onGraphChange();
     }
   };
 
@@ -468,7 +468,7 @@ class GraphManager {
     const inspection = NODE_INSPECTION.DisconnectedNode;
     const graphNode = createGraphNode(uuid(), `G${index}`, GRAPH_NODE_TYPE.GROUP, x, y, inspection);
     this.draw(convertGraphNodeToNode(graphNode));
-    this.onGraphChange(EFFECTTYPE.EFFECT);
+    this.onGraphChange();
   };
 
   lockPosition = () => {
@@ -484,7 +484,7 @@ class GraphManager {
       this._drawIcon(_node, GRAPH_NODE_TYPE.PIN);
     });
 
-    this.onGraphChange(EFFECTTYPE.EFFECT);
+    this.onGraphChange();
   };
 
   unlockPosition = () => {
@@ -500,7 +500,7 @@ class GraphManager {
       this._removeIcon(node, GRAPH_NODE_TYPE.PIN);
     });
 
-    this.onGraphChange(EFFECTTYPE.EFFECT);
+    this.onGraphChange();
   };
 
   addUndirectConstraint = (graphLinkType) => {
@@ -518,7 +518,7 @@ class GraphManager {
         this.draw(edge);
       });
 
-      this.onGraphChange(EFFECTTYPE.EFFECT);
+      this.onGraphChange();
     }
   };
 
@@ -532,10 +532,10 @@ class GraphManager {
         const target = this.lastestSelectedNode;
         const source = nodes.find((x) => x !== target);
         this.draw(createEdge(uuid(), source.data().id, target.data().id, false, graphLinkType));
-        this.onGraphChange(EFFECTTYPE.EFFECT);
+        this.onGraphChange();
       } else if (!oldEdge && !this.lastestSelectedNode) {
         this.draw(createEdge(uuid(), nodes[0].data().id, nodes[1].data().id, false, graphLinkType));
-        this.onGraphChange(EFFECTTYPE.EFFECT);
+        this.onGraphChange();
       } else if (oldEdge) {
         this.remove(oldEdge);
         const { source } = oldEdge.data();
@@ -543,7 +543,7 @@ class GraphManager {
         oldEdge.data().target = source;
         this.draw(oldEdge);
 
-        this.onGraphChange(EFFECTTYPE.EFFECT);
+        this.onGraphChange();
       }
     }
   };

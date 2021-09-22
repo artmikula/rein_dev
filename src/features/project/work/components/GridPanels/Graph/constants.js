@@ -1,10 +1,5 @@
 import { NODE_INSPECTION } from 'features/shared/constants';
 
-export const EFFECTTYPE = {
-  EFFECT: 'EFFECT',
-  SIDEEFFECT: 'SIDEEFFECT',
-};
-
 export const EDGE_COLOR = {
   NOT_RELATION: '#965196',
   CONSTRAINT: '#444444',

@@ -1,6 +1,5 @@
-import constraintService from 'features/project/work/services/constraintService';
-import graphLinkService from 'features/project/work/services/graphLinkService';
 import graphNodeService from 'features/project/work/services/graphNodeService';
+import { setGraph } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
   GRAPH_LINK_TYPE,
@@ -11,56 +10,28 @@ import {
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
-import { debounce } from 'lodash';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import { DELETE_KEY, EFFECTTYPE } from './constants';
+import { DELETE_KEY } from './constants';
 import GraphManager from './graphManager';
 import './style.scss';
 import {
-  compareEdgeArray,
   compareNodeArray,
   convertDirectConstraintToEdge,
-  convertEdgeToDirectConstraint,
-  convertEdgeToGraphLink,
   convertGraphLinkToEdge,
   convertGraphNodeToNode,
-  convertNodeToGraphNode,
-  convertNodeToUndirectConstraint,
   convertUndirectConstraintToEdges,
   convertUndirectConstraintToNode,
   covertGraphStateToSavedData,
   getGraphSize,
   isDirectConstraint,
-  separateEdges,
   separateNodes,
 } from './utils';
 
 class Graph extends Component {
-  _syncData = debounce(async (oldState, currentState) => {
-    const { nodeState, edgeState } = currentState;
-    const { addNodes, updateNodes, removeNodes } = compareNodeArray(oldState.nodeState, nodeState);
-    const { addEdges, updateEdges, removeEdges } = compareEdgeArray(oldState.edgeState, edgeState);
-    const _removeEdges = removeEdges.filter((x) => !removeNodes.some((y) => x.source === y.id || x.target === y.id));
-    // sync removed nodes
-    let succeeded = await this._removeNodesAsync(removeNodes);
-    // sync updated nodes
-    succeeded = succeeded && (await this._updateNodesAsync(updateNodes));
-    // sync added nodes
-    succeeded = succeeded && (await this._addNodesAsync(addNodes));
-    // sync removed edges
-    succeeded = succeeded && (await this._removeEdgesAsync(_removeEdges));
-    // sync updated edges
-    succeeded = succeeded && (await this._updateEdgesAsync(updateEdges));
-    // sync added edges
-    if (succeeded) {
-      await this._addEdgesAsync(addEdges);
-    }
-  }, 500);
-
   constructor(props) {
     super(props);
     this.graphManager = null;
@@ -96,9 +67,6 @@ class Graph extends Component {
     eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
       this._handleWorkMenuEvents(event.message);
     });
-    eventBus.subscribe(this, domainEvents.WORK_DATA_COLLECTION, (event) => {
-      this._handleDataCollectionRequest(event.message);
-    });
     document.addEventListener('click', this._handleClick, false);
     // register shortcut
     GRAPH_SHORTCUT.forEach(({ code, shortcutKeys }) => {
@@ -118,293 +86,24 @@ class Graph extends Component {
     eventBus.publish(domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, message);
   };
 
-  _handleDataCollectionRequest = () => {
-    const currentState = this.graphManager.getState();
-    const data = covertGraphStateToSavedData(currentState);
+  _handleGraphChange = () => {
+    const { setGraph, graph } = this.props;
 
-    this._raiseEvent({ action: domainEvents.ACTION.COLLECT_RESPONSE, value: data });
-  };
-
-  _addNodesAsync = async (addNodes) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { undirectConstraintNodes, graphNodes } = separateNodes(addNodes);
-
-    if (undirectConstraintNodes.length > 0) {
-      const data = undirectConstraintNodes.map((constraint) => convertNodeToUndirectConstraint(constraint));
-      const result = await constraintService.createBatchAsync(projectId, workId, data);
-
-      if (!result.error) {
-        // update graph state
-        this.graphState.nodeState = [...this.graphState.nodeState, ...undirectConstraintNodes];
-        this._raiseEvent({
-          action: domainEvents.ACTION.ADD,
-          value: undirectConstraintNodes,
-          'g-type': G_TYPE.CONSTRAINT,
-          receivers: this.consumers,
-        });
-      } else {
-        return false;
-      }
-    }
-
-    if (graphNodes.length > 0) {
-      const data = graphNodes.map((graphNode) => convertNodeToGraphNode(graphNode));
-      const result = await graphNodeService.createBatchAsync(projectId, workId, data);
-
-      if (!result.error) {
-        // update graph state
-        this.graphState.nodeState = [...this.graphState.nodeState, ...graphNodes];
-        this._raiseEvent({
-          action: domainEvents.ACTION.ADD,
-          value: graphNodes,
-          'g-type': G_TYPE.NODE,
-          receivers: this.consumers,
-        });
-      } else {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  _removeNodesAsync = async (removeNodes) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { undirectConstraintNodes, graphNodes } = separateNodes(removeNodes);
-
-    if (undirectConstraintNodes.length > 0) {
-      const ids = undirectConstraintNodes.map((constraint) => constraint.id);
-      const result = await constraintService.deleteBatchAsync(projectId, workId, ids);
-
-      if (!result.error) {
-        // update graph state
-        this.graphState.nodeState = this.graphState.nodeState.filter(
-          (x) => !undirectConstraintNodes.some((y) => y.id === x.id)
-        );
-        this._raiseEvent({
-          action: domainEvents.ACTION.ACCEPTDELETE,
-          value: undirectConstraintNodes,
-          'g-type': G_TYPE.CONSTRAINT,
-          receivers: this.consumers,
-        });
-      } else {
-        return false;
-      }
-    }
-
-    if (graphNodes.length > 0) {
-      const ids = graphNodes.map((graphNode) => graphNode.id);
-      const result = await graphNodeService.deleteBatchAsync(projectId, workId, ids);
-
-      if (!result.error) {
-        // update graph state
-        this.graphState.nodeState = this.graphState.nodeState.filter((x) => !graphNodes.some((y) => y.id === x.id));
-        this._raiseEvent({
-          action: domainEvents.ACTION.ACCEPTDELETE,
-          value: graphNodes,
-          'g-type': G_TYPE.NODE,
-        });
-      } else {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  _updateNodesAsync = async (updateNodes) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { undirectConstraintNodes, graphNodes } = separateNodes(updateNodes);
-
-    if (undirectConstraintNodes.length > 0) {
-      const data = undirectConstraintNodes.map((undirectConstraintNode) =>
-        convertNodeToUndirectConstraint(undirectConstraintNode)
-      );
-      const result = await constraintService.updateBatchAsync(projectId, workId, data);
-
-      if (!result.error) {
-        undirectConstraintNodes.forEach((x) => {
-          Object.assign(
-            this.graphState.nodeState.find((y) => y.id === x.id),
-            x
-          );
-        });
-        this._raiseEvent({
-          action: domainEvents.ACTION.UPDATE,
-          value: data,
-          'g-type': G_TYPE.CONSTRAINT,
-          receivers: this.consumers,
-        });
-      } else {
-        return false;
-      }
-    }
-
-    if (graphNodes.length > 0) {
-      const data = graphNodes.map((graphNode) => convertNodeToGraphNode(graphNode));
-      const result = await graphNodeService.updateBatchAsync(projectId, workId, data);
-
-      if (!result.error) {
-        graphNodes.forEach((x) => {
-          Object.assign(
-            this.graphState.nodeState.find((y) => y.id === x.id),
-            x
-          );
-        });
-        this._raiseEvent({
-          action: domainEvents.ACTION.UPDATE,
-          value: data,
-          'g-type': G_TYPE.NODE,
-          receivers: this.consumers,
-        });
-      } else {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  _addEdgesAsync = async (addEdges) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { directConstraints, graphLinks } = separateEdges(addEdges);
-
-    if (directConstraints.length > 0) {
-      const data = directConstraints.map((constraint) => convertEdgeToDirectConstraint(constraint));
-      const result = await constraintService.createBatchAsync(projectId, workId, data);
-
-      if (!result.error) {
-        this.graphState.edgeState = [...this.graphState.edgeState, ...directConstraints];
-        this._raiseEvent({
-          action: domainEvents.ACTION.ADD,
-          value: directConstraints,
-          'g-type': G_TYPE.CONSTRAINT,
-          receivers: this.consumers,
-        });
-      } else {
-        return false;
-      }
-    }
-
-    if (graphLinks.length > 0) {
-      const data = graphLinks.map((graphLink) => convertEdgeToGraphLink(graphLink));
-      const result = await graphLinkService.createBatchAsync(projectId, workId, data);
-
-      if (!result.error) {
-        this.graphState.edgeState = [...this.graphState.edgeState, ...graphLinks];
-        this._raiseEvent({
-          action: domainEvents.ACTION.ADD,
-          value: graphLinks,
-          'g-type': G_TYPE.LINK,
-          receivers: this.consumers,
-        });
-      } else {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  _removeEdgesAsync = async (removeEdges) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { directConstraints, graphLinks } = separateEdges(removeEdges);
-
-    if (directConstraints.length > 0) {
-      const ids = directConstraints.map((constraint) => constraint.id);
-      const result = await constraintService.deleteBatchAsync(projectId, workId, ids);
-
-      if (!result.error) {
-        this.graphState.edgeState = this.graphState.edgeState.filter(
-          (x) => !directConstraints.some((y) => y.id === x.id)
-        );
-        this._raiseEvent({
-          action: domainEvents.ACTION.REMOVE,
-          value: directConstraints,
-          'g-type': G_TYPE.CONSTRAINT,
-          receivers: this.consumers,
-        });
-      } else {
-        return false;
-      }
-    }
-
-    if (graphLinks.length > 0) {
-      const ids = graphLinks.map((graphLink) => graphLink.id);
-      const result = await graphLinkService.deleteBatchAsync(projectId, workId, ids);
-
-      if (!result.error) {
-        this.graphState.edgeState = this.graphState.edgeState.filter((x) => !graphLinks.some((y) => y.id === x.id));
-        this._raiseEvent({
-          action: domainEvents.ACTION.ACCEPTDELETE,
-          value: graphLinks,
-          'g-type': G_TYPE.LINK,
-          receivers: this.consumers,
-        });
-      } else {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  _updateEdgesAsync = async (updateEdges) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { directConstraints, graphLinks } = separateEdges(updateEdges);
-
-    if (directConstraints.length > 0) {
-      const data = directConstraints.map((directConstraint) => convertEdgeToDirectConstraint(directConstraint));
-      const result = await constraintService.updateBatchAsync(projectId, workId, data);
-
-      if (!result.error) {
-        directConstraints.forEach((x) => {
-          Object.assign(
-            this.graphState.edgeState.find((y) => y.id === x.id),
-            x
-          );
-        });
-        this._raiseEvent({
-          action: domainEvents.ACTION.UPDATE,
-          value: data,
-          'g-type': G_TYPE.CONSTRAINT,
-          receivers: this.consumers,
-        });
-      } else {
-        return false;
-      }
-    }
-
-    if (graphLinks.length > 0) {
-      const data = graphLinks.map((graphLink) => convertEdgeToGraphLink(graphLink));
-      const result = await graphLinkService.updateBatchAsync(projectId, workId, data);
-
-      if (!result.error) {
-        graphLinks.forEach((x) => {
-          Object.assign(
-            this.graphState.edgeState.find((y) => y.id === x.id),
-            x
-          );
-        });
-        this._raiseEvent({
-          action: domainEvents.ACTION.UPDATE,
-          value: data,
-          'g-type': G_TYPE.LINK,
-          receivers: this.consumers,
-        });
-      } else {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  _handleGraphChange = (actionType) => {
-    if (actionType === EFFECTTYPE.EFFECT && this.graphState && this.graphManager && !this.initialingData) {
-      const oldState = { ...this.graphState };
+    if (this.graphState && this.graphManager && !this.initialingData) {
       const currentState = this.graphManager.getState();
-      this._syncData(oldState, currentState);
+      const data = covertGraphStateToSavedData(currentState);
+      const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
+      const { graphNodes } = separateNodes(removeNodes);
+
+      if (graphNodes.length > 0) {
+        this._raiseEvent({
+          action: domainEvents.ACTION.ACCEPTDELETE,
+          value: graphNodes,
+          'g-type': G_TYPE.NODE,
+        });
+      }
+
+      setGraph(data);
     }
   };
 
@@ -433,10 +132,10 @@ class Graph extends Component {
   };
 
   _saveAsPicture = async () => {
-    const { work } = this.props;
+    const { workName } = this.props;
     const tmpLink = document.createElement('a');
 
-    tmpLink.download = FILE_NAME.GRAPH_IMAGE.replace('workname', work.name.replace(/\s+/g, '_'));
+    tmpLink.download = FILE_NAME.GRAPH_IMAGE.replace('workname', workName.replace(/\s+/g, '_'));
     tmpLink.href = await this._getGraphImage();
     document.body.appendChild(tmpLink);
 
@@ -466,13 +165,13 @@ class Graph extends Component {
       case domainEvents.ACTION.ADD: {
         const { isMerged } = value;
         if (!isMerged) {
-          this.graphManager.drawCauseEffect(value, EFFECTTYPE.EFFECT);
+          this.graphManager.drawCauseEffect(value);
         }
         break;
       }
       case domainEvents.ACTION.ACCEPTDELETE: {
         if (receives === undefined || receives.includes(domainEvents.DES.GRAPH)) {
-          this.graphManager.deleteCauseEffectNode(value, EFFECTTYPE.SIDEEFFECT);
+          this.graphManager.deleteCauseEffectNode(value);
         }
         break;
       }
@@ -546,37 +245,25 @@ class Graph extends Component {
   /* End events */
 
   _getData = async (graphManager) => {
-    this.initialingData = true;
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const getGraphNodesResult = await graphNodeService.getListAsync(projectId, workId);
-    if (getGraphNodesResult.data) {
-      getGraphNodesResult.data.forEach((graphNode) => graphManager.draw(convertGraphNodeToNode(graphNode)));
-      const getGraphLinksResult = await graphLinkService.getListAsync(projectId, workId);
-      if (getGraphLinksResult.data) {
-        getGraphLinksResult.data.forEach((graphLink) => graphManager.draw(convertGraphLinkToEdge(graphLink)));
-      } else {
-        window.alert(getGraphLinksResult.error);
-      }
+    const { graph } = this.props;
 
-      const getContraintsResult = await constraintService.getListAsync(projectId, workId);
-      if (getContraintsResult.data) {
-        getContraintsResult.data.forEach((constraint) => {
-          if (isDirectConstraint(constraint.type)) {
-            graphManager.draw(convertDirectConstraintToEdge(constraint));
-          } else {
-            const node = convertUndirectConstraintToNode(constraint);
-            graphManager.draw(node);
-            const edges = convertUndirectConstraintToEdges(constraint);
-            edges.forEach((edge) => graphManager.draw(edge));
-          }
-        });
+    this.initialingData = true;
+
+    graph.graphNodes.forEach((graphNode) => graphManager.draw(convertGraphNodeToNode(graphNode)));
+
+    graph.graphLinks.forEach((graphLink) => graphManager.draw(convertGraphLinkToEdge(graphLink)));
+
+    graph.constraints.forEach((constraint) => {
+      if (isDirectConstraint(constraint.type)) {
+        graphManager.draw(convertDirectConstraintToEdge(constraint));
       } else {
-        window.alert(getContraintsResult.error);
+        const node = convertUndirectConstraintToNode(constraint);
+        graphManager.draw(node);
+        const edges = convertUndirectConstraintToEdges(constraint);
+        edges.forEach((edge) => graphManager.draw(edge));
       }
-    } else {
-      window.alert(getGraphNodesResult.error);
-    }
+    });
+
     this.initialingData = false;
   };
 
@@ -597,7 +284,10 @@ Graph.propTypes = {
 };
 
 const mapStateToProps = (state) => ({
-  work: state.work,
+  workName: state.work.name,
+  graph: state.work.graph,
 });
 
-export default connect(mapStateToProps)(withRouter(Graph));
+const mapDispatchToProps = { setGraph };
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Graph));

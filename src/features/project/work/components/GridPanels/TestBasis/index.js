@@ -39,7 +39,7 @@ class TestBasis extends Component {
     };
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     // TODO: set testBasis
     this.ready = true;
 
@@ -116,7 +116,7 @@ class TestBasis extends Component {
   };
 
   /* Events */
-  _handleEventBus = async (message) => {
+  _handleEventBus = (message) => {
     const { action, type, value, receivers } = message;
     if (receivers === undefined || receivers.includes(domainEvents.DES.TESTBASIS)) {
       if (action === domainEvents.ACTION.ACCEPTDELETE) {
@@ -216,7 +216,7 @@ class TestBasis extends Component {
     }
   };
 
-  _addCauseEffect = async (data) => {
+  _addCauseEffect = (data) => {
     const { editorState, selectionState } = this.state;
     if (this.ready) {
       const contentState = editorState.getCurrentContent();
@@ -229,7 +229,7 @@ class TestBasis extends Component {
     }
   };
 
-  _classifyText = async (currentType) => {
+  _classifyText = (currentType) => {
     const { type: previousType } = this._selectedText;
     if (!this.ready || previousType === currentType) {
       return;
@@ -239,7 +239,7 @@ class TestBasis extends Component {
     }
     if (currentType) {
       const definitionId = uuidv4();
-      await this._addCauseEffect({ ...this._selectedText, type: currentType, definitionId });
+      this._addCauseEffect({ ...this._selectedText, type: currentType, definitionId });
       this._raiseEvent(domainEvents.ACTION.ADD, { ...this._selectedText, type: currentType, definitionId });
     }
   };
