@@ -3,12 +3,7 @@ import Download from 'downloadjs';
 import testCaseHelper from 'features/project/work/biz/TestCase';
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
-import constraintService from 'features/project/work/services/constraintService';
-import graphLinkService from 'features/project/work/services/graphLinkService';
-import graphNodeService from 'features/project/work/services/graphNodeService';
-import testCaseService from 'features/project/work/services/testCaseService';
-import testDataService from 'features/project/work/services/testDataService';
-import testScenarioService from 'features/project/work/services/testScenarioService';
+import { setTestScenariosAndCases } from 'features/project/work/slices/workSlice';
 import { FILE_NAME, TEST_CASE_METHOD, TEST_CASE_SHORTCUT, TEST_CASE_SHORTCUT_CODE } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
@@ -16,7 +11,6 @@ import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
 import Enumerable from 'linq';
-import debounce from 'lodash.debounce';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -34,107 +28,6 @@ const options = [
 ];
 
 class TestScenarioAndCase extends Component {
-  _setTestScenarioAndCase = debounce(async (domainAction, isRefreshPage = false) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const graphNodeResult = await graphNodeService.getListAsync(projectId, workId);
-    const graphLinkResult = await graphLinkService.getListAsync(projectId, workId);
-    const constraintResult = await constraintService.getListAsync(projectId, workId);
-    const testDataResult = await testDataService.listAsync(projectId, workId);
-    if (graphNodeResult) {
-      if (isRefreshPage) {
-        const testScenarioResult = await testScenarioService.getListAsync(projectId, workId);
-        this._setColumns(graphNodeResult.data);
-        if (testScenarioResult.data) {
-          const testCases = [];
-          testScenarioResult.data.forEach((testScenario) => {
-            testScenario.testCases.forEach((testCase) => {
-              const testDatas = JSON.parse(testCase.testDatas).map((x) => {
-                const result = {
-                  graphNodeId: x.GraphNodeId,
-                  data: x.Data,
-                };
-                return result;
-              });
-
-              testCases.push({
-                ...testCase,
-                testScenario: { ...testScenario },
-                testDatas,
-                results: JSON.parse(testCase.results),
-              });
-            });
-          });
-
-          this._setRows(testCases, testScenarioResult.data);
-        }
-      } else {
-        let scenarioAndGraphNodes = null;
-        if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
-          scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(
-            graphLinkResult.data,
-            constraintResult.data,
-            graphNodeResult.data
-          );
-        } else {
-          scenarioAndGraphNodes = MyersTechnique.buildTestScenario(
-            graphLinkResult.data,
-            constraintResult.data,
-            graphNodeResult.data
-          );
-        }
-
-        const testCases = testCaseHelper.updateTestCase(
-          scenarioAndGraphNodes.scenarios,
-          testDataResult.data,
-          graphNodeResult.data
-        );
-
-        this._setColumns(graphNodeResult.data);
-        this._setRows(testCases, scenarioAndGraphNodes.scenarios);
-
-        const data = scenarioAndGraphNodes.scenarios.map((x) => {
-          const scenario = {
-            ...x,
-            testAssertions: x.testAssertions.map((y) => {
-              const assertion = {
-                result: y.result,
-                graphNodeId: y.graphNode.id,
-                workId,
-              };
-              return assertion;
-            }),
-            testResults: x.testResults.map((y) => {
-              const testResult = {
-                ...y,
-                workId,
-              };
-              return testResult;
-            }),
-            testCases: testCases
-              .filter((e) => e.testScenarioId === x.id)
-              .map((y) => {
-                const testCase = {
-                  ...y,
-                  workId,
-                };
-
-                return testCase;
-              }),
-          };
-
-          return scenario;
-        });
-        await testScenarioService.createBatchAsync(projectId, workId, data);
-        this._raiseEvent({
-          action: domainAction,
-          value: { ...scenarioAndGraphNodes },
-          receivers: [domainEvents.DES.GRAPH, domainEvents.DES.SSMETRIC],
-        });
-      }
-    }
-  }, 300);
-
   constructor(props) {
     super(props);
     this.state = {
@@ -145,11 +38,12 @@ class TestScenarioAndCase extends Component {
     };
   }
 
-  async componentDidMount() {
-    await this._setTestScenarioAndCase(domainEvents.ACTION.UPDATE, true);
-    eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, async (event) => {
+  componentDidMount() {
+    this._setTestScenarioAndCase(domainEvents.ACTION.UPDATE, true);
+
+    eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
-        await this._setTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
+        this._caculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       }
     });
 
@@ -157,20 +51,22 @@ class TestScenarioAndCase extends Component {
       const { code } = event.message;
       this._handleShortCutEvents(code);
     });
-    eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
-      this._handleWorkMenuEvents(event);
+
+    eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, (event) => {
+      if (event.message.action === domainEvents.ACTION.UPDATE) {
+        this._caculateTestScenarioAndCase(domainEvents.ACTION.UPDATE);
+      }
     });
+
+    eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
+      this._caculateTestScenarioAndCase(event);
+    });
+
     TEST_CASE_SHORTCUT.forEach(({ code, shortcutKeys }) => {
       Mousetrap.bind(shortcutKeys.join('+'), (e) => {
         e.preventDefault();
         this._handleShortCutEvents(code);
       });
-    });
-
-    eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, async (event) => {
-      if (event.message.action === domainEvents.ACTION.UPDATE) {
-        await this._setTestScenarioAndCase(domainEvents.ACTION.UPDATE);
-      }
     });
   }
 
@@ -178,48 +74,51 @@ class TestScenarioAndCase extends Component {
     eventBus.unsubscribe(this);
   }
 
-  handleChange = (selectedOption) => {
-    this.setState({ selectedOption });
+  _setTestScenarioAndCase = () => {
+    const { graph, testScenariosAndCases } = this.props;
+    const testCases = [];
+
+    testScenariosAndCases.forEach((testScenario) => {
+      testScenario.testCases.forEach((testCase) => {
+        const testDatas = JSON.parse(testCase.testDatas).map((x) => {
+          const result = {
+            graphNodeId: x.GraphNodeId,
+            data: x.Data,
+          };
+
+          return result;
+        });
+
+        testCases.push({
+          ...testCase,
+          testScenario: { ...testScenario },
+          testDatas,
+          results: JSON.parse(testCase.results),
+        });
+      });
+    });
+
+    this._setColumns(graph.graphNodes);
+    this._setRows(testCases, testScenariosAndCases);
   };
 
-  _getScenarioData = async () => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const graphNodeResult = await graphNodeService.getListAsync(projectId, workId);
-    const graphLinkResult = await graphLinkService.getListAsync(projectId, workId);
-    const constraintResult = await constraintService.getListAsync(projectId, workId);
-    const testDataResult = await testDataService.listAsync(projectId, workId);
+  _caculateTestScenarioAndCase = (domainAction) => {
+    const { graph, testDatas, setTestScenariosAndCases, match } = this.props;
+    const { workId } = match.params;
 
-    if (graphNodeResult.data && graphLinkResult.data && constraintResult.data && testDataResult.data) {
-      let scenarioAndGraphNodes = null;
-      if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
-        scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(
-          graphLinkResult.data,
-          constraintResult.data,
-          graphNodeResult.data
-        );
-      } else {
-        scenarioAndGraphNodes = MyersTechnique.buildTestScenario(
-          graphLinkResult.data,
-          constraintResult.data,
-          graphNodeResult.data
-        );
-      }
-
-      const testCases = testCaseHelper.updateTestCase(
-        scenarioAndGraphNodes.scenarios,
-        testDataResult.data,
-        graphNodeResult.data
-      );
-
-      return this._convertScenariosToSavedData(scenarioAndGraphNodes.scenarios, testCases);
+    let scenarioAndGraphNodes = null;
+    if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
+      scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
+    } else {
+      scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
     }
 
-    return null;
-  };
+    const testCases = testCaseHelper.updateTestCase(scenarioAndGraphNodes.scenarios, testDatas, graph.graphNodes);
 
-  _convertScenariosToSavedData = (scenarios, testCases) => {
-    const data = scenarios.map((x) => {
+    this._setColumns(graph.graphNodes);
+    this._setRows(testCases, scenarioAndGraphNodes.scenarios);
+
+    const newTestScenariosAndCases = scenarioAndGraphNodes.scenarios.map((x) => {
       const scenario = {
         ...x,
         testAssertions: x.testAssertions.map((y) => {
@@ -252,7 +151,17 @@ class TestScenarioAndCase extends Component {
       return scenario;
     });
 
-    return data;
+    setTestScenariosAndCases(newTestScenariosAndCases);
+
+    this._raiseEvent({
+      action: domainAction,
+      value: { ...scenarioAndGraphNodes },
+      receivers: [domainEvents.DES.GRAPH, domainEvents.DES.SSMETRIC],
+    });
+  };
+
+  handleChange = (selectedOption) => {
+    this.setState({ selectedOption });
   };
 
   _raiseEvent = (message) => {
@@ -264,9 +173,7 @@ class TestScenarioAndCase extends Component {
     this.setState((state) => ({ expandId: { ...state.expandId, [id]: !state.expandId[id] } }));
   };
 
-  _onCheckboxChange = async (e, id, key) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
+  _onCheckboxChange = (e, id, key) => {
     const { rows } = this.state;
     const testScenario = rows.find((x) => x.id === id);
     testScenario[key] = e.target.checked;
@@ -277,12 +184,10 @@ class TestScenarioAndCase extends Component {
       isBaseScenario: testScenario.B,
     };
 
-    await testScenarioService.updateAsync(projectId, workId, data);
+    // TODO
   };
 
-  _onTestCaseChecked = async (e, id, testScenarioId) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
+  _onTestCaseChecked = (e, id, testScenarioId) => {
     const { rows } = this.state;
 
     const testScenario = rows.find((x) => x.id === testScenarioId);
@@ -300,13 +205,10 @@ class TestScenarioAndCase extends Component {
     ];
 
     this.setState({ rows: [...rows] });
-
-    await testCaseService.updateBatchAsync(projectId, workId, data);
+    // TODO
   };
 
-  _onTestScenarioChecked = async (e, id) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
+  _onTestScenarioChecked = (e, id) => {
     const { rows } = this.state;
 
     const testScenario = rows.find((x) => x.id === id);
@@ -316,8 +218,7 @@ class TestScenarioAndCase extends Component {
     }
 
     this.setState({ rows: [...rows] });
-
-    await testCaseService.updateBatchAsync(projectId, workId, testScenario.testCases);
+    // TODO
   };
 
   _setRows(testCases = [], scenarios = []) {
@@ -401,9 +302,7 @@ class TestScenarioAndCase extends Component {
     });
   }
 
-  _onCheckboxChange = async (e, id, key) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
+  _onCheckboxChange = (e, id, key) => {
     const { rows } = this.state;
     const testScenario = rows.find((x) => x.id === id);
     testScenario[key] = e.target.checked;
@@ -413,8 +312,7 @@ class TestScenarioAndCase extends Component {
       isValid: testScenario.isValid,
       isBaseScenario: testScenario.isBaseScenario,
     };
-
-    await testScenarioService.updateAsync(projectId, workId, data);
+    // TODO
   };
 
   _createExportRowData(item, columns) {
@@ -425,22 +323,19 @@ class TestScenarioAndCase extends Component {
     return row;
   }
 
-  async _exportData() {
-    const { match, work } = this.props;
-    const { projectId, workId } = match.params;
+  _exportData() {
+    const { workName, graph } = this.props;
     const { columns, rows } = this.state;
-
-    const graphNodeResult = await graphNodeService.getListAsync(projectId, workId);
-
     const dataToConvert = [];
+
     rows.forEach((testScenario) => {
       dataToConvert.push(this._createExportRowData(testScenario, columns));
       testScenario.testCases.forEach((testCase) => {
         dataToConvert.push(this._createExportRowData(testCase, columns));
       });
     });
-    const csvFile = arrayToCsv(dataToConvert, graphNodeResult.data, EXPORT_TYPE_NAME.TestCase);
-    Download(csvFile, FILE_NAME.EXPORT_TEST_CASE.replace('workname', work.name), 'text/csv;charset=utf-8');
+    const csvFile = arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
+    Download(csvFile, FILE_NAME.EXPORT_TEST_CASE.replace('workname', workName), 'text/csv;charset=utf-8');
   }
 
   _handleShortCutEvents = (code) => {
@@ -622,11 +517,15 @@ class TestScenarioAndCase extends Component {
 
 TestScenarioAndCase.propTypes = {
   match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
-  work: PropTypes.shape({
-    name: PropTypes.string,
-  }).isRequired,
 };
+
 const mapStateToProps = (state) => ({
-  work: state.work,
+  workName: state.work.name,
+  graph: state.work.graph,
+  testDatas: state.work.testDatas,
+  testScenariosAndCases: state.work.testScenariosAndCases,
 });
-export default connect(mapStateToProps)(withRouter(TestScenarioAndCase));
+
+const mapDispatchToProps = { setTestScenariosAndCases };
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestScenarioAndCase));

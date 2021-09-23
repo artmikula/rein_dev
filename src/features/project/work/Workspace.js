@@ -29,7 +29,6 @@ class Workspace extends Component {
       isLockedPanel: !!initialIsLock,
       gridPanelLayout: intialLayouts || DEFAULT_LAYOUTS,
       formName: '',
-      workData: {},
       openRenameWorkModal: false,
     };
   }
@@ -60,11 +59,14 @@ class Workspace extends Component {
     const { setWork } = this.props;
     const { getToken } = this.context;
     const result = await workService.getAsync(getToken(), projectId, workId);
+    const work = localStorage.getItem(workId) ?? {};
+    console.log('work', work);
+
     if (result.data) {
-      this.setState({ workData: result.data });
-      setWork(result.data);
+      setWork({ ...work, ...result.data });
     } else {
       this._showErrorMessage(result.error);
+      setWork({ ...work });
     }
   };
 
@@ -159,13 +161,12 @@ class Workspace extends Component {
   };
 
   _handleSubmitRenameWork = async (values, { setErrors, setSubmitting }) => {
-    const { workData } = this.state;
-    const { match } = this.props;
+    const { match, workName, projectName } = this.props;
     const { params } = match;
     const { projectId, workId } = params;
     const { getToken } = this.context;
 
-    if (workData.name !== values.name) {
+    if (workName !== values.name) {
       const result = await workService.updateAsync(getToken(), projectId, workId, values);
       setSubmitting(false);
       if (!result.error) {
@@ -184,9 +185,11 @@ class Workspace extends Component {
   };
 
   render() {
-    const { viewMode, isLockedPanel, gridPanelLayout, formName, workData, openRenameWorkModal } = this.state;
+    const { viewMode, isLockedPanel, gridPanelLayout, formName, openRenameWorkModal } = this.state;
+    const { workName, projectName } = this.props;
     const isSplitView = viewMode === VIEW_MODE.SPLIT;
     const menus = <MenuContainer />;
+    console.log('work re-render');
 
     return (
       <ProjectLayout menus={menus}>
@@ -196,10 +199,10 @@ class Workspace extends Component {
         <div className="d-flex flex-wrap align-items-center justify-content-between border-bottom bg-white px-3 small position-relative">
           <span>
             <span className="text-muted">{Language.get('project')}: </span>
-            {workData.projectName}
+            {projectName}
             <i className="bi bi-chevron-right text-muted mx-1" />
             <Link to="#" onClick={this._openRenameWorkModal}>
-              {workData.name}
+              {workName}
             </Link>
             <Button
               color="link"
@@ -264,7 +267,7 @@ class Workspace extends Component {
 
         <ModalForm
           isOpen={openRenameWorkModal}
-          formData={this._getWorkSchema(workData.name)}
+          formData={this._getWorkSchema(workName)}
           onToggle={() => this._closeRenameWorkModal()}
           onSubmit={this._handleSubmitRenameWork}
         />
@@ -285,4 +288,6 @@ Workspace.propTypes = {
 Workspace.contextType = GlobalContext;
 
 const mapDispatchToProps = { setWork };
-export default connect(null, mapDispatchToProps)(Workspace);
+const mapStateToProps = (state) => ({ workName: state.work.name, projectName: state.work.projectName });
+
+export default connect(mapStateToProps, mapDispatchToProps)(Workspace);

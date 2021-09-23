@@ -14,6 +14,12 @@ export const defaultTestCoverageData = {
   [COVERAGE_ASPECT.InvalidScenario]: { actualPercent: 0, planPercent: 0, denominator: 0 },
 };
 
+export const storeData = (state) => {
+  const workId = state.id ?? 'workId';
+
+  localStorage.setItem(workId, JSON.stringify(state));
+};
+
 export const workSlice = createSlice({
   name: 'work',
   initialState: {
@@ -41,27 +47,41 @@ export const workSlice = createSlice({
       _state.name = action.payload;
     },
     setWork: (state, action) => {
-      const { name, version, projectName } = action.payload;
-      return { ...state, name, version, projectName };
+      return { ...state, ...action.payload };
     },
     setGeneratingReport: (state, action) => {
       const generatingReport = action.payload;
       return { ...state, generatingReport };
     },
     setTestBasis: (state, action) => {
-      return { ...state, testBasis: { content: action.payload } };
+      const newState = { ...state, testBasis: { content: action.payload } };
+      storeData(newState);
+      return newState;
     },
     setCauseEffects: (state, action) => {
-      return { ...state, causeEffects: action.payload };
+      const newState = { ...state, causeEffects: action.payload };
+      storeData(newState);
+      return newState;
     },
     setGraph: (state, action) => {
-      return { ...state, graph: action.payload };
+      const newState = { ...state, graph: action.payload };
+      storeData(newState);
+      return newState;
     },
     setTestCoverages: (state, action) => {
-      return { ...state, testCoverages: action.payload };
+      const newState = { ...state, testCoverages: action.payload };
+      storeData(newState);
+      return newState;
     },
     setTestDatas: (state, action) => {
-      return { ...state, testDatas: action.payload };
+      const newState = { ...state, testDatas: action.payload };
+      storeData(newState);
+      return newState;
+    },
+    setTestScenariosAndCases: (state, action) => {
+      const newState = { ...state, testScenariosAndCases: action.payload };
+      storeData(newState);
+      return newState;
     },
   },
 });
@@ -75,6 +95,7 @@ export const {
   setGraph,
   setTestCoverages,
   setTestDatas,
+  setTestScenariosAndCases,
 } = workSlice.actions;
 
 export default workSlice.reducer;
