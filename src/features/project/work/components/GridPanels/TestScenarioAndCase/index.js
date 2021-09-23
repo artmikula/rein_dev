@@ -3,7 +3,7 @@ import Download from 'downloadjs';
 import testCaseHelper from 'features/project/work/biz/TestCase';
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
-import { setTestScenariosAndCases } from 'features/project/work/slices/workSlice';
+import { setGraph, setTestScenariosAndCases } from 'features/project/work/slices/workSlice';
 import { FILE_NAME, TEST_CASE_METHOD, TEST_CASE_SHORTCUT, TEST_CASE_SHORTCUT_CODE } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
@@ -36,11 +36,10 @@ class TestScenarioAndCase extends Component {
       rows: [],
       expandId: {},
     };
+    this.initiatedData = false;
   }
 
   componentDidMount() {
-    this._setTestScenarioAndCase(domainEvents.ACTION.UPDATE, true);
-
     eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this._caculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
@@ -68,42 +67,51 @@ class TestScenarioAndCase extends Component {
         this._handleShortCutEvents(code);
       });
     });
+
+    this._initData();
+  }
+
+  componentDidUpdate() {
+    this._initData();
   }
 
   componentWillUnmount() {
     eventBus.unsubscribe(this);
   }
 
-  _setTestScenarioAndCase = () => {
-    const { graph, testScenariosAndCases } = this.props;
+  _initData = () => {
+    const { graph, testScenariosAndCases, workLoaded } = this.props;
     const testCases = [];
 
-    testScenariosAndCases.forEach((testScenario) => {
-      testScenario.testCases.forEach((testCase) => {
-        const testDatas = JSON.parse(testCase.testDatas).map((x) => {
-          const result = {
-            graphNodeId: x.GraphNodeId,
-            data: x.Data,
-          };
+    if (!this.initiatedData && workLoaded) {
+      testScenariosAndCases.forEach((testScenario) => {
+        testScenario.testCases.forEach((testCase) => {
+          const testDatas = testCase.testDatas.map((x) => {
+            const result = {
+              graphNodeId: x.GraphNodeId,
+              data: x.Data,
+            };
 
-          return result;
-        });
+            return result;
+          });
 
-        testCases.push({
-          ...testCase,
-          testScenario: { ...testScenario },
-          testDatas,
-          results: JSON.parse(testCase.results),
+          testCases.push({
+            ...testCase,
+            testScenario: { ...testScenario },
+            testDatas,
+            results: testCase.results,
+          });
         });
       });
-    });
 
-    this._setColumns(graph.graphNodes);
-    this._setRows(testCases, testScenariosAndCases);
+      this.initiatedData = true;
+      this._setColumns(graph.graphNodes);
+      this._setRows(testCases, testScenariosAndCases);
+    }
   };
 
   _caculateTestScenarioAndCase = (domainAction) => {
-    const { graph, testDatas, setTestScenariosAndCases, match } = this.props;
+    const { graph, testDatas, setTestScenariosAndCases, setGraph, match } = this.props;
     const { workId } = match.params;
 
     let scenarioAndGraphNodes = null;
@@ -151,11 +159,14 @@ class TestScenarioAndCase extends Component {
       return scenario;
     });
 
+    console.log(scenarioAndGraphNodes.graphNodes);
+
     setTestScenariosAndCases(newTestScenariosAndCases);
+    setGraph({ ...graph, graphNodes: scenarioAndGraphNodes.graphNodes });
 
     this._raiseEvent({
       action: domainAction,
-      value: { ...scenarioAndGraphNodes },
+      value: scenarioAndGraphNodes.graphNodes,
       receivers: [domainEvents.DES.GRAPH, domainEvents.DES.SSMETRIC],
     });
   };
@@ -369,6 +380,7 @@ class TestScenarioAndCase extends Component {
 
   render() {
     const { selectedOption, columns, rows, expandId } = this.state;
+    console.log('render');
     return (
       <div>
         <div className="d-flex justify-content-between m-2">
@@ -524,8 +536,10 @@ const mapStateToProps = (state) => ({
   graph: state.work.graph,
   testDatas: state.work.testDatas,
   testScenariosAndCases: state.work.testScenariosAndCases,
+  set: state.work.testScenariosAndCases,
+  workLoaded: state.work.loaded,
 });
 
-const mapDispatchToProps = { setTestScenariosAndCases };
+const mapDispatchToProps = { setTestScenariosAndCases, setGraph };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestScenarioAndCase));

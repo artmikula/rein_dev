@@ -75,8 +75,8 @@ class TestCoverage extends Component {
         testCases.push({
           ...testCase,
           testScenario: { ...testScenario },
-          testDatas: JSON.parse(testCase.testDatas),
-          results: JSON.parse(testCase.results),
+          testDatas: testCase.testDatas,
+          results: testCase.results,
         })
       );
     });

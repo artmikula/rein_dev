@@ -42,10 +42,10 @@ class GraphManager {
     this.generate = generate;
     this.lastestSelectedNode = null;
     this.tapNode = false;
-    this._initial(container);
+    this._init(container);
   }
 
-  _initial = (container) => {
+  _init = (container) => {
     this.graph = cytoscapeSetup(container);
     edgehandleSetup(this.graph);
     gridlinesSetup(this.graph);

@@ -41,7 +41,7 @@ class Graph extends Component {
       domainEvents.DES.TESTDATA,
       domainEvents.DES.SSMETRIC,
     ];
-    this.initialingData = false;
+    this.dataIniting = false;
     this.initiatedGraph = false;
   }
 
@@ -52,7 +52,7 @@ class Graph extends Component {
       generate: () => this._raiseEvent({ action: domainEvents.ACTION.GENERATE }),
     });
 
-    this._initialGraph(this.graphManager);
+    this._drawGraph(this.graphManager);
     // get graph state
     this.graphState = this.graphManager.getState();
     // register domain event
@@ -90,7 +90,7 @@ class Graph extends Component {
   _handleGraphChange = () => {
     const { setGraph, graph } = this.props;
 
-    if (this.graphState && this.graphManager && !this.initialingData) {
+    if (this.graphState && this.graphManager && !this.dataIniting) {
       const currentState = this.graphManager.getState();
       const data = covertGraphStateToSavedData(currentState);
       const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
@@ -121,7 +121,7 @@ class Graph extends Component {
     document.body.append(dummyContainer);
 
     const dummyGraphManager = new GraphManager(dummyContainer, { onGraphChange: () => {} });
-    this._initialGraph(dummyGraphManager);
+    this._drawGraph(dummyGraphManager);
     dummyGraphManager.graph.center();
 
     const href = dummyGraphManager.graph.jpg();
@@ -178,7 +178,7 @@ class Graph extends Component {
       }
       case domainEvents.ACTION.ACCEPTGENERATE: {
         this.graphManager.clear();
-        this._initialGraph(this.graphManager, true);
+        this._drawGraph(this.graphManager, value, true);
         break;
       }
       default:
@@ -240,13 +240,14 @@ class Graph extends Component {
   };
   /* End events */
 
-  _initialGraph = (graphManager, forceUpdate = false) => {
+  _drawGraph = (graphManager, graphNodes = null, forceUpdate = false) => {
     const { graph, workLoaded } = this.props;
+    const _graphNodes = graphNodes ?? graph.graphNodes;
 
     if ((!this.initiatedGraph && workLoaded) || forceUpdate) {
-      this.initialingData = true;
+      this.dataIniting = true;
 
-      graph.graphNodes.forEach((graphNode) => graphManager.draw(convertGraphNodeToNode(graphNode)));
+      _graphNodes.forEach((graphNode) => graphManager.draw(convertGraphNodeToNode(graphNode)));
 
       graph.graphLinks.forEach((graphLink) => graphManager.draw(convertGraphLinkToEdge(graphLink)));
 
@@ -261,13 +262,13 @@ class Graph extends Component {
         }
       });
 
-      this.initialingData = false;
+      this.dataIniting = false;
       this.initiatedGraph = true;
     }
   };
 
   componentDidUpdate() {
-    this._initialGraph(this.graphManager);
+    this._drawGraph(this.graphManager);
   }
 
   componentWillUnmout() {

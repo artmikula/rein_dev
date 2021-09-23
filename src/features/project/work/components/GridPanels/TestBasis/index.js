@@ -46,18 +46,18 @@ class TestBasis extends Component {
       this._handleEventBus(message);
     });
 
-    this._initialTestBasis();
+    this._initTestBasis();
   }
 
   componentDidUpdate() {
-    this._initialTestBasis();
+    this._initTestBasis();
   }
 
   componentWillUnmount() {
     eventBus.unsubscribe(this);
   }
 
-  _initialTestBasis = () => {
+  _initTestBasis = () => {
     const { testBasis, workLoaded } = this.props;
 
     if (!this.initiatedTestBasis && testBasis.content !== null && workLoaded) {
