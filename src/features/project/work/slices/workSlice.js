@@ -49,25 +49,32 @@ export const workSlice = createSlice({
       return { ...state, generatingReport };
     },
     setTestBasis: (state, action) => {
-      console.log('setTestBasis', action.payload);
       return { ...state, testBasis: { content: action.payload } };
     },
     setCauseEffects: (state, action) => {
-      console.log('setCauseEffects', action.payload);
       return { ...state, causeEffects: action.payload };
     },
     setGraph: (state, action) => {
-      console.log('setGraph', action.payload);
       return { ...state, graph: action.payload };
     },
     setTestCoverages: (state, action) => {
-      console.log('setTestCoverages', action.payload);
       return { ...state, testCoverages: action.payload };
+    },
+    setTestDatas: (state, action) => {
+      return { ...state, testDatas: action.payload };
     },
   },
 });
 
-export const { setWorkName, setWork, setGeneratingReport, setTestBasis, setCauseEffects, setGraph, setTestCoverages } =
-  workSlice.actions;
+export const {
+  setWorkName,
+  setWork,
+  setGeneratingReport,
+  setTestBasis,
+  setCauseEffects,
+  setGraph,
+  setTestCoverages,
+  setTestDatas,
+} = workSlice.actions;
 
 export default workSlice.reducer;
