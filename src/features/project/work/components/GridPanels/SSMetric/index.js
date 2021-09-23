@@ -226,12 +226,7 @@ class SSMertic extends Component {
               <span className="conotation min position-absolute text-14">0</span>
               <input type="range" min="1" max="100" defaultValue={conotationValue * 100} className="slider" />
               <span ref={this.conotationValueRef} className="position-absolute conotation-container">
-                <input
-                  readOnly
-                  className="text-center conotation-value small"
-                  value={conotationValue}
-                  defaultValue={conotationValue}
-                />
+                <input readOnly className="text-center conotation-value small" value={conotationValue} />
               </span>
               <span className="conotation max position-absolute text-14">1</span>
               <Label>{Language.get('connotation')}</Label>

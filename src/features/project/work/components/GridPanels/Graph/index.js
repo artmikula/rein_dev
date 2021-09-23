@@ -1,4 +1,3 @@
-import graphNodeService from 'features/project/work/services/graphNodeService';
 import { setGraph } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
@@ -109,7 +108,7 @@ class Graph extends Component {
     }
   };
 
-  _getGraphImage = async () => {
+  _getGraphImage = () => {
     const { width, height } = getGraphSize(this.graphManager.graph.nodes(), this.graphManager.graph.edges());
     const dummyContainer = document.createElement('div');
 
@@ -122,7 +121,7 @@ class Graph extends Component {
     document.body.append(dummyContainer);
 
     const dummyGraphManager = new GraphManager(dummyContainer, { onGraphChange: () => {} });
-    await this._initialGraph(dummyGraphManager);
+    this._initialGraph(dummyGraphManager);
     dummyGraphManager.graph.center();
 
     const href = dummyGraphManager.graph.jpg();
@@ -133,12 +132,12 @@ class Graph extends Component {
     return href;
   };
 
-  _saveAsPicture = async () => {
+  _saveAsPicture = () => {
     const { workName } = this.props;
     const tmpLink = document.createElement('a');
 
     tmpLink.download = FILE_NAME.GRAPH_IMAGE.replace('workname', workName.replace(/\s+/g, '_'));
-    tmpLink.href = await this._getGraphImage();
+    tmpLink.href = this._getGraphImage();
     document.body.appendChild(tmpLink);
 
     tmpLink.click();
@@ -161,7 +160,7 @@ class Graph extends Component {
   };
 
   /* Events */
-  _handleEvents = async (message) => {
+  _handleEvents = (message) => {
     const { action, receives, value } = message;
     switch (action) {
       case domainEvents.ACTION.ADD: {
@@ -178,13 +177,8 @@ class Graph extends Component {
         break;
       }
       case domainEvents.ACTION.ACCEPTGENERATE: {
-        const { match } = this.props;
-        const { projectId, workId } = match.params;
-        // update generated graphNodes
-        await graphNodeService.updateBatchAsync(projectId, workId, value.graphNodes);
-        // clear all graph and draw again
         this.graphManager.clear();
-        await this._initialGraph(this.graphManager, true);
+        this._initialGraph(this.graphManager, true);
         break;
       }
       default:
@@ -232,14 +226,14 @@ class Graph extends Component {
     }
   };
 
-  _handleWorkMenuEvents = async (message) => {
+  _handleWorkMenuEvents = (message) => {
     const { action } = message;
     if (action === domainEvents.ACTION.REPORTWORK) {
       const inspections = this.graphManager.getInspectionsReportData();
 
       this._raiseEvent({
         action: domainEvents.ACTION.REPORTWORK,
-        value: { graphSrc: await this._getGraphImage(), inspections },
+        value: { graphSrc: this._getGraphImage(), inspections },
         receivers: domainEvents.DES.WORKMENU,
       });
     }
@@ -247,9 +241,9 @@ class Graph extends Component {
   /* End events */
 
   _initialGraph = (graphManager, forceUpdate = false) => {
-    const { graph } = this.props;
+    const { graph, workLoaded } = this.props;
 
-    if ((!this.initiatedGraph && graph.graphNodes.length !== 0) || forceUpdate) {
+    if ((!this.initiatedGraph && workLoaded) || forceUpdate) {
       this.initialingData = true;
 
       graph.graphNodes.forEach((graphNode) => graphManager.draw(convertGraphNodeToNode(graphNode)));
@@ -295,6 +289,7 @@ Graph.propTypes = {
 const mapStateToProps = (state) => ({
   workName: state.work.name,
   graph: state.work.graph,
+  workLoaded: state.work.loaded,
 });
 
 const mapDispatchToProps = { setGraph };

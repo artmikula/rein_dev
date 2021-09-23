@@ -27,6 +27,7 @@ export const workSlice = createSlice({
     version: '',
     projectName: '',
     generatingReport: false,
+    loaded: false,
     testBasis: {
       content: null,
     },

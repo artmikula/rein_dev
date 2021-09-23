@@ -16,7 +16,7 @@ export default function GridPanelItem(props) {
 
   return (
     <>
-      <p
+      <div
         className={`draggable-tag collapse-title bg-light p-2 rounded-top ${
           isCollapse ? 'collapse-title-vertical h-100 pt-5' : ''
         } ${!isLockedPanel ? 'cursor-move' : ''}`}
@@ -37,7 +37,7 @@ export default function GridPanelItem(props) {
               </Fragment>
             ))
           : innerRenderTitle()}
-      </p>
+      </div>
       {!isLockedPanel && (
         <>
           <Button
@@ -72,18 +72,20 @@ export default function GridPanelItem(props) {
     </>
   );
 }
+
 GridPanelItem.defaultProps = {
   title: '',
   isLockedPanel: false,
   tabs: [],
   onTogglePanel: () => {},
 };
+
 GridPanelItem.propTypes = {
   isCollapse: PropTypes.bool.isRequired,
   isLockedPanel: PropTypes.bool,
   title: PropTypes.string,
   tabs: PropTypes.arrayOf(PropTypes.string),
   index: PropTypes.number.isRequired,
-  children: PropTypes.oneOf([PropTypes.node, PropTypes.arrayOf(PropTypes.node)]).isRequired,
   onTogglePanel: PropTypes.func,
+  children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]).isRequired,
 };

@@ -10,12 +10,10 @@ import {
 } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import TestBasisManager from 'features/project/work/biz/TestBasis';
-import testBasisService from 'features/project/work/services/testBasisService';
 import { setTestBasis } from 'features/project/work/slices/workSlice';
 import { STRING } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
-import debounce from 'lodash.debounce';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -60,16 +58,16 @@ class TestBasis extends Component {
   }
 
   _initialTestBasis = () => {
-    const { testBasis } = this.props;
+    const { testBasis, workLoaded } = this.props;
 
-    if (!this.initiatedTestBasis && testBasis.content !== null) {
+    if (!this.initiatedTestBasis && testBasis.content !== null && workLoaded) {
       const editorState = EditorState.createWithContent(
         convertFromRaw(JSON.parse(testBasis.content)),
         this._compositeDecorator()
       );
 
+      this._updateEditorState(editorState);
       this.initiatedTestBasis = true;
-      this.setState({ editorState });
     }
   };
 
@@ -119,13 +117,6 @@ class TestBasis extends Component {
     this.setState(newState);
   };
 
-  _createUpdateTestBasis = debounce((content) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { getToken } = this.context;
-    return testBasisService.createUpdateAsync(getToken(), projectId, workId, { content });
-  }, 500);
-
   _removeCauseEffect = (definitionId) => {
     if (this.ready) {
       const drawContent = TestBasisManager.removeEntity(definitionId);
@@ -143,10 +134,7 @@ class TestBasis extends Component {
         this._removeCauseEffect(value.definitionId);
       }
       if (action === domainEvents.ACTION.NOTACCEPT) {
-        /*
-         * - handle not accepted when add,update or remove,
-         * - You can add more data to the message if needed, sample type of action which is not accepted
-         */
+        this._removeCauseEffect(value.definitionId);
       }
     }
   };
@@ -268,8 +256,6 @@ class TestBasis extends Component {
   render() {
     const { editorState, isOpenClassifyPopover } = this.state;
     const visibleSelectionRect = getVisibleSelectionRect(window);
-    const { testBasis } = this.props;
-    console.log('test basis re-render', testBasis);
 
     return (
       <div className="h-100 p-4">
@@ -309,7 +295,7 @@ TestBasis.defaultProps = {
 
 TestBasis.contextType = GlobalContext;
 
-const mapStateToProps = (state) => ({ testBasis: state.work.testBasis });
+const mapStateToProps = (state) => ({ testBasis: state.work.testBasis, workLoaded: state.work.loaded });
 
 const mapDispatchToProps = { setTestBasis };
 

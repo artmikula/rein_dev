@@ -183,8 +183,8 @@ class TestCoverage extends Component {
             })}
           </div>
           <div className="d-flex mt-2 mb-3">
-            {this.testCoverageProperties.map((x, index) => (
-              <span key={index} className="test-coverage-item">
+            {this.testCoverageProperties.map((x) => (
+              <span key={x.key} className="test-coverage-item">
                 {x.label}
               </span>
             ))}

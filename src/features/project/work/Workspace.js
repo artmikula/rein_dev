@@ -63,10 +63,10 @@ class Workspace extends Component {
     const work = workData ? JSON.parse(workData) : {}; // TODO
 
     if (result.data) {
-      setWork({ ...work, ...result.data });
+      setWork({ ...work, ...result.data, loaded: true });
     } else {
       this._showErrorMessage(result.error);
-      setWork({ ...work });
+      setWork({ ...work, loaded: true });
     }
   };
 
