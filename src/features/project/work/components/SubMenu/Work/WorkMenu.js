@@ -55,6 +55,7 @@ class WorkMenu extends Component {
     const { match, history } = this.props;
     const { projectId, workId } = match.params;
     const { getToken } = this.context;
+
     workService.deleteAsync(getToken(), projectId, workId).then(() => {
       history.push(`/project/${projectId}/works`);
     });
@@ -112,7 +113,9 @@ class WorkMenu extends Component {
   _searchWorks = (searchValue) => {
     const { match } = this.props;
     const { projectId } = match.params;
-    workService.listAsync(projectId, 1, 10, searchValue).then((response) => {
+    const { getToken } = this.context;
+
+    workService.listAsync(getToken(), projectId, 1, 10, searchValue).then((response) => {
       this.setState({ searchWorks: response.items });
     });
   };
@@ -124,7 +127,9 @@ class WorkMenu extends Component {
   _getRecentWorks = () => {
     const { match } = this.props;
     const { projectId } = match.params;
-    workService.listAsync(projectId, 1, 5).then((response) => {
+    const { getToken } = this.context;
+
+    workService.listAsync(getToken(), projectId, 1, 5).then((response) => {
       this.setState({ recentWorks: response.items });
     });
   };
@@ -141,6 +146,7 @@ class WorkMenu extends Component {
     const { recentWorks, searchWorks, createFormOpen, importFormOpen } = this.state;
     const { match } = this.props;
     const { projectId, workId } = match.params;
+    const { getToken } = this.context;
     const actions = [
       {
         key: 1,
@@ -160,7 +166,7 @@ class WorkMenu extends Component {
         key: 3,
         text: Language.get('export'),
         action: async () => {
-          const response = await workService.exportAsync(projectId, workId);
+          const response = await workService.exportAsync(getToken(), projectId, workId);
           if (response.data) {
             const fileContentString = atob(response.data.fileContents);
             Download(fileContentString, response.data.fileDownloadName, response.data.contentType);

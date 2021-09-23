@@ -1,8 +1,9 @@
 import Download from 'downloadjs';
 import Language from 'features/shared/languages/Language';
 import debounce from 'lodash.debounce';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Router, useHistory, useParams } from 'react-router';
+import GlobalContext from 'security/GlobalContext';
 import { SearchComponent, SubMenu } from '../../../../../shared/components';
 import CreateForm from '../../../../components/CreateForm';
 import ImportForm from '../../../../components/ImportForm';
@@ -18,10 +19,11 @@ export default function ProjectMenu() {
 
   const history = useHistory();
   const params = useParams();
+  const { getToken } = useContext(GlobalContext);
   const { projectId } = params;
 
   const _confirmDelete = () => {
-    projectService.deleteAsync(projectId).then(() => {
+    projectService.deleteAsync(getToken(), projectId).then(() => {
       history.push('/projects');
     });
   };
@@ -45,7 +47,7 @@ export default function ProjectMenu() {
       key: 3,
       text: Language.get('export'),
       action: async () => {
-        const response = await projectService.exportAsync(projectId);
+        const response = await projectService.exportAsync(getToken(), projectId);
         if (response.data) {
           const fileContentString = atob(response.data.fileContents);
           Download(fileContentString, response.data.fileDownloadName, response.data.contentType);
@@ -78,7 +80,7 @@ export default function ProjectMenu() {
   ];
 
   const _searchProjects = (searchValue) => {
-    projectService.listAsync(1, 10, searchValue).then((response) => {
+    projectService.listAsync(getToken(), 1, 10, searchValue).then((response) => {
       setSearchProjects(response.items);
     });
   };
@@ -88,7 +90,7 @@ export default function ProjectMenu() {
   }, 300);
 
   const _getRecentProjects = () => {
-    projectService.listAsync(1, 5).then((response) => {
+    projectService.listAsync(getToken(), 1, 5).then((response) => {
       setRecentProjects(response.items);
     });
   };

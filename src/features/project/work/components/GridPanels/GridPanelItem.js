@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import Language from 'features/shared/languages/Language';
-import { Button, UncontrolledTooltip, TabContent, TabPane } from 'reactstrap';
+import React, { Fragment, useState } from 'react';
+import { Button, TabContent, TabPane, UncontrolledTooltip } from 'reactstrap';
 import './style.scss';
 
 export default function GridPanelItem(props) {
@@ -24,19 +23,18 @@ export default function GridPanelItem(props) {
       >
         {tabs && tabs.length > 0
           ? tabs.map((tab, index) => (
-              <>
+              <Fragment key={index}>
                 {index > 0 && <span className="mx-2 text-muted">|</span>}
                 <span
                   className={`collapse-title-tab ${activeTab === index ? 'active' : ''}`}
                   role="button"
                   tabIndex={index}
-                  key={index}
                   onKeyPress={() => {}}
                   onClick={() => setActiveTab(index)}
                 >
                   {tab}
                 </span>
-              </>
+              </Fragment>
             ))
           : innerRenderTitle()}
       </p>

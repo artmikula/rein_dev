@@ -193,9 +193,6 @@ class Workspace extends Component {
 
     return (
       <ProjectLayout menus={menus}>
-        <button onClick={() => console.log('sync data')} type="button">
-          collect data
-        </button>
         <div className="d-flex flex-wrap align-items-center justify-content-between border-bottom bg-white px-3 small position-relative">
           <span>
             <span className="text-muted">{Language.get('project')}: </span>

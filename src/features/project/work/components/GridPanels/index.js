@@ -1,11 +1,10 @@
-import { Button } from 'reactstrap';
 import { GRID_PANEL_SIZE, VIEW_MODE } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import GridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
-import TestData from '../../biz/TestData';
+import { Button } from 'reactstrap';
 import CauseEffectTable from './CauseEffectTable';
 import Graph from './Graph';
 import GridPanelItem from './GridPanelItem';
@@ -33,7 +32,7 @@ export default class GridPanels extends Component {
   panels = [
     {
       title: Language.get('testbasis'),
-      component: <TestBasis />,
+      children: <TestBasis />,
       renderTitle: (title) => {
         return (
           <div className="flex-title">
@@ -49,19 +48,19 @@ export default class GridPanels extends Component {
     },
     {
       title: Language.get('causeandeffecttable'),
-      component: <CauseEffectTable />,
+      children: <CauseEffectTable />,
     },
     {
       title: Language.get('ssmetric'),
-      component: <SSMertic />,
+      children: <SSMertic />,
     },
     {
       title: Language.get('testcoverage'),
-      component: <TestCoverage />,
+      children: <TestCoverage />,
     },
     {
       title: Language.get('causeandeffectgraph'),
-      component: <Graph setActionHandler={this.setGraphActionHandler} />,
+      children: <Graph setActionHandler={this.setGraphActionHandler} />,
       renderTitle: (title) => {
         return (
           <div className="flex-title">
@@ -84,7 +83,7 @@ export default class GridPanels extends Component {
     {
       title: 'Test Scenario/Case/Data',
       tabs: [Language.get('testscenarioortestcase'), Language.get('testdata')],
-      component: [<TestScenarioAndCase />, <TestDataTable />],
+      children: [<TestScenarioAndCase />, <TestDataTable />],
     },
   ];
 
@@ -189,7 +188,7 @@ export default class GridPanels extends Component {
                 onTogglePanel={() => this._handleTogglePanel(layout.i)}
                 renderTitle={this.panels[index]?.renderTitle}
               >
-                {this.panels[index]?.component}
+                {this.panels[index]?.children}
               </GridPanelItem>
             </div>
           ))}
