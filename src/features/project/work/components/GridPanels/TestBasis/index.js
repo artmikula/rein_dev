@@ -37,21 +37,41 @@ class TestBasis extends Component {
       editorState: EditorState.createEmpty(this._compositeDecorator()),
       selectionState: {},
     };
+    this.initiatedTestBasis = false;
   }
 
   componentDidMount() {
-    // TODO: set testBasis
     this.ready = true;
 
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleEventBus(message);
     });
+
+    this._initialTestBasis();
+  }
+
+  componentDidUpdate() {
+    this._initialTestBasis();
   }
 
   componentWillUnmount() {
     eventBus.unsubscribe(this);
   }
+
+  _initialTestBasis = () => {
+    const { testBasis } = this.props;
+
+    if (!this.initiatedTestBasis && testBasis.content !== null) {
+      const editorState = EditorState.createWithContent(
+        convertFromRaw(JSON.parse(testBasis.content)),
+        this._compositeDecorator()
+      );
+
+      this.initiatedTestBasis = true;
+      this.setState({ editorState });
+    }
+  };
 
   _findEntities = (contentBlock, callback, contentState) => {
     contentBlock.findEntityRanges((character) => {
@@ -248,6 +268,8 @@ class TestBasis extends Component {
   render() {
     const { editorState, isOpenClassifyPopover } = this.state;
     const visibleSelectionRect = getVisibleSelectionRect(window);
+    const { testBasis } = this.props;
+    console.log('test basis re-render', testBasis);
 
     return (
       <div className="h-100 p-4">

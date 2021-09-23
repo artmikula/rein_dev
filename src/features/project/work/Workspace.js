@@ -59,8 +59,8 @@ class Workspace extends Component {
     const { setWork } = this.props;
     const { getToken } = this.context;
     const result = await workService.getAsync(getToken(), projectId, workId);
-    const work = localStorage.getItem(workId) ?? {};
-    console.log('work', work);
+    const workData = localStorage.getItem(workId);
+    const work = workData ? JSON.parse(workData) : {}; // TODO
 
     if (result.data) {
       setWork({ ...work, ...result.data });

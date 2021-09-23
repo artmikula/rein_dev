@@ -28,8 +28,7 @@ export const workSlice = createSlice({
     projectName: '',
     generatingReport: false,
     testBasis: {
-      content:
-        '{"blocks":[{"key":"6jveu","text":"","type":"unstyled","depth":0,"inlineStyleRanges":[],"entityRanges":[],"data":{}}],"entityMap":{}}',
+      content: null,
     },
     causeEffects: [],
     graph: {

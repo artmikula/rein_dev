@@ -43,15 +43,17 @@ class Graph extends Component {
       domainEvents.DES.SSMETRIC,
     ];
     this.initialingData = false;
+    this.initiatedGraph = false;
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     const container = document.getElementById('graph_container_id');
     this.graphManager = new GraphManager(container, {
       onGraphChange: this._handleGraphChange,
       generate: () => this._raiseEvent({ action: domainEvents.ACTION.GENERATE }),
     });
-    await this._getData(this.graphManager);
+
+    this._initialGraph(this.graphManager);
     // get graph state
     this.graphState = this.graphManager.getState();
     // register domain event
@@ -120,7 +122,7 @@ class Graph extends Component {
     document.body.append(dummyContainer);
 
     const dummyGraphManager = new GraphManager(dummyContainer, { onGraphChange: () => {} });
-    await this._getData(dummyGraphManager);
+    await this._initialGraph(dummyGraphManager);
     dummyGraphManager.graph.center();
 
     const href = dummyGraphManager.graph.jpg();
@@ -182,7 +184,7 @@ class Graph extends Component {
         await graphNodeService.updateBatchAsync(projectId, workId, value.graphNodes);
         // clear all graph and draw again
         this.graphManager.clear();
-        await this._getData(this.graphManager);
+        await this._initialGraph(this.graphManager, true);
         break;
       }
       default:
@@ -244,28 +246,35 @@ class Graph extends Component {
   };
   /* End events */
 
-  _getData = async (graphManager) => {
+  _initialGraph = (graphManager, forceUpdate = false) => {
     const { graph } = this.props;
 
-    this.initialingData = true;
+    if ((!this.initiatedGraph && graph.graphNodes.length !== 0) || forceUpdate) {
+      this.initialingData = true;
 
-    graph.graphNodes.forEach((graphNode) => graphManager.draw(convertGraphNodeToNode(graphNode)));
+      graph.graphNodes.forEach((graphNode) => graphManager.draw(convertGraphNodeToNode(graphNode)));
 
-    graph.graphLinks.forEach((graphLink) => graphManager.draw(convertGraphLinkToEdge(graphLink)));
+      graph.graphLinks.forEach((graphLink) => graphManager.draw(convertGraphLinkToEdge(graphLink)));
 
-    graph.constraints.forEach((constraint) => {
-      if (isDirectConstraint(constraint.type)) {
-        graphManager.draw(convertDirectConstraintToEdge(constraint));
-      } else {
-        const node = convertUndirectConstraintToNode(constraint);
-        graphManager.draw(node);
-        const edges = convertUndirectConstraintToEdges(constraint);
-        edges.forEach((edge) => graphManager.draw(edge));
-      }
-    });
+      graph.constraints.forEach((constraint) => {
+        if (isDirectConstraint(constraint.type)) {
+          graphManager.draw(convertDirectConstraintToEdge(constraint));
+        } else {
+          const node = convertUndirectConstraintToNode(constraint);
+          graphManager.draw(node);
+          const edges = convertUndirectConstraintToEdges(constraint);
+          edges.forEach((edge) => graphManager.draw(edge));
+        }
+      });
 
-    this.initialingData = false;
+      this.initialingData = false;
+      this.initiatedGraph = true;
+    }
   };
+
+  componentDidUpdate() {
+    this._initialGraph(this.graphManager);
+  }
 
   componentWillUnmout() {
     eventBus.unsubscribe(this);
