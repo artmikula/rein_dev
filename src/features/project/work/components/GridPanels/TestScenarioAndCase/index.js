@@ -267,7 +267,6 @@ class TestScenarioAndCase extends Component {
 
   render() {
     const { selectedOption, columns, rows, expandId } = this.state;
-    console.log('render');
 
     return (
       <div>

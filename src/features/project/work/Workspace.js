@@ -192,7 +192,6 @@ class Workspace extends Component {
     const { workName, projectName } = this.props;
     const isSplitView = viewMode === VIEW_MODE.SPLIT;
     const menus = <MenuContainer />;
-    console.log('work re-render');
 
     return (
       <ProjectLayout menus={menus}>
