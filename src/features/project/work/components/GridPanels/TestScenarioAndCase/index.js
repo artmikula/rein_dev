@@ -243,14 +243,26 @@ class TestScenarioAndCase extends Component {
 
   _handleTestCaseChecked = (scenarioId, caseId, checked) => {
     testScenarioAnsCaseService.checkTestCase(scenarioId, caseId, checked);
+    const { rows } = this.state;
+    const newRows = testScenarioAnsCaseService.checkTestCase(scenarioId, caseId, checked, rows);
+
+    this.setState({ rows: newRows });
   };
 
   _handleTestScenarioChecked = (scenarioId, checked) => {
     testScenarioAnsCaseService.checkTestScenario(scenarioId, checked);
+    const { rows } = this.state;
+    const newRows = testScenarioAnsCaseService.checkTestScenario(scenarioId, checked, rows);
+
+    this.setState({ rows: newRows });
   };
 
   _handleCheckboxChange = (scenarioId, key, checked) => {
     testScenarioAnsCaseService.changeTestScenario(scenarioId, key, checked);
+    const { rows } = this.state;
+    const newRows = testScenarioAnsCaseService.changeTestScenario(scenarioId, key, checked, rows);
+
+    this.setState({ rows: newRows });
   };
 
   render() {
@@ -340,7 +352,7 @@ class TestScenarioAndCase extends Component {
                                   type="checkbox"
                                   className="mt-1"
                                   onChange={(e) => this._handleTestScenarioChecked(testScenario.id, e.target.checked)}
-                                  defaultChecked={testScenario.isChecked}
+                                  checked={testScenario.isChecked}
                                 />
                                 <span className="font-weight-500" style={{ lineHeight: '21px' }}>
                                   {testScenario.Name}
@@ -360,7 +372,7 @@ class TestScenarioAndCase extends Component {
                                         onChange={(e) =>
                                           this._handleTestCaseChecked(testScenario.id, testCase.id, e.target.checked)
                                         }
-                                        defaultChecked={testCase.isChecked}
+                                        checked={testCase.isChecked}
                                       />
                                       {testCase.Name}
                                     </Label>
@@ -380,7 +392,7 @@ class TestScenarioAndCase extends Component {
                               onChange={(e) =>
                                 this._handleCheckboxChange(testScenario.id, column.key, e.target.checked)
                               }
-                              defaultChecked={testScenario[column.headerName]}
+                              checked={testScenario[column.headerName]}
                             />
                           </span>
                         ) : (

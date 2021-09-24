@@ -17,8 +17,8 @@ class TestScenarioAnsCaseService {
     return data ? JSON.parse(data) : [];
   };
 
-  checkTestCase = (scenarioId, caseId, checked) => {
-    const data = this.get();
+  checkTestCase = (scenarioId, caseId, checked, defaultData = null) => {
+    const data = defaultData ?? this.get();
     const testScenario = data.find((x) => x.id === scenarioId);
 
     if (testScenario) {
@@ -33,13 +33,17 @@ class TestScenarioAnsCaseService {
           testScenario.isChecked = !testScenario.testCases.some((x) => !x.isChecked);
         }
 
-        this.set(data);
+        if (!defaultData) {
+          this.set(data);
+        }
       }
     }
+
+    return data;
   };
 
-  checkTestScenario = (scenarioId, checked) => {
-    const data = this.get();
+  checkTestScenario = (scenarioId, checked, defaultData = null) => {
+    const data = defaultData ?? this.get();
     const testScenario = data.find((x) => x.id === scenarioId);
 
     if (testScenario) {
@@ -49,19 +53,27 @@ class TestScenarioAnsCaseService {
         testScenario.testCases[i].isChecked = checked;
       }
 
-      this.set(data);
+      if (!defaultData) {
+        this.set(data);
+      }
     }
+
+    return data;
   };
 
-  changeTestScenario = (scenarioId, key, value) => {
-    const data = this.get();
+  changeTestScenario = (scenarioId, key, value, defaultData = null) => {
+    const data = defaultData ?? this.get();
     const testScenario = data.find((x) => x.id === scenarioId);
 
     if (testScenario) {
       testScenario[key] = value;
+
+      if (!defaultData) {
+        this.set(data);
+      }
     }
 
-    this.set(data);
+    return data;
   };
 }
 
