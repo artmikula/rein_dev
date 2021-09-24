@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import Language from 'features/shared/languages/Language';
-import { Button, UncontrolledTooltip, TabContent, TabPane } from 'reactstrap';
+import React, { Fragment, useState } from 'react';
+import { Button, TabContent, TabPane, UncontrolledTooltip } from 'reactstrap';
 import './style.scss';
 
 export default function GridPanelItem(props) {
@@ -17,29 +16,28 @@ export default function GridPanelItem(props) {
 
   return (
     <>
-      <p
+      <div
         className={`draggable-tag collapse-title bg-light p-2 rounded-top ${
           isCollapse ? 'collapse-title-vertical h-100 pt-5' : ''
         } ${!isLockedPanel ? 'cursor-move' : ''}`}
       >
         {tabs && tabs.length > 0
           ? tabs.map((tab, index) => (
-              <>
+              <Fragment key={index}>
                 {index > 0 && <span className="mx-2 text-muted">|</span>}
                 <span
                   className={`collapse-title-tab ${activeTab === index ? 'active' : ''}`}
                   role="button"
                   tabIndex={index}
-                  key={index}
                   onKeyPress={() => {}}
                   onClick={() => setActiveTab(index)}
                 >
                   {tab}
                 </span>
-              </>
+              </Fragment>
             ))
           : innerRenderTitle()}
-      </p>
+      </div>
       {!isLockedPanel && (
         <>
           <Button
@@ -74,18 +72,20 @@ export default function GridPanelItem(props) {
     </>
   );
 }
+
 GridPanelItem.defaultProps = {
   title: '',
   isLockedPanel: false,
   tabs: [],
   onTogglePanel: () => {},
 };
+
 GridPanelItem.propTypes = {
   isCollapse: PropTypes.bool.isRequired,
   isLockedPanel: PropTypes.bool,
   title: PropTypes.string,
   tabs: PropTypes.arrayOf(PropTypes.string),
   index: PropTypes.number.isRequired,
-  children: PropTypes.oneOf([PropTypes.node, PropTypes.arrayOf(PropTypes.node)]).isRequired,
   onTogglePanel: PropTypes.func,
+  children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]).isRequired,
 };

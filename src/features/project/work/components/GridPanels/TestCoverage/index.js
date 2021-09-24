@@ -1,18 +1,13 @@
-import constraintService from 'features/project/work/services/constraintService';
-import graphLinkService from 'features/project/work/services/graphLinkService';
-import graphNodeService from 'features/project/work/services/graphNodeService';
-import testCoverageService from 'features/project/work/services/testCoverageService';
-import testDataService from 'features/project/work/services/testDataService';
-import testScenarioService from 'features/project/work/services/testScenarioService';
+import { setTestCoverages } from 'features/project/work/slices/workSlice';
 import { COVERAGE_ASPECT } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import cloneDeep from 'lodash.clonedeep';
-import debounce from 'lodash.debounce';
 import isEqual from 'lodash.isequal';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import testCoverage from '../../../biz/TestCoverage';
 import PlanButton from './component/PlanButton';
@@ -35,33 +30,14 @@ class TestCoverage extends Component {
     { label: Language.get('invalidscenario'), key: COVERAGE_ASPECT.InvalidScenario },
   ];
 
-  defaultTestCoverageData = {
-    [COVERAGE_ASPECT.TestCase]: { actualPercent: 0, planPercent: 0, denominator: 0 },
-    [COVERAGE_ASPECT.Cause]: { actualPercent: 0, planPercent: 0, denominator: 0 },
-    [COVERAGE_ASPECT.CauseTestData]: { actualPercent: 0, planPercent: 0, denominator: 0 },
-    [COVERAGE_ASPECT.Effect]: { actualPercent: 0, planPercent: 0, denominator: 0 },
-    [COVERAGE_ASPECT.ComplexLogicalRelation]: { actualPercent: 0, denominator: 0 },
-    [COVERAGE_ASPECT.Scenario]: { actualPercent: 0, planPercent: 0, denominator: 0 },
-    [COVERAGE_ASPECT.BaseScenario]: { actualPercent: 0, planPercent: 0, denominator: 0 },
-    [COVERAGE_ASPECT.ValidScenario]: { actualPercent: 0, planPercent: 0, denominator: 0 },
-    [COVERAGE_ASPECT.InvalidScenario]: { actualPercent: 0, planPercent: 0, denominator: 0 },
+  _setTestCoverages = (data) => {
+    const { setTestCoverages } = this.props;
+    setTestCoverages(data);
   };
-
-  _saveData = debounce(async (data) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const result = await testCoverageService.createUpdateAsync(projectId, workId, data);
-    if (result.error) {
-      alert(result.error);
-    }
-  }, 300);
 
   constructor(props) {
     super(props);
-    this.state = {
-      isPlanning: false,
-      data: cloneDeep(this.defaultTestCoverageData),
-    };
+    this.state = { isPlanning: false };
     this.oldData = {};
   }
 
@@ -69,10 +45,10 @@ class TestCoverage extends Component {
     eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
       this._handleEvents(event.message);
     });
+
     eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
       this._handleWorkMenuEvents(event);
     });
-    this._getData();
   }
 
   componentWillUnmount() {
@@ -80,101 +56,91 @@ class TestCoverage extends Component {
   }
 
   isPlanDataChanging = () => {
-    const { data, isPlanning } = this.state;
+    const { isPlanning } = this.state;
+    const { data } = this.props;
+
     return !isEqual(this.oldData, data) && isPlanning;
   };
 
-  _calculate = async () => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const graphNodeResult = await graphNodeService.getListAsync(projectId, workId);
-    const graphLinkResult = await graphLinkService.getListAsync(projectId, workId);
-    const constraintResult = await constraintService.getListAsync(projectId, workId);
-    const testDataResult = await testDataService.listAsync(projectId, workId);
-    const testScenarioResult = await testScenarioService.getListAsync(projectId, workId);
-    if (
-      graphNodeResult.data &&
-      graphLinkResult.data &&
-      constraintResult.data &&
-      testDataResult.data &&
-      testScenarioResult.data
-    ) {
-      const testCases = [];
-      testScenarioResult.data.forEach((testScenario) => {
-        testScenario.testCases.forEach((testCase) =>
-          testCases.push({
-            ...testCase,
-            testScenario: { ...testScenario },
-            testDatas: JSON.parse(testCase.testDatas),
-            results: JSON.parse(testCase.results),
-          })
-        );
-      });
-
-      testCoverage.initValue(
-        graphNodeResult.data,
-        testCases,
-        testScenarioResult.data,
-        graphLinkResult.data,
-        testDataResult.data
-      );
-
-      const data = {};
-
-      Object.keys(COVERAGE_ASPECT).forEach((key) => {
-        const result = testCoverage.calculateCoverage(COVERAGE_ASPECT[key]);
-        data[COVERAGE_ASPECT[key]] = { actualPercent: toPercent(result), denominator: result.denominator };
-      });
-
-      return data;
-    }
-
-    return null;
+  _raiseEvent = (action, value) => {
+    eventBus.publish(domainEvents.TEST_COVERAGE_ONCHANGE_DOMAINEVENT, { action, value });
   };
 
-  _recalculate = async () => {
-    const result = await this._calculate();
+  _calculate = () => {
+    const { graph, testDatas, testScenariosAndCases } = this.props;
+
+    const testCases = [];
+    testScenariosAndCases.forEach((testScenario) => {
+      testScenario.testCases.forEach((testCase) =>
+        testCases.push({
+          ...testCase,
+          testScenario: { ...testScenario },
+          testDatas: testCase.testDatas,
+          results: testCase.results,
+        })
+      );
+    });
+
+    testCoverage.initValue(graph.graphNodes, testCases, testScenariosAndCases, graph.graphLinks, testDatas);
+
+    const data = {};
+
+    Object.keys(COVERAGE_ASPECT).forEach((key) => {
+      const result = testCoverage.calculateCoverage(COVERAGE_ASPECT[key]);
+      data[COVERAGE_ASPECT[key]] = { actualPercent: toPercent(result), denominator: result.denominator };
+    });
+
+    return data;
+  };
+
+  _recalculate = () => {
+    const result = this._calculate();
     if (result) {
-      const { data } = this.state;
+      const { data } = this.props;
+
       Object.keys(result).forEach((key) => {
         result[key].planPercent = data[key].planPercent;
       });
-      this.setState({ data: result });
-      this._saveData(result);
+
+      this._setTestCoverages(result);
     }
   };
 
   _handleRevert = () => {
-    this.setState({ data: cloneDeep(this.oldData) });
+    this._setTestCoverages(cloneDeep(this.oldData));
   };
 
   _handlePlanChange = (key, value) => {
-    const { data } = this.state;
+    const { data } = this.props;
     const _data = cloneDeep(data);
+
     _data[key].planPercent = value;
-    this.setState({ data: _data }, async () => {
-      this._saveData(_data);
-    });
+
+    this._setTestCoverages(_data);
   };
 
-  _handlePlan = async () => {
-    const { isPlanning, data } = this.state;
+  _handlePlan = () => {
+    const { isPlanning } = this.state;
+    const { data } = this.props;
+
     if (!isPlanning) {
       this.oldData = cloneDeep(data);
     }
+
     this.setState({ isPlanning: !isPlanning });
   };
 
-  _handleEvents = async (message) => {
+  _handleEvents = (message) => {
     const { isPlanning } = this.state;
     if (message.action === domainEvents.ACTION.ACCEPTGENERATE && !isPlanning) {
-      await this._recalculate();
+      this._recalculate();
     }
   };
 
   _handleWorkMenuEvents = (event) => {
     const { action } = event.message;
-    const { data } = this.state;
+    const { data } = this.props;
+
     if (action === domainEvents.ACTION.REPORTWORK) {
       eventBus.publish(domainEvents.TEST_COVERAGE_ONCHANGE_DOMAINEVENT, {
         action: domainEvents.ACTION.REPORTWORK,
@@ -184,19 +150,9 @@ class TestCoverage extends Component {
     }
   };
 
-  _getData = async () => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const result = await testCoverageService.getAsync(projectId, workId);
-    if (result.error) {
-      alert(result.error);
-    } else if (result.data) {
-      this.setState({ data: cloneDeep(result.data) });
-    }
-  };
-
   render() {
-    const { data, isPlanning } = this.state;
+    const { isPlanning } = this.state;
+    const { data } = this.props;
 
     return (
       <div className="d-flex test-coverage-container pt-3 text-muted">
@@ -213,6 +169,7 @@ class TestCoverage extends Component {
             {this.testCoverageProperties.map((x) => {
               const value = isPlanning ? data[x.key].planPercent : data[x.key].actualPercent;
               const kiloValue = kiloFormat(data[x.key].denominator);
+
               return (
                 <Range
                   key={x.key}
@@ -226,8 +183,8 @@ class TestCoverage extends Component {
             })}
           </div>
           <div className="d-flex mt-2 mb-3">
-            {this.testCoverageProperties.map((x, index) => (
-              <span key={index} className="test-coverage-item">
+            {this.testCoverageProperties.map((x) => (
+              <span key={x.key} className="test-coverage-item">
                 {x.label}
               </span>
             ))}
@@ -242,4 +199,12 @@ TestCoverage.propTypes = {
   match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
 };
 
-export default withRouter(TestCoverage);
+const mapStateToProps = (state) => ({
+  data: state.work.testCoverages,
+  graph: state.work.graph,
+  testDatas: state.work.testDatas,
+  testScenariosAndCases: state.work.testScenariosAndCases,
+});
+const mapDispatchToProps = { setTestCoverages };
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestCoverage));

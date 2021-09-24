@@ -1,6 +1,6 @@
-import React from 'react';
-import { ModalBody, Modal, ModalFooter, Button, ModalHeader } from 'reactstrap';
 import PropTypes from 'prop-types';
+import React from 'react';
+import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import Language from '../../languages/Language';
 import './style.scss';
 
@@ -18,7 +18,7 @@ export default function Alert({ id, title, content, iconClassName, actionText, o
         {_iconClassName && <i className={`${_iconClassName} mr-2`} />}
         {title || Language.get('Alert')}
       </ModalHeader>
-      <ModalBody>{content}</ModalBody>
+      <ModalBody>{content.toString()}</ModalBody>
       <ModalFooter className="border-0">
         <Button color="primary" className="px-4" onClick={onClose} outline size="sm">
           {Language.get(actionText)}

@@ -1,27 +1,27 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { withRouter } from 'react-router-dom';
 import {
+  CompositeDecorator,
+  convertFromRaw,
+  convertToRaw,
   Editor,
   EditorState,
-  RichUtils,
-  CompositeDecorator,
   getVisibleSelectionRect,
-  convertToRaw,
-  convertFromRaw,
   Modifier,
+  RichUtils,
 } from 'draft-js';
 import 'draft-js/dist/Draft.css';
-import { v4 as uuidv4 } from 'uuid';
-import debounce from 'lodash.debounce';
 import TestBasisManager from 'features/project/work/biz/TestBasis';
+import { setTestBasis } from 'features/project/work/slices/workSlice';
+import { STRING } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
-import testBasisService from 'features/project/work/services/testBasisService';
-import { STRING, CLASSIFY } from 'features/shared/constants';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
 import GlobalContext from 'security/GlobalContext';
-import DecoratedText from './DecoratedText';
+import { v4 as uuidv4 } from 'uuid';
 import ClassifyPopover from './ClassifyPopover';
+import DecoratedText from './DecoratedText';
 import StyleControlEditor from './StyleControlEditor';
 
 class TestBasis extends Component {
@@ -29,32 +29,46 @@ class TestBasis extends Component {
     super(props);
     this._selectedText = {};
     this._isFocusEditor = false;
+    this.ready = false;
     this.state = {
       isOpenClassifyPopover: false,
       editorState: EditorState.createEmpty(this._compositeDecorator()),
       selectionState: {},
-      ready: false,
     };
+    this.initiatedTestBasis = false;
   }
 
-  async componentDidMount() {
-    await this._getTestBasis();
+  componentDidMount() {
+    this.ready = true;
+
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleEventBus(message);
     });
+
+    this._initTestBasis();
+  }
+
+  componentDidUpdate() {
+    this._initTestBasis();
   }
 
   componentWillUnmount() {
     eventBus.unsubscribe(this);
   }
 
-  _saveTestBasis = (newEditorState) => {
-    const { editorState } = this.state;
-    const currentEditor = newEditorState || editorState;
-    const drawContentState = convertToRaw(currentEditor.getCurrentContent());
-    TestBasisManager.set(drawContentState);
-    this._createUpdateTestBasis(JSON.stringify(drawContentState));
+  _initTestBasis = () => {
+    const { testBasis, workLoaded } = this.props;
+
+    if (!this.initiatedTestBasis && testBasis.content !== null && workLoaded) {
+      const editorState = EditorState.createWithContent(
+        convertFromRaw(JSON.parse(testBasis.content)),
+        this._compositeDecorator()
+      );
+
+      this._updateEditorState(editorState);
+      this.initiatedTestBasis = true;
+    }
   };
 
   _findEntities = (contentBlock, callback, contentState) => {
@@ -75,7 +89,7 @@ class TestBasis extends Component {
           const { type, definition } = entityData;
           // update definition
           if (definition !== decoratedText) {
-            this._raiseEventBus(domainEvents.ACTION.UPDATE, newEntityData);
+            this._raiseEvent(domainEvents.ACTION.UPDATE, newEntityData);
             contentState.mergeEntityData(entityKey, newEntityData);
           }
           return <DecoratedText {...props} type={type} />;
@@ -83,80 +97,57 @@ class TestBasis extends Component {
       },
     ]);
 
-  _updateTextDecorators = (drawContent) => {
-    let newEditorState;
-    if (drawContent) {
-      newEditorState = EditorState.createWithContent(convertFromRaw(drawContent));
-    }
-    this.setState((state) => ({
+  _updateEditorState = (editorState, state) => {
+    const { setTestBasis } = this.props;
+    const drawContent = convertToRaw(editorState.getCurrentContent());
+
+    TestBasisManager.set(drawContent);
+
+    setTestBasis(JSON.stringify(drawContent));
+
+    const newState = {
       isOpenClassifyPopover: false,
-      editorState: EditorState.set(newEditorState || state.editorState, {
+      selectionState: {},
+      ...state,
+      editorState: EditorState.set(editorState, {
         decorator: this._compositeDecorator(),
       }),
-    }));
-  };
+    };
 
-  _createUpdateTestBasis = debounce((content) => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { getToken } = this.context;
-    return testBasisService.createUpdateAsync(getToken(), projectId, workId, { content });
-  }, 500);
-
-  _getTestBasis = async () => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { getToken } = this.context;
-    const result = await testBasisService.getAsync(getToken(), projectId, workId);
-    if (result.data) {
-      const { content } = result.data;
-      const drawContent = JSON.parse(content);
-      this._updateTextDecorators(drawContent);
-      TestBasisManager.set(drawContent);
-    }
-    setTimeout(() => {
-      this.setState({ ready: true });
-    }, 500);
+    this.setState(newState);
   };
 
   _removeCauseEffect = (definitionId) => {
-    const { ready } = this.state;
-    if (ready) {
-      const drawContentState = TestBasisManager.removeEntity(definitionId);
-      this._updateTextDecorators(drawContentState);
-      this._saveTestBasis();
+    if (this.ready) {
+      const drawContent = TestBasisManager.removeEntity(definitionId);
+      const editorState = EditorState.createWithContent(convertFromRaw(drawContent));
+
+      this._updateEditorState(editorState);
     }
   };
 
   /* Events */
-  _handleEventBus = async (message) => {
+  _handleEventBus = (message) => {
     const { action, type, value, receivers } = message;
     if (receivers === undefined || receivers.includes(domainEvents.DES.TESTBASIS)) {
       if (action === domainEvents.ACTION.ACCEPTDELETE) {
         this._removeCauseEffect(value.definitionId);
       }
       if (action === domainEvents.ACTION.NOTACCEPT) {
-        /*
-         * - handle not accepted when add,update or remove,
-         * - You can add more data to the message if needed, sample type of action which is not accepted
-         */
+        this._removeCauseEffect(value.definitionId);
       }
     }
   };
 
-  _raiseEventBus = (action, value) => {
-    let eventName = domainEvents.TESTBASIC_CLASSIFYASEFFECT_DOMAINEVENT;
-    if (value.type === CLASSIFY.CAUSE) {
-      eventName = domainEvents.TESTBASIC_CLASSIFYASCAUSE_DOMAINEVENT;
-    }
-    eventBus.publish(eventName, { action, value });
+  _raiseEvent = (action, value) => {
+    eventBus.publish(domainEvents.TESTBASIC_DOMAINEVENT, { action, value });
   };
   /* End event */
 
   /* Action */
   _handleChange = (newEditorState) => {
-    const { ready, editorState } = this.state;
-    if (!ready) {
+    const { editorState } = this.state;
+    if (!this.ready) {
       return;
     }
     const selectionState = newEditorState.getSelection();
@@ -192,27 +183,24 @@ class TestBasis extends Component {
       // check if delete definition
       const removedEntities = TestBasisManager.findRemovedEntities(drawContent);
       removedEntities.forEach((item) => {
-        this._raiseEventBus(domainEvents.ACTION.REMOVE, { ...item });
+        this._raiseEvent(domainEvents.ACTION.REMOVE, { ...item });
       });
-      this._saveTestBasis(newEditorState);
     }
-    this.setState({
-      editorState: newEditorState,
+
+    this._updateEditorState(newEditorState, {
       selectionState,
       isOpenClassifyPopover: selectedText.length > 0,
     });
   };
 
   _handleFocus = () => {
-    const { ready } = this.state;
-    if (ready) {
+    if (this.ready) {
       this._isFocusEditor = true;
     }
   };
 
   _handleKeyCommand = (command, editorState) => {
-    const { ready } = this.state;
-    if (ready) {
+    if (this.ready) {
       const newState = RichUtils.handleKeyCommand(editorState, command);
       if (newState) {
         this._handleChange(newState);
@@ -223,46 +211,44 @@ class TestBasis extends Component {
   };
 
   _toggleInlineStyle = (inlineStyle) => {
-    const { editorState, ready } = this.state;
-    if (ready) {
+    const { editorState } = this.state;
+    if (this.ready) {
       this._handleChange(RichUtils.toggleInlineStyle(editorState, inlineStyle));
     }
   };
 
   _toggleBlockType = (blockType) => {
-    const { editorState, ready } = this.state;
-    if (ready) {
+    const { editorState } = this.state;
+    if (this.ready) {
       this._handleChange(RichUtils.toggleBlockType(editorState, blockType));
     }
   };
 
-  _addCauseEffect = async (data) => {
-    const { editorState, selectionState, ready } = this.state;
-    if (ready) {
+  _addCauseEffect = (data) => {
+    const { editorState, selectionState } = this.state;
+    if (this.ready) {
       const contentState = editorState.getCurrentContent();
       const contentStateWithEntity = contentState.createEntity(STRING.DEFINITION, 'MUTABLE', data);
       const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
       const contentStateWithLink = Modifier.applyEntity(contentStateWithEntity, selectionState, entityKey);
       const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithLink });
-      await this.setState({ editorState: newEditorState, selectionState: {}, isOpenClassifyPopover: false });
-      this._updateTextDecorators();
-      this._saveTestBasis(newEditorState);
+
+      this._updateEditorState(newEditorState);
     }
   };
 
-  _classifyText = async (currentType) => {
-    const { ready } = this.state;
+  _classifyText = (currentType) => {
     const { type: previousType } = this._selectedText;
-    if (!ready || previousType === currentType) {
+    if (!this.ready || previousType === currentType) {
       return;
     }
     if (previousType) {
-      this._raiseEventBus(domainEvents.ACTION.REMOVE, { ...this._selectedText, type: previousType });
+      this._raiseEvent(domainEvents.ACTION.REMOVE, { ...this._selectedText, type: previousType });
     }
     if (currentType) {
       const definitionId = uuidv4();
-      await this._addCauseEffect({ ...this._selectedText, type: currentType, definitionId });
-      this._raiseEventBus(domainEvents.ACTION.ADD, { ...this._selectedText, type: currentType, definitionId });
+      this._addCauseEffect({ ...this._selectedText, type: currentType, definitionId });
+      this._raiseEvent(domainEvents.ACTION.ADD, { ...this._selectedText, type: currentType, definitionId });
     }
   };
   /* End Action */
@@ -295,11 +281,13 @@ class TestBasis extends Component {
     );
   }
 }
+
 TestBasis.propTypes = {
   match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
   decoratedText: PropTypes.string,
   entityKey: PropTypes.string,
 };
+
 TestBasis.defaultProps = {
   decoratedText: undefined,
   entityKey: undefined,
@@ -307,4 +295,8 @@ TestBasis.defaultProps = {
 
 TestBasis.contextType = GlobalContext;
 
-export default withRouter(TestBasis);
+const mapStateToProps = (state) => ({ testBasis: state.work.testBasis, workLoaded: state.work.loaded });
+
+const mapDispatchToProps = { setTestBasis };
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestBasis));

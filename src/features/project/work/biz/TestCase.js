@@ -1,5 +1,5 @@
 /* eslint-disable no-loop-func */
-import { RESULT_TYPE, CLASSIFY } from 'features/shared/constants';
+import { CLASSIFY, RESULT_TYPE } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
 import TestData from './TestData';
 
@@ -11,7 +11,6 @@ class TestCase {
   }
 
   updateTestCase(testScenarios = [], allTestDatas = [], graphNodes) {
-    this.testDataService.set(allTestDatas);
     this.allTestDatas = allTestDatas;
     this.graphNodes = graphNodes;
 
@@ -21,7 +20,7 @@ class TestCase {
       const causeAssertions = testScenarios[i].testAssertions.filter((x) => x.graphNode);
       for (let j = 0; j < causeAssertions.length; j++) {
         let testDatas = '';
-        const testData = this.testDataService.getTestData(causeAssertions[j].graphNode.nodeId);
+        const testData = this.testDataService.getTestData(allTestDatas, causeAssertions[j].graphNode.nodeId);
         if (testData) {
           testDatas = causeAssertions[j].result ? testData.trueDatas : testData.falseDatas;
         }

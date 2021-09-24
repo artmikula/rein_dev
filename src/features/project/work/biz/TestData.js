@@ -1,14 +1,7 @@
 import appConfig from 'features/shared/lib/appConfig';
+import { v4 as uuidv4 } from 'uuid';
 
 class TestData {
-  constructor() {
-    this._list = [];
-  }
-
-  set(list) {
-    this._list = list;
-  }
-
   createTest(nodeId) {
     const defaultType = 'String';
     return {
@@ -20,26 +13,36 @@ class TestData {
     };
   }
 
-  add(item, id) {
-    this._list.push({ ...item, id });
-    return this._list;
+  add(testDatas, item) {
+    const id = uuidv4();
+    const _testDatas = [...testDatas];
+    const newItem = { ...item, id };
+
+    _testDatas.push(newItem);
+
+    return _testDatas;
   }
 
-  remove(item) {
-    const index = this._list.findIndex((e) => e.nodeId === item.node);
+  remove(testDatas, item) {
+    const _testDatas = [...testDatas];
+    const index = _testDatas.findIndex((e) => e.nodeId === item.node);
+
     if (index >= 0) {
-      this._list.splice(index, 1);
+      _testDatas.splice(index, 1);
     }
-    return this._list;
+
+    return _testDatas;
   }
 
-  update(index, item) {
-    this._list[index] = item;
-    return this._list;
+  update(testDatas, item, index) {
+    const _testDatas = [...testDatas];
+    _testDatas[index] = item;
+
+    return _testDatas;
   }
 
-  getTestData(nodeId) {
-    return this._list.find((x) => x.nodeId === nodeId);
+  getTestData(testDatas, nodeId) {
+    return testDatas.find((x) => x.nodeId === nodeId);
   }
 }
 export default new TestData();

@@ -1,15 +1,15 @@
 /* eslint-disable no-bitwise */
-import appConfig from 'features/shared/lib/appConfig';
-import Enumerable from 'linq';
-import { v4 as uuid } from 'uuid';
 import {
+  CONSTRAINT_TYPE,
   GRAPH_NODE_TYPE,
   NODE_INSPECTION,
   OPERATOR_TYPE,
   RESULT_TYPE,
-  CONSTRAINT_TYPE,
   TEST_SCENARIO_TYPE,
 } from 'features/shared/constants';
+import appConfig from 'features/shared/lib/appConfig';
+import Enumerable from 'linq';
+import { v4 as uuid } from 'uuid';
 import constraintHelper from '../../Constraint';
 import TestScenarioHelper from '../TestScenarioHelper';
 
@@ -96,8 +96,10 @@ class MyerTechnique {
     testScenarios = TestScenarioHelper.findBaseScenario(testScenarios, this.causeNodes);
 
     inspectionDictionary.forEach((value, key) => {
-      const node = this.graphNodes.find((x) => key === x.id);
-      node.inspection = value;
+      const nodeIndex = this.graphNodes.findIndex((x) => key === x.id);
+      const node = this.graphNodes[nodeIndex];
+
+      this.graphNodes[nodeIndex] = { ...node, inspection: value };
     });
 
     for (let i = 0; i < testScenarios.length; i++) {

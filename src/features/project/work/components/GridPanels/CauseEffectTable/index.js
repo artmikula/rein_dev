@@ -1,33 +1,23 @@
 import CauseEffect from 'features/project/work/biz/CauseEffect';
-import causeEffectService from 'features/project/work/services/causeEffectService';
+import { setCauseEffects } from 'features/project/work/slices/workSlice';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Table } from 'reactstrap';
 import GlobalContext from 'security/GlobalContext';
+import { v4 as uuidv4 } from 'uuid';
 import CauseEffectRow from './CauseEffectRow';
 import AbbreviateConfirmContent from './components/AbbreviateConfirmContent';
 import './style.scss';
 
 class CauseEffectTable extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      listData: [],
-    };
-  }
-
-  async componentDidMount() {
-    await this._listData();
-    eventBus.subscribe(this, domainEvents.TESTBASIC_CLASSIFYASCAUSE_DOMAINEVENT, (event) => {
-      const { message } = event;
-      this._handleEvent(message);
-    });
-    eventBus.subscribe(this, domainEvents.TESTBASIC_CLASSIFYASEFFECT_DOMAINEVENT, (event) => {
+  componentDidMount() {
+    eventBus.subscribe(this, domainEvents.TESTBASIC_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleEvent(message);
     });
@@ -47,19 +37,9 @@ class CauseEffectTable extends Component {
 
   _raiseEvent = (message) => eventBus.publish(domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, message);
 
-  _listData = async () => {
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { getToken } = this.context;
-    const result = await causeEffectService.listAsync(getToken(), projectId, workId);
-    if (result.data) {
-      this.setState({ listData: result.data });
-    }
-  };
-
   _confirmAbbreviate = (value, similarItem) => {
     const { definition, type } = value;
-    const { listData } = this.state;
+    const { listData } = this.props;
     const newNode = CauseEffect.createNode(listData, type);
 
     return window.confirm(
@@ -84,7 +64,7 @@ class CauseEffectTable extends Component {
 
   /* Handle event */
   _handleAddEvent = async (value, confirmedAbbreviate = undefined) => {
-    const { listData } = this.state;
+    const { listData, setCauseEffects } = this.props;
     let parent = null;
     const checkResult = CauseEffect.checkExistOrSimilarity(value, listData, appConfig);
     // if existed
@@ -101,31 +81,21 @@ class CauseEffectTable extends Component {
       }
       parent = confirmedAbbreviate ? checkResult.similarItem : null;
     }
-    // create cause/effect item
+    // create cause/effect item and set id
     const newItem = CauseEffect.generateCauseEffectItem(listData, value, parent);
-    // call api add item
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
-    const { getToken } = this.context;
-    const result = await causeEffectService.createAsync(getToken(), projectId, workId, newItem);
+    newItem.id = uuidv4();
 
-    if (result.error) {
-      this._raiseEvent({ action: domainEvents.ACTION.NOTACCEPT, value: newItem });
-      CauseEffect.alertError(result.error);
-    } else {
-      newItem.id = result.data;
-      this.setState((state) => {
-        return { listData: [...state.listData, newItem] };
-      });
-      eventBus.publish(domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, {
-        action: domainEvents.ACTION.ADD,
-        value: newItem,
-      });
-    }
+    setCauseEffects([...listData, newItem]);
+
+    eventBus.publish(domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, {
+      action: domainEvents.ACTION.ADD,
+      value: newItem,
+    });
   };
 
-  _handleDeleteAction = async (item) => {
-    const removeList = await this._delete(item);
+  _handleDeleteAction = (item) => {
+    const removeList = this._delete(item);
+
     if (removeList) {
       removeList.forEach((e) => {
         this._raiseEvent({
@@ -137,45 +107,38 @@ class CauseEffectTable extends Component {
     }
   };
 
-  _delete = async (item) => {
-    const { listData } = this.state;
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
+  _delete = (item) => {
+    const { listData, setCauseEffects } = this.props;
     const { definitionId } = item;
     const data = listData.find((x) => x.definitionId === definitionId);
     if (!data) {
       return false;
     }
-    const { id } = data;
     // does not remove merged item
     if (data?.isMerged) {
       window.alert(Language.get('cannotremovemergedefinition'));
       return false;
     }
-    const { getToken } = this.context;
-    const result = await causeEffectService.deleteAsync(getToken(), projectId, workId, id);
-    if (result.error) {
-      alert(Language.get('errorwhendeletedefinition'));
-      return false;
-    }
+
+    const { id } = data;
     const newList = [];
     const removeList = [];
-    this.setState((state) => {
-      state.listData.forEach((data) => {
-        if (data.id === id || data.parent === id) {
-          removeList.push(data);
-        } else {
-          newList.push(data);
-        }
-      });
-      return { listData: newList };
+
+    listData.forEach((data) => {
+      if (data.id === id || data.parent === id) {
+        removeList.push(data);
+      } else {
+        newList.push(data);
+      }
     });
+
+    setCauseEffects(newList);
 
     return removeList;
   };
 
-  _handleRemoveEvent = async (item) => {
-    const removeList = await this._delete(item);
+  _handleRemoveEvent = (item) => {
+    const removeList = this._delete(item);
     if (removeList) {
       removeList.forEach((e) => {
         const receivers = [domainEvents.DES.GRAPH, domainEvents.DES.TESTDATA];
@@ -187,30 +150,23 @@ class CauseEffectTable extends Component {
     }
   };
 
-  _handleUpdateEvent = async (value) => {
-    const { listData } = this.state;
-    const { match } = this.props;
-    const { projectId, workId } = match.params;
+  _handleUpdateEvent = (value) => {
+    const { listData, setCauseEffects } = this.props;
     const { definitionId } = value;
     const index = listData.findIndex((e) => e.definitionId === definitionId);
+
     if (index < 0) {
       return;
     }
-    const { id } = listData[index];
+
     const newItem = { ...listData[index], ...value };
-    const { getToken } = this.context;
-    const result = await causeEffectService.updateAsync(getToken(), projectId, workId, id, newItem);
-    if (result.error) {
-      this._raiseEvent({ action: domainEvents.ACTION.NOTACCEPT, value });
-      CauseEffect.alertError(result.error);
-    } else {
-      listData[index] = newItem;
-      this.setState({ listData });
-    }
+    listData[index] = newItem;
+
+    setCauseEffects([...listData]);
   };
 
   _handleWorkMenuEvent = () => {
-    const { listData } = this.state;
+    const { listData } = this.props;
     const value = CauseEffect.generateReportData(listData);
     this._raiseEvent({
       action: domainEvents.ACTION.REPORTWORK,
@@ -219,18 +175,18 @@ class CauseEffectTable extends Component {
     });
   };
 
-  _handleEvent = async (message) => {
+  _handleEvent = (message) => {
     const { action, value, receivers } = message;
     if (receivers === undefined || receivers.includes(domainEvents.DES.CAUSEEFFECT)) {
       switch (action) {
         case domainEvents.ACTION.ADD:
-          await this._handleAddEvent(value);
+          this._handleAddEvent(value);
           break;
         case domainEvents.ACTION.UPDATE:
-          await this._handleUpdateEvent(value);
+          this._handleUpdateEvent(value);
           break;
         case domainEvents.ACTION.REMOVE:
-          await this._handleRemoveEvent(value);
+          this._handleRemoveEvent(value);
           break;
         case domainEvents.ACTION.ACCEPTDELETE:
           this._handleAcceptDeleteEvent(value);
@@ -245,7 +201,7 @@ class CauseEffectTable extends Component {
   };
 
   _handleAcceptDeleteEvent = (items) => {
-    const { listData } = this.state;
+    const { listData, setCauseEffects } = this.props;
     // get causeEffect need remove
     let removedcauseEffects = listData.filter((x) => items.some((item) => item.nodeId === x.node));
     // get causeEffect need remove include merged causeEffect;
@@ -259,7 +215,8 @@ class CauseEffectTable extends Component {
     );
 
     if (newListData.length !== listData.length) {
-      this.setState({ listData: newListData });
+      setCauseEffects(newListData);
+
       removedcauseEffects.forEach((removedcauseEffect) => {
         this._raiseEvent({
           action: domainEvents.ACTION.ACCEPTDELETE,
@@ -272,7 +229,8 @@ class CauseEffectTable extends Component {
 
   /* End handle event */
   render() {
-    const { listData } = this.state;
+    const { listData } = this.props;
+
     return (
       <Table bordered size="sm" className="border-bottom cause-effect-table">
         <thead className="bg-transparent">
@@ -295,4 +253,7 @@ CauseEffectTable.propTypes = {
 
 CauseEffectTable.contextType = GlobalContext;
 
-export default withRouter(CauseEffectTable);
+const mapStateToProps = (state) => ({ listData: state.work.causeEffects });
+const mapDispatchToProps = { setCauseEffects };
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(CauseEffectTable));

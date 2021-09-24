@@ -1,16 +1,7 @@
-import constraintService from 'features/project/work/services/constraintService';
-import graphLinkService from 'features/project/work/services/graphLinkService';
-import graphNodeService from 'features/project/work/services/graphNodeService';
 import { CLASSIFY, GRAPH_LINK_TYPE, GRAPH_NODE_TYPE } from 'features/shared/constants';
 import appConfig from 'features/shared/lib/appConfig';
 import { DEFAULT_NODE_X, DEFAULT_SPACE, EDGE_COLOR } from '../components/GridPanels/Graph/constants';
-import {
-  convertEdgeToDirectConstraint,
-  convertEdgeToGraphLink,
-  convertNodeToGraphNode,
-  convertNodeToUndirectConstraint,
-  isUndirectConstraintNode,
-} from '../components/GridPanels/Graph/utils';
+import { isUndirectConstraintNode } from '../components/GridPanels/Graph/utils';
 
 const allAreCause = (nodes) => {
   return !nodes.some((x) => x._private.data.type !== GRAPH_NODE_TYPE.CAUSE);
@@ -85,26 +76,6 @@ export const getEdgeParams = (sourceNode, isNotRelation) => {
     params.data.lineColor = EDGE_COLOR.CONSTRAINT;
   }
   return params;
-};
-
-export const createGraphNodeAsync = async (node, projectId, workId) => {
-  const grapNode = convertNodeToGraphNode(node);
-  return graphNodeService.createAsync(projectId, workId, grapNode);
-};
-
-export const createGraphLinkAsync = async (edge, projectId, workId) => {
-  const grapLink = convertEdgeToGraphLink(edge);
-  return graphLinkService.createAsync(projectId, workId, grapLink);
-};
-
-export const createUndirectConstraintAsync = async (node, projectId, workId) => {
-  const constraint = convertNodeToUndirectConstraint(node);
-  return constraintService.createAsync(projectId, workId, constraint);
-};
-
-export const createDirectConstraintAsync = async (edge, projectId, workId) => {
-  const constraint = convertEdgeToDirectConstraint(edge);
-  return constraintService.createAsync(projectId, workId, constraint);
 };
 
 export const getOldEdges = (sourceEdges, targetEdges, addedEle) => {
