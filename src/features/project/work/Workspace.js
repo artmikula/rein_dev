@@ -15,6 +15,7 @@ import CreateForm from './components';
 import AlertGenerateReport from './components/AlertGenerateReport';
 import GridPanels from './components/GridPanels';
 import MenuContainer from './components/Menu/MenuContainer';
+import testScenarioAnsCaseService from './services/testScenarioAndCaseService';
 import workService from './services/workService';
 
 class Workspace extends Component {
@@ -60,13 +61,15 @@ class Workspace extends Component {
     const { getToken } = this.context;
     const result = await workService.getAsync(getToken(), projectId, workId);
     const workData = localStorage.getItem(workId);
-    const work = workData ? JSON.parse(workData) : {}; // TODO
+    const work = workData ? JSON.parse(workData) : {};
+    testScenarioAnsCaseService.setId(`${workId}-testScenarioAnsCase`);
+    const testScenariosAndCases = testScenarioAnsCaseService.get();
 
     if (result.data) {
-      setWork({ ...work, ...result.data, loaded: true });
+      setWork({ ...work, ...result.data, testScenariosAndCases, loaded: true });
     } else {
       this._showErrorMessage(result.error);
-      setWork({ ...work, loaded: true });
+      setWork({ ...work, testScenariosAndCases, loaded: true });
     }
   };
 
