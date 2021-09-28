@@ -1,8 +1,10 @@
 /* eslint-disable max-lines */
 import Download from 'downloadjs';
 import testCaseHelper from 'features/project/work/biz/TestCase';
+import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
+import testScenarioAnsCaseService from 'features/project/work/services/testScenarioAndCaseService';
 import { setGraph, setTestScenariosAndCases } from 'features/project/work/slices/workSlice';
 import { FILE_NAME, TEST_CASE_METHOD, TEST_CASE_SHORTCUT, TEST_CASE_SHORTCUT_CODE } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
@@ -10,7 +12,6 @@ import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
-import Enumerable from 'linq';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -40,7 +41,7 @@ class TestScenarioAndCase extends Component {
   }
 
   componentDidMount() {
-    eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this._caculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       }
@@ -88,8 +89,8 @@ class TestScenarioAndCase extends Component {
         testScenario.testCases.forEach((testCase) => {
           const testDatas = testCase.testDatas.map((x) => {
             const result = {
-              graphNodeId: x.GraphNodeId,
-              data: x.Data,
+              graphNodeId: x.graphNodeId,
+              data: x.data,
             };
 
             return result;
@@ -105,16 +106,15 @@ class TestScenarioAndCase extends Component {
       });
 
       this.initiatedData = true;
-
-      this._setColumnsAndRows(graph.graphNodes, testCases, testScenariosAndCases);
+      this._setColumnsAndRows(testCases, testScenariosAndCases, graph.graphNodes);
     }
   };
 
   _caculateTestScenarioAndCase = (domainAction) => {
     const { graph, testDatas, setTestScenariosAndCases, setGraph, match } = this.props;
     const { workId } = match.params;
-
     let scenarioAndGraphNodes = null;
+
     if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
       scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
     } else {
@@ -123,13 +123,14 @@ class TestScenarioAndCase extends Component {
 
     const testCases = testCaseHelper.updateTestCase(scenarioAndGraphNodes.scenarios, testDatas, graph.graphNodes);
 
-    this._setColumnsAndRows(graph.graphNodes, testCases, scenarioAndGraphNodes.scenarios);
+    this._setColumnsAndRows(testCases, scenarioAndGraphNodes.scenarios, scenarioAndGraphNodes.graphNodes);
 
     const newTestScenariosAndCases = scenarioAndGraphNodes.scenarios.map((x) => {
       const scenario = {
         ...x,
         testAssertions: x.testAssertions.map((y) => {
           const assertion = {
+            ...y,
             result: y.result,
             graphNodeId: y.graphNode.id,
             workId,
@@ -158,8 +159,6 @@ class TestScenarioAndCase extends Component {
       return scenario;
     });
 
-    console.log(scenarioAndGraphNodes.graphNodes);
-
     setTestScenariosAndCases(newTestScenariosAndCases);
     setGraph({ ...graph, graphNodes: scenarioAndGraphNodes.graphNodes });
 
@@ -183,152 +182,11 @@ class TestScenarioAndCase extends Component {
     this.setState((state) => ({ expandId: { ...state.expandId, [id]: !state.expandId[id] } }));
   };
 
-  _onCheckboxChange = (e, id, key) => {
-    const { rows } = this.state;
-    const testScenario = rows.find((x) => x.id === id);
-    testScenario[key] = e.target.checked;
-
-    const data = {
-      id: testScenario.id,
-      isValid: testScenario.V,
-      isBaseScenario: testScenario.B,
-    };
-
-    // TODO
-  };
-
-  _onTestCaseChecked = (e, id, testScenarioId) => {
-    const { rows } = this.state;
-
-    const testScenario = rows.find((x) => x.id === testScenarioId);
-
-    const testCase = testScenario.testCases.find((x) => x.id === id);
-    testCase.isChecked = e.target.checked;
-
-    testScenario.isChecked = !testScenario.testCases.some((x) => !x.isChecked);
-
-    const data = [
-      {
-        id,
-        isChecked: e.target.checked,
-      },
-    ];
-
-    this.setState({ rows: [...rows] });
-    // TODO
-  };
-
-  _onTestScenarioChecked = (e, id) => {
-    const { rows } = this.state;
-
-    const testScenario = rows.find((x) => x.id === id);
-    testScenario.isChecked = e.target.checked;
-    for (let i = 0; i < testScenario.testCases.length; i++) {
-      testScenario.testCases[i].isChecked = e.target.checked;
-    }
-
-    this.setState({ rows: [...rows] });
-    // TODO
-  };
-
-  _getRows(testCases = [], scenarios = [], columns = []) {
-    if (!testCases || !scenarios) {
-      return [];
-    }
-
-    const rows = scenarios.map((scenario) => ({
-      ...scenario,
-      testCases: testCases.filter((e) => e.testScenarioId === scenario.id),
-      isChecked: !testCases.filter((e) => e.testScenarioId === scenario.id).some((x) => !x.isChecked),
-    }));
-    const testScenarios = rows.map((testScenario, testScenarioIndex) => {
-      const testScenarioItem = {};
-      testScenarioItem.Name = `TS#${testScenarioIndex + 1}(${testScenario.scenarioType})`;
-      testScenarioItem.isChecked = !!testScenario.isChecked;
-      testScenarioItem.id = testScenario.id;
-      columns.forEach((column) => {
-        if (column.key === 'results') {
-          testScenarioItem[column.headerName] = testScenario.expectedResults;
-        } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
-          testScenarioItem[column.headerName] = !!testScenario[column.key];
-        } else {
-          const testAssertion = testScenario.testAssertions.find((x) => x.graphNode.id === column.graphNodeId);
-          if (testAssertion) {
-            testScenarioItem[column.headerName] = testAssertion.result ? 'T' : 'F';
-          } else {
-            testScenarioItem[column.headerName] = '';
-          }
-        }
-      });
-      testScenarioItem.testCases = testScenario.testCases.map((testCase, testCaseIndex) => {
-        const testCaseItem = {};
-        testCaseItem.Name = `TC#${testScenarioIndex + 1}-${testCaseIndex + 1}`;
-        testCaseItem.isChecked = !!testCase.isChecked;
-        testCaseItem.id = testCase.id;
-        columns.forEach((column) => {
-          if (column.key === 'results') {
-            testCaseItem[column.headerName] = testCase[column.key].join(', ');
-          } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
-            testCaseItem[column.headerName] = '';
-          } else {
-            const testData = testCase.testDatas.find((x) => x.graphNodeId === column.graphNodeId);
-            testCaseItem[column.headerName] = testData ? testData.data : '';
-          }
-        });
-        return testCaseItem;
-      });
-      return testScenarioItem;
-    });
-
-    return testScenarios;
-  }
-
-  _getColumns(graphNodes) {
-    const columns = [
-      {
-        headerName: 'V',
-        key: 'isValid',
-      },
-      {
-        headerName: 'B',
-        key: 'isBaseScenario',
-      },
-    ];
-
-    const orderdGraphNodes = Enumerable.from(graphNodes)
-      .orderBy((x) => x.nodeId)
-      .toArray();
-
-    const graphNodeHeaders = orderdGraphNodes.map((x) => {
-      return {
-        headerName: x.nodeId,
-        graphNodeId: x.id,
-      };
-    });
-    columns.push({ headerName: Language.get('expectedresults'), key: 'results' });
-    columns.push(...graphNodeHeaders);
-
-    return columns;
-  }
-
-  _setColumnsAndRows = (graphNodes, testCases = [], scenarios = []) => {
-    const columns = this._getColumns(graphNodes);
-    const rows = this._getRows(testCases, scenarios, columns);
+  _setColumnsAndRows = (testCases = [], scenarios = [], graphNodes = []) => {
+    const columns = TestScenarioHelper.convertToColumns(graphNodes, Language);
+    const rows = TestScenarioHelper.convertToRows(testCases, scenarios, columns);
 
     this.setState({ rows, columns });
-  };
-
-  _onCheckboxChange = (e, id, key) => {
-    const { rows } = this.state;
-    const testScenario = rows.find((x) => x.id === id);
-    testScenario[key] = e.target.checked;
-
-    const data = {
-      id: testScenario.id,
-      isValid: testScenario.isValid,
-      isBaseScenario: testScenario.isBaseScenario,
-    };
-    // TODO
   };
 
   _createExportRowData(item, columns) {
@@ -383,9 +241,33 @@ class TestScenarioAndCase extends Component {
     }
   };
 
+  _handleTestCaseChecked = (scenarioId, caseId, checked) => {
+    testScenarioAnsCaseService.checkTestCase(scenarioId, caseId, checked);
+    const { rows } = this.state;
+    const newRows = testScenarioAnsCaseService.checkTestCase(scenarioId, caseId, checked, rows);
+
+    this.setState({ rows: newRows });
+  };
+
+  _handleTestScenarioChecked = (scenarioId, checked) => {
+    testScenarioAnsCaseService.checkTestScenario(scenarioId, checked);
+    const { rows } = this.state;
+    const newRows = testScenarioAnsCaseService.checkTestScenario(scenarioId, checked, rows);
+
+    this.setState({ rows: newRows });
+  };
+
+  _handleCheckboxChange = (scenarioId, key, checked) => {
+    testScenarioAnsCaseService.changeTestScenario(scenarioId, key, checked);
+    const { rows } = this.state;
+    const newRows = testScenarioAnsCaseService.changeTestScenario(scenarioId, key, checked, rows);
+
+    this.setState({ rows: newRows });
+  };
+
   render() {
     const { selectedOption, columns, rows, expandId } = this.state;
-    console.log('render');
+
     return (
       <div>
         <div className="d-flex justify-content-between m-2">
@@ -468,7 +350,7 @@ class TestScenarioAndCase extends Component {
                                 <Input
                                   type="checkbox"
                                   className="mt-1"
-                                  onChange={(e) => this._onTestScenarioChecked(e, testScenario.id)}
+                                  onChange={(e) => this._handleTestScenarioChecked(testScenario.id, e.target.checked)}
                                   checked={testScenario.isChecked}
                                 />
                                 <span className="font-weight-500" style={{ lineHeight: '21px' }}>
@@ -486,7 +368,9 @@ class TestScenarioAndCase extends Component {
                                       <Input
                                         type="checkbox"
                                         className="mt-1"
-                                        onChange={(e) => this._onTestCaseChecked(e, testCase.id, testScenario.id)}
+                                        onChange={(e) =>
+                                          this._handleTestCaseChecked(testScenario.id, testCase.id, e.target.checked)
+                                        }
                                         checked={testCase.isChecked}
                                       />
                                       {testCase.Name}
@@ -504,8 +388,10 @@ class TestScenarioAndCase extends Component {
                           <span className="d-flex">
                             <input
                               type="checkbox"
-                              onChange={(e) => this._onCheckboxChange(e, testScenario.id, column.headerName)}
-                              defaultChecked={testScenario[column.headerName]}
+                              onChange={(e) =>
+                                this._handleCheckboxChange(testScenario.id, column.key, e.target.checked)
+                              }
+                              checked={testScenario[column.headerName]}
                             />
                           </span>
                         ) : (
