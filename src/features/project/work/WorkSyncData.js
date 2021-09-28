@@ -14,15 +14,12 @@ class WorkSyncData extends Component {
   }
 
   componentDidMount() {
-    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, this._handleEvent);
+    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, this._handleEvent);
     eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, this._handleEvent);
-    eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, this._handleEvent);
+    eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, this._handleEvent);
     eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, this._handleEvent);
     eventBus.subscribe(this, domainEvents.TESTBASIC_DOMAINEVENT, this._handleEvent);
-  }
-
-  componentDidUpdate() {
-    this._sync();
+    eventBus.subscribe(this, domainEvents.TEST_COVERAGE_DOMAINEVENT, this._handleEvent);
   }
 
   _sync = debounce(async () => {
@@ -33,10 +30,10 @@ class WorkSyncData extends Component {
     const { getToken } = this.context;
 
     const data = { testBasis, causeEffects, graph, testCoverages: testCoverage, testDatas, testScenariosAndCases };
-    const result = await workService.updateWorkDataAsync(getToken(), projectId, workId, data);
+    await workService.updateWorkDataAsync(getToken(), projectId, workId, data);
 
     this.syncing = false;
-  }, 10000);
+  }, 3000);
 
   _handleEvent = async () => {
     if (!this.syncing) {

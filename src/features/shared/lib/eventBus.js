@@ -1,5 +1,5 @@
-import { EventEmitter } from 'fbemitter';
 import { Mutex } from 'async-mutex';
+import { EventEmitter } from 'fbemitter';
 import { v4 as uuidv4 } from 'uuid';
 
 class EventBus {
@@ -28,9 +28,6 @@ class EventBus {
     this.publish('eventbus.addedListener', {
       listeners: this.emitter.listeners.length,
     });
-
-    // console.log('EventBus - Adding listener', { component, eventName });
-    // console.log('EventBus', this.subscibers);
   }
 
   unsubscribe(component) {
@@ -41,16 +38,12 @@ class EventBus {
 
       this.subscibers = this.subscibers.filter((x) => x.component !== component);
 
-      // console.log('EventBus - Removing listeners', listeners);
-
       listeners.forEach((x) => x.token.remove());
-
-      // console.log('EventBus', this.subscibers);
     });
   }
 
   publish(eventName, message) {
-    // console.log('EventBus - publishing event', { eventName, message });
+    console.log('EventBus - publishing event', { eventName, message });
     const eventId = uuidv4();
     this.emitter.emit(eventName, { eventId, message });
   }

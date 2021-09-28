@@ -45,7 +45,7 @@ class TestDataTable extends Component {
   }
 
   async componentDidMount() {
-    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleCauseEffectEvents(message);
     });

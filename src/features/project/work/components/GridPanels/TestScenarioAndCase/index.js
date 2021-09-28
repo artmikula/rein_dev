@@ -40,7 +40,7 @@ class TestScenarioAndCase extends Component {
   }
 
   componentDidMount() {
-    eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this._caculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       }
@@ -105,8 +105,8 @@ class TestScenarioAndCase extends Component {
       });
 
       this.initiatedData = true;
-      this._setColumns(graph.graphNodes);
-      this._setRows(testCases, testScenariosAndCases);
+
+      this._setColumnsAndRows(graph.graphNodes, testCases, testScenariosAndCases);
     }
   };
 
@@ -123,8 +123,7 @@ class TestScenarioAndCase extends Component {
 
     const testCases = testCaseHelper.updateTestCase(scenarioAndGraphNodes.scenarios, testDatas, graph.graphNodes);
 
-    this._setColumns(graph.graphNodes);
-    this._setRows(testCases, scenarioAndGraphNodes.scenarios);
+    this._setColumnsAndRows(graph.graphNodes, testCases, scenarioAndGraphNodes.scenarios);
 
     const newTestScenariosAndCases = scenarioAndGraphNodes.scenarios.map((x) => {
       const scenario = {
@@ -232,12 +231,11 @@ class TestScenarioAndCase extends Component {
     // TODO
   };
 
-  _setRows(testCases = [], scenarios = []) {
+  _getRows(testCases = [], scenarios = [], columns = []) {
     if (!testCases || !scenarios) {
-      return;
+      return [];
     }
 
-    const { columns } = this.state;
     const rows = scenarios.map((scenario) => ({
       ...scenario,
       testCases: testCases.filter((e) => e.testScenarioId === scenario.id),
@@ -281,10 +279,11 @@ class TestScenarioAndCase extends Component {
       });
       return testScenarioItem;
     });
-    this.setState({ rows: testScenarios });
+
+    return testScenarios;
   }
 
-  _setColumns(graphNodes) {
+  _getColumns(graphNodes) {
     const columns = [
       {
         headerName: 'V',
@@ -308,10 +307,16 @@ class TestScenarioAndCase extends Component {
     });
     columns.push({ headerName: Language.get('expectedresults'), key: 'results' });
     columns.push(...graphNodeHeaders);
-    this.setState({
-      columns,
-    });
+
+    return columns;
   }
+
+  _setColumnsAndRows = (graphNodes, testCases = [], scenarios = []) => {
+    const columns = this._getColumns(graphNodes);
+    const rows = this._getRows(testCases, scenarios, columns);
+
+    this.setState({ rows, columns });
+  };
 
   _onCheckboxChange = (e, id, key) => {
     const { rows } = this.state;

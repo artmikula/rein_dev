@@ -41,7 +41,7 @@ class TestBasis extends Component {
   componentDidMount() {
     this.ready = true;
 
-    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleEventBus(message);
     });
