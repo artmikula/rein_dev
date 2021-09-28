@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { COVERAGE_ASPECT } from 'features/shared/constants';
 import { cloneDeep } from 'lodash';
+import testScenarioAnsCaseService from '../services/testScenarioAndCaseService';
 
 export const defaultTestCoverageData = {
   [COVERAGE_ASPECT.TestCase]: { actualPercent: 0, planPercent: 0, denominator: 0 },
@@ -17,6 +18,7 @@ export const defaultTestCoverageData = {
 export const storeData = (state) => {
   const workId = state.id ?? 'workId';
 
+  testScenarioAnsCaseService.set(state.testScenariosAndCases);
   localStorage.setItem(workId, JSON.stringify(state));
 };
 

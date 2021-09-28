@@ -121,7 +121,7 @@ class Graph extends Component {
     document.body.append(dummyContainer);
 
     const dummyGraphManager = new GraphManager(dummyContainer, { onGraphChange: () => {} });
-    this._drawGraph(dummyGraphManager);
+    this._drawGraph(dummyGraphManager, null, true);
     dummyGraphManager.graph.center();
 
     const href = dummyGraphManager.graph.jpg();

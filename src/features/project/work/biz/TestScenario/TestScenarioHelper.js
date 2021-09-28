@@ -1,8 +1,7 @@
 /* eslint-disable no-bitwise */
-import appConfig from 'features/shared/lib/appConfig';
+import { GRAPH_NODE_TYPE, OPERATOR_TYPE, RESULT_TYPE, SCENARIO_PROPERTIES } from 'features/shared/constants';
 import Enumerable from 'linq';
 import { v4 as uuid } from 'uuid';
-import { GRAPH_NODE_TYPE, OPERATOR_TYPE, RESULT_TYPE, SCENARIO_PROPERTIES } from 'features/shared/constants';
 
 class TestScenarioHelper {
   buildAssertionDictionary(graphLinks) {
@@ -371,6 +370,89 @@ class TestScenarioHelper {
     }
 
     return true;
+  }
+
+  convertToRows(testCases = [], scenarios = [], columns = []) {
+    const rows = scenarios.map((scenario) => ({
+      ...scenario,
+      testCases: testCases.filter((e) => e.testScenarioId === scenario.id),
+      isChecked: !testCases.filter((e) => e.testScenarioId === scenario.id).some((x) => !x.isChecked),
+    }));
+
+    const testScenarios = rows.map((testScenario, testScenarioIndex) => {
+      const testScenarioItem = {};
+      testScenarioItem.Name = `TS#${testScenarioIndex + 1}(${testScenario.scenarioType})`;
+      testScenarioItem.isChecked = !!testScenario.isChecked;
+      testScenarioItem.id = testScenario.id;
+
+      columns.forEach((column) => {
+        if (column.key === 'results') {
+          testScenarioItem[column.headerName] = testScenario.expectedResults;
+        } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
+          testScenarioItem[column.headerName] = !!testScenario[column.key];
+        } else {
+          const testAssertion = testScenario.testAssertions.find((x) => x.graphNode.id === column.graphNodeId);
+          if (testAssertion) {
+            testScenarioItem[column.headerName] = testAssertion.result ? 'T' : 'F';
+          } else {
+            testScenarioItem[column.headerName] = '';
+          }
+        }
+      });
+
+      testScenarioItem.testCases = testScenario.testCases.map((testCase, testCaseIndex) => {
+        const testCaseItem = {};
+        testCaseItem.Name = `TC#${testScenarioIndex + 1}-${testCaseIndex + 1}`;
+        testCaseItem.isChecked = !!testCase.isChecked;
+        testCaseItem.id = testCase.id;
+
+        columns.forEach((column) => {
+          if (column.key === 'results') {
+            testCaseItem[column.headerName] = testCase[column.key].join(', ');
+          } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
+            testCaseItem[column.headerName] = '';
+          } else {
+            const testData = testCase.testDatas.find((x) => x.graphNodeId === column.graphNodeId);
+            testCaseItem[column.headerName] = testData ? testData.data : '';
+          }
+        });
+
+        return testCaseItem;
+      });
+
+      return testScenarioItem;
+    });
+
+    return testScenarios;
+  }
+
+  convertToColumns(graphNodes = [], language) {
+    const columns = [
+      {
+        headerName: 'V',
+        key: 'isValid',
+      },
+      {
+        headerName: 'B',
+        key: 'isBaseScenario',
+      },
+    ];
+
+    const orderdGraphNodes = Enumerable.from(graphNodes)
+      .orderBy((x) => x.nodeId)
+      .toArray();
+
+    const graphNodeHeaders = orderdGraphNodes.map((x) => {
+      return {
+        headerName: x.nodeId,
+        graphNodeId: x.id,
+      };
+    });
+
+    columns.push({ headerName: language.get('expectedresults'), key: 'results' });
+    columns.push(...graphNodeHeaders);
+
+    return columns;
   }
 }
 
