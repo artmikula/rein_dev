@@ -200,7 +200,7 @@ TestCoverage.propTypes = {
 };
 
 const mapStateToProps = (state) => ({
-  data: state.work.testCoverages,
+  data: state.work.testCoverage,
   graph: state.work.graph,
   testDatas: state.work.testDatas,
   testScenariosAndCases: state.work.testScenariosAndCases,

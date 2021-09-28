@@ -20,7 +20,7 @@ class RestServiceHelper {
       const response = await action;
       return this.handleResponse(response);
     } catch (error) {
-      return this.handleError(error);
+      return this.handleError(error.message);
     }
   }
 }

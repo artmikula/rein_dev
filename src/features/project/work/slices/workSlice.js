@@ -14,12 +14,6 @@ export const defaultTestCoverageData = {
   [COVERAGE_ASPECT.InvalidScenario]: { actualPercent: 0, planPercent: 0, denominator: 0 },
 };
 
-export const storeData = (state) => {
-  const workId = state.id ?? 'workId';
-
-  localStorage.setItem(workId, JSON.stringify(state));
-};
-
 export const workSlice = createSlice({
   name: 'work',
   initialState: {
@@ -37,7 +31,7 @@ export const workSlice = createSlice({
       graphLinks: [],
       constraints: [],
     },
-    testCoverages: cloneDeep(defaultTestCoverageData),
+    testCoverage: cloneDeep(defaultTestCoverageData),
     testDatas: [],
     testScenariosAndCases: [],
   },
@@ -53,36 +47,12 @@ export const workSlice = createSlice({
       const generatingReport = action.payload;
       return { ...state, generatingReport };
     },
-    setTestBasis: (state, action) => {
-      const newState = { ...state, testBasis: { content: action.payload } };
-      storeData(newState);
-      return newState;
-    },
-    setCauseEffects: (state, action) => {
-      const newState = { ...state, causeEffects: action.payload };
-      storeData(newState);
-      return newState;
-    },
-    setGraph: (state, action) => {
-      const newState = { ...state, graph: action.payload };
-      storeData(newState);
-      return newState;
-    },
-    setTestCoverages: (state, action) => {
-      const newState = { ...state, testCoverages: action.payload };
-      storeData(newState);
-      return newState;
-    },
-    setTestDatas: (state, action) => {
-      const newState = { ...state, testDatas: action.payload };
-      storeData(newState);
-      return newState;
-    },
-    setTestScenariosAndCases: (state, action) => {
-      const newState = { ...state, testScenariosAndCases: action.payload };
-      storeData(newState);
-      return newState;
-    },
+    setTestBasis: (state, action) => ({ ...state, testBasis: { content: action.payload } }),
+    setCauseEffects: (state, action) => ({ ...state, causeEffects: action.payload }),
+    setGraph: (state, action) => ({ ...state, graph: action.payload }),
+    setTestCoverages: (state, action) => ({ ...state, testCoverage: action.payload }),
+    setTestDatas: (state, action) => ({ ...state, testDatas: action.payload }),
+    setTestScenariosAndCases: (state, action) => ({ ...state, testScenariosAndCases: action.payload }),
   },
 });
 

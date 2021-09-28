@@ -1,10 +1,11 @@
 import ProjectLayout from 'features/project/components/ProjectLayout';
-import { setWork } from 'features/project/work/slices/workSlice';
+import { defaultTestCoverageData, setWork } from 'features/project/work/slices/workSlice';
 import { ModalForm } from 'features/shared/components';
 import alert from 'features/shared/components/Alert';
 import { DEFAULT_LAYOUTS, DEFAULT_LAYOUTS_SINGLE, STRING, VIEW_MODE, WORK_FORM_NAME } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import LocalStorage from 'features/shared/lib/localStorage';
+import { cloneDeep } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -16,6 +17,7 @@ import AlertGenerateReport from './components/AlertGenerateReport';
 import GridPanels from './components/GridPanels';
 import MenuContainer from './components/Menu/MenuContainer';
 import workService from './services/workService';
+import WorkSyncData from './WorkSyncData';
 
 class Workspace extends Component {
   constructor(props) {
@@ -55,23 +57,54 @@ class Workspace extends Component {
     this.unlisten();
   }
 
+  getWorkData = (data) => {
+    const {
+      testBasis,
+      causeEffects,
+      graphNodes,
+      graphLinks,
+      constraints,
+      testCoverage,
+      testDatas,
+      testScenariosAndCases,
+      ...others
+    } = data;
+
+    const _data = {
+      ...others,
+      testBasis: data.testBasis ?? {
+        content: null,
+      },
+      causeEffects: data.causeEffects ?? [],
+      graph: {
+        graphNodes: data.graphNodes ?? [],
+        graphLinks: data.graphLinks ?? [],
+        constraints: data.constraints ?? [],
+      },
+      testCoverage: data.testCoverage ?? cloneDeep(defaultTestCoverageData),
+      testDatas: data.testDatas ?? [],
+      testScenariosAndCases: data.testScenariosAndCases ?? [],
+    };
+
+    return _data;
+  };
+
   _getWorkById = async (projectId, workId) => {
     const { setWork } = this.props;
     const { getToken } = this.context;
     const result = await workService.getAsync(getToken(), projectId, workId);
-    const workData = localStorage.getItem(workId);
-    const work = workData ? JSON.parse(workData) : {}; // TODO
 
     if (result.data) {
-      setWork({ ...work, ...result.data, loaded: true });
+      setWork({ ...this.getWorkData(result.data), loaded: true });
     } else {
+      console.log(result.error);
       this._showErrorMessage(result.error);
-      setWork({ ...work, loaded: true });
+      setWork({ loaded: true });
     }
   };
 
   _showErrorMessage = (error) => {
-    alert(error.detail, { title: error.title, error: true });
+    alert(error, { error: true });
   };
 
   _handleChangePanelLayout = (layouts, mode) => {
@@ -268,6 +301,7 @@ class Workspace extends Component {
           onToggle={() => this._closeRenameWorkModal()}
           onSubmit={this._handleSubmitRenameWork}
         />
+        <WorkSyncData />
       </ProjectLayout>
     );
   }
