@@ -57,7 +57,17 @@ class Workspace extends Component {
     this.unlisten();
   }
 
-  getWorkData = (data) => {
+  _convertTestScenarios = (testScenarios = []) =>
+    testScenarios.map((testScenario) => ({
+      ...testScenario,
+      testCases: testScenario.testCases.map((testCase) => ({
+        ...testCase,
+        testDatas: JSON.parse(testCase.testDatas),
+        results: JSON.parse(testCase.results),
+      })),
+    }));
+
+  _getWorkData = (data) => {
     const {
       testBasis,
       causeEffects,
@@ -66,24 +76,26 @@ class Workspace extends Component {
       constraints,
       testCoverage,
       testDatas,
-      testScenariosAndCases,
+      testScenarios,
       ...others
     } = data;
 
+    testScenarios.forEach((x) => x);
+
     const _data = {
       ...others,
-      testBasis: data.testBasis ?? {
+      testBasis: testBasis ?? {
         content: null,
       },
-      causeEffects: data.causeEffects ?? [],
+      causeEffects: causeEffects ?? [],
       graph: {
-        graphNodes: data.graphNodes ?? [],
-        graphLinks: data.graphLinks ?? [],
-        constraints: data.constraints ?? [],
+        graphNodes: graphNodes ?? [],
+        graphLinks: graphLinks ?? [],
+        constraints: constraints ?? [],
       },
-      testCoverage: data.testCoverage ?? cloneDeep(defaultTestCoverageData),
-      testDatas: data.testDatas ?? [],
-      testScenariosAndCases: data.testScenariosAndCases ?? [],
+      testCoverage: testCoverage ?? cloneDeep(defaultTestCoverageData),
+      testDatas: testDatas ?? [],
+      testScenariosAndCases: this._convertTestScenarios(testScenarios ?? []),
     };
 
     return _data;
@@ -93,14 +105,14 @@ class Workspace extends Component {
     const { setWork } = this.props;
     const { getToken } = this.context;
     const result = await workService.getAsync(getToken(), projectId, workId);
+    let workData = {};
 
-    if (result.data) {
-      setWork({ ...this.getWorkData(result.data), loaded: true });
-    } else {
-      console.log(result.error);
+    if (result.error) {
       this._showErrorMessage(result.error);
-      setWork({ loaded: true });
+    } else {
+      workData = this._getWorkData(result.data);
     }
+    setWork({ ...workData, loaded: true });
   };
 
   _showErrorMessage = (error) => {
