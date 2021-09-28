@@ -25,13 +25,8 @@ class TestScenarioAnsCaseService {
       const testCase = testScenario.testCases.find((x) => x.id === caseId);
 
       if (testCase) {
-        testCase.isChecked = checked;
-
-        if (!checked) {
-          testScenario.isChecked = checked;
-        } else {
-          testScenario.isChecked = !testScenario.testCases.some((x) => !x.isChecked);
-        }
+        testCase.isSelected = checked;
+        testScenario.isSelected = !testScenario.testCases.some((x) => !x.isSelected);
 
         if (!defaultData) {
           this.set(data);
@@ -47,10 +42,10 @@ class TestScenarioAnsCaseService {
     const testScenario = data.find((x) => x.id === scenarioId);
 
     if (testScenario) {
-      testScenario.isChecked = checked;
+      testScenario.isSelected = checked;
 
       for (let i = 0; i < testScenario.testCases.length; i++) {
-        testScenario.testCases[i].isChecked = checked;
+        testScenario.testCases[i].isSelected = checked;
       }
 
       if (!defaultData) {

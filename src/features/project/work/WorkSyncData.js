@@ -5,6 +5,7 @@ import { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import GlobalContext from 'security/GlobalContext';
+import testScenarioAnsCaseService from './services/testScenarioAnsCaseService';
 import workService from './services/workService';
 
 class WorkSyncData extends Component {
@@ -25,11 +26,21 @@ class WorkSyncData extends Component {
   _sync = debounce(async () => {
     this.syncing = true;
 
-    const { testBasis, causeEffects, graph, testCoverage, testDatas, testScenariosAndCases, match } = this.props;
+    const { testBasis, causeEffects, graph, testCoverage, testDatas, match } = this.props;
     const { projectId, workId } = match.params;
     const { getToken } = this.context;
 
-    const data = { testBasis, causeEffects, graph, testCoverages: testCoverage, testDatas, testScenariosAndCases };
+    const testScenariosAndCases = testScenarioAnsCaseService.get();
+
+    const data = {
+      testBasis,
+      causeEffects,
+      graph,
+      testCoverages: testCoverage,
+      testDatas,
+      testScenariosAndCases,
+    };
+
     await workService.updateWorkDataAsync(getToken(), projectId, workId, data);
 
     this.syncing = false;
@@ -52,7 +63,6 @@ const mapStateToProps = (state) => ({
   graph: state.work.graph,
   testCoverage: state.work.testCoverage,
   testDatas: state.work.testDatas,
-  testScenariosAndCases: state.work.testScenariosAndCases,
 });
 
 WorkSyncData.contextType = GlobalContext;

@@ -68,7 +68,8 @@ class TestCoverage extends Component {
   };
 
   _calculate = () => {
-    const { graph, testDatas, testScenariosAndCases } = this.props;
+    const { graph, testDatas } = this.props;
+    const testScenariosAndCases = testScenarioAnsCaseService.get();
 
     const testCases = [];
     testScenariosAndCases.forEach((testScenario) => {
@@ -204,7 +205,6 @@ const mapStateToProps = (state) => ({
   data: state.work.testCoverage,
   graph: state.work.graph,
   testDatas: state.work.testDatas,
-  testScenariosAndCases: state.work.testScenariosAndCases,
 });
 const mapDispatchToProps = { setTestCoverages };
 

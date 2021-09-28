@@ -16,6 +16,7 @@ import CreateForm from './components';
 import AlertGenerateReport from './components/AlertGenerateReport';
 import GridPanels from './components/GridPanels';
 import MenuContainer from './components/Menu/MenuContainer';
+import testScenarioAnsCaseService from './services/testScenarioAnsCaseService';
 import workService from './services/workService';
 import WorkSyncData from './WorkSyncData';
 
@@ -95,7 +96,6 @@ class Workspace extends Component {
       },
       testCoverage: testCoverage ?? cloneDeep(defaultTestCoverageData),
       testDatas: testDatas ?? [],
-      testScenariosAndCases: this._convertTestScenarios(testScenarios ?? []),
     };
 
     return _data;
@@ -107,11 +107,18 @@ class Workspace extends Component {
     const result = await workService.getAsync(getToken(), projectId, workId);
     let workData = {};
 
+    testScenarioAnsCaseService.setId(workId);
+
     if (result.error) {
       this._showErrorMessage(result.error);
+      testScenarioAnsCaseService.set([]);
     } else {
+      const testScenariosAndCases = this._convertTestScenarios(result.data.testScenarios ?? []);
+      testScenarioAnsCaseService.set(testScenariosAndCases);
+
       workData = this._getWorkData(result.data);
     }
+
     setWork({ ...workData, loaded: true });
   };
 
@@ -234,7 +241,6 @@ class Workspace extends Component {
     const { workName, projectName } = this.props;
     const isSplitView = viewMode === VIEW_MODE.SPLIT;
     const menus = <MenuContainer />;
-    console.log('work re-render');
 
     return (
       <ProjectLayout menus={menus}>
