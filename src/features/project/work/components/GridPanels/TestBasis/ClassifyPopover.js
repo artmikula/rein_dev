@@ -1,12 +1,19 @@
-import React from 'react';
+import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { Popover } from 'react-tiny-popover';
 import { ListGroup, ListGroupItem } from 'reactstrap';
-import Language from 'features/shared/languages/Language';
 import { CLASSIFY } from '../../../../../shared/constants';
 
 export default function ClassifyPopover(props) {
   const { isOpen, visibleSelectionRect, onClickItem } = props;
+
+  const handleMouseDown = (e) => {
+    e.stopPropagation();
+    const type = e.target.getAttribute('classifytype');
+    onClickItem(type);
+  };
+
   return (
     <Popover
       containerClassName="bg-white"
@@ -17,7 +24,8 @@ export default function ClassifyPopover(props) {
             className="small p-2 text-primary"
             tag="button"
             action
-            onClick={() => onClickItem(CLASSIFY.CAUSE)}
+            classifytype={CLASSIFY.CAUSE}
+            onMouseDown={handleMouseDown}
           >
             {Language.get('classifyascause')}
           </ListGroupItem>
@@ -25,7 +33,8 @@ export default function ClassifyPopover(props) {
             className="small p-2 text-success"
             tag="button"
             action
-            onClick={() => onClickItem(CLASSIFY.EFFECT)}
+            classifytype={CLASSIFY.EFFECT}
+            onMouseDown={handleMouseDown}
           >
             {Language.get('classifyaseffect')}
           </ListGroupItem>

@@ -27,8 +27,6 @@ import StyleControlEditor from './StyleControlEditor';
 class TestBasis extends Component {
   constructor(props) {
     super(props);
-    this._selectedText = {};
-    this._isFocusEditor = false;
     this.ready = false;
     this.state = {
       isOpenClassifyPopover: false,
@@ -39,14 +37,13 @@ class TestBasis extends Component {
   }
 
   componentDidMount() {
-    this.ready = true;
-
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleEventBus(message);
     });
 
     this._initTestBasis();
+    this.ready = true;
   }
 
   componentDidUpdate() {
@@ -144,58 +141,35 @@ class TestBasis extends Component {
   };
   /* End event */
 
-  /* Action */
-  _handleChange = (newEditorState) => {
+  _getSelectedText = (selectionState, newEditorState = null) => {
     const { editorState } = this.state;
+    const _editorState = newEditorState ?? editorState;
+
+    const anchorKey = selectionState.getAnchorKey();
+    const content = _editorState.getCurrentContent();
+    const contentBlock = content.getBlockForKey(anchorKey);
+    const start = selectionState.getStartOffset();
+    const end = selectionState.getEndOffset();
+    const selectedText = contentBlock.getText().slice(start, end);
+
+    return { selectedText, anchorKey, start, end };
+  };
+
+  /* Action */
+  _handleChange = (editorState) => {
+    const { isOpenClassifyPopover } = this.state;
+
     if (!this.ready) {
       return;
     }
-    const selectionState = newEditorState.getSelection();
-    const isCollapsed = selectionState.isCollapsed();
-    const currentAnchorKey = selectionState.getAnchorKey();
-    const currentContent = newEditorState.getCurrentContent();
-    const currentContentBlock = currentContent.getBlockForKey(currentAnchorKey);
-    const start = selectionState.getStartOffset();
-    const end = selectionState.getEndOffset();
-    const currentPlainText = currentContent.getPlainText();
-    let selectedText = currentContentBlock.getText().slice(start, end);
-    const drawContent = convertToRaw(currentContent);
-    const prevContent = editorState.getCurrentContent();
-    const prevPlainText = prevContent.getPlainText();
-    // select new definition
-    if (!isCollapsed) {
-      this._selectedText = { definition: selectedText };
-    }
-    if (this._isFocusEditor) {
-      this._isFocusEditor = false;
-      this.setState({ isOpenClassifyPopover: false });
-      return;
-    }
-    // check is selected exist definition
-    const existDefinition = TestBasisManager.getEntity(selectedText, currentAnchorKey, start, end);
-    if (existDefinition) {
-      this._selectedText = existDefinition;
+
+    const selectionState = editorState.getSelection();
+    const { selectedText } = this._getSelectedText(selectionState, editorState);
+
+    if (selectedText.length > 0 && !isOpenClassifyPopover) {
+      this.setState({ isOpenClassifyPopover: true, selectionState });
     } else {
-      selectedText = '';
-      this._selectedText = {};
-    }
-    if (currentPlainText.length !== prevPlainText.length) {
-      // check if delete definition
-      const removedEntities = TestBasisManager.findRemovedEntities(drawContent);
-      removedEntities.forEach((item) => {
-        this._raiseEvent(domainEvents.ACTION.REMOVE, { ...item });
-      });
-    }
-
-    this._updateEditorState(newEditorState, {
-      selectionState,
-      isOpenClassifyPopover: selectedText.length > 0,
-    });
-  };
-
-  _handleFocus = () => {
-    if (this.ready) {
-      this._isFocusEditor = true;
+      this._updateEditorState(editorState, { selectionState });
     }
   };
 
@@ -237,18 +211,25 @@ class TestBasis extends Component {
     }
   };
 
-  _classifyText = (currentType) => {
-    const { type: previousType } = this._selectedText;
-    if (!this.ready || previousType === currentType) {
+  _classifyText = (type) => {
+    if (!this.ready) {
       return;
     }
-    if (previousType) {
-      this._raiseEvent(domainEvents.ACTION.REMOVE, { ...this._selectedText, type: previousType });
+
+    const { selectionState } = this.state;
+    const { selectedText, anchorKey, start, end } = this._getSelectedText(selectionState);
+    const existDefinition = TestBasisManager.getEntity(selectedText, anchorKey, start, end);
+
+    let removedDefinitionId;
+
+    if (existDefinition && existDefinition.type !== type) {
+      removedDefinitionId = existDefinition.definitionId;
     }
-    if (currentType) {
+
+    if ((existDefinition && existDefinition.type !== type) || !existDefinition) {
       const definitionId = uuidv4();
-      this._addCauseEffect({ ...this._selectedText, type: currentType, definitionId });
-      this._raiseEvent(domainEvents.ACTION.ADD, { ...this._selectedText, type: currentType, definitionId });
+      this._addCauseEffect({ type, definitionId, definition: selectedText });
+      this._raiseEvent(domainEvents.ACTION.ADD, { type, definitionId, definition: selectedText, removedDefinitionId });
     }
   };
   /* End Action */
@@ -270,7 +251,6 @@ class TestBasis extends Component {
           editorState={editorState}
           handleKeyCommand={this._handleKeyCommand}
           onChange={this._handleChange}
-          onFocus={this._handleFocus}
         />
         <ClassifyPopover
           isOpen={isOpenClassifyPopover}
