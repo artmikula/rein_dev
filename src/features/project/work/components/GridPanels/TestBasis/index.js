@@ -220,16 +220,14 @@ class TestBasis extends Component {
     const { selectedText, anchorKey, start, end } = this._getSelectedText(selectionState);
     const existDefinition = TestBasisManager.getEntity(selectedText, anchorKey, start, end);
 
-    let removedDefinitionId;
-
     if (existDefinition && existDefinition.type !== type) {
-      removedDefinitionId = existDefinition.definitionId;
+      this._raiseEvent(domainEvents.ACTION.ADD, existDefinition);
     }
 
     if ((existDefinition && existDefinition.type !== type) || !existDefinition) {
       const definitionId = uuidv4();
       this._addCauseEffect({ type, definitionId, definition: selectedText });
-      this._raiseEvent(domainEvents.ACTION.ADD, { type, definitionId, definition: selectedText, removedDefinitionId });
+      this._raiseEvent(domainEvents.ACTION.ADD, { type, definitionId, definition: selectedText });
     }
   };
   /* End Action */
