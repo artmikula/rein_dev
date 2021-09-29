@@ -119,7 +119,8 @@ class SSMertic extends Component {
   }
 
   _caculateSSMetricValue = () => {
-    const { testBasis, causeEffects, graph, testScenariosAndCases } = this.props;
+    const { testBasis, causeEffects, graph } = this.props;
+    const testScenariosAndCases = testScenarioAnsCaseService.get();
 
     SSMetricHelper.initValue(graph.graphNodes, graph.graphLinks, graph.constraints, causeEffects);
     const newChartDatas = this.baseChartDatas.map((x) => {
@@ -285,7 +286,6 @@ const mapStateToProps = (state) => ({
   testBasis: state.work.testBasis,
   causeEffects: state.work.causeEffects,
   graph: state.work.graph,
-  testScenariosAndCases: state.work.testScenariosAndCases,
 });
 
 export default connect(mapStateToProps)(withRouter(SSMertic));

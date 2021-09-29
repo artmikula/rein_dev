@@ -376,13 +376,13 @@ class TestScenarioHelper {
     const rows = scenarios.map((scenario) => ({
       ...scenario,
       testCases: testCases.filter((e) => e.testScenarioId === scenario.id),
-      isChecked: !testCases.filter((e) => e.testScenarioId === scenario.id).some((x) => !x.isChecked),
+      isSelected: !testCases.filter((e) => e.testScenarioId === scenario.id).some((x) => !x.isSelected),
     }));
 
     const testScenarios = rows.map((testScenario, testScenarioIndex) => {
       const testScenarioItem = {};
       testScenarioItem.Name = `TS#${testScenarioIndex + 1}(${testScenario.scenarioType})`;
-      testScenarioItem.isChecked = !!testScenario.isChecked;
+      testScenarioItem.isSelected = !!testScenario.isSelected;
       testScenarioItem.id = testScenario.id;
 
       columns.forEach((column) => {
@@ -403,7 +403,7 @@ class TestScenarioHelper {
       testScenarioItem.testCases = testScenario.testCases.map((testCase, testCaseIndex) => {
         const testCaseItem = {};
         testCaseItem.Name = `TC#${testScenarioIndex + 1}-${testCaseIndex + 1}`;
-        testCaseItem.isChecked = !!testCase.isChecked;
+        testCaseItem.isSelected = !!testCase.isSelected;
         testCaseItem.id = testCase.id;
 
         columns.forEach((column) => {

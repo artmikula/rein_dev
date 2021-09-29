@@ -4,8 +4,8 @@ import testCaseHelper from 'features/project/work/biz/TestCase';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
-import testScenarioAnsCaseService from 'features/project/work/services/testScenarioAndCaseService';
-import { setGraph, setTestScenariosAndCases } from 'features/project/work/slices/workSlice';
+import testScenarioAnsCaseService from 'features/project/work/services/testScenarioAnsCaseService';
+import { setGraph } from 'features/project/work/slices/workSlice';
 import { FILE_NAME, TEST_CASE_METHOD, TEST_CASE_SHORTCUT, TEST_CASE_SHORTCUT_CODE } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
@@ -41,7 +41,7 @@ class TestScenarioAndCase extends Component {
   }
 
   componentDidMount() {
-    eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this._caculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       }
@@ -81,8 +81,9 @@ class TestScenarioAndCase extends Component {
   }
 
   _initData = () => {
-    const { graph, testScenariosAndCases, workLoaded } = this.props;
+    const { graph, workLoaded } = this.props;
     const testCases = [];
+    const testScenariosAndCases = testScenarioAnsCaseService.get();
 
     if (!this.initiatedData && workLoaded) {
       testScenariosAndCases.forEach((testScenario) => {
@@ -111,7 +112,7 @@ class TestScenarioAndCase extends Component {
   };
 
   _caculateTestScenarioAndCase = (domainAction) => {
-    const { graph, testDatas, setTestScenariosAndCases, setGraph, match } = this.props;
+    const { graph, testDatas, setGraph, match } = this.props;
     const { workId } = match.params;
     let scenarioAndGraphNodes = null;
 
@@ -159,7 +160,7 @@ class TestScenarioAndCase extends Component {
       return scenario;
     });
 
-    setTestScenariosAndCases(newTestScenariosAndCases);
+    testScenarioAnsCaseService.set(newTestScenariosAndCases);
     setGraph({ ...graph, graphNodes: scenarioAndGraphNodes.graphNodes });
 
     this._raiseEvent({
@@ -190,7 +191,7 @@ class TestScenarioAndCase extends Component {
   };
 
   _createExportRowData(item, columns) {
-    const row = { Name: item.Name, Checked: item.isChecked };
+    const row = { Name: item.Name, Checked: item.isSelected };
     columns.forEach((col) => {
       row[col.headerName] = item[col.headerName];
     });
@@ -241,12 +242,20 @@ class TestScenarioAndCase extends Component {
     }
   };
 
+  _setRows = (rows) => {
+    this._raiseEvent({
+      action: domainEvents.ACTION.UPDATE,
+    });
+
+    this.setState({ rows });
+  };
+
   _handleTestCaseChecked = (scenarioId, caseId, checked) => {
     testScenarioAnsCaseService.checkTestCase(scenarioId, caseId, checked);
     const { rows } = this.state;
     const newRows = testScenarioAnsCaseService.checkTestCase(scenarioId, caseId, checked, rows);
 
-    this.setState({ rows: newRows });
+    this._setRows(newRows);
   };
 
   _handleTestScenarioChecked = (scenarioId, checked) => {
@@ -254,7 +263,7 @@ class TestScenarioAndCase extends Component {
     const { rows } = this.state;
     const newRows = testScenarioAnsCaseService.checkTestScenario(scenarioId, checked, rows);
 
-    this.setState({ rows: newRows });
+    this._setRows(newRows);
   };
 
   _handleCheckboxChange = (scenarioId, key, checked) => {
@@ -262,7 +271,7 @@ class TestScenarioAndCase extends Component {
     const { rows } = this.state;
     const newRows = testScenarioAnsCaseService.changeTestScenario(scenarioId, key, checked, rows);
 
-    this.setState({ rows: newRows });
+    this._setRows(newRows);
   };
 
   render() {
@@ -351,7 +360,7 @@ class TestScenarioAndCase extends Component {
                                   type="checkbox"
                                   className="mt-1"
                                   onChange={(e) => this._handleTestScenarioChecked(testScenario.id, e.target.checked)}
-                                  checked={testScenario.isChecked}
+                                  checked={testScenario.isSelected ?? false}
                                 />
                                 <span className="font-weight-500" style={{ lineHeight: '21px' }}>
                                   {testScenario.Name}
@@ -371,7 +380,7 @@ class TestScenarioAndCase extends Component {
                                         onChange={(e) =>
                                           this._handleTestCaseChecked(testScenario.id, testCase.id, e.target.checked)
                                         }
-                                        checked={testCase.isChecked}
+                                        checked={testCase.isSelected ?? false}
                                       />
                                       {testCase.Name}
                                     </Label>
@@ -391,7 +400,7 @@ class TestScenarioAndCase extends Component {
                               onChange={(e) =>
                                 this._handleCheckboxChange(testScenario.id, column.key, e.target.checked)
                               }
-                              checked={testScenario[column.headerName]}
+                              checked={testScenario[column.key] ?? false}
                             />
                           </span>
                         ) : (
@@ -426,11 +435,9 @@ const mapStateToProps = (state) => ({
   workName: state.work.name,
   graph: state.work.graph,
   testDatas: state.work.testDatas,
-  testScenariosAndCases: state.work.testScenariosAndCases,
-  set: state.work.testScenariosAndCases,
   workLoaded: state.work.loaded,
 });
 
-const mapDispatchToProps = { setTestScenariosAndCases, setGraph };
+const mapDispatchToProps = { setGraph };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestScenarioAndCase));

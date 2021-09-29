@@ -441,7 +441,6 @@ class GraphManager {
     let zoom = clientWidth / width;
     zoom = clientHeight / height < zoom ? clientHeight / height : zoom;
     this.graph.zoom(zoom - 0.05);
-    console.log(zoom);
     // align center all nodes
     this.graph.center();
   };

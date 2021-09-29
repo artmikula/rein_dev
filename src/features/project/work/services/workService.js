@@ -50,5 +50,12 @@ class WorkService {
     const response = await restServiceHelper.requestAsync(restService.postAsync(url));
     return response;
   }
+
+  async updateWorkDataAsync(token, projectId, workId, data) {
+    const url = `/project/${projectId}/common/${workId}`;
+    restService.setToken(token);
+    const response = await restServiceHelper.requestAsync(restService.postAsync(url, data));
+    return response;
+  }
 }
 export default new WorkService();

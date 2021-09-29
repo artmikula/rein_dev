@@ -50,7 +50,7 @@ class TestCoverage {
 
   calculateCoverageByTestCase() {
     const casesCount = this.testCases.length;
-    const checkedCasesCount = this.testCases.filter((x) => x.isChecked).length;
+    const checkedCasesCount = this.testCases.filter((x) => x.isSelected).length;
 
     return {
       numerator: checkedCasesCount,
@@ -63,7 +63,7 @@ class TestCoverage {
     const trueCauses = [];
     const falseCauses = [];
 
-    const checkedCases = this.testCases.filter((x) => x.isChecked);
+    const checkedCases = this.testCases.filter((x) => x.isSelected);
     for (let i = 0; i < checkedCases.length; i++) {
       const testAssertions = checkedCases[i].testScenario.testAssertions.filter(
         (x) => x.graphNode && x.graphNode.type === GRAPH_NODE_TYPE.CAUSE
@@ -94,7 +94,7 @@ class TestCoverage {
     const trueDatas = new Map();
     const falseDatas = new Map();
 
-    const checkedCases = this.testCases.filter((x) => x.isChecked);
+    const checkedCases = this.testCases.filter((x) => x.isSelected);
     for (let i = 0; i < checkedCases.length; i++) {
       const testAssertions = checkedCases[i].testScenario.testAssertions.filter(
         (x) => x.graphNode && x.graphNode.type === GRAPH_NODE_TYPE.CAUSE
@@ -148,7 +148,7 @@ class TestCoverage {
 
   calculateCoverageByEffect() {
     const effects = this.effectNodes.length;
-    const unCheckedCases = this.testCases.filter((x) => !x.isChecked);
+    const unCheckedCases = this.testCases.filter((x) => !x.isSelected);
 
     const allResults = Enumerable.from(this.testScenarios)
       .selectMany((x) => x.testResults)
@@ -181,7 +181,7 @@ class TestCoverage {
     let checkedCasesCount = 0;
     let casesCount = 0;
     for (let i = 0; i < testCasesContainsCause.length; i++) {
-      if (testCasesContainsCause[i].isChecked) {
+      if (testCasesContainsCause[i].isSelected) {
         checkedCasesCount++;
       }
 
@@ -196,7 +196,7 @@ class TestCoverage {
 
   calculateCoverageByScenario() {
     const scenariosCount = this.testScenarios.length;
-    const notCheckedCases = this.testCases.filter((x) => !x.isChecked);
+    const notCheckedCases = this.testCases.filter((x) => !x.isSelected);
     const notCheckedScenarios = [];
     for (let i = 0; i < notCheckedCases.length; i++) {
       if (!notCheckedScenarios.some((x) => x.id === notCheckedCases[i].testScenario.id)) {
@@ -216,7 +216,7 @@ class TestCoverage {
     const baseTestCases = this.testCases.filter((x) => x.testScenario.isBaseScenario);
     for (let i = 0; i < baseTestCases.length; i++) {
       cases += 1.0;
-      if (baseTestCases[i].isChecked) {
+      if (baseTestCases[i].isSelected) {
         checkedCases += 1.0;
       }
     }
@@ -233,7 +233,7 @@ class TestCoverage {
     const baseTestCases = this.testCases.filter((x) => x.testScenario.isValid);
     for (let i = 0; i < baseTestCases.length; i++) {
       cases += 1.0;
-      if (baseTestCases[i].isChecked) {
+      if (baseTestCases[i].isSelected) {
         checkedCases += 1.0;
       }
     }
@@ -250,7 +250,7 @@ class TestCoverage {
     const baseTestCases = this.testCases.filter((x) => x.testScenario.isValid);
     for (let i = 0; i < baseTestCases.length; i++) {
       cases += 1.0;
-      if (baseTestCases[i].isChecked) {
+      if (baseTestCases[i].isSelected) {
         checkedCases += 1.0;
       }
     }

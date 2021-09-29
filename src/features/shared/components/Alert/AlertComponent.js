@@ -18,7 +18,7 @@ export default function Alert({ id, title, content, iconClassName, actionText, o
         {_iconClassName && <i className={`${_iconClassName} mr-2`} />}
         {title || Language.get('Alert')}
       </ModalHeader>
-      <ModalBody>{content.toString()}</ModalBody>
+      <ModalBody>{content}</ModalBody>
       <ModalFooter className="border-0">
         <Button color="primary" className="px-4" onClick={onClose} outline size="sm">
           {Language.get(actionText)}

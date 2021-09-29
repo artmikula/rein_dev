@@ -32,6 +32,7 @@ class TestCoverage extends Component {
 
   _setTestCoverages = (data) => {
     const { setTestCoverages } = this.props;
+    this._raiseEvent({ action: domainEvents.ACTION.UPDATE });
     setTestCoverages(data);
   };
 
@@ -62,12 +63,13 @@ class TestCoverage extends Component {
     return !isEqual(this.oldData, data) && isPlanning;
   };
 
-  _raiseEvent = (action, value) => {
-    eventBus.publish(domainEvents.TEST_COVERAGE_ONCHANGE_DOMAINEVENT, { action, value });
+  _raiseEvent = (message) => {
+    eventBus.publish(domainEvents.TEST_COVERAGE_DOMAINEVENT, message);
   };
 
   _calculate = () => {
-    const { graph, testDatas, testScenariosAndCases } = this.props;
+    const { graph, testDatas } = this.props;
+    const testScenariosAndCases = testScenarioAnsCaseService.get();
 
     const testCases = [];
     testScenariosAndCases.forEach((testScenario) => {
@@ -142,7 +144,7 @@ class TestCoverage extends Component {
     const { data } = this.props;
 
     if (action === domainEvents.ACTION.REPORTWORK) {
-      eventBus.publish(domainEvents.TEST_COVERAGE_ONCHANGE_DOMAINEVENT, {
+      this._raiseEvent({
         action: domainEvents.ACTION.REPORTWORK,
         value: { testCoverage: testCoverage.generateReportData(data) },
         receivers: [domainEvents.DES.WORKMENU],
@@ -200,10 +202,9 @@ TestCoverage.propTypes = {
 };
 
 const mapStateToProps = (state) => ({
-  data: state.work.testCoverages,
+  data: state.work.testCoverage,
   graph: state.work.graph,
   testDatas: state.work.testDatas,
-  testScenariosAndCases: state.work.testScenariosAndCases,
 });
 const mapDispatchToProps = { setTestCoverages };
 

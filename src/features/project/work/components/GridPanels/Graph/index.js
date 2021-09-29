@@ -56,7 +56,7 @@ class Graph extends Component {
     // get graph state
     this.graphState = this.graphManager.getState();
     // register domain event
-    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, (event) => {
       this._handleEvents(event.message);
     });
     eventBus.subscribe(this, domainEvents.GRAPH_MENU_DOMAINEVENT, (event) => {
@@ -84,7 +84,7 @@ class Graph extends Component {
   }
 
   _raiseEvent = (message) => {
-    eventBus.publish(domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, message);
+    eventBus.publish(domainEvents.GRAPH_DOMAINEVENT, message);
   };
 
   _handleGraphChange = () => {
@@ -121,7 +121,7 @@ class Graph extends Component {
     document.body.append(dummyContainer);
 
     const dummyGraphManager = new GraphManager(dummyContainer, { onGraphChange: () => {} });
-    this._drawGraph(dummyGraphManager, null, true);
+    this._drawGraph(dummyGraphManager);
     dummyGraphManager.graph.center();
 
     const href = dummyGraphManager.graph.jpg();

@@ -21,7 +21,7 @@ class CauseEffectTable extends Component {
       const { message } = event;
       this._handleEvent(message);
     });
-    eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleEvent(message);
     });
@@ -35,7 +35,7 @@ class CauseEffectTable extends Component {
     eventBus.unsubscribe(this);
   }
 
-  _raiseEvent = (message) => eventBus.publish(domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, message);
+  _raiseEvent = (message) => eventBus.publish(domainEvents.CAUSEEFFECT_DOMAINEVENT, message);
 
   _confirmAbbreviate = (value, similarItem) => {
     const { definition, type } = value;
@@ -87,7 +87,7 @@ class CauseEffectTable extends Component {
 
     setCauseEffects([...listData, newItem]);
 
-    eventBus.publish(domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, {
+    eventBus.publish(domainEvents.CAUSEEFFECT_DOMAINEVENT, {
       action: domainEvents.ACTION.ADD,
       value: newItem,
     });

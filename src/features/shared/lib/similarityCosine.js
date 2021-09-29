@@ -58,7 +58,12 @@ class SimilarityCosine {
     return Math.acos(Number(cos).toFixed(4));
   };
 
-  distanceTwoString = (firstString, secondString) => this.distance(firstString.split(''), secondString.split(''));
+  distanceTwoString = (firstString, secondString) => {
+    const _firstString = firstString ?? '';
+    const _secondString = secondString ?? '';
+
+    return this.distance(_firstString.split(''), _secondString.split(''));
+  };
 }
 
 export default new SimilarityCosine();

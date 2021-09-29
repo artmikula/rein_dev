@@ -30,13 +30,13 @@ class WorkMenu extends Component {
 
   componentDidMount() {
     this._getRecentWorks();
-    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_ONCHANGE_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, (event) => {
       this._handleReportEvent(event);
     });
-    eventBus.subscribe(this, domainEvents.GRAPH_ONCHANGE_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       this._handleReportEvent(event);
     });
-    eventBus.subscribe(this, domainEvents.TEST_COVERAGE_ONCHANGE_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.TEST_COVERAGE_DOMAINEVENT, (event) => {
       this._handleReportEvent(event);
     });
     eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {

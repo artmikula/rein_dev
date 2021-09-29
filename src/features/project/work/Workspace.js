@@ -1,10 +1,11 @@
 import ProjectLayout from 'features/project/components/ProjectLayout';
-import { setWork } from 'features/project/work/slices/workSlice';
+import { defaultTestCoverageData, setWork } from 'features/project/work/slices/workSlice';
 import { ModalForm } from 'features/shared/components';
 import alert from 'features/shared/components/Alert';
 import { DEFAULT_LAYOUTS, DEFAULT_LAYOUTS_SINGLE, STRING, VIEW_MODE, WORK_FORM_NAME } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import LocalStorage from 'features/shared/lib/localStorage';
+import { cloneDeep } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -15,8 +16,9 @@ import CreateForm from './components';
 import AlertGenerateReport from './components/AlertGenerateReport';
 import GridPanels from './components/GridPanels';
 import MenuContainer from './components/Menu/MenuContainer';
-import testScenarioAnsCaseService from './services/testScenarioAndCaseService';
+import testScenarioAnsCaseService from './services/testScenarioAnsCaseService';
 import workService from './services/workService';
+import WorkSyncData from './WorkSyncData';
 
 class Workspace extends Component {
   constructor(props) {
@@ -56,25 +58,72 @@ class Workspace extends Component {
     this.unlisten();
   }
 
+  _convertTestScenarios = (testScenarios = []) =>
+    testScenarios.map((testScenario) => ({
+      ...testScenario,
+      testCases: testScenario.testCases.map((testCase) => ({
+        ...testCase,
+        testDatas: JSON.parse(testCase.testDatas),
+        results: JSON.parse(testCase.results),
+      })),
+    }));
+
+  _getWorkData = (data) => {
+    const {
+      testBasis,
+      causeEffects,
+      graphNodes,
+      graphLinks,
+      constraints,
+      testCoverage,
+      testDatas,
+      testScenarios,
+      ...others
+    } = data;
+
+    testScenarios.forEach((x) => x);
+
+    const _data = {
+      ...others,
+      testBasis: testBasis ?? {
+        content: null,
+      },
+      causeEffects: causeEffects ?? [],
+      graph: {
+        graphNodes: graphNodes ?? [],
+        graphLinks: graphLinks ?? [],
+        constraints: constraints ?? [],
+      },
+      testCoverage: testCoverage ?? cloneDeep(defaultTestCoverageData),
+      testDatas: testDatas ?? [],
+    };
+
+    return _data;
+  };
+
   _getWorkById = async (projectId, workId) => {
     const { setWork } = this.props;
     const { getToken } = this.context;
     const result = await workService.getAsync(getToken(), projectId, workId);
-    const workData = localStorage.getItem(workId);
-    const work = workData ? JSON.parse(workData) : {};
-    testScenarioAnsCaseService.setId(`${workId}-testScenarioAnsCase`);
-    const testScenariosAndCases = testScenarioAnsCaseService.get();
+    let workData = {};
 
-    if (result.data) {
-      setWork({ ...work, ...result.data, testScenariosAndCases, loaded: true });
-    } else {
+    testScenarioAnsCaseService.setId(workId);
+
+    if (result.error) {
       this._showErrorMessage(result.error);
-      setWork({ ...work, testScenariosAndCases, loaded: true });
+      testScenarioAnsCaseService.set([]);
+    } else {
+      const testScenariosAndCases = this._convertTestScenarios(result.data.testScenarios ?? []);
+      testScenarioAnsCaseService.set(testScenariosAndCases);
+
+      workData = this._getWorkData(result.data);
     }
+
+    setWork({ ...workData, loaded: true });
   };
 
   _showErrorMessage = (error) => {
-    alert(error.detail, { title: error.title, error: true });
+    alert(error, { error: true });
   };
 
   _handleChangePanelLayout = (layouts, mode) => {
@@ -270,6 +319,7 @@ class Workspace extends Component {
           onToggle={() => this._closeRenameWorkModal()}
           onSubmit={this._handleSubmitRenameWork}
         />
+        <WorkSyncData />
       </ProjectLayout>
     );
   }
