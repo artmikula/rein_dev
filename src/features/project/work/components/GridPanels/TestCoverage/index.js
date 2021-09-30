@@ -6,7 +6,6 @@ import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import cloneDeep from 'lodash.clonedeep';
 import isEqual from 'lodash.isequal';
-import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -197,10 +196,6 @@ class TestCoverage extends Component {
     );
   }
 }
-
-TestCoverage.propTypes = {
-  match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
-};
 
 const mapStateToProps = (state) => ({
   data: state.work.testCoverage,

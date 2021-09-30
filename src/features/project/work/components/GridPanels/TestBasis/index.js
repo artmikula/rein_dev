@@ -265,7 +265,6 @@ class TestBasis extends Component {
 }
 
 TestBasis.propTypes = {
-  match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
   decoratedText: PropTypes.string,
   entityKey: PropTypes.string,
 };

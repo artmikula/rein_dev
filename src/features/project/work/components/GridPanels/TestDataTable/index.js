@@ -14,7 +14,6 @@ import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
 import Mousetrap from 'mousetrap';
-import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -281,9 +280,6 @@ class TestDataTable extends Component {
     );
   }
 }
-TestDataTable.propTypes = {
-  match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
-};
 
 const mapStateToProps = (state) => ({
   workName: state.work.name,

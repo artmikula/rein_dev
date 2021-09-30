@@ -6,7 +6,6 @@ import { DEFAULT_LAYOUTS, DEFAULT_LAYOUTS_SINGLE, STRING, VIEW_MODE, WORK_FORM_N
 import Language from 'features/shared/languages/Language';
 import LocalStorage from 'features/shared/lib/localStorage';
 import { cloneDeep } from 'lodash';
-import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
@@ -324,15 +323,6 @@ class Workspace extends Component {
     );
   }
 }
-
-Workspace.propTypes = {
-  match: PropTypes.shape({
-    params: PropTypes.shape({
-      projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-      workId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    }),
-  }).isRequired,
-};
 
 Workspace.contextType = GlobalContext;
 

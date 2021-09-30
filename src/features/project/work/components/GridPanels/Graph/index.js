@@ -288,7 +288,6 @@ class Graph extends Component {
 }
 
 Graph.propTypes = {
-  match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
   setActionHandler: PropTypes.func.isRequired,
 };
 

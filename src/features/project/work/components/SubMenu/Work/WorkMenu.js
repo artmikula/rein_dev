@@ -69,12 +69,12 @@ class WorkMenu extends Component {
   };
 
   _generateReport = async (data) => {
-    const { work, setGeneratingReport } = this.props;
+    const { workName, projectName, workVersion, setGeneratingReport } = this.props;
     const reportData = {
-      projectName: work.projectName,
-      workName: work.name,
-      functionName: work.name,
-      version: work.version,
+      projectName,
+      workName,
+      functionName: workName,
+      version: workVersion,
       reporter: '',
       reviewer: '',
       approver: '',
@@ -87,14 +87,14 @@ class WorkMenu extends Component {
       testScenarios: [],
       ...data,
     };
-    reportData.workName = work.name;
+    reportData.workName = workName;
     reportData.testCases.forEach((e) => {
       const testCase = e;
       testCase.causes = reportData.causes.map((cause) => ({ ...cause, type: testCase[cause.node] }));
     });
 
     const blob = await pdf(ReportDocument(reportData)).toBlob();
-    Download(blob, FILE_NAME.REPORT_WORK.replace('workname', work.name));
+    Download(blob, FILE_NAME.REPORT_WORK.replace('workname', workName));
     setGeneratingReport(false);
   };
 
@@ -218,7 +218,9 @@ class WorkMenu extends Component {
   }
 }
 const mapStateToProps = (state) => ({
-  work: state.work,
+  workName: state.work.name,
+  projectName: state.work.projectName,
+  workVersion: state.work.version,
 });
 const mapDispatchToProps = { setGeneratingReport };
 
