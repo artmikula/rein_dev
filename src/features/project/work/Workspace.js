@@ -10,7 +10,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Button, UncontrolledTooltip } from 'reactstrap';
-import GlobalContext from 'security/GlobalContext';
 import CreateForm from './components';
 import AlertGenerateReport from './components/AlertGenerateReport';
 import GridPanels from './components/GridPanels';
@@ -102,8 +101,7 @@ class Workspace extends Component {
 
   _getWorkById = async (projectId, workId) => {
     const { setWork } = this.props;
-    const { getToken } = this.context;
-    const result = await workService.getAsync(getToken(), projectId, workId);
+    const result = await workService.getAsync(projectId, workId);
     let workData = {};
 
     testScenarioAnsCaseService.setId(workId);
@@ -215,10 +213,9 @@ class Workspace extends Component {
     const { match, workName, projectName } = this.props;
     const { params } = match;
     const { projectId, workId } = params;
-    const { getToken } = this.context;
 
     if (workName !== values.name) {
-      const result = await workService.updateAsync(getToken(), projectId, workId, values);
+      const result = await workService.updateAsync(projectId, workId, values);
       setSubmitting(false);
       if (!result.error) {
         await this._getWorkById(projectId, workId);
@@ -323,8 +320,6 @@ class Workspace extends Component {
     );
   }
 }
-
-Workspace.contextType = GlobalContext;
 
 const mapDispatchToProps = { setWork };
 const mapStateToProps = (state) => ({ workName: state.work.name, projectName: state.work.projectName });

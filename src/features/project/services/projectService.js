@@ -2,23 +2,21 @@ import restServiceHelper from '../../shared/lib/restServiceHelper';
 import restService from '../../shared/services/restService';
 
 class ProjectService {
-  async listAsync(token, page = 1, pageSize = 5, filter = '') {
+  async listAsync(page = 1, pageSize = 5, filter = '') {
     const url = `/project?page=${page}&pageSize=${pageSize}&filter=${filter}`;
-    restService.setToken(token);
     const response = await restService.getAsync(url);
     return response.data;
   }
 
-  async getAsync(token, id) {
+  async getAsync(id) {
     const url = `/project/${id}`;
     const response = await restService.getAsync(url);
     return response.data;
   }
 
-  async createAsync(token, data) {
+  async createAsync(data) {
     const url = `/project`;
     try {
-      restService.setToken(token);
       const response = await restService.postAsync(url, data);
       return restServiceHelper.handleResponse(response);
     } catch (error) {
@@ -26,10 +24,9 @@ class ProjectService {
     }
   }
 
-  async updateAsync(token, id, data) {
+  async updateAsync(id, data) {
     const url = `/project/${id}`;
     try {
-      restService.setToken(token);
       const response = await restService.putAsync(url, data);
       return restServiceHelper.handleResponse(response);
     } catch (error) {
@@ -37,10 +34,9 @@ class ProjectService {
     }
   }
 
-  async importAsync(token, data) {
+  async importAsync(data) {
     const url = `/project/import`;
     try {
-      restService.setToken(token);
       const response = await restService.postAsync(url, data);
       return restServiceHelper.handleResponse(response);
     } catch (error) {
@@ -48,10 +44,9 @@ class ProjectService {
     }
   }
 
-  async deleteAsync(token, id) {
+  async deleteAsync(id) {
     const url = `/project/${id}`;
     try {
-      restService.setToken(token);
       const response = await restService.deleteAsync(url);
       return restServiceHelper.handleResponse(response);
     } catch (error) {

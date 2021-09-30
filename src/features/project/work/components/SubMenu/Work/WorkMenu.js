@@ -13,7 +13,6 @@ import debounce from 'lodash.debounce';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import GlobalContext from 'security/GlobalContext';
 import WorkLink from './WorkLink';
 
 class WorkMenu extends Component {
@@ -54,9 +53,8 @@ class WorkMenu extends Component {
   _confirmDelete = () => {
     const { match, history } = this.props;
     const { projectId, workId } = match.params;
-    const { getToken } = this.context;
 
-    workService.deleteAsync(getToken(), projectId, workId).then(() => {
+    workService.deleteAsync(projectId, workId).then(() => {
       history.push(`/project/${projectId}/works`);
     });
   };
@@ -113,9 +111,8 @@ class WorkMenu extends Component {
   _searchWorks = (searchValue) => {
     const { match } = this.props;
     const { projectId } = match.params;
-    const { getToken } = this.context;
 
-    workService.listAsync(getToken(), projectId, 1, 10, searchValue).then((response) => {
+    workService.listAsync(projectId, 1, 10, searchValue).then((response) => {
       this.setState({ searchWorks: response.items });
     });
   };
@@ -127,9 +124,8 @@ class WorkMenu extends Component {
   _getRecentWorks = () => {
     const { match } = this.props;
     const { projectId } = match.params;
-    const { getToken } = this.context;
 
-    workService.listAsync(getToken(), projectId, 1, 5).then((response) => {
+    workService.listAsync(projectId, 1, 5).then((response) => {
       this.setState({ recentWorks: response.items });
     });
   };
@@ -146,7 +142,6 @@ class WorkMenu extends Component {
     const { recentWorks, searchWorks, createFormOpen, importFormOpen } = this.state;
     const { match } = this.props;
     const { projectId, workId } = match.params;
-    const { getToken } = this.context;
     const actions = [
       {
         key: 1,
@@ -166,7 +161,7 @@ class WorkMenu extends Component {
         key: 3,
         text: Language.get('export'),
         action: async () => {
-          const response = await workService.exportAsync(getToken(), projectId, workId);
+          const response = await workService.exportAsync(projectId, workId);
           if (response.data) {
             const fileContentString = atob(response.data.fileContents);
             Download(fileContentString, response.data.fileDownloadName, response.data.contentType);
@@ -223,7 +218,5 @@ const mapStateToProps = (state) => ({
   workVersion: state.work.version,
 });
 const mapDispatchToProps = { setGeneratingReport };
-
-WorkMenu.contextType = GlobalContext;
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(WorkMenu));

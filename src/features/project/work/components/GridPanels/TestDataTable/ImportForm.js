@@ -1,8 +1,7 @@
 import testDataService from 'features/project/work/services/testDataService';
 import PropTypes from 'prop-types';
-import React, { useContext } from 'react';
+import React from 'react';
 import { useHistory } from 'react-router-dom';
-import GlobalContext from 'security/GlobalContext';
 import { ModalForm } from '../../../../../shared/components';
 
 const formSchema = {
@@ -27,12 +26,11 @@ const formSchema = {
 
 export default function ImportForm({ isOpenModel, onToggleModal, projectId, workId }) {
   const history = useHistory();
-  const { getToken } = useContext(GlobalContext);
 
   const _handleSubmit = async (values, { setErrors, setSubmitting }) => {
     const form = new FormData();
     form.append('data.file', values?.testDataList[0]);
-    const result = await testDataService.importAsync(getToken(), projectId, workId, form);
+    const result = await testDataService.importAsync(projectId, workId, form);
     setSubmitting(false);
     if (result.error) {
       setErrors({

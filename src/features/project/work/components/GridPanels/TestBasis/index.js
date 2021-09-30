@@ -18,7 +18,6 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import GlobalContext from 'security/GlobalContext';
 import { v4 as uuidv4 } from 'uuid';
 import ClassifyPopover from './ClassifyPopover';
 import DecoratedText from './DecoratedText';
@@ -273,8 +272,6 @@ TestBasis.defaultProps = {
   decoratedText: undefined,
   entityKey: undefined,
 };
-
-TestBasis.contextType = GlobalContext;
 
 const mapStateToProps = (state) => ({ testBasis: state.work.testBasis, workLoaded: state.work.loaded });
 

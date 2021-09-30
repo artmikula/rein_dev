@@ -14,7 +14,7 @@ class Auth extends Component {
 
     keycloak.init({ onLoad: 'login-required', checkLoginIframe: false }).then((authenticated) => {
       setAuthenticated(authenticated);
-      setAuthContext({ authContext: keycloak });
+      setAuthContext(keycloak);
       if (!NODE_ENV || NODE_ENV === 'development') {
         console.log(keycloak.token);
         console.log(keycloak.subject);
@@ -28,6 +28,7 @@ class Auth extends Component {
         .then((refreshed) => {
           if (refreshed) {
             console.log('successfully get a new token');
+            setAuthContext(keycloak);
           } else {
             keycloak.login();
           }

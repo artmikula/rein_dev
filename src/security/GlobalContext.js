@@ -1,3 +1,4 @@
+import restService from 'features/shared/services/restService';
 import React, { Component } from 'react';
 
 const GlobalContext = React.createContext();
@@ -15,7 +16,8 @@ class GlobalProvider extends Component {
   };
 
   setAuthContext = (authContext) => {
-    this.setState({ ...authContext });
+    restService.setToken(authContext.token);
+    this.setState({ authContext });
   };
 
   getToken = () => {

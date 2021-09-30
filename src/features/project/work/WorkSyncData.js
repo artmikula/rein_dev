@@ -4,7 +4,6 @@ import { debounce } from 'lodash';
 import { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
-import GlobalContext from 'security/GlobalContext';
 import testScenarioAnsCaseService from './services/testScenarioAnsCaseService';
 import workService from './services/workService';
 
@@ -28,7 +27,6 @@ class WorkSyncData extends Component {
 
     const { testBasis, causeEffects, graph, testCoverage, testDatas, match } = this.props;
     const { projectId, workId } = match.params;
-    const { getToken } = this.context;
 
     const testScenariosAndCases = testScenarioAnsCaseService.get();
 
@@ -41,7 +39,7 @@ class WorkSyncData extends Component {
       testScenariosAndCases,
     };
 
-    await workService.updateWorkDataAsync(getToken(), projectId, workId, data);
+    await workService.updateWorkDataAsync(projectId, workId, data);
 
     this.syncing = false;
   }, 3000);
@@ -64,7 +62,5 @@ const mapStateToProps = (state) => ({
   testCoverage: state.work.testCoverage,
   testDatas: state.work.testDatas,
 });
-
-WorkSyncData.contextType = GlobalContext;
 
 export default connect(mapStateToProps)(withRouter(WorkSyncData));

@@ -8,7 +8,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Table } from 'reactstrap';
-import GlobalContext from 'security/GlobalContext';
 import { v4 as uuidv4 } from 'uuid';
 import CauseEffectRow from './CauseEffectRow';
 import AbbreviateConfirmContent from './components/AbbreviateConfirmContent';
@@ -248,8 +247,6 @@ class CauseEffectTable extends Component {
     );
   }
 }
-
-CauseEffectTable.contextType = GlobalContext;
 
 const mapStateToProps = (state) => ({ listData: state.work.causeEffects });
 const mapDispatchToProps = { setCauseEffects };

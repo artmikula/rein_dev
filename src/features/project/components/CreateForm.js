@@ -1,8 +1,7 @@
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
-import { React, useContext } from 'react';
+import { React } from 'react';
 import { useHistory } from 'react-router-dom';
-import GlobalContext from 'security/GlobalContext';
 import { ModalForm } from '../../shared/components';
 import projectService from '../services/projectService';
 
@@ -50,12 +49,9 @@ export default function CreateForm({ isOpenModel, onToggleModal, onSuccess }) {
   };
 
   const history = useHistory();
-  const context = useContext(GlobalContext);
-
-  const { getToken } = context;
 
   const _handleSubmit = async (values, { setErrors, setSubmitting }) => {
-    const result = await projectService.createAsync(getToken(), values);
+    const result = await projectService.createAsync(values);
     setSubmitting(false);
     if (result.data) {
       onSuccess(result.data);
