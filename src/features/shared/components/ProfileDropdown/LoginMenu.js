@@ -1,23 +1,10 @@
 import React, { Component } from 'react';
-import { DropdownItem } from 'reactstrap';
 import { Link } from 'react-router-dom';
+import { DropdownItem } from 'reactstrap';
 import GlobalContext from 'security/GlobalContext';
 import Language from '../../languages/Language';
 
 class LoginMenu extends Component {
-  render() {
-    const { authenticated } = this.context;
-
-    if (!authenticated) {
-      const registerPath = '';
-      const loginPath = '';
-      return this.anonymousView(registerPath, loginPath);
-    }
-    const profilePath = '';
-    const logoutPath = { pathname: '', state: { local: true } };
-    return this.authenticatedView(profilePath, logoutPath);
-  }
-
   authenticatedView(profilePath, logoutPath) {
     const { authContext, getUserInfo } = this.context;
     let userName = '';
@@ -57,6 +44,19 @@ class LoginMenu extends Component {
         </DropdownItem>
       </>
     );
+  }
+
+  render() {
+    const { authenticated } = this.context;
+
+    if (!authenticated) {
+      const registerPath = '';
+      const loginPath = '';
+      return this.anonymousView(registerPath, loginPath);
+    }
+    const profilePath = '';
+    const logoutPath = { pathname: '', state: { local: true } };
+    return this.authenticatedView(profilePath, logoutPath);
   }
 }
 

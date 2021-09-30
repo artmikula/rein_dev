@@ -4,6 +4,7 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
+import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -40,7 +41,7 @@ class CauseEffectTable extends Component {
     const { listData } = this.props;
     const newNode = CauseEffect.createNode(listData, type);
 
-    return window.confirm(
+    return confirm(
       <AbbreviateConfirmContent
         addDefination={definition}
         addNode={newNode}
@@ -247,6 +248,11 @@ class CauseEffectTable extends Component {
     );
   }
 }
+
+CauseEffectTable.propTypes = {
+  setCauseEffects: PropTypes.func.isRequired,
+  listData: PropTypes.arrayOf(PropTypes.object).isRequired,
+};
 
 const mapStateToProps = (state) => ({ listData: state.work.causeEffects });
 const mapDispatchToProps = { setCauseEffects };

@@ -56,7 +56,7 @@ export default function ProjectMenu() {
       key: 4,
       text: Language.get('delete'),
       action: () => {
-        window.confirm(undefined, { yesAction: _confirmDelete });
+        confirm(undefined, { yesAction: _confirmDelete });
       },
     },
     {

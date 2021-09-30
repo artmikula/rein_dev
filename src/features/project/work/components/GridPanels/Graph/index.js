@@ -289,6 +289,13 @@ class Graph extends Component {
 
 Graph.propTypes = {
   setActionHandler: PropTypes.func.isRequired,
+  workName: PropTypes.string.isRequired,
+  graph: PropTypes.shape({
+    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
+    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+  workLoaded: PropTypes.bool.isRequired,
 };
 
 const mapStateToProps = (state) => ({

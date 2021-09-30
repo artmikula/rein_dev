@@ -13,6 +13,7 @@ import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
 import Mousetrap from 'mousetrap';
+import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -432,6 +433,17 @@ class TestScenarioAndCase extends Component {
     );
   }
 }
+
+TestScenarioAndCase.propTypes = {
+  workName: PropTypes.string.isRequired,
+  graph: PropTypes.shape({
+    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
+    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+  testDatas: PropTypes.arrayOf(PropTypes.object).isRequired,
+  workLoaded: PropTypes.bool.isRequired,
+};
 
 const mapStateToProps = (state) => ({
   workName: state.work.name,

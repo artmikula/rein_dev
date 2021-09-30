@@ -6,6 +6,7 @@ import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import cloneDeep from 'lodash.clonedeep';
 import isEqual from 'lodash.isequal';
+import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -30,12 +31,6 @@ class TestCoverage extends Component {
     { label: Language.get('invalidscenario'), key: COVERAGE_ASPECT.InvalidScenario },
   ];
 
-  _setTestCoverages = (data) => {
-    const { setTestCoverages } = this.props;
-    this._raiseEvent({ action: domainEvents.ACTION.UPDATE });
-    setTestCoverages(data);
-  };
-
   constructor(props) {
     super(props);
     this.state = { isPlanning: false };
@@ -55,6 +50,12 @@ class TestCoverage extends Component {
   componentWillUnmount() {
     eventBus.unsubscribe();
   }
+
+  _setTestCoverages = (data) => {
+    const { setTestCoverages } = this.props;
+    this._raiseEvent({ action: domainEvents.ACTION.UPDATE });
+    setTestCoverages(data);
+  };
 
   isPlanDataChanging = () => {
     const { isPlanning } = this.state;
@@ -196,6 +197,17 @@ class TestCoverage extends Component {
     );
   }
 }
+
+TestCoverage.propTypes = {
+  data: PropTypes.shape({}).isRequired,
+  testDatas: PropTypes.arrayOf(PropTypes.object).isRequired,
+  setTestCoverages: PropTypes.func.isRequired,
+  graph: PropTypes.shape({
+    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
+    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+};
 
 const mapStateToProps = (state) => ({
   data: state.work.testCoverage,

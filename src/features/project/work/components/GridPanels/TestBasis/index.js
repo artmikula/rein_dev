@@ -93,7 +93,7 @@ class TestBasis extends Component {
       },
     ]);
 
-  _updateEditorState = (editorState, state) => {
+  _updateEditorState = (editorState) => {
     const { setTestBasis } = this.props;
     const drawContent = convertToRaw(editorState.getCurrentContent());
 
@@ -104,7 +104,6 @@ class TestBasis extends Component {
     const newState = {
       isOpenClassifyPopover: false,
       selectionState: null,
-      ...state,
       editorState: EditorState.set(editorState, {
         decorator: this._compositeDecorator(),
       }),
@@ -266,6 +265,9 @@ class TestBasis extends Component {
 TestBasis.propTypes = {
   decoratedText: PropTypes.string,
   entityKey: PropTypes.string,
+  testBasis: PropTypes.shape({ content: PropTypes.string }).isRequired,
+  workLoaded: PropTypes.bool.isRequired,
+  setTestBasis: PropTypes.func.isRequired,
 };
 
 TestBasis.defaultProps = {

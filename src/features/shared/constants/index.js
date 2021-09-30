@@ -1,5 +1,3 @@
-import Language from '../languages/Language';
-
 export const MAX_PROJECT_FILE_SIZE = 2097152; // Byte = 2MB
 export const ACCEPTED_PROJECT_FILE = ['.cetaprj'];
 

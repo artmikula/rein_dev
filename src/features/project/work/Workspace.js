@@ -6,6 +6,7 @@ import { DEFAULT_LAYOUTS, DEFAULT_LAYOUTS_SINGLE, STRING, VIEW_MODE, WORK_FORM_N
 import Language from 'features/shared/languages/Language';
 import LocalStorage from 'features/shared/lib/localStorage';
 import { cloneDeep } from 'lodash';
+import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
@@ -210,7 +211,7 @@ class Workspace extends Component {
   };
 
   _handleSubmitRenameWork = async (values, { setErrors, setSubmitting }) => {
-    const { match, workName, projectName } = this.props;
+    const { match, workName } = this.props;
     const { params } = match;
     const { projectId, workId } = params;
 
@@ -320,6 +321,12 @@ class Workspace extends Component {
     );
   }
 }
+
+Workspace.propTypes = {
+  setWork: PropTypes.func.isRequired,
+  workName: PropTypes.string.isRequired,
+  projectName: PropTypes.string.isRequired,
+};
 
 const mapDispatchToProps = { setWork };
 const mapStateToProps = (state) => ({ workName: state.work.name, projectName: state.work.projectName });

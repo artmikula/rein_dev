@@ -10,12 +10,17 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import debounce from 'lodash.debounce';
+import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import WorkLink from './WorkLink';
 
 class WorkMenu extends Component {
+  _handleSearch = debounce((searchValue) => {
+    this._searchWorks(searchValue);
+  }, 300);
+
   constructor(props) {
     super(props);
     this.state = {
@@ -117,10 +122,6 @@ class WorkMenu extends Component {
     });
   };
 
-  _handleSearch = debounce((searchValue) => {
-    this._searchWorks(searchValue);
-  }, 300);
-
   _getRecentWorks = () => {
     const { match } = this.props;
     const { projectId } = match.params;
@@ -179,7 +180,7 @@ class WorkMenu extends Component {
         key: 5,
         text: Language.get('delete'),
         action: () => {
-          window.confirm(undefined, { yesAction: this._confirmDelete });
+          confirm(undefined, { yesAction: this._confirmDelete });
         },
       },
     ];
@@ -212,6 +213,14 @@ class WorkMenu extends Component {
     );
   }
 }
+
+WorkMenu.propTypes = {
+  workName: PropTypes.string.isRequired,
+  projectName: PropTypes.string.isRequired,
+  workVersion: PropTypes.string.isRequired,
+  setGeneratingReport: PropTypes.func.isRequired,
+};
+
 const mapStateToProps = (state) => ({
   workName: state.work.name,
   projectName: state.work.projectName,

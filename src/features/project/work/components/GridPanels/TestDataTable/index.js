@@ -14,6 +14,7 @@ import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
 import Mousetrap from 'mousetrap';
+import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -22,20 +23,6 @@ import ImportForm from './ImportForm';
 import './style.scss';
 
 class TestDataTable extends Component {
-  _setTestDatas = (testDatas, raiseEvent = false) => {
-    const { setTestDatas } = this.props;
-
-    setTestDatas(testDatas);
-
-    if (raiseEvent) {
-      this._raiseEvent({
-        action: domainEvents.ACTION.UPDATE,
-        value: { ...testDatas },
-        receivers: [domainEvents.DES.TESTSCENARIOS],
-      });
-    }
-  };
-
   constructor(props) {
     super(props);
     this.state = {
@@ -71,6 +58,20 @@ class TestDataTable extends Component {
     eventBus.unsubscribe(this);
     Mousetrap.reset();
   }
+
+  _setTestDatas = (testDatas, raiseEvent = false) => {
+    const { setTestDatas } = this.props;
+
+    setTestDatas(testDatas);
+
+    if (raiseEvent) {
+      this._raiseEvent({
+        action: domainEvents.ACTION.UPDATE,
+        value: { ...testDatas },
+        receivers: [domainEvents.DES.TESTSCENARIOS],
+      });
+    }
+  };
 
   _raiseEvent = (message) => {
     eventBus.publish(domainEvents.TEST_DATA_DOMAINEVENT, message);
@@ -280,6 +281,12 @@ class TestDataTable extends Component {
     );
   }
 }
+
+TestDataTable.propTypes = {
+  workName: PropTypes.string.isRequired,
+  testDatas: PropTypes.arrayOf(PropTypes.object).isRequired,
+  setTestDatas: PropTypes.func.isRequired,
+};
 
 const mapStateToProps = (state) => ({
   workName: state.work.name,
