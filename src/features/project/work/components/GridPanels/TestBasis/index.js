@@ -158,6 +158,7 @@ class TestBasis extends Component {
   /* Action */
   _handleChange = (editorState) => {
     const { isOpenClassifyPopover } = this.state;
+    const { setTestBasis } = this.props;
 
     if (!this.ready) {
       return;
@@ -169,7 +170,9 @@ class TestBasis extends Component {
     if (selectedText.length > 0 && !isOpenClassifyPopover) {
       this.setState({ isOpenClassifyPopover: true, selectionState });
     } else {
-      this._updateEditorState(editorState, { selectionState });
+      const drawContent = convertToRaw(editorState.getCurrentContent());
+      TestBasisManager.set(drawContent);
+      setTestBasis(JSON.stringify(drawContent));
     }
   };
 
@@ -220,11 +223,11 @@ class TestBasis extends Component {
     const { selectedText, anchorKey, start, end } = this._getSelectedText(selectionState);
     const existDefinition = TestBasisManager.getEntity(selectedText, anchorKey, start, end);
 
-    if (existDefinition && existDefinition.type !== type) {
-      this._raiseEvent(domainEvents.ACTION.ADD, existDefinition);
+    if (existDefinition.type && existDefinition.type !== type) {
+      this._raiseEvent(domainEvents.ACTION.REMOVE, existDefinition);
     }
 
-    if ((existDefinition && existDefinition.type !== type) || !existDefinition) {
+    if (existDefinition.type !== type) {
       const definitionId = uuidv4();
       this._addCauseEffect({ type, definitionId, definition: selectedText });
       this._raiseEvent(domainEvents.ACTION.ADD, { type, definitionId, definition: selectedText });

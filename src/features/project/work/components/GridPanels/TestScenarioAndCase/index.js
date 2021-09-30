@@ -44,6 +44,8 @@ class TestScenarioAndCase extends Component {
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this._caculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
+      } else {
+        this._clearData();
       }
     });
 
@@ -79,6 +81,11 @@ class TestScenarioAndCase extends Component {
   componentWillUnmount() {
     eventBus.unsubscribe(this);
   }
+
+  _clearData = () => {
+    this._setColumnsAndRows([], [], []);
+    testScenarioAnsCaseService.set([]);
+  };
 
   _initData = () => {
     const { graph, workLoaded } = this.props;

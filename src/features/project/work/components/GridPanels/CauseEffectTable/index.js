@@ -160,9 +160,10 @@ class CauseEffectTable extends Component {
     }
 
     const newItem = { ...listData[index], ...value };
-    listData[index] = newItem;
+    const newList = [...listData];
+    newList[index] = newItem;
 
-    setCauseEffects([...listData]);
+    setCauseEffects(newList);
   };
 
   _handleWorkMenuEvent = () => {

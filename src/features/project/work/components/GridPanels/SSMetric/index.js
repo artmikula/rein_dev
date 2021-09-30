@@ -1,5 +1,5 @@
 import SSMetricHelper from 'features/project/work/biz/SSMetric';
-import PropTypes from 'prop-types';
+import testScenarioAnsCaseService from 'features/project/work/services/testScenarioAnsCaseService';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -277,10 +277,6 @@ class SSMertic extends Component {
     );
   }
 }
-
-SSMertic.propTypes = {
-  match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
-};
 
 const mapStateToProps = (state) => ({
   testBasis: state.work.testBasis,
