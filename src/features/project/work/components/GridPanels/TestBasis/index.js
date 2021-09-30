@@ -31,7 +31,7 @@ class TestBasis extends Component {
     this.state = {
       isOpenClassifyPopover: false,
       editorState: EditorState.createEmpty(this._compositeDecorator()),
-      selectionState: {},
+      selectionState: null,
     };
     this.initiatedTestBasis = false;
   }
@@ -104,7 +104,7 @@ class TestBasis extends Component {
 
     const newState = {
       isOpenClassifyPopover: false,
-      selectionState: {},
+      selectionState: null,
       ...state,
       editorState: EditorState.set(editorState, {
         decorator: this._compositeDecorator(),
@@ -167,12 +167,13 @@ class TestBasis extends Component {
     const selectionState = editorState.getSelection();
     const { selectedText } = this._getSelectedText(selectionState, editorState);
 
-    if (selectedText.length > 0 && !isOpenClassifyPopover) {
+    if (selectedText.trim().length > 0 && !isOpenClassifyPopover) {
       this.setState({ isOpenClassifyPopover: true, selectionState });
     } else {
       const drawContent = convertToRaw(editorState.getCurrentContent());
       TestBasisManager.set(drawContent);
       setTestBasis(JSON.stringify(drawContent));
+      this.setState({ editorState, isOpenClassifyPopover: false });
     }
   };
 

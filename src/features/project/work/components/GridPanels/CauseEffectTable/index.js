@@ -152,17 +152,18 @@ class CauseEffectTable extends Component {
 
   _handleUpdateEvent = (value) => {
     const { listData, setCauseEffects } = this.props;
-    const { definitionId } = value;
+    const { definitionId, definition } = value;
     const index = listData.findIndex((e) => e.definitionId === definitionId);
 
     if (index < 0) {
       return;
     }
 
-    const newItem = { ...listData[index], ...value };
+    const newItem = { ...listData[index], definition };
     const newList = [...listData];
     newList[index] = newItem;
 
+    this._raiseEvent({ action: domainEvents.ACTION.UPDATE, value: newItem });
     setCauseEffects(newList);
   };
 
