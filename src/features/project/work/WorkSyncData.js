@@ -1,14 +1,36 @@
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
 import { debounce } from 'lodash';
+import PropTypes from 'prop-types';
 import { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
-import GlobalContext from 'security/GlobalContext';
 import testScenarioAnsCaseService from './services/testScenarioAnsCaseService';
 import workService from './services/workService';
 
 class WorkSyncData extends Component {
+  _sync = debounce(async () => {
+    this.syncing = true;
+
+    const { testBasis, causeEffects, graph, testCoverage, testDatas, match } = this.props;
+    const { projectId, workId } = match.params;
+
+    const testScenariosAndCases = testScenarioAnsCaseService.get();
+
+    const data = {
+      testBasis,
+      causeEffects,
+      graph,
+      testCoverages: testCoverage,
+      testDatas,
+      testScenariosAndCases,
+    };
+
+    await workService.updateWorkDataAsync(projectId, workId, data);
+
+    this.syncing = false;
+  }, 3000);
+
   constructor(props) {
     super(props);
     this.syncing = false;
@@ -23,29 +45,6 @@ class WorkSyncData extends Component {
     eventBus.subscribe(this, domainEvents.TEST_COVERAGE_DOMAINEVENT, this._handleEvent);
   }
 
-  _sync = debounce(async () => {
-    this.syncing = true;
-
-    const { testBasis, causeEffects, graph, testCoverage, testDatas, match } = this.props;
-    const { projectId, workId } = match.params;
-    const { getToken } = this.context;
-
-    const testScenariosAndCases = testScenarioAnsCaseService.get();
-
-    const data = {
-      testBasis,
-      causeEffects,
-      graph,
-      testCoverages: testCoverage,
-      testDatas,
-      testScenariosAndCases,
-    };
-
-    await workService.updateWorkDataAsync(getToken(), projectId, workId, data);
-
-    this.syncing = false;
-  }, 3000);
-
   _handleEvent = async () => {
     if (!this.syncing) {
       await this._sync();
@@ -57,6 +56,18 @@ class WorkSyncData extends Component {
   }
 }
 
+WorkSyncData.propTypes = {
+  testBasis: PropTypes.shape({ content: PropTypes.string }).isRequired,
+  causeEffects: PropTypes.arrayOf(PropTypes.object).isRequired,
+  graph: PropTypes.shape({
+    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
+    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+  testCoverage: PropTypes.shape({}).isRequired,
+  testDatas: PropTypes.arrayOf(PropTypes.object).isRequired,
+};
+
 const mapStateToProps = (state) => ({
   testBasis: state.work.testBasis,
   causeEffects: state.work.causeEffects,
@@ -64,7 +75,5 @@ const mapStateToProps = (state) => ({
   testCoverage: state.work.testCoverage,
   testDatas: state.work.testDatas,
 });
-
-WorkSyncData.contextType = GlobalContext;
 
 export default connect(mapStateToProps)(withRouter(WorkSyncData));

@@ -9,7 +9,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Table } from 'reactstrap';
-import GlobalContext from 'security/GlobalContext';
 import { v4 as uuidv4 } from 'uuid';
 import CauseEffectRow from './CauseEffectRow';
 import AbbreviateConfirmContent from './components/AbbreviateConfirmContent';
@@ -42,7 +41,7 @@ class CauseEffectTable extends Component {
     const { listData } = this.props;
     const newNode = CauseEffect.createNode(listData, type);
 
-    return window.confirm(
+    return confirm(
       <AbbreviateConfirmContent
         addDefination={definition}
         addNode={newNode}
@@ -152,17 +151,19 @@ class CauseEffectTable extends Component {
 
   _handleUpdateEvent = (value) => {
     const { listData, setCauseEffects } = this.props;
-    const { definitionId } = value;
+    const { definitionId, definition } = value;
     const index = listData.findIndex((e) => e.definitionId === definitionId);
 
     if (index < 0) {
       return;
     }
 
-    const newItem = { ...listData[index], ...value };
-    listData[index] = newItem;
+    const newItem = { ...listData[index], definition };
+    const newList = [...listData];
+    newList[index] = newItem;
 
-    setCauseEffects([...listData]);
+    this._raiseEvent({ action: domainEvents.ACTION.UPDATE, value: newItem });
+    setCauseEffects(newList);
   };
 
   _handleWorkMenuEvent = () => {
@@ -247,11 +248,11 @@ class CauseEffectTable extends Component {
     );
   }
 }
-CauseEffectTable.propTypes = {
-  match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
-};
 
-CauseEffectTable.contextType = GlobalContext;
+CauseEffectTable.propTypes = {
+  setCauseEffects: PropTypes.func.isRequired,
+  listData: PropTypes.arrayOf(PropTypes.object).isRequired,
+};
 
 const mapStateToProps = (state) => ({ listData: state.work.causeEffects });
 const mapDispatchToProps = { setCauseEffects };

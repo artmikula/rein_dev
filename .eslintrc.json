@@ -1,6 +1,6 @@
 {
   "parser": "babel-eslint",
-  "plugins": [ "jest", "prettier" ],
+  "plugins": ["jest", "prettier"],
   "env": {
     "browser": true,
     "commonjs": true,
@@ -15,10 +15,10 @@
       "defaultParams": true
     }
   },
-  "extends": [ "airbnb", "eslint:recommended", "plugin:jest/recommended", "plugin:prettier/recommended", "prettier" ],
+  "extends": ["airbnb", "eslint:recommended", "plugin:jest/recommended", "plugin:prettier/recommended", "prettier"],
   "overrides": [
     {
-      "files": [ "src/**/*.test.js" ],
+      "files": ["src/**/*.test.js"],
       "env": {
         "jest/globals": true
       },
@@ -34,9 +34,9 @@
         "endOfLine": "auto"
       }
     ],
-    "class-methods-use-this": [ "off" ],
-    "comma-dangle": [ "error", "always-multiline" ],
-    "curly": [ "error", "all" ],
+    "class-methods-use-this": ["off"],
+    "comma-dangle": ["error", "always-multiline"],
+    "curly": ["error", "all"],
     "func-names": "off",
     "global-require": "off",
     "guard-for-in": "warn",
@@ -68,6 +68,7 @@
     ],
     "no-unused-vars": "warn",
     "no-restricted-syntax": "warn",
+    "no-restricted-globals": "warn",
     "object-curly-spacing": "warn",
     "object-curly-newline": "off",
     "padded-blocks": "off",
@@ -75,7 +76,7 @@
     "jsx-a11y/anchor-is-valid": [
       "warn",
       {
-        "aspects": [ "invalidHref" ]
+        "aspects": ["invalidHref"]
       }
     ],
     "react/no-array-index-key": "off",
@@ -83,7 +84,7 @@
     "react/prop-types": [
       "warn",
       {
-        "ignore": [ "classes", "location", "history", "theme", "cancel", "updateCancelTokens", "children" ]
+        "ignore": ["classes", "location", "history", "theme", "cancel", "updateCancelTokens", "children", "match"]
       }
     ],
     "react/jsx-no-target-blank": "warn",
@@ -98,7 +99,7 @@
     "react/jsx-filename-extension": [
       "error",
       {
-        "extensions": [ ".js" ]
+        "extensions": [".js"]
       }
     ],
     "react/jsx-tag-spacing": [

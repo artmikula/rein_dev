@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { Alert } from 'reactstrap';
@@ -14,6 +15,10 @@ function AlertGenerateReport(props) {
     )
   );
 }
+
+AlertGenerateReport.propTypes = {
+  generatingReport: PropTypes.bool.isRequired,
+};
 
 const mapStateToProps = (state) => ({ generatingReport: state.work.generatingReport });
 

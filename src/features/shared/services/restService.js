@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const { REACT_APP_API_URL } = process.env;
+
 class RestService {
   _token = '';
 
@@ -35,4 +36,6 @@ class RestService {
   }
 }
 
-export default new RestService();
+const restService = new RestService();
+
+export default restService;

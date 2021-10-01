@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { Link, Router, withRouter } from 'react-router-dom';
 import { Card, Container, Pagination, PaginationItem, PaginationLink, Table } from 'reactstrap';
-import GlobalContext from 'security/GlobalContext';
 import { ModalForm } from '../../shared/components';
 import Actions from '../../shared/components/Actions/Actions';
 import Language from '../../shared/languages/Language';
@@ -51,17 +50,15 @@ class WorkList extends Component {
   _confirmDelete = async () => {
     const { projectId } = this.props;
     const { selectedId, currentPage } = this.state;
-    const { getToken } = this.context;
 
-    await workService.deleteAsync(getToken(), projectId, selectedId);
+    await workService.deleteAsync(projectId, selectedId);
     await this._getWorkList(currentPage);
   };
 
   _getWorkList = async (page) => {
     const { projectId } = this.props;
-    const { getToken } = this.context;
 
-    const data = await workService.listAsync(getToken(), projectId, page);
+    const data = await workService.listAsync(projectId, page);
     this.setState({
       works: data.items,
       totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
@@ -69,7 +66,7 @@ class WorkList extends Component {
   };
 
   _deleteWork = (id) => {
-    window.confirm(undefined, { yesAction: this._confirmDelete });
+    confirm(undefined, { yesAction: this._confirmDelete });
     this.setState({ selectedId: id });
   };
 
@@ -84,9 +81,8 @@ class WorkList extends Component {
   _handleSubmit = async (values, { setErrors, setSubmitting }) => {
     const { projectId } = this.props;
     const { selectedId, currentPage } = this.state;
-    const { getToken } = this.context;
 
-    const result = await workService.updateAsync(getToken(), projectId, selectedId, values);
+    const result = await workService.updateAsync(projectId, selectedId, values);
     setSubmitting(false);
     if (result.error) {
       const { Name } = result.error;
@@ -234,7 +230,5 @@ class WorkList extends Component {
 WorkList.propTypes = {
   projectId: PropTypes.string.isRequired,
 };
-
-WorkList.contextType = GlobalContext;
 
 export default withRouter(WorkList);

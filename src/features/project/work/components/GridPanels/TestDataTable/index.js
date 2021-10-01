@@ -23,20 +23,6 @@ import ImportForm from './ImportForm';
 import './style.scss';
 
 class TestDataTable extends Component {
-  _setTestDatas = (testDatas, raiseEvent = false) => {
-    const { setTestDatas } = this.props;
-
-    setTestDatas(testDatas);
-
-    if (raiseEvent) {
-      this._raiseEvent({
-        action: domainEvents.ACTION.UPDATE,
-        value: { ...testDatas },
-        receivers: [domainEvents.DES.TESTSCENARIOS],
-      });
-    }
-  };
-
   constructor(props) {
     super(props);
     this.state = {
@@ -72,6 +58,20 @@ class TestDataTable extends Component {
     eventBus.unsubscribe(this);
     Mousetrap.reset();
   }
+
+  _setTestDatas = (testDatas, raiseEvent = false) => {
+    const { setTestDatas } = this.props;
+
+    setTestDatas(testDatas);
+
+    if (raiseEvent) {
+      this._raiseEvent({
+        action: domainEvents.ACTION.UPDATE,
+        value: { ...testDatas },
+        receivers: [domainEvents.DES.TESTSCENARIOS],
+      });
+    }
+  };
 
   _raiseEvent = (message) => {
     eventBus.publish(domainEvents.TEST_DATA_DOMAINEVENT, message);
@@ -281,8 +281,11 @@ class TestDataTable extends Component {
     );
   }
 }
+
 TestDataTable.propTypes = {
-  match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
+  workName: PropTypes.string.isRequired,
+  testDatas: PropTypes.arrayOf(PropTypes.object).isRequired,
+  setTestDatas: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({

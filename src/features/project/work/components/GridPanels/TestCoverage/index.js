@@ -1,3 +1,4 @@
+import testScenarioAnsCaseService from 'features/project/work/services/testScenarioAnsCaseService';
 import { setTestCoverages } from 'features/project/work/slices/workSlice';
 import { COVERAGE_ASPECT } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
@@ -30,12 +31,6 @@ class TestCoverage extends Component {
     { label: Language.get('invalidscenario'), key: COVERAGE_ASPECT.InvalidScenario },
   ];
 
-  _setTestCoverages = (data) => {
-    const { setTestCoverages } = this.props;
-    this._raiseEvent({ action: domainEvents.ACTION.UPDATE });
-    setTestCoverages(data);
-  };
-
   constructor(props) {
     super(props);
     this.state = { isPlanning: false };
@@ -55,6 +50,12 @@ class TestCoverage extends Component {
   componentWillUnmount() {
     eventBus.unsubscribe();
   }
+
+  _setTestCoverages = (data) => {
+    const { setTestCoverages } = this.props;
+    this._raiseEvent({ action: domainEvents.ACTION.UPDATE });
+    setTestCoverages(data);
+  };
 
   isPlanDataChanging = () => {
     const { isPlanning } = this.state;
@@ -198,7 +199,14 @@ class TestCoverage extends Component {
 }
 
 TestCoverage.propTypes = {
-  match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
+  data: PropTypes.shape({}).isRequired,
+  testDatas: PropTypes.arrayOf(PropTypes.object).isRequired,
+  setTestCoverages: PropTypes.func.isRequired,
+  graph: PropTypes.shape({
+    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
+    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
 };
 
 const mapStateToProps = (state) => ({

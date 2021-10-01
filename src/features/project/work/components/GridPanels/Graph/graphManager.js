@@ -334,6 +334,13 @@ class GraphManager {
     });
   };
 
+  updateDefinition = (item) => {
+    const node = this.graph.nodes().find((node) => node.data().definitionId === item.definitionId);
+    if (node) {
+      node.data().definition = item.definition;
+    }
+  };
+
   drawCauseEffect = (causeEffect, actionType) => {
     const { node, type, definitionId, definition } = causeEffect;
     const nodeType = type === CLASSIFY.CAUSE ? GRAPH_NODE_TYPE.CAUSE : GRAPH_NODE_TYPE.EFFECT;

@@ -1,5 +1,5 @@
-import Enumerable from 'linq';
 import { GRAPH_LINK_TYPE, NODE_INSPECTION } from 'features/shared/constants';
+import Enumerable from 'linq';
 
 class Constraint {
   validate(constraint, scenario) {
@@ -47,7 +47,7 @@ class Constraint {
     );
   }
 
-  _validateMask(scenario, constraint) {
+  _validateMask() {
     return true;
   }
 

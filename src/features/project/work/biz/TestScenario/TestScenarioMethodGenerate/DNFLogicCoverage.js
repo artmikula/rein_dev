@@ -1,14 +1,14 @@
 /* eslint-disable no-bitwise */
 /* eslint-disable max-lines */
-import Enumerable from 'linq';
-import { v4 as uuid } from 'uuid';
 import {
   GRAPH_NODE_TYPE,
+  NODE_INSPECTION,
   OPERATOR_TYPE,
   RESULT_TYPE,
-  NODE_INSPECTION,
   TEST_SCENARIO_TYPE,
 } from 'features/shared/constants';
+import Enumerable from 'linq';
+import { v4 as uuid } from 'uuid';
 import TestScenarioHelper from '../TestScenarioHelper';
 import MyersTechnique from './MyersTechnique';
 
@@ -50,10 +50,10 @@ class DNFLogicCoverage {
     ];
 
     const effectAssertionDictionary = new Map(
-      [...assertionDictionary].filter(([key, value]) => this.effectNodes.some((y) => y.id === key))
+      [...assertionDictionary].filter(([key]) => this.effectNodes.some((y) => y.id === key))
     );
 
-    effectAssertionDictionary.forEach((value, key) => {
+    effectAssertionDictionary.forEach((value) => {
       const simplified = this.simplify(value, assertionDictionary);
       boolExpressions.push(simplified);
     });

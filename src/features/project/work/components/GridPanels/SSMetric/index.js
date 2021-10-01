@@ -1,4 +1,5 @@
 import SSMetricHelper from 'features/project/work/biz/SSMetric';
+import testScenarioAnsCaseService from 'features/project/work/services/testScenarioAnsCaseService';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -279,7 +280,13 @@ class SSMertic extends Component {
 }
 
 SSMertic.propTypes = {
-  match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
+  testBasis: PropTypes.shape({ content: PropTypes.string }).isRequired,
+  causeEffects: PropTypes.arrayOf(PropTypes.object).isRequired,
+  graph: PropTypes.shape({
+    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
+    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
 };
 
 const mapStateToProps = (state) => ({

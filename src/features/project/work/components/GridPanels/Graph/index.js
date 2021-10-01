@@ -162,28 +162,33 @@ class Graph extends Component {
   /* Events */
   _handleEvents = (message) => {
     const { action, receives, value } = message;
+    const { isMerged } = value;
     switch (action) {
-      case domainEvents.ACTION.ADD: {
-        const { isMerged } = value;
+      case domainEvents.ACTION.ADD:
         if (!isMerged) {
           this.graphManager.drawCauseEffect(value);
         }
         break;
-      }
-      case domainEvents.ACTION.ACCEPTDELETE: {
+      case domainEvents.ACTION.ACCEPTDELETE:
         if (receives === undefined || receives.includes(domainEvents.DES.GRAPH)) {
           this.graphManager.deleteCauseEffectNode(value);
         }
         break;
-      }
-      case domainEvents.ACTION.ACCEPTGENERATE: {
+      case domainEvents.ACTION.ACCEPTGENERATE:
         this.graphManager.clear();
         this._drawGraph(this.graphManager, value, true);
         break;
-      }
+      case domainEvents.ACTION.UPDATE:
+        this._updateDefinition(value);
+        break;
       default:
         break;
     }
+  };
+
+  _updateDefinition = (value) => {
+    this.graphManager.updateDefinition(value);
+    this._raiseEvent({ action: domainEvents.ACTION.ACCEPTUPDATE, value });
   };
 
   _handleShortCutEvents = (code) => {
@@ -283,8 +288,14 @@ class Graph extends Component {
 }
 
 Graph.propTypes = {
-  match: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.bool])).isRequired,
   setActionHandler: PropTypes.func.isRequired,
+  workName: PropTypes.string.isRequired,
+  graph: PropTypes.shape({
+    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
+    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+  }).isRequired,
+  workLoaded: PropTypes.bool.isRequired,
 };
 
 const mapStateToProps = (state) => ({

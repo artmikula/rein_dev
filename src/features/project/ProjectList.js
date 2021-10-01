@@ -1,14 +1,13 @@
+import Language from 'features/shared/languages/Language';
 import React, { Component } from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import { Card, Container, Pagination, PaginationItem, PaginationLink, Table } from 'reactstrap';
-import Language from 'features/shared/languages/Language';
-import GlobalContext from 'security/GlobalContext';
 import { ModalForm } from '../shared/components';
+import Actions from '../shared/components/Actions/Actions';
 import toLocalTime from '../shared/lib/utils';
 import ProjectLayout from './components/ProjectLayout';
 import projectService from './services/projectService';
 import workService from './work/services/workService';
-import Actions from '../shared/components/Actions/Actions';
 
 class ProjectList extends Component {
   columns = [
@@ -47,8 +46,7 @@ class ProjectList extends Component {
   async componentDidMount() {
     const { location } = this.props;
     const currentPage = this._getPage(location);
-    const { getToken } = this.context;
-    const data = await projectService.listAsync(getToken(), currentPage);
+    const data = await projectService.listAsync(currentPage);
     this.setState({
       projects: data.items,
       totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
@@ -59,12 +57,11 @@ class ProjectList extends Component {
     const { isRefresh } = this.state;
     const preLocation = prevProps.location;
     const { location } = this.props;
-    const { getToken } = this.context;
     const prevPage = this._getPage(preLocation);
     const currentPage = this._getPage(location);
 
     if (prevPage !== currentPage || isRefresh) {
-      const data = await projectService.listAsync(getToken(), currentPage);
+      const data = await projectService.listAsync(currentPage);
       this._updateState({
         projects: data.items,
         totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
@@ -85,9 +82,8 @@ class ProjectList extends Component {
   _confirmDelete = async () => {
     const { selectedId } = this.state;
     const { history, location } = this.props;
-    const { getToken } = this.context;
     const currentPage = this._getPage(location);
-    await projectService.deleteAsync(getToken(), selectedId);
+    await projectService.deleteAsync(selectedId);
     history.push(`/projects?page=${currentPage}`);
     this.setState({
       isRefresh: true,
@@ -95,7 +91,7 @@ class ProjectList extends Component {
   };
 
   _deleteProject = (id) => {
-    window.confirm(undefined, { yesAction: this._confirmDelete });
+    confirm(undefined, { yesAction: this._confirmDelete });
     this.setState({ selectedId: id });
   };
 
@@ -110,9 +106,8 @@ class ProjectList extends Component {
   _handleSubmitEditProject = async (values, { setErrors, setSubmitting }) => {
     const { selectedId } = this.state;
     const { history, location } = this.props;
-    const { getToken } = this.context;
     const currentPage = this._getPage(location);
-    const result = await projectService.updateAsync(getToken(), selectedId, values);
+    const result = await projectService.updateAsync(selectedId, values);
     setSubmitting(false);
     if (result.error) {
       const { Name } = result.error.response.data;
@@ -142,8 +137,7 @@ class ProjectList extends Component {
 
   _goToWorkPage = async (projectId) => {
     const { history } = this.props;
-    const { getToken } = this.context;
-    const data = await workService.listAsync(getToken(), projectId, 1, 1);
+    const data = await workService.listAsync(projectId, 1, 1);
     if (data.items.length > 0) {
       history.push(`/project/${projectId}/work/${data.items[0].id}`);
     }
@@ -267,7 +261,5 @@ class ProjectList extends Component {
     );
   }
 }
-
-ProjectList.contextType = GlobalContext;
 
 export default withRouter(ProjectList);

@@ -1,15 +1,13 @@
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
-import React, { useContext } from 'react';
+import React from 'react';
 import { useHistory, useParams } from 'react-router-dom';
-import GlobalContext from 'security/GlobalContext';
 import { ModalForm } from '../../../shared/components';
 import workService from '../services/workService';
 
 export default function CreateForm(props) {
   const { isOpenModel, onToggleModal } = props;
   const history = useHistory();
-  const { getToken } = useContext(GlobalContext);
   const { projectId } = useParams();
 
   const formSchema = {
@@ -55,7 +53,7 @@ export default function CreateForm(props) {
   };
 
   const _handleSubmit = async (values, { setErrors, setSubmitting }) => {
-    const result = await workService.createAsync(getToken(), projectId, values);
+    const result = await workService.createAsync(projectId, values);
     setSubmitting(false);
     if (result.data) {
       history.push(`/project/${projectId}/work/${result.data}`);

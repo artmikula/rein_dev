@@ -10,13 +10,17 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import debounce from 'lodash.debounce';
+import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import GlobalContext from 'security/GlobalContext';
 import WorkLink from './WorkLink';
 
 class WorkMenu extends Component {
+  _handleSearch = debounce((searchValue) => {
+    this._searchWorks(searchValue);
+  }, 300);
+
   constructor(props) {
     super(props);
     this.state = {
@@ -54,9 +58,8 @@ class WorkMenu extends Component {
   _confirmDelete = () => {
     const { match, history } = this.props;
     const { projectId, workId } = match.params;
-    const { getToken } = this.context;
 
-    workService.deleteAsync(getToken(), projectId, workId).then(() => {
+    workService.deleteAsync(projectId, workId).then(() => {
       history.push(`/project/${projectId}/works`);
     });
   };
@@ -69,12 +72,12 @@ class WorkMenu extends Component {
   };
 
   _generateReport = async (data) => {
-    const { work, setGeneratingReport } = this.props;
+    const { workName, projectName, workVersion, setGeneratingReport } = this.props;
     const reportData = {
-      projectName: work.projectName,
-      workName: work.name,
-      functionName: work.name,
-      version: work.version,
+      projectName,
+      workName,
+      functionName: workName,
+      version: workVersion,
       reporter: '',
       reviewer: '',
       approver: '',
@@ -87,14 +90,14 @@ class WorkMenu extends Component {
       testScenarios: [],
       ...data,
     };
-    reportData.workName = work.name;
+    reportData.workName = workName;
     reportData.testCases.forEach((e) => {
       const testCase = e;
       testCase.causes = reportData.causes.map((cause) => ({ ...cause, type: testCase[cause.node] }));
     });
 
     const blob = await pdf(ReportDocument(reportData)).toBlob();
-    Download(blob, FILE_NAME.REPORT_WORK.replace('workname', work.name));
+    Download(blob, FILE_NAME.REPORT_WORK.replace('workname', workName));
     setGeneratingReport(false);
   };
 
@@ -113,23 +116,17 @@ class WorkMenu extends Component {
   _searchWorks = (searchValue) => {
     const { match } = this.props;
     const { projectId } = match.params;
-    const { getToken } = this.context;
 
-    workService.listAsync(getToken(), projectId, 1, 10, searchValue).then((response) => {
+    workService.listAsync(projectId, 1, 10, searchValue).then((response) => {
       this.setState({ searchWorks: response.items });
     });
   };
 
-  _handleSearch = debounce((searchValue) => {
-    this._searchWorks(searchValue);
-  }, 300);
-
   _getRecentWorks = () => {
     const { match } = this.props;
     const { projectId } = match.params;
-    const { getToken } = this.context;
 
-    workService.listAsync(getToken(), projectId, 1, 5).then((response) => {
+    workService.listAsync(projectId, 1, 5).then((response) => {
       this.setState({ recentWorks: response.items });
     });
   };
@@ -146,7 +143,6 @@ class WorkMenu extends Component {
     const { recentWorks, searchWorks, createFormOpen, importFormOpen } = this.state;
     const { match } = this.props;
     const { projectId, workId } = match.params;
-    const { getToken } = this.context;
     const actions = [
       {
         key: 1,
@@ -166,7 +162,7 @@ class WorkMenu extends Component {
         key: 3,
         text: Language.get('export'),
         action: async () => {
-          const response = await workService.exportAsync(getToken(), projectId, workId);
+          const response = await workService.exportAsync(projectId, workId);
           if (response.data) {
             const fileContentString = atob(response.data.fileContents);
             Download(fileContentString, response.data.fileDownloadName, response.data.contentType);
@@ -184,7 +180,7 @@ class WorkMenu extends Component {
         key: 5,
         text: Language.get('delete'),
         action: () => {
-          window.confirm(undefined, { yesAction: this._confirmDelete });
+          confirm(undefined, { yesAction: this._confirmDelete });
         },
       },
     ];
@@ -217,11 +213,19 @@ class WorkMenu extends Component {
     );
   }
 }
+
+WorkMenu.propTypes = {
+  workName: PropTypes.string.isRequired,
+  projectName: PropTypes.string.isRequired,
+  workVersion: PropTypes.string.isRequired,
+  setGeneratingReport: PropTypes.func.isRequired,
+};
+
 const mapStateToProps = (state) => ({
-  work: state.work,
+  workName: state.work.name,
+  projectName: state.work.projectName,
+  workVersion: state.work.version,
 });
 const mapDispatchToProps = { setGeneratingReport };
-
-WorkMenu.contextType = GlobalContext;
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(WorkMenu));
