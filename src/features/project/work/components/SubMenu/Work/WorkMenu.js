@@ -164,8 +164,12 @@ class WorkMenu extends Component {
         action: async () => {
           const response = await workService.exportAsync(projectId, workId);
           if (response.data) {
-            const fileContentString = atob(response.data.fileContents);
-            Download(fileContentString, response.data.fileDownloadName, response.data.contentType);
+            const fileContentString = atob(response.data.body);
+            Download(
+              fileContentString,
+              response.data.headers.fileDownloadName[0],
+              response.data.headers.contentType[0]
+            );
           }
         },
       },

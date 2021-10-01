@@ -54,6 +54,15 @@ class ProjectService {
     }
   }
 
-  exportAsync = async (id) => restServiceHelper.requestAsync(restService.postAsync(`project/${id}/export`));
+  async exportAsync(token, id) {
+    const url = `/project/${id}/export`;
+    try {
+      restService.setToken(token);
+      const response = await restService.postAsync(url);
+      return restServiceHelper.handleResponse(response);
+    } catch (error) {
+      return { error };
+    }
+  }
 }
 export default new ProjectService();
