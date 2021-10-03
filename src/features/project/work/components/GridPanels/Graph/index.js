@@ -57,13 +57,13 @@ class Graph extends Component {
     this.graphState = this.graphManager.getState();
     // register domain event
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, (event) => {
-      this._handleEvents(event.message);
+      this._handleCauseEffectEvents(event.message);
     });
     eventBus.subscribe(this, domainEvents.GRAPH_MENU_DOMAINEVENT, (event) => {
       this._handleShortCutEvents(event.message.code);
     });
     eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
-      this._handleEvents(event.message);
+      this._handleTestScenarioAndCaseEvents(event.message);
     });
     eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
       this._handleWorkMenuEvents(event.message);
@@ -81,6 +81,10 @@ class Graph extends Component {
     if (setActionHandler) {
       setActionHandler(this.graphManager);
     }
+  }
+
+  componentDidUpdate() {
+    this._drawGraph(this.graphManager);
   }
 
   _raiseEvent = (message) => {
@@ -121,7 +125,7 @@ class Graph extends Component {
     document.body.append(dummyContainer);
 
     const dummyGraphManager = new GraphManager(dummyContainer, { onGraphChange: () => {} });
-    this._drawGraph(dummyGraphManager);
+    this._drawGraph(dummyGraphManager, null, true);
     dummyGraphManager.graph.center();
 
     const href = dummyGraphManager.graph.jpg();
@@ -159,27 +163,36 @@ class Graph extends Component {
     }
   };
 
-  /* Events */
-  _handleEvents = (message) => {
+  _handleCauseEffectEvents = (message) => {
     const { action, receives, value } = message;
-    const { isMerged } = value;
     switch (action) {
-      case domainEvents.ACTION.ADD:
+      case domainEvents.ACTION.ADD: {
+        const { isMerged } = value;
         if (!isMerged) {
           this.graphManager.drawCauseEffect(value);
         }
         break;
+      }
       case domainEvents.ACTION.ACCEPTDELETE:
         if (receives === undefined || receives.includes(domainEvents.DES.GRAPH)) {
           this.graphManager.deleteCauseEffectNode(value);
         }
         break;
+      case domainEvents.ACTION.UPDATE:
+        this._updateDefinition(value);
+        break;
+      default:
+        break;
+    }
+  };
+
+  /* Events */
+  _handleTestScenarioAndCaseEvents = (message) => {
+    const { action, value } = message;
+    switch (action) {
       case domainEvents.ACTION.ACCEPTGENERATE:
         this.graphManager.clear();
         this._drawGraph(this.graphManager, value, true);
-        break;
-      case domainEvents.ACTION.UPDATE:
-        this._updateDefinition(value);
         break;
       default:
         break;
@@ -235,10 +248,11 @@ class Graph extends Component {
     const { action } = message;
     if (action === domainEvents.ACTION.REPORTWORK) {
       const inspections = this.graphManager.getInspectionsReportData();
+      const graphSrc = this._getGraphImage();
 
       this._raiseEvent({
         action: domainEvents.ACTION.REPORTWORK,
-        value: { graphSrc: this._getGraphImage(), inspections },
+        value: { graphSrc, inspections },
         receivers: domainEvents.DES.WORKMENU,
       });
     }
@@ -251,6 +265,7 @@ class Graph extends Component {
 
     if ((!this.initiatedGraph && workLoaded) || forceUpdate) {
       this.dataIniting = true;
+      console.log('_drawGraph');
 
       _graphNodes.forEach((graphNode) => graphManager.draw(convertGraphNodeToNode(graphNode)));
 
@@ -271,10 +286,6 @@ class Graph extends Component {
       this.initiatedGraph = true;
     }
   };
-
-  componentDidUpdate() {
-    this._drawGraph(this.graphManager);
-  }
 
   componentWillUnmout() {
     eventBus.unsubscribe(this);

@@ -1,4 +1,4 @@
-import testScenarioAnsCaseService from 'features/project/work/services/testScenarioAnsCaseService';
+import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import { setTestCoverages } from 'features/project/work/slices/workSlice';
 import { COVERAGE_ASPECT } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
@@ -70,7 +70,7 @@ class TestCoverage extends Component {
 
   _calculate = () => {
     const { graph, testDatas } = this.props;
-    const testScenariosAndCases = testScenarioAnsCaseService.get();
+    const testScenariosAndCases = testScenarioAnsCaseStorage.get();
 
     const testCases = [];
     testScenariosAndCases.forEach((testScenario) => {

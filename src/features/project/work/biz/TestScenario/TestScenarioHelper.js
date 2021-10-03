@@ -387,15 +387,15 @@ class TestScenarioHelper {
 
       columns.forEach((column) => {
         if (column.key === 'results') {
-          testScenarioItem[column.headerName] = testScenario.expectedResults;
+          testScenarioItem[column.key] = testScenario.expectedResults;
         } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
-          testScenarioItem[column.headerName] = !!testScenario[column.key];
+          testScenarioItem[column.key] = !!testScenario[column.key];
         } else {
-          const testAssertion = testScenario.testAssertions.find((x) => x.graphNode.id === column.graphNodeId);
+          const testAssertion = testScenario.testAssertions.find((x) => x.graphNode.id === column.key);
           if (testAssertion) {
-            testScenarioItem[column.headerName] = testAssertion.result ? 'T' : 'F';
+            testScenarioItem[column.key] = testAssertion.result ? 'T' : 'F';
           } else {
-            testScenarioItem[column.headerName] = '';
+            testScenarioItem[column.key] = '';
           }
         }
       });
@@ -408,12 +408,12 @@ class TestScenarioHelper {
 
         columns.forEach((column) => {
           if (column.key === 'results') {
-            testCaseItem[column.headerName] = testCase[column.key].join(', ');
+            testCaseItem[column.key] = testCase[column.key].join(', ');
           } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
-            testCaseItem[column.headerName] = '';
+            testCaseItem[column.key] = '';
           } else {
-            const testData = testCase.testDatas.find((x) => x.graphNodeId === column.graphNodeId);
-            testCaseItem[column.headerName] = testData ? testData.data : '';
+            const testData = testCase.testDatas.find((x) => x.graphNodeId === column.key);
+            testCaseItem[column.key] = testData ? testData.data : '';
           }
         });
 
@@ -445,7 +445,7 @@ class TestScenarioHelper {
     const graphNodeHeaders = orderdGraphNodes.map((x) => {
       return {
         headerName: x.nodeId,
-        graphNodeId: x.id,
+        key: x.id,
       };
     });
 

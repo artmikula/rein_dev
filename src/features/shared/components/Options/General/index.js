@@ -15,6 +15,7 @@ function General(props, ref) {
 
   // public for OptionManager save button call
   const save = async () => {
+    Object.assign(appConfig, { general: data });
     const result = await optionService.update(JSON.stringify({ key: 'general', value: JSON.stringify(data) }));
     if (result.error) {
       if (result.error.detail) {
@@ -24,7 +25,6 @@ function General(props, ref) {
       }
       return false;
     }
-    Object.assign(appConfig, { general: data });
     return true;
   };
 
