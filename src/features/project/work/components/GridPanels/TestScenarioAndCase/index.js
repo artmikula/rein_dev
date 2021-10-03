@@ -44,7 +44,7 @@ class TestScenarioAndCase extends Component {
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this._caculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
-      } else {
+      } else if (event.message.action !== domainEvents.ACTION.REPORTWORK) {
         this._clearData();
       }
     });
@@ -61,7 +61,7 @@ class TestScenarioAndCase extends Component {
     });
 
     eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
-      this._caculateTestScenarioAndCase(event);
+      this._handleWorkMenuEvents(event);
     });
 
     TEST_CASE_SHORTCUT.forEach(({ code, shortcutKeys }) => {
