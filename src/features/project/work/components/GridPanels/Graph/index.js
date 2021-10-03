@@ -265,7 +265,6 @@ class Graph extends Component {
 
     if ((!this.initiatedGraph && workLoaded) || forceUpdate) {
       this.dataIniting = true;
-      console.log('_drawGraph');
 
       _graphNodes.forEach((graphNode) => graphManager.draw(convertGraphNodeToNode(graphNode)));
 

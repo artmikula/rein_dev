@@ -1,9 +1,8 @@
+import Language from 'features/shared/languages/Language';
+import appConfig from 'features/shared/lib/appConfig';
+import similarityCosine from 'features/shared/lib/similarityCosine';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { Button, FormGroup, FormText, Input, Label } from 'reactstrap';
-import Language from 'features/shared/languages/Language';
-import similarityCosine from 'features/shared/lib/similarityCosine';
-import optionService from 'features/shared/services/optionService';
-import appConfig from 'features/shared/lib/appConfig';
 import InputNumber from '../../InputNumber';
 import Slider from './components/Slider';
 
@@ -21,22 +20,17 @@ function SentenceSimilarityCheck(props, ref) {
     setTest({ ...test, similarRate: parseFloat(_similarRate) });
   };
 
-  // public for OptionManager save button call
-  const save = () => {
-    const result = optionService.update(JSON.stringify({ key: 'similarity', value: JSON.stringify(data) }));
-    if (result.error) {
-      alert(result.error.detail, { title: result.error.title, error: true });
-    } else {
-      Object.assign(appConfig, { similarity: data });
-    }
-  };
+  const getData = () => ({
+    key: 'similarity',
+    value: JSON.parse(JSON.stringify(data)),
+  });
 
   // public for OptionManager reset button call
   const reset = () => {
     setData(appConfig.similarity);
   };
 
-  useImperativeHandle(ref, () => ({ save, reset }));
+  useImperativeHandle(ref, () => ({ getData, reset }));
 
   useEffect(() => {
     if (appConfig.similarity) {
