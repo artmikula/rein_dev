@@ -59,7 +59,7 @@ class TestDataTable extends Component {
     Mousetrap.reset();
   }
 
-  _setTestDatas = (testDatas, raiseEvent = false) => {
+  _setTestDatas = (testDatas, raiseEvent = true) => {
     const { setTestDatas } = this.props;
 
     setTestDatas(testDatas);
@@ -87,12 +87,12 @@ class TestDataTable extends Component {
     const { testDatas } = this.props;
     const newTestDatas = TestData.add(testDatas, item);
 
-    this._setTestDatas(newTestDatas);
+    this._setTestDatas(newTestDatas, false);
   };
 
   _removeData = (item) => {
     const { testDatas } = this.props;
-    this._setTestDatas(TestData.remove(testDatas, item));
+    this._setTestDatas(TestData.remove(testDatas, item), false);
   };
 
   _updateData = (index, type, strength = 1) => {
@@ -107,7 +107,7 @@ class TestDataTable extends Component {
 
     const newTestDatas = TestData.update(testDatas, item, index);
 
-    this._setTestDatas(newTestDatas, true);
+    this._setTestDatas(newTestDatas);
   };
 
   _onTrueFalseDataChange = async (index, valueType, value) => {
@@ -126,7 +126,7 @@ class TestDataTable extends Component {
     }
 
     const newTestDatas = TestData.update(testDatas, item, index);
-    this._setTestDatas(newTestDatas, true);
+    this._setTestDatas(newTestDatas);
   };
 
   _handleCauseEffectEvents = (message) => {
@@ -166,11 +166,23 @@ class TestDataTable extends Component {
         this._openImportForm();
         break;
       case TEST_DATA_SHORTCUT_CODE.DEFAULT_SETUP:
-        console.log('DEFAULT_SETUP');
+        this._setDefaultData();
         break;
       default:
         break;
     }
+  };
+
+  _setDefaultData = () => {
+    let newTestDatas = [];
+    const { testDatas } = this.props;
+
+    testDatas.forEach((item) => {
+      const newItem = TestData.createTest(item.nodeId);
+      newTestDatas = TestData.add(newTestDatas, newItem);
+    });
+
+    this._setTestDatas(newTestDatas);
   };
 
   _handleWorkMenuEvents = (message) => {
