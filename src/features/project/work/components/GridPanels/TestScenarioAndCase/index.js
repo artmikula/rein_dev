@@ -4,7 +4,7 @@ import testCaseHelper from 'features/project/work/biz/TestCase';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
-import testScenarioAnsCaseService from 'features/project/work/services/testScenarioAnsCaseService';
+import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import { setGraph } from 'features/project/work/slices/workSlice';
 import { FILE_NAME, TEST_CASE_METHOD, TEST_CASE_SHORTCUT, TEST_CASE_SHORTCUT_CODE } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
@@ -44,7 +44,7 @@ class TestScenarioAndCase extends Component {
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this._caculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
-      } else {
+      } else if (event.message.action !== domainEvents.ACTION.REPORTWORK) {
         this._clearData();
       }
     });
@@ -61,7 +61,7 @@ class TestScenarioAndCase extends Component {
     });
 
     eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
-      this._caculateTestScenarioAndCase(event);
+      this._handleWorkMenuEvents(event);
     });
 
     TEST_CASE_SHORTCUT.forEach(({ code, shortcutKeys }) => {
@@ -84,13 +84,13 @@ class TestScenarioAndCase extends Component {
 
   _clearData = () => {
     this._setColumnsAndRows([], [], []);
-    testScenarioAnsCaseService.set([]);
+    testScenarioAnsCaseStorage.set([]);
   };
 
   _initData = () => {
     const { graph, workLoaded } = this.props;
     const testCases = [];
-    const testScenariosAndCases = testScenarioAnsCaseService.get();
+    const testScenariosAndCases = testScenarioAnsCaseStorage.get();
 
     if (!this.initiatedData && workLoaded) {
       testScenariosAndCases.forEach((testScenario) => {
@@ -167,7 +167,7 @@ class TestScenarioAndCase extends Component {
       return scenario;
     });
 
-    testScenarioAnsCaseService.set(newTestScenariosAndCases);
+    testScenarioAnsCaseStorage.set(newTestScenariosAndCases);
     setGraph({ ...graph, graphNodes: scenarioAndGraphNodes.graphNodes });
 
     this._raiseEvent({
@@ -235,25 +235,25 @@ class TestScenarioAndCase extends Component {
   };
 
   _handleTestCaseChecked = (scenarioId, caseId, checked) => {
-    testScenarioAnsCaseService.checkTestCase(scenarioId, caseId, checked);
+    testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked);
     const { rows } = this.state;
-    const newRows = testScenarioAnsCaseService.checkTestCase(scenarioId, caseId, checked, rows);
+    const newRows = testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked, rows);
 
     this._setRows(newRows);
   };
 
   _handleTestScenarioChecked = (scenarioId, checked) => {
-    testScenarioAnsCaseService.checkTestScenario(scenarioId, checked);
+    testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked);
     const { rows } = this.state;
-    const newRows = testScenarioAnsCaseService.checkTestScenario(scenarioId, checked, rows);
+    const newRows = testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked, rows);
 
     this._setRows(newRows);
   };
 
   _handleCheckboxChange = (scenarioId, key, checked) => {
-    testScenarioAnsCaseService.changeTestScenario(scenarioId, key, checked);
+    testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked);
     const { rows } = this.state;
-    const newRows = testScenarioAnsCaseService.changeTestScenario(scenarioId, key, checked, rows);
+    const newRows = testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked, rows);
 
     this._setRows(newRows);
   };
@@ -261,7 +261,7 @@ class TestScenarioAndCase extends Component {
   _createExportRowData(item, columns) {
     const row = { Name: item.Name, Checked: item.isSelected };
     columns.forEach((col) => {
-      row[col.headerName] = item[col.headerName];
+      row[col.headerName] = item[col.key];
     });
     return row;
   }
@@ -400,18 +400,18 @@ class TestScenarioAndCase extends Component {
                     </td>
                     {columns.map((column, colIndex) => (
                       <td key={`${colIndex}test-scenario-col`}>
-                        {typeof testScenario[column.headerName] === 'boolean' ? (
+                        {typeof testScenario[column.key] === 'boolean' ? (
                           <span className="d-flex">
                             <input
                               type="checkbox"
                               onChange={(e) =>
                                 this._handleCheckboxChange(testScenario.id, column.key, e.target.checked)
                               }
-                              checked={testScenario[column.key] ?? false}
+                              checked={testScenario[column.key]}
                             />
                           </span>
                         ) : (
-                          testScenario[column.headerName]
+                          testScenario[column.key]
                         )}
                       </td>
                     ))}
@@ -420,7 +420,7 @@ class TestScenarioAndCase extends Component {
                     testScenario.testCases.map((testCase, tcIndex) => (
                       <tr key={`${tcIndex}test-case-row`}>
                         {columns.map((column, colIndex) => (
-                          <td key={`${colIndex}test-case-col`}>{testCase[column.headerName]}</td>
+                          <td key={`${colIndex}test-case-col`}>{testCase[column.key]}</td>
                         ))}
                       </tr>
                     ))}

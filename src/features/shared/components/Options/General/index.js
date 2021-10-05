@@ -1,7 +1,6 @@
 import { TEST_CASE_METHOD } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
-import optionService from 'features/shared/services/optionService';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { FormGroup, Input, Label } from 'reactstrap';
 
@@ -13,27 +12,17 @@ function General(props, ref) {
     setData({ ...data, [key]: value });
   };
 
-  // public for OptionManager save button call
-  const save = async () => {
-    const result = await optionService.update(JSON.stringify({ key: 'general', value: JSON.stringify(data) }));
-    if (result.error) {
-      if (result.error.detail) {
-        alert(result.error.detail, { title: result.error.title, error: true });
-      } else {
-        alert(result.error, { title: Language.get('error'), error: true });
-      }
-      return false;
-    }
-    Object.assign(appConfig, { general: data });
-    return true;
-  };
+  const getData = () => ({
+    key: 'general',
+    value: JSON.parse(JSON.stringify(data)),
+  });
 
   // public for OptionManager reset button call
   const reset = () => {
     setData(appConfig.general);
   };
 
-  useImperativeHandle(ref, () => ({ save, reset }));
+  useImperativeHandle(ref, () => ({ getData, reset }));
 
   useEffect(() => {
     if (appConfig.general) {

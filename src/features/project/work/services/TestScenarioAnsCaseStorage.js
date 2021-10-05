@@ -1,6 +1,6 @@
-class TestScenarioAnsCaseService {
+class TestScenarioAnsCaseStorage {
   constructor() {
-    this.localId = 'TestScenarioAnsCaseService';
+    this.localId = 'TestScenarioAnsCaseStorage';
   }
 
   setId = (localId) => {
@@ -58,10 +58,12 @@ class TestScenarioAnsCaseService {
 
   changeTestScenario = (scenarioId, key, value, defaultData = null) => {
     const data = defaultData ?? this.get();
+    console.log('a', JSON.parse(JSON.stringify(data)));
     const testScenario = data.find((x) => x.id === scenarioId);
 
     if (testScenario) {
       testScenario[key] = value;
+      console.log('b', JSON.parse(JSON.stringify(data)));
 
       if (!defaultData) {
         this.set(data);
@@ -72,8 +74,8 @@ class TestScenarioAnsCaseService {
   };
 }
 
-const testScenarioAnsCaseService = new TestScenarioAnsCaseService();
+const testScenarioAnsCaseStorage = new TestScenarioAnsCaseStorage();
 
-window.testScenarioAnsCaseService = testScenarioAnsCaseService;
+window.testScenarioAnsCaseStorage = testScenarioAnsCaseStorage;
 
-export default testScenarioAnsCaseService;
+export default testScenarioAnsCaseStorage;

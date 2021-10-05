@@ -1,10 +1,9 @@
-import Language from 'features/shared/languages/Language';
-import appConfig from 'features/shared/lib/appConfig';
-import optionService from 'features/shared/services/optionService';
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import { Form, FormGroup, CustomInput } from 'reactstrap';
 import InputNumber from 'features/shared/components/InputNumber';
 import { COMPLEX_LOGICAL } from 'features/shared/constants';
+import Language from 'features/shared/languages/Language';
+import appConfig from 'features/shared/lib/appConfig';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { CustomInput, Form, FormGroup } from 'reactstrap';
 
 function TestCoverage(props, ref) {
   const [data, setData] = useState(appConfig.testCoverage);
@@ -14,27 +13,17 @@ function TestCoverage(props, ref) {
     setData({ ...data, [key]: value });
   };
 
-  // public for OptionManager save button call
-  const save = async () => {
-    const result = await optionService.update(JSON.stringify({ key: 'testCoverage', value: JSON.stringify(data) }));
-    if (result.error) {
-      if (result.error.detail) {
-        alert(result.error.detail, { title: result.error.title, error: true });
-      } else {
-        alert(result.error, { title: Language.get('error'), error: true });
-      }
-      return false;
-    }
-    Object.assign(appConfig, { testCoverage: data });
-    return true;
-  };
+  const getData = () => ({
+    key: 'testCoverage',
+    value: JSON.parse(JSON.stringify(data)),
+  });
 
   // public for OptionManager reset button call
   const reset = () => {
     setData(appConfig.testCoverage);
   };
 
-  useImperativeHandle(ref, () => ({ save, reset }));
+  useImperativeHandle(ref, () => ({ getData, reset }));
 
   useEffect(() => {
     if (appConfig.testCoverage) {

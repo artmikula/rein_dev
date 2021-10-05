@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -6,7 +7,7 @@ export default function Option({ text, onClick, className, selected }) {
   const _className = clsx('option px-3 py-2 item-hover mb-1', selected && 'selected', className);
   return (
     <button onClick={onClick} type="button" className={_className}>
-      {text}
+      {Language.get(text)}
     </button>
   );
 }

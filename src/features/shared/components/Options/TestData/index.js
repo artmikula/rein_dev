@@ -1,7 +1,6 @@
 import InputNumber from 'features/shared/components/InputNumber';
 import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
-import optionService from 'features/shared/services/optionService';
 import cloneDeep from 'lodash.clonedeep';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { Input } from 'reactstrap';
@@ -16,27 +15,17 @@ function TestData(props, ref) {
     setData(cloneDeep(data));
   };
 
-  // public for OptionManager save button call
-  const save = async () => {
-    const result = await optionService.update(JSON.stringify({ key: 'testData', value: JSON.stringify(data) }));
-    if (result.error) {
-      if (result.error.detail) {
-        alert(result.error.detail, { title: result.error.title, error: true });
-      } else {
-        alert(result.error, { title: Language.get('error'), error: true });
-      }
-      return false;
-    }
-    Object.assign(appConfig, { testData: data });
-    return true;
-  };
+  const getData = () => ({
+    key: 'testData',
+    value: JSON.parse(JSON.stringify(data)),
+  });
 
   // public for OptionManager reset button call
   const reset = () => {
     setData(appConfig.testData);
   };
 
-  useImperativeHandle(ref, () => ({ save, reset }));
+  useImperativeHandle(ref, () => ({ getData, reset }));
 
   useEffect(() => {
     if (appConfig.testData) {

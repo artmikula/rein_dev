@@ -1,9 +1,11 @@
+import CustomModal from 'features/shared/components/CustomModal/CustomModal';
 import { OPTION_TYPE } from 'features/shared/constants';
+import Language from 'features/shared/languages/Language';
+import appConfig from 'features/shared/lib/appConfig';
+import optionService from 'features/shared/services/optionService';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import { Button } from 'reactstrap';
-import Language from 'features/shared/languages/Language';
-import CustomModal from 'features/shared/components/CustomModal/CustomModal';
 import '../style.scss';
 import OptionContainer from './OptionContainer';
 
@@ -27,13 +29,31 @@ export default function OptionsModal({ id, close, optionType }) {
     }
   };
 
+  const _save = async () => {
+    const option = ref.current.getData();
+
+    const result = await optionService.update({ key: option.key, value: JSON.stringify(option.value) });
+    if (result.error) {
+      if (result.error.detail) {
+        alert(result.error.detail, { title: result.error.title, error: true });
+      } else {
+        alert(result.error, { title: Language.get('error'), error: true });
+      }
+      return false;
+    }
+
+    Object.assign(appConfig, { [option.key]: option.value });
+    return true;
+  };
+
   const _handleSave = async () => {
     if (ref.current) {
       if (timeout) {
         clearTimeout(timeout);
       }
+
       setSaveState(SAVE_STATE.SAVING);
-      const result = await ref.current.save();
+      const result = await _save();
       setSaveState(result ? SAVE_STATE.SAVE_SUCCESS : SAVE_STATE.SAVE_FAIL);
 
       timeout = setTimeout(() => {

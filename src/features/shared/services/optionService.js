@@ -3,13 +3,13 @@ import restService from './restService';
 
 class OptionService {
   async get() {
-    const url = `api/options`;
+    const url = `/option`;
     const response = await restServiceHelper.requestAsync(restService.getAsync(url));
     return response;
   }
 
   async update(data) {
-    const url = `api/options`;
+    const url = `/option`;
     const response = await restServiceHelper.requestAsync(restService.putAsync(url, data));
     return response;
   }

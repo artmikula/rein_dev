@@ -1,10 +1,9 @@
-import appConfig from 'features/shared/lib/appConfig';
-import optionService from 'features/shared/services/optionService';
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import Language from 'features/shared/languages/Language';
+import appConfig from 'features/shared/lib/appConfig';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import InputNumber from '../../InputNumber';
-import GraphNode from './components/GraphNode';
 import Constraint from './components/Constraint';
+import GraphNode from './components/GraphNode';
 import IsRelation from './components/IsRelation';
 import NotRelation from './components/NotRelation';
 
@@ -26,27 +25,17 @@ function Graph(props, ref) {
     setData({ ...data, [key]: value });
   };
 
-  // public for OptionManager save button call
-  const save = async () => {
-    const result = await optionService.update(JSON.stringify({ key: 'graph', value: JSON.stringify(data) }));
-    if (result.error) {
-      if (result.error.detail) {
-        alert(result.error.detail, { title: result.error.title, error: true });
-      } else {
-        alert(result.error, { title: Language.get('error'), error: true });
-      }
-      return false;
-    }
-    Object.assign(appConfig, { graph: data });
-    return true;
-  };
+  const getData = () => ({
+    key: 'graph',
+    value: JSON.parse(JSON.stringify(data)),
+  });
 
   // public for OptionManager reset button call
   const reset = () => {
     setData(appConfig.graph);
   };
 
-  useImperativeHandle(ref, () => ({ save, reset }));
+  useImperativeHandle(ref, () => ({ getData, reset }));
 
   useEffect(() => {
     if (appConfig.graph) {

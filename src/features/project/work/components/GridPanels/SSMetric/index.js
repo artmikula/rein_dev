@@ -1,5 +1,5 @@
 import SSMetricHelper from 'features/project/work/biz/SSMetric';
-import testScenarioAnsCaseService from 'features/project/work/services/testScenarioAnsCaseService';
+import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -121,7 +121,7 @@ class SSMertic extends Component {
 
   _caculateSSMetricValue = () => {
     const { testBasis, causeEffects, graph } = this.props;
-    const testScenariosAndCases = testScenarioAnsCaseService.get();
+    const testScenariosAndCases = testScenarioAnsCaseStorage.get();
 
     SSMetricHelper.initValue(graph.graphNodes, graph.graphLinks, graph.constraints, causeEffects);
     const newChartDatas = this.baseChartDatas.map((x) => {

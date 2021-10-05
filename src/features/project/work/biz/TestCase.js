@@ -94,7 +94,7 @@ class TestCase {
         cause: 0,
         group: 0,
         bools: [],
-        expectedResults: testScenario['Expected Results'],
+        expectedResults: testScenario.results,
       };
       const setValue = (key, type) => {
         const index = parseInt(key.substring(1), 10) - 1;
@@ -118,8 +118,8 @@ class TestCase {
       testScenario.testCases.forEach((testCase) => {
         const testCaseItem = {
           name: testCase.Name,
-          expectedResults: testScenario['Expected Results'],
-          definition: testCase['Expected Results'],
+          expectedResults: testScenario.results,
+          definition: testCase.results,
           causes: [],
         };
         Object.keys(testCase).forEach((key) => {

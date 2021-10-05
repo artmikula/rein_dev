@@ -1,4 +1,4 @@
-import { COVERAGE_ASPECT, GRAPH_NODE_TYPE, COMPLEX_LOGICAL } from 'features/shared/constants';
+import { COMPLEX_LOGICAL, COVERAGE_ASPECT, GRAPH_NODE_TYPE } from 'features/shared/constants';
 import appConfig from 'features/shared/lib/appConfig';
 import Enumerable from 'linq';
 
@@ -374,13 +374,14 @@ class TestCoverage {
         key: COVERAGE_ASPECT.InvalidScenario,
       },
     ];
+
     testCoverage = testCoverage.map((e) => {
       const percent = data[e.key].actualPercent || 0;
       let numerator = ((percent * data[e.key].denominator) / 100).toFixed(0);
       numerator = parseInt(numerator, 10);
       return {
         name: e.name,
-        percent: percent.toFixed(2),
+        percent: parseFloat(percent.toFixed(2)),
         denominator: data[e.key].denominator,
         numerator,
       };

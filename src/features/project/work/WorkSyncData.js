@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
-import testScenarioAnsCaseService from './services/testScenarioAnsCaseService';
+import testScenarioAnsCaseStorage from './services/TestScenarioAnsCaseStorage';
 import workService from './services/workService';
 
 class WorkSyncData extends Component {
@@ -15,7 +15,7 @@ class WorkSyncData extends Component {
     const { testBasis, causeEffects, graph, testCoverage, testDatas, match } = this.props;
     const { projectId, workId } = match.params;
 
-    const testScenariosAndCases = testScenarioAnsCaseService.get();
+    const testScenariosAndCases = testScenarioAnsCaseStorage.get();
 
     const data = {
       testBasis,

@@ -15,7 +15,7 @@ import CreateForm from './components';
 import AlertGenerateReport from './components/AlertGenerateReport';
 import GridPanels from './components/GridPanels';
 import MenuContainer from './components/Menu/MenuContainer';
-import testScenarioAnsCaseService from './services/testScenarioAnsCaseService';
+import testScenarioAnsCaseStorage from './services/TestScenarioAnsCaseStorage';
 import workService from './services/workService';
 import WorkSyncData from './WorkSyncData';
 
@@ -105,14 +105,14 @@ class Workspace extends Component {
     const result = await workService.getAsync(projectId, workId);
     let workData = {};
 
-    testScenarioAnsCaseService.setId(workId);
+    testScenarioAnsCaseStorage.setId(workId);
 
     if (result.error) {
       this._showErrorMessage(result.error);
-      testScenarioAnsCaseService.set([]);
+      testScenarioAnsCaseStorage.set([]);
     } else {
       const testScenariosAndCases = this._convertTestScenarios(result.data.testScenarios ?? []);
-      testScenarioAnsCaseService.set(testScenariosAndCases);
+      testScenarioAnsCaseStorage.set(testScenariosAndCases);
 
       workData = this._getWorkData(result.data);
     }

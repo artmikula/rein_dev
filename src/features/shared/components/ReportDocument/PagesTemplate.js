@@ -1,8 +1,8 @@
-import React from 'react';
 import { Image } from '@react-pdf/renderer';
-import TestCoverage from './TestCoverage';
+import React from 'react';
 import CauseEffectTable from './CauseEffectTable';
 import TestCase from './TestCase';
+import TestCoverage from './TestCoverage';
 import TestScenariosTable from './TestScenariosTable';
 
 const causeEffectHeader = [
@@ -13,6 +13,7 @@ const causeEffectHeader = [
 
 export default function PagesTemplate(props) {
   const { theme, testCoverage, causes, effects, graphSrc, inspections, testScenarios, testData, testCases } = props;
+  console.log('testCoverage', testCoverage);
   return [
     {
       title: 'Test Coverage',
