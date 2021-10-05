@@ -34,9 +34,10 @@ class ProjectService {
     }
   }
 
-  async importAsync(data) {
+  async importAsync(token, data) {
     const url = `/project/import`;
     try {
+      restService.setToken(token);
       const response = await restService.postAsync(url, data);
       return restServiceHelper.handleResponse(response);
     } catch (error) {
