@@ -30,6 +30,7 @@ class TestBasis {
         }
       });
     }
+
     return result;
   }
 
@@ -65,6 +66,40 @@ class TestBasis {
       });
     }
     return removedEntities;
+  }
+
+  checkSameEntity(anchorKey, start, end) {
+    const { blocks } = this._drawContentState;
+    const block = blocks.find((x) => x.key === anchorKey);
+
+    if (block) {
+      console.log('start, end', start, end);
+      for (let i = 0; i < block.entityRanges.length; i++) {
+        const entityRange = block.entityRanges[i];
+        const rangeStart = entityRange.offset;
+        const rangeEnd = entityRange.offset + entityRange.length;
+
+        console.log('rangeStart, rangeEnd', rangeStart, rangeEnd);
+
+        if (rangeStart >= start && rangeStart <= end) {
+          return true;
+        }
+
+        if (rangeEnd >= start && rangeEnd <= end) {
+          return true;
+        }
+
+        if (start >= rangeStart && start <= rangeEnd) {
+          return true;
+        }
+
+        if (end >= rangeStart && end <= rangeEnd) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 }
 export default new TestBasis();
