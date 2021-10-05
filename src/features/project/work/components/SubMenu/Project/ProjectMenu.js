@@ -1,7 +1,7 @@
 import Download from 'downloadjs';
 import Language from 'features/shared/languages/Language';
 import debounce from 'lodash.debounce';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Router, useHistory, useParams } from 'react-router';
 import { SearchComponent, SubMenu } from '../../../../../shared/components';
 import CreateForm from '../../../../components/CreateForm';
@@ -9,6 +9,7 @@ import ImportForm from '../../../../components/ImportForm';
 import projectService from '../../../../services/projectService';
 import WorkList from '../../../WorkList';
 import ProjectLink from './ProjectLink';
+import GlobalContext from '../../../../../../security/GlobalContext';
 
 export default function ProjectMenu() {
   const [recentProjects, setRecentProjects] = useState([]);
@@ -17,6 +18,9 @@ export default function ProjectMenu() {
   const [importFormOpen, toggleImportForm] = useState(false);
 
   const history = useHistory();
+
+  const context = useContext(GlobalContext);
+
   const params = useParams();
   const { projectId } = params;
 
@@ -45,7 +49,9 @@ export default function ProjectMenu() {
       key: 3,
       text: Language.get('export'),
       action: async () => {
-        const response = await projectService.exportAsync(projectId);
+        const { getToken } = context;
+        const token = getToken();
+        const response = await projectService.exportAsync(token, projectId);
         if (response.data) {
           const fileContentString = atob(response.data.body);
           Download(fileContentString, response.data.headers.fileDownloadName[0], response.data.headers.contentType[0]);
