@@ -30,7 +30,7 @@ export default function ImportForm({ isOpenModel, onToggleModal, projectId }) {
 
   const _handleSubmit = async (values, { setErrors, setSubmitting }) => {
     const form = new FormData();
-    form.append('request.file', values?.workList[0]);
+    form.append('file', values?.workList[0]);
     const result = await workService.importAsync(projectId, form);
     setSubmitting(false);
     if (result.data) {
