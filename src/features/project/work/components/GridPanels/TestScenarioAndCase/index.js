@@ -141,6 +141,7 @@ class TestScenarioAndCase extends Component {
             ...y,
             result: y.result,
             graphNodeId: y.graphNode.id,
+            graphNode: y.graphNode,
             workId,
           };
           return assertion;
