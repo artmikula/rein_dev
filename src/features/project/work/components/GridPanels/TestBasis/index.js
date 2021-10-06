@@ -139,7 +139,7 @@ class TestBasis extends Component {
   };
   /* End event */
 
-  _getSelectedText = (selectionState, newEditorState = null) => {
+  _getSelection = (selectionState, newEditorState = null) => {
     const { editorState } = this.state;
     const _editorState = newEditorState ?? editorState;
 
@@ -163,9 +163,13 @@ class TestBasis extends Component {
     }
 
     const selectionState = editorState.getSelection();
-    const { selectedText } = this._getSelectedText(selectionState, editorState);
+    const { selectedText, anchorKey, end, start } = this._getSelection(selectionState, editorState);
 
-    if (selectedText.trim().length > 0 && !isOpenClassifyPopover) {
+    if (
+      selectedText.trim().length > 0 &&
+      !TestBasisManager.checkSameEntity(anchorKey, start, end) &&
+      !isOpenClassifyPopover
+    ) {
       this.setState({ isOpenClassifyPopover: true, selectionState });
     } else {
       const drawContent = convertToRaw(editorState.getCurrentContent());
@@ -219,7 +223,7 @@ class TestBasis extends Component {
     }
 
     const { selectionState } = this.state;
-    const { selectedText, anchorKey, start, end } = this._getSelectedText(selectionState);
+    const { selectedText, anchorKey, start, end } = this._getSelection(selectionState);
     const existDefinition = TestBasisManager.getEntity(selectedText, anchorKey, start, end);
 
     if (existDefinition.type && existDefinition.type !== type) {
