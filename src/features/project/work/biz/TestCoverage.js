@@ -64,19 +64,19 @@ class TestCoverage {
     const falseCauses = [];
 
     const checkedCases = this.testCases.filter((x) => x.isSelected);
-    for (let i = 0; i < checkedCases.length; i++) {
-      const testAssertions = checkedCases[i].testScenario.testAssertions.filter(
+    checkedCases.forEach((checkedCase) => {
+      const testAssertions = checkedCase.testScenario.testAssertions.filter(
         (x) => x.graphNode && x.graphNode.type === GRAPH_NODE_TYPE.CAUSE
       );
 
-      for (let j = 0; j < testAssertions.length; j++) {
-        if (testAssertions[j].result) {
-          trueCauses.push(testAssertions[j].graphNode);
+      testAssertions.forEach((testAssertion) => {
+        if (testAssertion.result) {
+          trueCauses.push(testAssertion);
         } else {
-          falseCauses.push(testAssertions[j].graphNode);
+          falseCauses.push(testAssertion);
         }
-      }
-    }
+      });
+    });
 
     const intersectsCause = trueCauses.filter((x) => falseCauses.some((y) => x.graphNode.id === y.graphNode.id));
 
@@ -95,33 +95,34 @@ class TestCoverage {
     const falseDatas = new Map();
 
     const checkedCases = this.testCases.filter((x) => x.isSelected);
-    for (let i = 0; i < checkedCases.length; i++) {
-      const testAssertions = checkedCases[i].testScenario.testAssertions.filter(
+    checkedCases.forEach((checkedCase) => {
+      const testAssertions = checkedCase.testScenario.testAssertions.filter(
         (x) => x.graphNode && x.graphNode.type === GRAPH_NODE_TYPE.CAUSE
       );
-      for (let j = 0; j < testAssertions.length; j++) {
-        if (testAssertions[j].result) {
-          if (!trueDatas.has(testAssertions[j].graphNode.id)) {
-            trueDatas.set(testAssertions[j].graphNode.id, []);
+
+      testAssertions.forEach((testAssertion) => {
+        if (testAssertion.result) {
+          if (!trueDatas.has(testAssertion.graphNode.id)) {
+            trueDatas.set(testAssertion.graphNode.id, []);
           }
 
-          const value = trueDatas.get(testAssertions[j].graphNode.id);
-          value.push(checkedCases[i].testDatas.find((x) => x.graphNodeId === testAssertions[j].graphNode.id));
-          trueDatas.set(testAssertions[j].graphNode.id, value);
+          const value = trueDatas.get(testAssertion.graphNode.id);
+          value.push(checkedCase.testDatas.find((x) => x.graphNodeId === testAssertion.graphNode.id));
+          trueDatas.set(testAssertion.graphNode.id, value);
         } else {
-          if (!falseDatas.has(testAssertions[j].graphNode.id)) {
-            falseDatas.set(testAssertions[j].graphNode.id, []);
+          if (!falseDatas.has(testAssertion.graphNode.id)) {
+            falseDatas.set(testAssertion.graphNode.id, []);
           }
 
-          const value = falseDatas.get(testAssertions[j].graphNode.id);
-          value.push(checkedCases[i].testDatas.find((x) => x.graphNodeId === testAssertions[j].graphNode.id));
-          falseDatas.set(testAssertions[j].graphNode.id, value);
+          const value = falseDatas.get(testAssertion.graphNode.id);
+          value.push(checkedCase.testDatas.find((x) => x.graphNodeId === testAssertion.graphNode.id));
+          falseDatas.set(testAssertion.graphNode.id, value);
         }
-      }
+      });
 
       trueDatas.forEach((value, key) => {
-        const nodeId = this.causeNodes.find((x) => x.id === key);
-        const testData = this.testDatas.find((x) => x.nodeId === nodeId);
+        const cause = this.causeNodes.find((x) => x.id === key);
+        const testData = this.testDatas.find((x) => x.nodeId === cause.nodeId);
         const trueDataArray = testData.trueDatas ? testData.trueDatas.split(',') : [''];
         if (Enumerable.from(trueDataArray).sequenceEqual(value)) {
           trueCauses.push(key);
@@ -129,14 +130,14 @@ class TestCoverage {
       });
 
       falseDatas.forEach((value, key) => {
-        const nodeId = this.causeNodes.find((x) => x.id === key);
-        const testData = this.testDatas.find((x) => x.nodeId === nodeId);
+        const cause = this.causeNodes.find((x) => x.id === key);
+        const testData = this.testDatas.find((x) => x.nodeId === cause.nodeId);
         const trueDataArray = testData.falseDatas ? testData.falseDatas.split(',') : [''];
         if (Enumerable.from(trueDataArray).sequenceEqual(value)) {
           falseDatas.push(key);
         }
       });
-    }
+    });
 
     const intersectsCause = trueCauses.filter((x) => falseCauses.some((y) => x.graphNode.id === y.graphNode.id));
 
@@ -155,15 +156,16 @@ class TestCoverage {
       .toArray();
     const exceptedEffects = [...this.effectNodes.filter((x) => !allResults.some((y) => y.graphNodeId === x.id))];
 
-    for (let i = 0; i < unCheckedCases.length; i++) {
-      const resultIds = unCheckedCases[i].testScenario.testResults.map((x) => x.graphNodeId);
+    unCheckedCases.forEach((unCheckedCase) => {
+      const resultIds = unCheckedCase.testScenario.testResults.map((x) => x.graphNodeId);
       const results = this.effectNodes.filter((x) => resultIds.some((y) => x.id === y));
-      for (let j = 0; j < results.length; j++) {
-        if (!exceptedEffects.some((x) => x.id === results[j].id)) {
-          exceptedEffects.push(results[j]);
+
+      results.forEach((result) => {
+        if (!exceptedEffects.some((x) => x.id === result.id)) {
+          exceptedEffects.push(result);
         }
-      }
-    }
+      });
+    });
 
     return {
       numerator: effects - exceptedEffects.length,
@@ -174,19 +176,20 @@ class TestCoverage {
   calculateCoverageByComplexLogicalRelation() {
     const causes = this._findComplexCauses();
     const causesIds = causes.map((x) => x.id);
-    const testCasesContainsCause = this.testCases.filter((x) =>
+    const testCasesContainsCauses = this.testCases.filter((x) =>
       x.testDatas.some((y) => causesIds.some((z) => y.graphNodeId === z))
     );
 
     let checkedCasesCount = 0;
     let casesCount = 0;
-    for (let i = 0; i < testCasesContainsCause.length; i++) {
-      if (testCasesContainsCause[i].isSelected) {
+
+    testCasesContainsCauses.forEach((testCasesContainsCause) => {
+      if (testCasesContainsCause.isSelected) {
         checkedCasesCount++;
       }
 
       casesCount++;
-    }
+    });
 
     return {
       numerator: checkedCasesCount,
@@ -196,16 +199,10 @@ class TestCoverage {
 
   calculateCoverageByScenario() {
     const scenariosCount = this.testScenarios.length;
-    const notCheckedCases = this.testCases.filter((x) => !x.isSelected);
-    const notCheckedScenarios = [];
-    for (let i = 0; i < notCheckedCases.length; i++) {
-      if (!notCheckedScenarios.some((x) => x.id === notCheckedCases[i].testScenario.id)) {
-        notCheckedScenarios.push(notCheckedCases[i].testScenario);
-      }
-    }
+    const checkedScenariosCount = this.testScenarios.filter((x) => x.isSelected).length;
 
     return {
-      numerator: scenariosCount - notCheckedScenarios.length,
+      numerator: checkedScenariosCount,
       denominator: scenariosCount,
     };
   }
@@ -213,13 +210,15 @@ class TestCoverage {
   calculateCoverageByBaseScenario() {
     let cases = 0.0;
     let checkedCases = 0.0;
-    const baseTestCases = this.testCases.filter((x) => x.testScenario.isBaseScenario);
-    for (let i = 0; i < baseTestCases.length; i++) {
-      cases += 1.0;
-      if (baseTestCases[i].isSelected) {
-        checkedCases += 1.0;
+
+    this.testCases.forEach((testCase) => {
+      if (testCase.testScenario.isBaseScenario) {
+        cases += 1.0;
+        if (testCase.isSelected) {
+          checkedCases += 1.0;
+        }
       }
-    }
+    });
 
     return {
       numerator: checkedCases,
@@ -230,13 +229,15 @@ class TestCoverage {
   calculateCoverageByValidScenario() {
     let cases = 0.0;
     let checkedCases = 0.0;
-    const baseTestCases = this.testCases.filter((x) => x.testScenario.isValid);
-    for (let i = 0; i < baseTestCases.length; i++) {
-      cases += 1.0;
-      if (baseTestCases[i].isSelected) {
-        checkedCases += 1.0;
+
+    this.testCases.forEach((testCase) => {
+      if (testCase.testScenario.isValid) {
+        cases += 1.0;
+        if (testCase.isSelected) {
+          checkedCases += 1.0;
+        }
       }
-    }
+    });
 
     return {
       numerator: checkedCases,
@@ -247,13 +248,15 @@ class TestCoverage {
   calculateCoverageByInvalidScenario() {
     let cases = 0.0;
     let checkedCases = 0.0;
-    const baseTestCases = this.testCases.filter((x) => x.testScenario.isValid);
-    for (let i = 0; i < baseTestCases.length; i++) {
-      cases += 1.0;
-      if (baseTestCases[i].isSelected) {
-        checkedCases += 1.0;
+
+    this.testCases.forEach((testCase) => {
+      if (!testCase.testScenario.isValid) {
+        cases += 1.0;
+        if (testCase.isSelected) {
+          checkedCases += 1.0;
+        }
       }
-    }
+    });
 
     return {
       numerator: checkedCases,
@@ -275,16 +278,23 @@ class TestCoverage {
     }
   }
 
-  _findComplexCausesByAverage() {
-    let complexities = 0;
+  _getCauseComplexities = () => {
+    let totalComplexities = 0.0;
     const causeComplexities = new Map();
-    for (let i = 0; i < this.causeNodes.length; i++) {
-      const causeComplexity = this.graphLinks.filter((x) => x.source.id === this.causeNodes[i].id).length;
-      causeComplexities.set(this.causeNodes[i].id, causeComplexity);
-      complexities += causeComplexity;
-    }
 
-    const averageComplexities = complexities / this.causeNodes.length;
+    this.causeNodes.forEach((causeNode) => {
+      const causeComplexity = this.graphLinks.filter((x) => x.source.id === causeNode.id).length;
+      causeComplexities.set(causeNode.id, causeComplexity);
+      totalComplexities += causeComplexity;
+    });
+
+    return { totalComplexities, causeComplexities };
+  };
+
+  _findComplexCausesByAverage() {
+    const { totalComplexities, causeComplexities } = this._getCauseComplexities();
+
+    const averageComplexities = totalComplexities / this.causeNodes.length;
     const resultIds = [];
     causeComplexities.forEach((value, key) => {
       if (value > averageComplexities) {
@@ -295,13 +305,8 @@ class TestCoverage {
   }
 
   _findComplexCausesByWeightedAverage() {
-    let totalComplexities = 0.0;
-    const causeComplexities = new Map();
-    for (let i = 0; i < this.causeNodes.length; i++) {
-      const causeComplexity = this.graphLinks.filter((x) => x.source.id === this.causeNodes[i].id).length;
-      causeComplexities.set(this.causeNodes[i].id, causeComplexity);
-      totalComplexities += causeComplexity;
-    }
+    const { totalComplexities, causeComplexities } = this._getCauseComplexities();
+
     let weightedAverage = 0.0;
     causeComplexities.forEach((value) => {
       weightedAverage += value * (value / totalComplexities);
@@ -319,11 +324,7 @@ class TestCoverage {
 
   findComplexCausesByUserDefinedThreshold() {
     const { threshold } = appConfig.testCoverage;
-    const causeComplexities = new Map();
-    for (let i = 0; i < this.causeNodes.length; i++) {
-      const causeComplexity = this.graphLinks.filter((x) => x.source.id === this.causeNodes[i].id).length;
-      causeComplexities.set(this.causeNodes[i].id, causeComplexity);
-    }
+    const { causeComplexities } = this._getCauseComplexities();
 
     const resultIds = [];
     causeComplexities.forEach((value, key) => {
