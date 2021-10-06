@@ -29,7 +29,7 @@ class WorkSyncData extends Component {
     await workService.updateWorkDataAsync(projectId, workId, data);
 
     this.syncing = false;
-  }, 3000);
+  }, 10000);
 
   constructor(props) {
     super(props);
