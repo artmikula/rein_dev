@@ -1,8 +1,8 @@
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
+import { BrowserRouter } from 'react-router-dom';
 import { GlobalProvider } from 'security/GlobalContext';
 import App from './App';
 import store from './app/store';
@@ -12,33 +12,11 @@ import cookiesHelper from './features/shared/lib/cookiesHelper';
 const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 
-const cookieValue = cookiesHelper.getCulture();
+const languageCode = cookiesHelper.getLanguageCode();
 
-if (cookieValue) {
-  if (cookieValue.indexOf('en-') > -1) {
-    import(/* webpackPrefetch: true  */ './features/shared/languages/en.js').then((module) => {
-      Language.add('en', module);
-    });
-  }
-
-  if (cookieValue.indexOf('ko-') > -1) {
-    import(/* webpackPrefetch: true  */ './features/shared/languages/ko.js').then((module) => {
-      Language.add('ko', module);
-    });
-  }
-
-  if (cookieValue.indexOf('vi-') > -1) {
-    import(/* webpackPrefetch: true  */ './features/shared/languages/vi.js').then((module) => {
-      Language.add('vi', module);
-    });
-  }
-
-  if (cookieValue.indexOf('th-') > -1) {
-    import(/* webpackPrefetch: true  */ './features/shared/languages/th.js').then((module) => {
-      Language.add('th', module);
-    });
-  }
-}
+import(/* webpackPrefetch: true  */ `./features/shared/languages/${languageCode}.js`).then((module) => {
+  Language.add('ko', module);
+});
 
 ReactDOM.render(
   <Provider store={store}>
