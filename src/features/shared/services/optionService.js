@@ -15,4 +15,6 @@ class OptionService {
   }
 }
 
-export default new OptionService();
+const optionService = new OptionService();
+
+export default optionService;
