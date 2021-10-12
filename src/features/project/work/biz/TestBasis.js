@@ -78,19 +78,19 @@ class TestBasis {
         const rangeStart = entityRange.offset;
         const rangeEnd = entityRange.offset + entityRange.length;
 
-        if (rangeStart >= start && rangeStart <= end) {
+        if (rangeStart >= start && rangeStart < end) {
           return true;
         }
 
-        if (rangeEnd >= start && rangeEnd <= end) {
+        if (rangeEnd > start && rangeEnd <= end) {
           return true;
         }
 
-        if (start >= rangeStart && start <= rangeEnd) {
+        if (start >= rangeStart && start < rangeEnd) {
           return true;
         }
 
-        if (end >= rangeStart && end <= rangeEnd) {
+        if (end > rangeStart && end <= rangeEnd) {
           return true;
         }
       }
