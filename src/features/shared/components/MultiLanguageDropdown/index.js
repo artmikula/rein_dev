@@ -1,21 +1,20 @@
+import appConfig from 'features/shared/lib/appConfig';
+import languageService from 'features/shared/services/languageService';
 import React from 'react';
-import { UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
-import axios from 'axios';
-import { LANGUAGE, CULTURE } from '../../constants';
-import CookiesHelper from '../../lib/cookiesHelper';
+import { DropdownItem, DropdownMenu, DropdownToggle, UncontrolledDropdown } from 'reactstrap';
+import { LANGUAGE } from '../../constants';
 
 export default function MultiLanguageDropdown() {
-  const langCode = CookiesHelper.getLanguageCode();
+  const language = languageService.get();
 
-  const handleChangeLanguage = (code) => {
-    const fd = new FormData();
-    fd.append('culture', CULTURE[code]);
-    fd.append('returnUrl', '/');
+  const handleChangeLanguage = async (code, name) => {
+    if (language.code !== code) {
+      const language = { code, name };
+      languageService.set(language);
 
-    axios
-      .post('/Home/SetLanguage', fd)
-      .then(() => window.location.reload())
-      .catch((err) => console.log(err));
+      Object.assign(appConfig, { language });
+      window.location.reload();
+    }
   };
 
   return (
@@ -25,7 +24,12 @@ export default function MultiLanguageDropdown() {
       </DropdownToggle>
       <DropdownMenu right className="border-0 shadow">
         {Object.keys(LANGUAGE).map((key) => (
-          <DropdownItem key={key} className="small" active={key === langCode} onClick={() => handleChangeLanguage(key)}>
+          <DropdownItem
+            key={key}
+            className="small"
+            active={key === language.code}
+            onClick={() => handleChangeLanguage(key, LANGUAGE[key])}
+          >
             {LANGUAGE[key]}
           </DropdownItem>
         ))}

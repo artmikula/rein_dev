@@ -21,8 +21,6 @@ export const WORK_FORM_NAME = {
 
 export const LANGUAGE = {
   en: 'English (United States)',
-  vi: 'Tiếng Việt (Việt Nam)',
-  th: 'ไทย (ไทย)',
   ko: '한국어(대한민국)',
 };
 

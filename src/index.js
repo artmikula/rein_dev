@@ -1,4 +1,5 @@
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import languageService from 'features/shared/services/languageService';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
@@ -7,15 +8,15 @@ import { GlobalProvider } from 'security/GlobalContext';
 import App from './App';
 import store from './app/store';
 import Language from './features/shared/languages/Language';
-import cookiesHelper from './features/shared/lib/cookiesHelper';
 
 const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 
-const languageCode = cookiesHelper.getLanguageCode();
+const language = languageService.get();
 
-import(/* webpackPrefetch: true  */ `./features/shared/languages/${languageCode}.js`).then((module) => {
-  Language.add('ko', module);
+import(/* webpackPrefetch: true  */ `./features/shared/languages/${language.code}.js`).then((module) => {
+  Language.add(language.code, module);
+  console.log('import Language');
 });
 
 ReactDOM.render(
