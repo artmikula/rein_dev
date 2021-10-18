@@ -63,10 +63,24 @@
   .delete-icon {
     color: #808080;
   }
-  
-  tbody tr:hover {
-    .delete-icon {
-      color: #dc3545;
-    } 
+
+  .icon-btn.delete-icon:hover {
+    color: #dc3545;
+  }
+
+  .merge-icon {
+    color: #808080;
+  }
+
+  .icon-btn.merge-icon:hover {
+    color: #0078d4;
+  }
+
+  .check-icon {
+    color: #808080;
+  }
+
+  .icon-btn.check-icon:hover {
+    color: #28a745;
   }
 }

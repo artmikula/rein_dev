@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { UncontrolledTooltip } from 'reactstrap';
+import React, { useState } from 'react';
 import { CLASSIFY } from '../../../../../shared/constants';
+import IconButton from './components/IconButton';
 
-export default function CauseEffectRow(props) {
-  const { rows } = props;
+export default function CauseEffectRow({ rows, onDelete, onMerge, onOpenMerging, mergeItem }) {
   const [collapseId, setCollapseId] = useState({});
 
   const _handleCollapseRow = (e, id) => {
     e.preventDefault();
     setCollapseId((state) => ({ ...state, [id]: !state[id] }));
   };
+
+  const _canMergeCause = rows.filter((x) => x.type === CLASSIFY.CAUSE && !x.isMerge).length > 1;
+
+  const _canMergeEffect = rows.filter((x) => x.type === CLASSIFY.EFFECT && !x.isMerge).length > 1;
+
   return rows.map((row) => {
     const rowId = row.node;
     const rowIdClassName = row.type === CLASSIFY.CAUSE ? 'cause-id' : 'effect-id';
+    const canMerge = row.type === CLASSIFY.CAUSE ? _canMergeCause : _canMergeEffect;
+
     return (
       <React.Fragment key={rowId}>
         <tr key={rowId + rowIdClassName}>
@@ -34,13 +40,32 @@ export default function CauseEffectRow(props) {
           <td>{row.definition}</td>
           <td>
             {row.mergedNodes.join(', ')}
-            <button
-              className="border-0 outline-0 float-right bg-transparent"
-              type="button"
-              onClick={() => props.onDelete(row)}
-            >
-              <i className="icon-btn bi bi-trash delete-icon" id={`tooltip${rowId}`} />
-            </button>
+            {!mergeItem && (
+              <IconButton
+                id={`delete${rowId}`}
+                tooltip={`Delete ${row.node}`}
+                onClick={() => onDelete(row)}
+                iconClassName="bi bi-trash delete-icon"
+              />
+            )}
+
+            {!mergeItem && canMerge && (
+              <IconButton
+                id={`merge${rowId}`}
+                tooltip={`Abridge ${row.node}`}
+                onClick={() => onOpenMerging(row)}
+                iconClassName=" bi bi-subtract merge-icon"
+              />
+            )}
+
+            {mergeItem && row.type === mergeItem.type && row.node !== mergeItem.node && (
+              <IconButton
+                id={`check${rowId}`}
+                tooltip={`Abridge ${mergeItem.node} to ${row.node}`}
+                onClick={() => onMerge(row)}
+                iconClassName="bi bi-clipboard-check check-icon"
+              />
+            )}
           </td>
         </tr>
         {row.mergedChildren.map((mergedRow) => {
@@ -56,9 +81,6 @@ export default function CauseEffectRow(props) {
             </tr>
           );
         })}
-        <UncontrolledTooltip placement="left" target={`tooltip${rowId}`}>
-          <small>Delete {row.node}</small>
-        </UncontrolledTooltip>
       </React.Fragment>
     );
   });

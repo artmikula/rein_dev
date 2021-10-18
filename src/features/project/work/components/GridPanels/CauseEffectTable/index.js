@@ -12,9 +12,17 @@ import { Table } from 'reactstrap';
 import { v4 as uuidv4 } from 'uuid';
 import CauseEffectRow from './CauseEffectRow';
 import AbbreviateConfirmContent from './components/AbbreviateConfirmContent';
+import IconButton from './components/IconButton';
 import './style.scss';
 
 class CauseEffectTable extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      mergeItem: null,
+    };
+  }
+
   componentDidMount() {
     eventBus.subscribe(this, domainEvents.TESTBASIC_DOMAINEVENT, (event) => {
       const { message } = event;
@@ -86,10 +94,7 @@ class CauseEffectTable extends Component {
 
     setCauseEffects([...listData, newItem]);
 
-    eventBus.publish(domainEvents.CAUSEEFFECT_DOMAINEVENT, {
-      action: domainEvents.ACTION.ADD,
-      value: newItem,
-    });
+    this._raiseEvent({ action: domainEvents.ACTION.ADD, value: newItem });
   };
 
   _handleDeleteAction = (item) => {
@@ -162,8 +167,8 @@ class CauseEffectTable extends Component {
     const newList = [...listData];
     newList[index] = newItem;
 
-    this._raiseEvent({ action: domainEvents.ACTION.UPDATE, value: newItem });
     setCauseEffects(newList);
+    this._raiseEvent({ action: domainEvents.ACTION.UPDATE, value: newItem });
   };
 
   _handleWorkMenuEvent = () => {
@@ -203,8 +208,12 @@ class CauseEffectTable extends Component {
 
   _handleAcceptDeleteEvent = (items) => {
     const { listData, setCauseEffects } = this.props;
+    const { mergeItem } = this.state;
     // get causeEffect need remove
-    let removedcauseEffects = listData.filter((x) => items.some((item) => item.nodeId === x.node));
+    let removedcauseEffects = listData.filter((x) =>
+      items.some((item) => item.nodeId === x.node && (!mergeItem || (mergeItem && item.nodeId !== mergeItem.node)))
+    );
+    console.log('removedcauseEffects', removedcauseEffects);
     // get causeEffect need remove include merged causeEffect;
     removedcauseEffects = listData.filter((x) =>
       removedcauseEffects.some(
@@ -228,9 +237,50 @@ class CauseEffectTable extends Component {
     }
   };
 
+  _openMergeOption = (item) => this.setState({ mergeItem: item });
+
+  _closeMergeOption = () => this.setState({ mergeItem: null });
+
+  _handleMerge = async (item) => {
+    const { mergeItem } = this.state;
+    const { listData, setCauseEffects } = this.props;
+
+    const newListData = [...listData];
+    const mergeIndex = newListData.findIndex((x) => x.id === mergeItem.id);
+
+    if (mergeIndex > -1) {
+      newListData.forEach((x, index) => {
+        if (x.isMerged && x.parent === mergeItem.id) {
+          newListData[index] = { ...x, id: uuidv4(), isMerged: true, parent: item.id };
+        }
+      });
+
+      const newItem = { ...mergeItem, id: uuidv4(), isMerged: true, parent: item.id };
+
+      newListData[mergeIndex] = newItem;
+      setCauseEffects(newListData);
+
+      this._raiseEvent({
+        action: domainEvents.ACTION.ACCEPTDELETE,
+        value: mergeItem,
+        receivers: [domainEvents.DES.GRAPH, domainEvents.DES.TESTDATA],
+      });
+
+      this._raiseEvent({
+        action: domainEvents.ACTION.ADD,
+        value: newItem,
+        receivers: [domainEvents.DES.TESTDATA],
+      });
+    }
+
+    this._closeMergeOption();
+  };
+
   /* End handle event */
   render() {
+    const { mergeItem } = this.state;
     const { listData } = this.props;
+    console.log('listData', listData, CauseEffect.generateData(listData));
 
     return (
       <Table bordered size="sm" className="border-bottom cause-effect-table">
@@ -238,11 +288,27 @@ class CauseEffectTable extends Component {
           <tr className="text-primary font-weight-bold">
             <td className="text-right">{Language.get('id')}</td>
             <td>{Language.get('definition')}</td>
-            <td>{Language.get('abridged')}</td>
+            <td>
+              {Language.get('abridged')}
+              {mergeItem && (
+                <IconButton
+                  id={`cancel${mergeItem.node}`}
+                  tooltip={`Cancel abridge ${mergeItem.node}`}
+                  onClick={this._closeMergeOption}
+                  iconClassName="bi bi-x-lg delete-icon"
+                />
+              )}
+            </td>
           </tr>
         </thead>
         <tbody>
-          <CauseEffectRow rows={CauseEffect.generateData(listData)} onDelete={this._handleDeleteAction} />
+          <CauseEffectRow
+            rows={CauseEffect.generateData(listData)}
+            onDelete={this._handleDeleteAction}
+            onMerge={this._handleMerge}
+            onOpenMerging={this._openMergeOption}
+            mergeItem={mergeItem}
+          />
         </tbody>
       </Table>
     );
