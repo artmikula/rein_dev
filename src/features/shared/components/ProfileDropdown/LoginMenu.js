@@ -5,25 +5,41 @@ import GlobalContext from 'security/GlobalContext';
 import Language from '../../languages/Language';
 
 class LoginMenu extends Component {
-  authenticatedView(profilePath, logoutPath) {
-    const { authContext, getUserInfo } = this.context;
-    let userName = '';
-    getUserInfo().then((data) => {
-      userName = data.name;
-    });
+  constructor(props) {
+    super(props);
+    this.state = {
+      user: {},
+    };
+  }
+
+  componentDidMount() {
+    this._getUserInfo();
+  }
+
+  _getUserInfo = async () => {
+    const { getUserInfo } = this.context;
+    const data = await getUserInfo();
+
+    this.setState({ user: data });
+  };
+
+  authenticatedView(logoutPath) {
+    const { authContext } = this.context;
+    const { user } = this.state;
+
     return (
       <>
-        {userName && <p className="h6 p-2 pl-4">{userName}</p>}
-        <DropdownItem tag={Link} to={profilePath} className="small py-2">
+        {user.name && <p className="h6 p-2 pl-4 mb-0">{user.name}</p>}
+        {/* <DropdownItem tag={Link} to={profilePath} className="small py-2">
           <i className="bi bi-person mr-2" />
           {Language.get('viewaccount')}
-        </DropdownItem>
-        <DropdownItem className="small py-2" onClick={() => window.option()}>
+        </DropdownItem> */}
+        <DropdownItem className="small py-2" onClick={window.option}>
           <i className="bi bi-sliders mr-2" />
           {Language.get('options')}
         </DropdownItem>
         <div className="border-top my-1" />
-        <DropdownItem onClick={() => authContext.logout()} to={logoutPath} className="small py-2">
+        <DropdownItem onClick={authContext.logout} to={logoutPath} className="small py-2">
           <i className="bi bi-box-arrow-left mr-2" />
           {Language.get('logout')}
         </DropdownItem>
@@ -54,9 +70,10 @@ class LoginMenu extends Component {
       const loginPath = '';
       return this.anonymousView(registerPath, loginPath);
     }
-    const profilePath = '';
+
     const logoutPath = { pathname: '', state: { local: true } };
-    return this.authenticatedView(profilePath, logoutPath);
+
+    return this.authenticatedView(logoutPath);
   }
 }
 
