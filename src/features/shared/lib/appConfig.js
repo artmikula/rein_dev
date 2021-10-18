@@ -21,7 +21,7 @@ const appConfig = {
     notRelationColor: '#965196',
     lineWidth: 1,
   },
-  similarity: { enable: false, rate: 100 },
+  similarity: { enable: true, rate: 70 },
   testCoverage: { complexLogical: COMPLEX_LOGICAL.Average, threshold: 1 },
   testData: {
     String: [
