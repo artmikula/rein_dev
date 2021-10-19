@@ -111,7 +111,13 @@ class CauseEffect {
    * @returns {array} [list cause, list effect]
    */
 
-  generateData = (data) => this._mergeData(data);
+  generateData = (data) => {
+    let causes = data.filter((x) => x.type === CLASSIFY.CAUSE);
+    let effects = data.filter((x) => x.type === CLASSIFY.EFFECT);
+    causes = this._mergeData(causes);
+    effects = this._mergeData(effects);
+    return [...causes, ...effects];
+  };
 
   /**
    * generate report data cause/effect data to object
