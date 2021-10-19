@@ -1,6 +1,10 @@
 .cause-effect-table {
   $col-padding: 4px;
 
+  tr {
+    background-color: #fff;
+  }
+  
   th,
   td {
     font-size: small !important;
