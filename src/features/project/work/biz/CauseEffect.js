@@ -85,16 +85,18 @@ class CauseEffect {
   /**
    * Merge cause/effect child to its parent
    */
-  _mergeData = (data) => {
+  _mergeData = (data, type, prefix) => {
     const listData = new Map();
 
-    data.forEach((item) => {
+    const _data = data.filter((x) => x.type === type);
+
+    _data.forEach((item) => {
       if (!item.isMerged) {
         listData.set(item.id, { ...item, mergedChildren: [], mergedNodes: [] });
       }
     });
 
-    data.forEach((item) => {
+    _data.forEach((item) => {
       if (item.isMerged) {
         const parent = listData.get(item.parent);
         parent.mergedChildren.push({ ...item });
@@ -102,7 +104,13 @@ class CauseEffect {
       }
     });
 
-    return [...listData.values()];
+    const result = [...listData.values()].sort((a, b) => {
+      const aIndex = parseInt(a.node.replace(prefix, ''), 10);
+      const bIndex = parseInt(b.node.replace(prefix, ''), 10);
+      return aIndex - bIndex;
+    });
+
+    return result;
   };
 
   /**
@@ -112,10 +120,9 @@ class CauseEffect {
    */
 
   generateData = (data) => {
-    let causes = data.filter((x) => x.type === CLASSIFY.CAUSE);
-    let effects = data.filter((x) => x.type === CLASSIFY.EFFECT);
-    causes = this._mergeData(causes);
-    effects = this._mergeData(effects);
+    const causes = this._mergeData(data, CLASSIFY.CAUSE, CLASSIFY.CAUSE_PREFIX);
+    const effects = this._mergeData(data, CLASSIFY.EFFECT, CLASSIFY.EFFECT);
+
     return [...causes, ...effects];
   };
 
