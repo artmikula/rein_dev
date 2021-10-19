@@ -31,7 +31,7 @@ export default function CauseEffectRow({ data, onDelete, index }) {
               <div className="cause-effect-cell">
                 {mergedChildren.length > 0 && (
                   <a href="#toggler" onClick={handleCollapseRow}>
-                    {collapsed[id] ? (
+                    {collapsed ? (
                       <i className="bi bi-chevron-contract mr-2" />
                     ) : (
                       <i className="bi bi-chevron-expand mr-2" />

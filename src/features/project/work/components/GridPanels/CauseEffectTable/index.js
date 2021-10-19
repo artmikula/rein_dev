@@ -242,7 +242,7 @@ class CauseEffectTable extends Component {
 
       this.mergeItem = mergeItem;
 
-      if (mergeItem && parentItem && mergeItem.type === parentItem.type) {
+      if (mergeItem && parentItem && mergeItem.type === parentItem.type && !parentItem.isMerged) {
         const newListData = [...listData];
         const mergeIndex = newListData.findIndex((x) => x.id === mergeItem.id);
 
