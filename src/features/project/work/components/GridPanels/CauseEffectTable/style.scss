@@ -4,7 +4,7 @@
   tr {
     background-color: #fff;
   }
-  
+
   th,
   td {
     font-size: small !important;
@@ -35,8 +35,6 @@
     display: inline-flex;
     justify-content: flex-end;
     align-items: center;
-    cursor: -webkit-grab;
-    cursor: grab;
 
     ._cause-effect-node {
       height: 100%;
@@ -50,6 +48,8 @@
 
     .cause-effect-node {
       @extend ._cause-effect-node;
+      cursor: -webkit-grab;
+      cursor: grab;
     }
 
     .cause-id {
