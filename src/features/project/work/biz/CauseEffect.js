@@ -85,29 +85,32 @@ class CauseEffect {
   /**
    * Merge cause/effect child to its parent
    */
-  _mergeData = (data) => {
-    const { length } = data;
-    const listData = [];
+  _mergeData = (data, type, prefix) => {
+    const listData = new Map();
 
-    for (let i = 0; i < length; i++) {
-      if (!data[i].isMerged) {
-        const parent = { ...data[i] };
+    const _data = data.filter((x) => x.type === type);
 
-        parent.mergedChildren = [];
-        parent.mergedNodes = [];
-
-        for (let j = i + 1; j < length; j++) {
-          if (data[j].parent === parent.id) {
-            parent.mergedChildren.push({ ...data[j] });
-            parent.mergedNodes.push(data[j].node);
-          }
-        }
-
-        listData.push(parent);
+    _data.forEach((item) => {
+      if (!item.isMerged) {
+        listData.set(item.id, { ...item, mergedChildren: [], mergedNodes: [] });
       }
-    }
+    });
 
-    return listData;
+    _data.forEach((item) => {
+      if (item.isMerged) {
+        const parent = listData.get(item.parent);
+        parent.mergedChildren.push({ ...item });
+        parent.mergedNodes.push(item.node);
+      }
+    });
+
+    const result = [...listData.values()].sort((a, b) => {
+      const aIndex = parseInt(a.node.replace(prefix, ''), 10);
+      const bIndex = parseInt(b.node.replace(prefix, ''), 10);
+      return aIndex - bIndex;
+    });
+
+    return result;
   };
 
   /**
@@ -115,24 +118,12 @@ class CauseEffect {
    * @param {array} data
    * @returns {array} [list cause, list effect]
    */
+
   generateData = (data) => {
-    let listCause = [];
-    let listEffect = [];
+    const causes = this._mergeData(data, CLASSIFY.CAUSE, CLASSIFY.CAUSE_PREFIX);
+    const effects = this._mergeData(data, CLASSIFY.EFFECT, CLASSIFY.EFFECT);
 
-    // Separete 2 list cause, effect from list data
-    data.forEach((item) => {
-      if (item.type.toString() === CLASSIFY.CAUSE) {
-        listCause.push(item);
-      } else {
-        listEffect.push(item);
-      }
-    });
-
-    this._listCauseLength = listCause.length;
-    listCause = this._mergeData(listCause);
-    listEffect = this._mergeData(listEffect);
-
-    return [...listCause, ...listEffect];
+    return [...causes, ...effects];
   };
 
   /**

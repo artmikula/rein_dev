@@ -334,7 +334,9 @@ class TestScenarioAndCase extends Component {
             <tr>
               <td>{Language.get('name')}</td>
               {columns.map((column, colIndex) => (
-                <td key={colIndex}>{column.headerName}</td>
+                <td key={colIndex} title={column.title} style={{ cursor: column.title ? 'pointer' : 'default' }}>
+                  {column.headerName}
+                </td>
               ))}
             </tr>
           </thead>

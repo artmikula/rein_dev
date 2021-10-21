@@ -108,6 +108,8 @@ class Graph extends Component {
         });
       }
 
+      this._raiseEvent({ action: domainEvents.ACTION.GRAPH_UPDATE });
+
       setGraph(data);
     }
   };

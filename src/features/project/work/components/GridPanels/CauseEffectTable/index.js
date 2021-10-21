@@ -10,11 +10,13 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Table } from 'reactstrap';
 import { v4 as uuidv4 } from 'uuid';
-import CauseEffectRow from './CauseEffectRow';
 import AbbreviateConfirmContent from './components/AbbreviateConfirmContent';
+import CauseEffectRow from './components/CauseEffectRow';
 import './style.scss';
 
 class CauseEffectTable extends Component {
+  mergeItem = null;
+
   componentDidMount() {
     eventBus.subscribe(this, domainEvents.TESTBASIC_DOMAINEVENT, (event) => {
       const { message } = event;
@@ -64,6 +66,7 @@ class CauseEffectTable extends Component {
   /* Handle event */
   _handleAddEvent = async (value, confirmedAbbreviate = undefined) => {
     const { listData, setCauseEffects } = this.props;
+
     let parent = null;
     const checkResult = CauseEffect.checkExistOrSimilarity(value, listData, appConfig);
     // if existed
@@ -85,11 +88,7 @@ class CauseEffectTable extends Component {
     newItem.id = uuidv4();
 
     setCauseEffects([...listData, newItem]);
-
-    eventBus.publish(domainEvents.CAUSEEFFECT_DOMAINEVENT, {
-      action: domainEvents.ACTION.ADD,
-      value: newItem,
-    });
+    this._raiseEvent({ action: domainEvents.ACTION.ADD, value: newItem });
   };
 
   _handleDeleteAction = (item) => {
@@ -162,8 +161,8 @@ class CauseEffectTable extends Component {
     const newList = [...listData];
     newList[index] = newItem;
 
-    this._raiseEvent({ action: domainEvents.ACTION.UPDATE, value: newItem });
     setCauseEffects(newList);
+    this._raiseEvent({ action: domainEvents.ACTION.UPDATE, value: newItem });
   };
 
   _handleWorkMenuEvent = () => {
@@ -204,7 +203,11 @@ class CauseEffectTable extends Component {
   _handleAcceptDeleteEvent = (items) => {
     const { listData, setCauseEffects } = this.props;
     // get causeEffect need remove
-    let removedcauseEffects = listData.filter((x) => items.some((item) => item.nodeId === x.node));
+    let removedcauseEffects = listData.filter((x) =>
+      items.some(
+        (item) => item.nodeId === x.node && (!this.mergeItem || (this.mergeItem && item.nodeId !== this.mergeItem.node))
+      )
+    );
     // get causeEffect need remove include merged causeEffect;
     removedcauseEffects = listData.filter((x) =>
       removedcauseEffects.some(
@@ -228,9 +231,53 @@ class CauseEffectTable extends Component {
     }
   };
 
+  _handleMerge = (mergeId, parentId) => {
+    if (mergeId !== parentId) {
+      const { listData, setCauseEffects } = this.props;
+
+      const mergeItem = listData.find((x) => x.id === mergeId);
+      const parentItem = listData.find((x) => x.id === parentId);
+
+      this.mergeItem = mergeItem;
+
+      if (mergeItem && parentItem && mergeItem.type === parentItem.type && !parentItem.isMerged) {
+        const newListData = [...listData];
+        const mergeIndex = newListData.findIndex((x) => x.id === mergeItem.id);
+
+        if (mergeIndex > -1) {
+          newListData.forEach((x, index) => {
+            if (x.isMerged && x.parent === mergeItem.id) {
+              newListData[index] = { ...x, id: uuidv4(), isMerged: true, parent: parentItem.id };
+            }
+          });
+
+          const newItem = { ...mergeItem, id: uuidv4(), isMerged: true, parent: parentItem.id };
+
+          newListData[mergeIndex] = newItem;
+          setCauseEffects(newListData);
+
+          this._raiseEvent({
+            action: domainEvents.ACTION.ACCEPTDELETE,
+            value: mergeItem,
+            receivers: [domainEvents.DES.GRAPH, domainEvents.DES.TESTDATA],
+          });
+
+          this._raiseEvent({
+            action: domainEvents.ACTION.ADD,
+            value: newItem,
+            receivers: [domainEvents.DES.TESTDATA],
+          });
+        }
+
+        this.mergeItem = null;
+      }
+    }
+  };
+
   /* End handle event */
   render() {
     const { listData } = this.props;
+    const rows = CauseEffect.generateData(listData);
 
     return (
       <Table bordered size="sm" className="border-bottom cause-effect-table">
@@ -238,11 +285,14 @@ class CauseEffectTable extends Component {
           <tr className="text-primary font-weight-bold">
             <td className="text-right">{Language.get('id')}</td>
             <td>{Language.get('definition')}</td>
-            <td>{Language.get('abridged')}</td>
+            <td> {Language.get('abridged')}</td>
           </tr>
         </thead>
+
         <tbody>
-          <CauseEffectRow rows={CauseEffect.generateData(listData)} onDelete={this._handleDeleteAction} />
+          {rows.map((item) => (
+            <CauseEffectRow key={item.id} data={item} onDelete={this._handleDeleteAction} onMerge={this._handleMerge} />
+          ))}
         </tbody>
       </Table>
     );

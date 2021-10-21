@@ -176,6 +176,7 @@ export default class GridPanels extends Component {
           isDroppable={!isLockedPanel}
           isResizable={!isLockedPanel}
           onLayoutChange={onLayoutChange}
+          draggableCancel=".cause-effect-node"
         >
           {layouts?.map((layout, index) => (
             <div key={layout.i} className="d-flex flex-column bg-white rounded shadow-sm">

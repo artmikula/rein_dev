@@ -125,10 +125,12 @@ class Workspace extends Component {
   };
 
   _handleChangePanelLayout = (layouts, mode) => {
+    console.log('_handleChangePanelLayout', layouts);
+    const _layouts = layouts.filter((x) => x.i !== '__dropping-elem__');
     const { viewMode } = this.state;
     const currentMode = mode || viewMode;
-    this.setState({ gridPanelLayout: layouts, viewMode: currentMode });
-    LocalStorage.set(STRING.GRID_PANEL_LAYOUT + currentMode, JSON.stringify(layouts));
+    this.setState({ gridPanelLayout: _layouts, viewMode: currentMode });
+    LocalStorage.set(STRING.GRID_PANEL_LAYOUT + currentMode, JSON.stringify(_layouts));
     LocalStorage.set(STRING.GRID_PANEL_VIEW_MODE, currentMode);
   };
 
