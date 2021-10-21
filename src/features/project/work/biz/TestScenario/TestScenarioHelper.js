@@ -446,6 +446,7 @@ class TestScenarioHelper {
       return {
         headerName: x.nodeId,
         key: x.id,
+        title: x.definition,
       };
     });
 
