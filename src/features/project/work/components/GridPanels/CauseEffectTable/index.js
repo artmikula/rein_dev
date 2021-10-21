@@ -6,7 +6,6 @@ import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Table } from 'reactstrap';
@@ -232,13 +231,12 @@ class CauseEffectTable extends Component {
     }
   };
 
-  _handleMerge = (result) => {
-    if (result.combine) {
+  _handleMerge = (mergeId, parentId) => {
+    if (mergeId !== parentId) {
       const { listData, setCauseEffects } = this.props;
-      const { combine, draggableId } = result;
 
-      const mergeItem = listData.find((x) => x.id === draggableId);
-      const parentItem = listData.find((x) => x.id === combine.draggableId);
+      const mergeItem = listData.find((x) => x.id === mergeId);
+      const parentItem = listData.find((x) => x.id === parentId);
 
       this.mergeItem = mergeItem;
 
@@ -291,18 +289,11 @@ class CauseEffectTable extends Component {
           </tr>
         </thead>
 
-        <DragDropContext onDragEnd={this._handleMerge}>
-          <Droppable droppableId="list" isCombineEnabled>
-            {(provided) => (
-              <tbody ref={provided.innerRef} {...provided.droppableProps}>
-                {rows.map((item, i) => (
-                  <CauseEffectRow key={item.id} index={i} data={item} onDelete={this._handleDeleteAction} />
-                ))}
-                {provided.placeholder}
-              </tbody>
-            )}
-          </Droppable>
-        </DragDropContext>
+        <tbody>
+          {rows.map((item) => (
+            <CauseEffectRow key={item.id} data={item} onDelete={this._handleDeleteAction} onMerge={this._handleMerge} />
+          ))}
+        </tbody>
       </Table>
     );
   }
