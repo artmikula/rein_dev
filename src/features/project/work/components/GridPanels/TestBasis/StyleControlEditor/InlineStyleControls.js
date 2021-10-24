@@ -1,5 +1,5 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import StyleButton from './StyleButton';
 
 export default function InlineStyleControls(props) {
@@ -7,7 +7,7 @@ export default function InlineStyleControls(props) {
     { label: 'Bold', style: 'BOLD' },
     { label: 'Italic', style: 'ITALIC' },
     { label: 'Underline', style: 'UNDERLINE' },
-    { label: 'Monospace', style: 'CODE' },
+    // { label: 'Monospace', style: 'CODE' },
   ];
   const { editorState, onToggle } = props;
   const currentStyle = editorState.getCurrentInlineStyle();
