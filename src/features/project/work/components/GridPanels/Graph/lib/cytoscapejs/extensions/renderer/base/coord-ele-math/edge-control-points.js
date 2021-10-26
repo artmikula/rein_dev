@@ -1,7 +1,9 @@
-import * as math from '../../../../math';
+import { GRAPH_LINK_TYPE } from 'features/shared/constants';
 import * as is from '../../../../is';
-import * as util from '../../../../util';
 import Map from '../../../../map';
+import * as math from '../../../../math';
+import * as util from '../../../../util';
+import { distance } from '../../../../util';
 
 let BRp = {};
 
@@ -208,33 +210,45 @@ BRp.findBezierPoints = function( edge, pairInfo, i, edgeIsUnbundled, edgeIsSwapp
 
   rs.edgeType = multi ? 'multibezier' : 'bezier';
   rs.ctrlpts = [];
+  const [x1, y1] = rs.srcIntn;
+  const [x2, y2] = rs.tgtIntn;
+  let distanceFromMidpoint = distance(x1, y1, x2, y2) / 2 + 50;
 
-  for( let b = 0; b < bezierN; b++ ){
-    let normctrlptDist = (0.5 - pairInfo.eles.length / 2 + i) * stepSize * (edgeIsSwapped ? -1 : 1);
-    let manctrlptDist;
-    let sign = math.signum( normctrlptDist );
+  if (edge.data().type === GRAPH_LINK_TYPE.MASK) {
+    if (y2 > y1) {
+      distanceFromMidpoint = -distanceFromMidpoint;
+    }
+  } else if (y2 <= y1) {
+    distanceFromMidpoint = -distanceFromMidpoint;
+  }
 
-    if( multi ){
-      ctrlptDist = ctrlptDists ? ctrlptDists.pfValue[ b ] : stepSize; // fall back on step size
-      ctrlptWeight = ctrlptWs.value[ b ];
+  for (let b = 0; b < bezierN; b++) {
+    // const normctrlptDist = (0.5 - pairInfo.eles.length / 2 + i) * stepSize * (edgeIsSwapped ? -1 : 1);
+    // let manctrlptDist;
+    // const sign = math.signum(normctrlptDist);
+
+    if (multi) {
+      // ctrlptDist = ctrlptDists ? ctrlptDists.pfValue[b] : stepSize; // fall back on step size
+      ctrlptWeight = ctrlptWs.value[b];
     }
 
-    if( edgeIsUnbundled ){ // multi or single unbundled
-      manctrlptDist = ctrlptDist;
-    } else {
-      manctrlptDist = ctrlptDist !== undefined ? sign * ctrlptDist : undefined;
-    }
+    // if (edgeIsUnbundled) {
+    //   // multi or single unbundled
+    //   manctrlptDist = ctrlptDist;
+    // } else {
+    //   manctrlptDist = ctrlptDist !== undefined ? sign * ctrlptDist : undefined;
+    // }
 
-    let distanceFromMidpoint = manctrlptDist !== undefined ? manctrlptDist : normctrlptDist;
+    // let distanceFromMidpoint = manctrlptDist !== undefined ? manctrlptDist : normctrlptDist;
 
-    let w1 = 1 - ctrlptWeight;
-    let w2 = ctrlptWeight;
+    const w1 = 1 - ctrlptWeight;
+    const w2 = ctrlptWeight;
 
-    let midptPts = edgeDistances === 'node-position' ? posPts : intersectionPts;
+    const midptPts = edgeDistances === 'node-position' ? posPts : intersectionPts;
 
-    let adjustedMidpt = {
+    const adjustedMidpt = {
       x: midptPts.x1 * w1 + midptPts.x2 * w2,
-      y: midptPts.y1 * w1 + midptPts.y2 * w2
+      y: midptPts.y1 * w1 + midptPts.y2 * w2,
     };
 
     rs.ctrlpts.push(

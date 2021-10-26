@@ -2,7 +2,6 @@
 
 import { GRAPH_LINK_TYPE } from 'features/shared/constants';
 import { isDirectConstraint, isUndirectConstraint } from '../../../../../utils';
-import P5 from '../../../../p5';
 import * as util from '../../../util';
 
 let CRp = {};
@@ -267,9 +266,9 @@ CRp.drawArrowheads = function (context, edge, opacity) {
       if (isDirectConstraint(edge._private.data.type)) {
         const targetY = edge._private.target._private.position.y;
         const sourceY = edge._private.source._private.position.y;
-        let tgtArrowAngle = targetY >= sourceY ? 0.35 * Math.PI : -0.35 * Math.PI;
+        let tgtArrowAngle = targetY >= sourceY ? 0.1 * Math.PI : -0.1 * Math.PI;
         if (edge._private.data.type === GRAPH_LINK_TYPE.REQUIRE) {
-          tgtArrowAngle = targetY >= sourceY ? -0.35 * Math.PI : 0.35 * Math.PI;
+          tgtArrowAngle = targetY >= sourceY ? -0.1 * Math.PI : 0.1 * Math.PI;
         }
         this.drawArrowhead(
           context,

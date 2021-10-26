@@ -115,34 +115,34 @@ BRp.recalculateEdgeLabelProjections = function (edge) {
     y: rs.midY,
   };
 
-  const edgeType = edge.data().type;
+  // const edgeType = edge.data().type;
 
-  if (isDirectConstraint(edgeType)) {
-    const sourcePos = edge.source().position();
-    const targetPos = edge.target().position();
-    const distance = util.distance(sourcePos.x, sourcePos.y, targetPos.x, targetPos.y);
-    const angleBetween = util.angleBetween(sourcePos.x, sourcePos.y, targetPos.x, targetPos.y);
-    let angle;
+  // if (isDirectConstraint(edgeType)) {
+  //   const sourcePos = edge.source().position();
+  //   const targetPos = edge.target().position();
+  //   const distance = util.distance(sourcePos.x, sourcePos.y, targetPos.x, targetPos.y);
+  //   const angleBetween = util.angleBetween(sourcePos.x, sourcePos.y, targetPos.x, targetPos.y);
+  //   let angle;
 
-    if (edgeType === GRAPH_LINK_TYPE.MASK) {
-      if (targetPos.y <= sourcePos.y) {
-        angle = angleBetween + Math.PI / 2;
-      } else {
-        angle = -(angleBetween + Math.PI / 2);
-        if (angleBetween >= Math.PI / 2 && angleBetween < Math.PI) {
-          angle = angleBetween - Math.PI / 2;
-        }
-      }
-    } else {
-      if (targetPos.y <= sourcePos.y) {
-        angle = angleBetween + (3 * Math.PI) / 2;
-      } else {
-        angle = angleBetween + Math.PI / 2;
-      }
-    }
+  //   if (edgeType === GRAPH_LINK_TYPE.MASK) {
+  //     if (targetPos.y <= sourcePos.y) {
+  //       angle = angleBetween + Math.PI / 2;
+  //     } else {
+  //       angle = -(angleBetween + Math.PI / 2);
+  //       if (angleBetween >= Math.PI / 2 && angleBetween < Math.PI) {
+  //         angle = angleBetween - Math.PI / 2;
+  //       }
+  //     }
+  //   } else {
+  //     if (targetPos.y <= sourcePos.y) {
+  //       angle = angleBetween + (3 * Math.PI) / 2;
+  //     } else {
+  //       angle = angleBetween + Math.PI / 2;
+  //     }
+  //   }
 
-    p = translationByAngle(rs.midX, rs.midY, (distance - appConfig.graph.nodeSize + 30) / 2, angle);
-  }
+  //   p = translationByAngle(rs.midX, rs.midY, 30, angle);
+  // }
 
   let setRs = function (propName, prefix, value) {
     util.setPrefixedProperty(_p.rscratch, propName, prefix, value);
