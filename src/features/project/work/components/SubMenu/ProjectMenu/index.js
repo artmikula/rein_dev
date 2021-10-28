@@ -3,6 +3,7 @@ import { SearchComponent, SubMenu } from 'features/shared/components';
 import Language from 'features/shared/languages/Language';
 import debounce from 'lodash.debounce';
 import React, { useContext, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Router, useHistory, useParams } from 'react-router';
 import GlobalContext from '../../../../../../security/GlobalContext';
 import CreateForm from '../../../../components/CreateForm';
@@ -16,6 +17,7 @@ export default function ProjectMenu() {
   const [searchProjects, setSearchProjects] = useState([]);
   const [createFormOpen, toggleCreateForm] = useState(false);
   const [importFormOpen, toggleImportForm] = useState(false);
+  const projectName = useSelector((state) => state.work.projectName);
 
   const history = useHistory();
 
@@ -70,7 +72,7 @@ export default function ProjectMenu() {
       text: Language.get('explorer'),
       action: () => {
         const modaProps = {
-          title: projectId,
+          title: `Project: ${projectName}`,
           content: (
             <Router history={history}>
               <WorkList projectId={projectId} />

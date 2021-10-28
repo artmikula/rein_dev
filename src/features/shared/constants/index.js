@@ -269,9 +269,9 @@ export const TEMPLATE_SHORTCUT_CODE = {
 };
 
 export const TEMPLATE_SHORTCUT = [
-  { code: TEMPLATE_SHORTCUT_CODE.SAVE_TEMPLATE, text: 'savetemplate', shortcutKeys: [ctrlCode, 'r'] },
-  { code: TEMPLATE_SHORTCUT_CODE.LOAD_TEMPLATE, text: 'loadtemplate', shortcutKeys: [ctrlCode, 'shift', 'm'] },
-  { code: TEMPLATE_SHORTCUT_CODE.EXPLORER, text: 'explorer', shortcutKeys: [ctrlCode, 'shift', 'm'] },
+  { code: TEMPLATE_SHORTCUT_CODE.SAVE_TEMPLATE, text: 'savetemplate' },
+  { code: TEMPLATE_SHORTCUT_CODE.LOAD_TEMPLATE, text: 'loadtemplate' },
+  { code: TEMPLATE_SHORTCUT_CODE.EXPLORER, text: 'explorer' },
 ];
 
 export const TEST_DATA = {

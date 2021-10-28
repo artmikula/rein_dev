@@ -7,7 +7,7 @@ import React from 'react';
 export default function BaseSubMenu({ shortcuts, domainEvent }) {
   const capitalizeFirstLetter = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
-  const actions = shortcuts.map(({ text, code, shortcutKeys }) => {
+  const actions = shortcuts.map(({ text, code, shortcutKeys = [] }) => {
     return {
       text: Language.get(text),
       shortcutKeys: shortcutKeys.map((shorcutKey) => capitalizeFirstLetter(shorcutKey)),

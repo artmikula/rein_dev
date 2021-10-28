@@ -201,6 +201,7 @@ const en = {
   template: 'Template',
   savetemplate: 'Save Work as Template',
   loadtemplate: 'Load Template to current Work',
+  templatename: 'Template name',
   /* End Template menu */
 };
 
