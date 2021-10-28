@@ -121,7 +121,15 @@ export const createGraphNode = (
 export const createEdge = (id, sourceId, targetId, isNotRelation, type) => {
   const edge = {
     group: 'edges',
-    data: { id, source: sourceId, target: targetId, isNotRelation, type, lineWidth: appConfig.graph.lineWidth },
+    data: {
+      id,
+      source: sourceId,
+      target: targetId,
+      isNotRelation,
+      type,
+      lineWidth: appConfig.graph.lineWidth,
+      edgeType: isDirectConstraint(type) ? 'unbundled-bezier' : 'bezier',
+    },
   };
   edge.data.lineColor = isNotRelation ? EDGE_COLOR.NOT_RELATION : EDGE_COLOR.RELATION;
   edge.data.label = type === GRAPH_LINK_TYPE.MASK ? 'M' : '';
@@ -223,14 +231,9 @@ export const convertGraphNodeToNode = (graphNode) => {
 };
 
 export const convertGraphLinkToEdge = (graphLink) => {
-  const { source, target, isNotRelation, ...others } = graphLink;
-  const lineColor = isNotRelation ? EDGE_COLOR.NOT_RELATION : EDGE_COLOR.RELATION;
-  const { lineWidth } = appConfig.graph;
+  const { id, source, target, isNotRelation, type } = graphLink;
 
-  return {
-    group: 'edges',
-    data: { source: source.id, target: target.id, isNotRelation, lineColor, lineWidth, ...others },
-  };
+  return createEdge(id, source.id, target.id, isNotRelation, type);
 };
 
 export const convertNodeToGraphNode = (node) => {
@@ -273,7 +276,7 @@ export const convertEdgeToDirectConstraint = (edge) => {
 export const convertDirectConstraintToEdge = (constraint) => {
   const { id, type, nodes } = constraint;
 
-  return createEdge(id, nodes[0].graphNodeId, nodes[1].graphNodeId, false, type, false);
+  return createEdge(id, nodes[0].graphNodeId, nodes[1].graphNodeId, false, type);
 };
 
 export const convertUndirectConstraintToNode = (constraint) => {
@@ -286,9 +289,7 @@ export const convertUndirectConstraintToNode = (constraint) => {
 export const convertUndirectConstraintToEdges = (constraint) => {
   const { id, type, nodes } = constraint;
 
-  return nodes.map((node) =>
-    createEdge(`${id}_${node.graphNodeId}`, id, node.graphNodeId, node.isNotRelation, type, false)
-  );
+  return nodes.map((node) => createEdge(`${id}_${node.graphNodeId}`, id, node.graphNodeId, node.isNotRelation, type));
 };
 
 export const canAddEdge = (sourceNode, targetNode) => {

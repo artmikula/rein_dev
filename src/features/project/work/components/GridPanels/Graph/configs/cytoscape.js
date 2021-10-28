@@ -30,7 +30,7 @@ const cytoscapeSetup = (container) => {
       {
         selector: 'edge',
         css: {
-          'curve-style': 'bezier',
+          'curve-style': 'data(edgeType)',
           'target-arrow-shape': 'triangle',
           'control-point-distances': [0.3, 20, 0, -20, 0.7],
           'control-point-weights': [0.3, 0.4, 0.5, 0.6, 0.7],
@@ -41,7 +41,10 @@ const cytoscapeSetup = (container) => {
         selector: 'edge[lineColor]',
         css: { 'line-color': 'data(lineColor)', 'target-arrow-color': 'data(lineColor)' },
       },
-      { selector: 'edge[label]', css: { label: 'data(label)', color: LABELCOLOR.EDGE, fontWeight: 'bold' } },
+      {
+        selector: 'edge[label]',
+        css: { label: 'data(label)', color: LABELCOLOR.EDGE, fontWeight: 'bold' },
+      },
       { selector: 'edge:selected', css: { 'line-color': 'red', 'target-arrow-color': 'red' } },
       {
         selector: '.eh-handle',

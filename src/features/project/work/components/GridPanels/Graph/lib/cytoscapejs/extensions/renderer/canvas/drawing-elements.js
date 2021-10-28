@@ -4,7 +4,6 @@ let CRp = {};
 
 CRp.drawElement = function (context, ele, shiftToOriginWithBb, showLabel, showOverlay, showOpacity) {
   let r = this;
-  ele.context = context;
 
   if (ele.isNode()) {
     r.drawNode(context, ele, shiftToOriginWithBb, showLabel, showOverlay, showOpacity);
