@@ -472,7 +472,7 @@ class GraphManager {
     const { x, y } = e.position;
     const index = getNextGroupNodeIndex(this.graph.nodes());
     const inspection = NODE_INSPECTION.DisconnectedNode;
-    const graphNode = createGraphNode(uuid(), `G${index}`, GRAPH_NODE_TYPE.GROUP, x, y, inspection);
+    const graphNode = createGraphNode(uuid(), `G${index}`, GRAPH_NODE_TYPE.GROUP, x, y, inspection, null, '');
     this.draw(convertGraphNodeToNode(graphNode));
     this.onGraphChange();
   };

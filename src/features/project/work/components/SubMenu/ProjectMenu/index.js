@@ -1,15 +1,15 @@
 import Download from 'downloadjs';
+import { SearchComponent, SubMenu } from 'features/shared/components';
 import Language from 'features/shared/languages/Language';
 import debounce from 'lodash.debounce';
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Router, useHistory, useParams } from 'react-router';
-import { SearchComponent, SubMenu } from '../../../../../shared/components';
+import GlobalContext from '../../../../../../security/GlobalContext';
 import CreateForm from '../../../../components/CreateForm';
 import ImportForm from '../../../../components/ImportForm';
 import projectService from '../../../../services/projectService';
 import WorkList from '../../../WorkList';
 import ProjectLink from './ProjectLink';
-import GlobalContext from '../../../../../../security/GlobalContext';
 
 export default function ProjectMenu() {
   const [recentProjects, setRecentProjects] = useState([]);

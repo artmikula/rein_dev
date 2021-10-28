@@ -36,7 +36,10 @@ const arrayToCsv = (data = [], graphNodes = [], exportTypeName = '') => {
       const graphNode = graphNodes.find((x) => x.nodeId === key);
 
       if (graphNode) {
-        result += graphNode.definition.includes(columnDelimiter) ? `"${graphNode.definition}"` : graphNode.definition;
+        result +=
+          graphNode.definition && graphNode.definition.includes(columnDelimiter)
+            ? `"${graphNode.definition}"`
+            : graphNode.definition;
       }
 
       if (index < keys.length - 1) {

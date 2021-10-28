@@ -1,11 +1,12 @@
 import Language from 'features/shared/languages/Language';
 import React from 'react';
 import { Nav, NavItem } from 'reactstrap';
-import GraphMenu from '../SubMenu/Graph/GraphMenu';
-import ProjectMenu from '../SubMenu/Project/ProjectMenu';
-import TestCaseMenu from '../SubMenu/TestCase/TestCaseMenu';
-import TestDataMenu from '../SubMenu/TestData/TestDataMenu';
-import WorkMenu from '../SubMenu/Work/WorkMenu';
+import GraphMenu from '../SubMenu/GraphMenu';
+import ProjectMenu from '../SubMenu/ProjectMenu';
+import TemplateMenu from '../SubMenu/TemplateMenu';
+import TestCaseMenu from '../SubMenu/TestCaseMenu';
+import TestDataMenu from '../SubMenu/TestDataMenu';
+import WorkMenu from '../SubMenu/WorkMenu';
 import MenuItem from './MenuItem';
 
 export default function MenuContainer() {
@@ -25,6 +26,9 @@ export default function MenuContainer() {
       </NavItem>
       <NavItem className="mx-1">
         <MenuItem iconClassName="bi bi-diagram-3" text={Language.get('testcase')} dropdown={<TestCaseMenu />} />
+      </NavItem>
+      <NavItem className="mx-1">
+        <MenuItem iconClassName="bi bi-diagram-3" text={Language.get('template')} dropdown={<TemplateMenu />} />
       </NavItem>
     </Nav>
   );

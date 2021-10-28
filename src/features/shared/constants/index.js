@@ -262,6 +262,18 @@ export const TEST_CASE_SHORTCUT = [
   },
 ];
 
+export const TEMPLATE_SHORTCUT_CODE = {
+  SAVE_TEMPLATE: 'SAVE_TEMPLATE',
+  LOAD_TEMPLATE: 'LOAD_TEMPLATE',
+  EXPLORER: 'EXPLORER',
+};
+
+export const TEMPLATE_SHORTCUT = [
+  { code: TEMPLATE_SHORTCUT_CODE.SAVE_TEMPLATE, text: 'savetemplate', shortcutKeys: [ctrlCode, 'r'] },
+  { code: TEMPLATE_SHORTCUT_CODE.LOAD_TEMPLATE, text: 'loadtemplate', shortcutKeys: [ctrlCode, 'shift', 'm'] },
+  { code: TEMPLATE_SHORTCUT_CODE.EXPLORER, text: 'explorer', shortcutKeys: [ctrlCode, 'shift', 'm'] },
+];
+
 export const TEST_DATA = {
   String: {
     1: {
