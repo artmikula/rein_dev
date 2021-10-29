@@ -1,21 +1,23 @@
 import Download from 'downloadjs';
+import { SearchComponent, SubMenu } from 'features/shared/components';
 import Language from 'features/shared/languages/Language';
 import debounce from 'lodash.debounce';
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Router, useHistory, useParams } from 'react-router';
-import { SearchComponent, SubMenu } from '../../../../../shared/components';
+import GlobalContext from '../../../../../../security/GlobalContext';
 import CreateForm from '../../../../components/CreateForm';
 import ImportForm from '../../../../components/ImportForm';
 import projectService from '../../../../services/projectService';
 import WorkList from '../../../WorkList';
 import ProjectLink from './ProjectLink';
-import GlobalContext from '../../../../../../security/GlobalContext';
 
 export default function ProjectMenu() {
   const [recentProjects, setRecentProjects] = useState([]);
   const [searchProjects, setSearchProjects] = useState([]);
   const [createFormOpen, toggleCreateForm] = useState(false);
   const [importFormOpen, toggleImportForm] = useState(false);
+  const projectName = useSelector((state) => state.work.projectName);
 
   const history = useHistory();
 
@@ -70,7 +72,7 @@ export default function ProjectMenu() {
       text: Language.get('explorer'),
       action: () => {
         const modaProps = {
-          title: projectId,
+          title: `Project: ${projectName}`,
           content: (
             <Router history={history}>
               <WorkList projectId={projectId} />

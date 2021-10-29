@@ -197,6 +197,12 @@ const en = {
   processinglogoutcallback: 'Processing logout callback',
   alert: 'Alert',
   /* End Logout successfullly */
+  /* Template menu */
+  template: 'Template',
+  savetemplate: 'Save Work as Template',
+  loadtemplate: 'Load Template to current Work',
+  templatename: 'Template name',
+  /* End Template menu */
 };
 
 export default en;

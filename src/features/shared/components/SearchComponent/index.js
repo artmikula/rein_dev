@@ -2,7 +2,6 @@ import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 import { DropdownItem, Input } from 'reactstrap';
-import './style.scss';
 
 export default function SearchComponent({
   recentTitle,
