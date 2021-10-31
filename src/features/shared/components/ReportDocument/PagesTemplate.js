@@ -13,7 +13,6 @@ const causeEffectHeader = [
 
 export default function PagesTemplate(props) {
   const { theme, testCoverage, causes, effects, graphSrc, inspections, testScenarios, testData, testCases } = props;
-  console.log('testCoverage', testCoverage);
   return [
     {
       title: 'Test Coverage',

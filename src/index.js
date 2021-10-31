@@ -16,7 +16,6 @@ const language = languageService.get();
 
 import(/* webpackPrefetch: true  */ `./features/shared/languages/${language.code}.js`).then((module) => {
   Language.add(language.code, module);
-  console.log('import Language');
 });
 
 ReactDOM.render(

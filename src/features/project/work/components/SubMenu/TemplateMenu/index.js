@@ -3,11 +3,13 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import React, { Component } from 'react';
+import { Router, withRouter } from 'react-router';
 import BaseSubMenu from '../BaseSubMenu';
-import TemplateList from './components/TemplateList';
+import TemplateExplorer from './components/TemplateExplorer';
+import TemplateLoading from './components/TemplateLoading';
 import TemplateSaving from './components/TemplateSaving';
 
-export default class TemplateMenu extends Component {
+class TemplateMenu extends Component {
   componentDidMount() {
     eventBus.subscribe(this, domainEvents.TEMPLATE_MENU_DOMAINEVENT, (event) => {
       this._handleEvent(event.message);
@@ -34,27 +36,42 @@ export default class TemplateMenu extends Component {
   };
 
   _saveTemplate = () => {
+    const { history, match } = this.props;
     const modaProps = {
       title: Language.get('savetemplate'),
-      content: <TemplateSaving />,
+      content: (
+        <Router history={history}>
+          <TemplateSaving projectId={match.params.projectId} workId={match.params.workId} />
+        </Router>
+      ),
       actions: null,
     };
     window.modal(modaProps);
   };
 
   _loadTemplate = () => {
+    const { history, match } = this.props;
     const modaProps = {
       title: Language.get('loadtemplate'),
-      content: <TemplateList />,
+      content: (
+        <Router history={history}>
+          <TemplateLoading projectId={match.params.projectId} workId={match.params.workId} />
+        </Router>
+      ),
       actions: null,
     };
     window.modal(modaProps);
   };
 
   _explorer = () => {
+    const { history, match } = this.props;
     const modaProps = {
       title: Language.get('explorer'),
-      content: <TemplateList />,
+      content: (
+        <Router history={history}>
+          <TemplateExplorer projectId={match.params.projectId} workId={match.params.workId} />
+        </Router>
+      ),
       actions: null,
     };
     window.modal(modaProps);
@@ -72,3 +89,5 @@ export default class TemplateMenu extends Component {
     );
   }
 }
+
+export default withRouter(TemplateMenu);

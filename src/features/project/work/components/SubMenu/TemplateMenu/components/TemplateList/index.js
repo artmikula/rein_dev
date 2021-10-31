@@ -1,32 +1,29 @@
+import templateService from 'features/project/work/services/templateService';
 import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { Table } from 'reactstrap';
-import { v4 as uuidv4 } from 'uuid';
 import TemplateItem from '../TemplateItem';
 import './style.scss';
 
-export default function TemplateList({ onSelectRow, selectedItemId }) {
-  const [data, setData] = useState([]);
+function TemplateList({ onSelectRow, selectedItemId, onSuccessDelete }, ref) {
   const [selectedId, setSelectedId] = useState(null);
+  const [data, setData] = useState([]);
 
-  const getData = async () => {
-    const data = [
-      { id: uuidv4(), name: 'Template 1', createdDate: new Date(), lastModifiedDate: null },
-      { id: uuidv4(), name: 'Template 2', createdDate: new Date(), lastModifiedDate: null },
-      { id: uuidv4(), name: 'Template 3', createdDate: new Date(), lastModifiedDate: null },
-      { id: uuidv4(), name: 'Template 4', createdDate: new Date(), lastModifiedDate: null },
-      { id: uuidv4(), name: 'Template 5', createdDate: new Date(), lastModifiedDate: null },
-      { id: uuidv4(), name: 'Template 6', createdDate: new Date(), lastModifiedDate: null },
-      { id: uuidv4(), name: 'Template 7', createdDate: new Date(), lastModifiedDate: null },
-      { id: uuidv4(), name: 'Template 8', createdDate: new Date(), lastModifiedDate: null },
-      { id: uuidv4(), name: 'Template 9', createdDate: new Date(), lastModifiedDate: null },
-    ];
-
-    setData(data);
+  const getTemplateList = async () => {
+    const result = await templateService.listAsync();
+    if (result.data) {
+      setData(result.data.items);
+    }
   };
 
-  const confirmDelete = (item) => {
-    setData(data.filter((x) => x.id !== item.id));
+  const confirmDelete = async (item) => {
+    const result = await templateService.deleteAsync(item.id);
+    if (result.error) {
+      alert(result.error);
+    } else {
+      getTemplateList();
+      onSuccessDelete(item);
+    }
   };
 
   const handleDelete = (item) => {
@@ -38,13 +35,15 @@ export default function TemplateList({ onSelectRow, selectedItemId }) {
     onSelectRow(item);
   };
 
-  useEffect(() => {
-    getData();
-  }, []);
+  useImperativeHandle(ref, () => ({ reload: getTemplateList }));
 
   useEffect(() => {
     setSelectedId(selectedItemId);
   }, [selectedItemId]);
+
+  useEffect(() => {
+    getTemplateList();
+  }, []);
 
   return (
     <div className="template-list">
@@ -76,10 +75,14 @@ export default function TemplateList({ onSelectRow, selectedItemId }) {
 
 TemplateList.defaultProps = {
   onSelectRow: () => {},
+  onSuccessDelete: () => {},
   selectedItemId: null,
 };
 
 TemplateList.propTypes = {
   onSelectRow: PropTypes.func,
+  onSuccessDelete: PropTypes.func,
   selectedItemId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
+
+export default forwardRef(TemplateList);

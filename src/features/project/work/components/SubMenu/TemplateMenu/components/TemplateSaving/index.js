@@ -1,34 +1,81 @@
+import templateService from 'features/project/work/services/templateService';
 import Language from 'features/shared/languages/Language';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from 'reactstrap';
 import TemplateList from '../TemplateList';
 
-export default function TemplateSaving() {
-  const [data, setData] = useState({ name: '' });
+const defaultItem = { name: '', id: null };
 
-  const handleChangeName = (e) => setData({ name: e.target.value });
+export default function TemplateSaving({ projectId, workId }) {
+  const [data, setData] = useState(defaultItem);
+  const listRef = useRef();
 
-  const handleSelectTemplate = ({ id, name }) => setData({ id, name });
+  const handleChangeName = (e) => setData({ ...data, name: e.target.value });
+
+  const handleSelectTemplate = ({ id, name }) => {
+    if (id !== data.id) {
+      setData({ id, name });
+    } else {
+      setData({ ...data, id: null });
+    }
+  };
+
+  const updateTemplate = async () => {
+    const result = await templateService.updateAsync(projectId, workId, data);
+    if (result.error) {
+      window.alert(result.error);
+    } else {
+      listRef.current.reload();
+      setData(defaultItem);
+    }
+  };
+
+  const createTemplate = async () => {
+    const result = await templateService.createAsync(projectId, workId, data);
+    if (result.error) {
+      window.alert(result.error);
+    } else {
+      listRef.current.reload();
+      setData(defaultItem);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (data.id) {
+      updateTemplate();
+    } else {
+      createTemplate();
+    }
+  };
+
+  const handleSuccessDelete = (item) => {
+    if (item.id === data.id) {
+      setData(defaultItem);
+    }
+  };
 
   return (
     <div className="m-3">
-      <TemplateList onSelectRow={handleSelectTemplate} selectedItemId={data.id} />
-      <div className="pt-2 mt-2 border-top">
-        <div className="d-flex justify-content-between">
-          <label className="form-check-label font-weight-bold" htmlFor="inlineCheckbox1">
-            {Language.get('templatename')}
-            <input
-              className="border-1 ml-2 px-2"
-              id="inlineCheckbox1"
-              value={data.name}
-              onChange={handleChangeName}
-              style={{ outline: 'none', width: '300px' }}
-            />
-          </label>
-          <Button size="sm" color="primary">
-            {Language.get('save')}
-          </Button>
-        </div>
+      <TemplateList
+        ref={listRef}
+        onSelectRow={handleSelectTemplate}
+        selectedItemId={data.id}
+        onSuccessDelete={handleSuccessDelete}
+      />
+      <div className="pt-2 mt-2 border-top d-flex justify-content-between">
+        <label className="form-check-label font-weight-bold" htmlFor="inlineCheckbox1">
+          {Language.get('templatename')}
+          <input
+            className="border-1 ml-2 px-2"
+            id="inlineCheckbox1"
+            value={data.name}
+            onChange={handleChangeName}
+            style={{ outline: 'none', width: '300px' }}
+          />
+        </label>
+        <Button size="sm" color="primary" onClick={handleSubmit}>
+          {Language.get('save')}
+        </Button>
       </div>
     </div>
   );

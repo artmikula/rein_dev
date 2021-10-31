@@ -58,12 +58,10 @@ class TestScenarioAnsCaseStorage {
 
   changeTestScenario = (scenarioId, key, value, defaultData = null) => {
     const data = defaultData ?? this.get();
-    console.log('a', JSON.parse(JSON.stringify(data)));
     const testScenario = data.find((x) => x.id === scenarioId);
 
     if (testScenario) {
       testScenario[key] = value;
-      console.log('b', JSON.parse(JSON.stringify(data)));
 
       if (!defaultData) {
         this.set(data);
