@@ -91,26 +91,30 @@ class Graph extends Component {
     eventBus.publish(domainEvents.GRAPH_DOMAINEVENT, message);
   };
 
-  _handleGraphChange = () => {
-    const { setGraph, graph } = this.props;
+  _handleGraphChange = (graphAligning = false) => {
+    if (graphAligning) {
+      this._raiseEvent({ action: domainEvents.ACTION.GRAPH_ALIGN });
+    } else {
+      const { setGraph, graph } = this.props;
 
-    if (this.graphState && this.graphManager && !this.dataIniting) {
-      const currentState = this.graphManager.getState();
-      const data = covertGraphStateToSavedData(currentState);
-      const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
-      const { graphNodes } = separateNodes(removeNodes);
+      if (this.graphState && this.graphManager && !this.dataIniting) {
+        const currentState = this.graphManager.getState();
+        const data = covertGraphStateToSavedData(currentState);
+        const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
+        const { graphNodes } = separateNodes(removeNodes);
 
-      if (graphNodes.length > 0) {
-        this._raiseEvent({
-          action: domainEvents.ACTION.ACCEPTDELETE,
-          value: graphNodes,
-          'g-type': G_TYPE.NODE,
-        });
+        if (graphNodes.length > 0) {
+          this._raiseEvent({
+            action: domainEvents.ACTION.ACCEPTDELETE,
+            value: graphNodes,
+            'g-type': G_TYPE.NODE,
+          });
+        }
+
+        this._raiseEvent({ action: domainEvents.ACTION.GRAPH_UPDATE });
+
+        setGraph(data);
       }
-
-      this._raiseEvent({ action: domainEvents.ACTION.GRAPH_UPDATE });
-
-      setGraph(data);
     }
   };
 
