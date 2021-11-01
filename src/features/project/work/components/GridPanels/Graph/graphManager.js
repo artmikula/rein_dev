@@ -38,7 +38,8 @@ import {
 class GraphManager {
   constructor(container, options = {}) {
     const { onGraphChange, generate } = options;
-    this.onGraphChange = onGraphChange;
+    this.aligning = false;
+    this.onGraphChange = () => onGraphChange(this.aligning);
     this.generate = generate;
     this.lastestSelectedNode = null;
     this.tapNode = false;
@@ -243,8 +244,9 @@ class GraphManager {
       if (inspectionNode) {
         inspectionNode.position(getIconPosition(e.target, GRAPH_NODE_TYPE.INSPECTION));
       }
-
+      this.aligning = true;
       this.onGraphChange();
+      this.aligning = false;
     }
   };
 
@@ -435,6 +437,7 @@ class GraphManager {
 
   align = () => {
     // align node
+    this.aligning = true;
     const nodes = this.graph.nodes();
     this._alignGraphNode(nodes, GRAPH_NODE_TYPE.CAUSE, CLASSIFY.CAUSE_PREFIX, DEFAULT_NODE_X.CAUSE);
     this._alignGraphNode(nodes, GRAPH_NODE_TYPE.GROUP, CLASSIFY.GROUP_PREFIX, DEFAULT_NODE_X.GROUP);
@@ -450,6 +453,7 @@ class GraphManager {
     this.graph.zoom(zoom - 0.05);
     // align center all nodes
     this.graph.center();
+    this.aligning = false;
   };
 
   zoomIn = () => {

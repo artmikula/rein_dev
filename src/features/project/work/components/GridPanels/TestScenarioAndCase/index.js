@@ -44,7 +44,10 @@ class TestScenarioAndCase extends Component {
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this._caculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
-      } else if (event.message.action !== domainEvents.ACTION.REPORTWORK) {
+      } else if (
+        event.message.action !== domainEvents.ACTION.REPORTWORK &&
+        event.message.action !== domainEvents.ACTION.GRAPH_ALIGN
+      ) {
         this._clearData();
       }
     });
