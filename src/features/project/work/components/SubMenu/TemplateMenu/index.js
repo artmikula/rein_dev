@@ -14,6 +14,7 @@ class TemplateMenu extends Component {
     eventBus.subscribe(this, domainEvents.TEMPLATE_MENU_DOMAINEVENT, (event) => {
       this._handleEvent(event.message);
     });
+    this.checkQuery();
   }
 
   componentWillUnmount() {
@@ -75,6 +76,15 @@ class TemplateMenu extends Component {
       actions: null,
     };
     window.modal(modaProps);
+  };
+
+  checkQuery = () => {
+    const { location } = this.props;
+    const queryParams = new URLSearchParams(location.search);
+
+    if (queryParams.has('load-template')) {
+      this._loadTemplate();
+    }
   };
 
   render() {
