@@ -244,8 +244,9 @@ class GraphManager {
       if (inspectionNode) {
         inspectionNode.position(getIconPosition(e.target, GRAPH_NODE_TYPE.INSPECTION));
       }
-
+      this.aligning = true;
       this.onGraphChange();
+      this.aligning = false;
     }
   };
 
