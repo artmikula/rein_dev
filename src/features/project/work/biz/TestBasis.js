@@ -1,3 +1,5 @@
+import { STRING } from 'features/shared/constants';
+
 class TestBasis {
   constructor() {
     this._drawContentState = {
@@ -69,29 +71,33 @@ class TestBasis {
   }
 
   checkSameEntity(anchorKey, start, end) {
-    const { blocks } = this._drawContentState;
+    const { blocks, entityMap } = this._drawContentState;
     const block = blocks.find((x) => x.key === anchorKey);
 
     if (block) {
       for (let i = 0; i < block.entityRanges.length; i++) {
         const entityRange = block.entityRanges[i];
-        const rangeStart = entityRange.offset;
-        const rangeEnd = entityRange.offset + entityRange.length;
+        const entity = entityMap[entityRange.key];
 
-        if (rangeStart >= start && rangeStart < end) {
-          return true;
-        }
+        if (entity.type === STRING.DEFINITION) {
+          const rangeStart = entityRange.offset;
+          const rangeEnd = entityRange.offset + entityRange.length;
 
-        if (rangeEnd > start && rangeEnd <= end) {
-          return true;
-        }
+          if (rangeStart >= start && rangeStart < end) {
+            return true;
+          }
 
-        if (start >= rangeStart && start < rangeEnd) {
-          return true;
-        }
+          if (rangeEnd > start && rangeEnd <= end) {
+            return true;
+          }
 
-        if (end > rangeStart && end <= rangeEnd) {
-          return true;
+          if (start >= rangeStart && start < rangeEnd) {
+            return true;
+          }
+
+          if (end > rangeStart && end <= rangeEnd) {
+            return true;
+          }
         }
       }
     }
