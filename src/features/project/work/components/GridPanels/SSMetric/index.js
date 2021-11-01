@@ -1,5 +1,8 @@
 import SSMetricHelper from 'features/project/work/biz/SSMetric';
 import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
+import domainEvents from 'features/shared/domainEvents';
+import eventBus from 'features/shared/lib/eventBus';
+import { debounce } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -114,9 +117,19 @@ class SSMertic extends Component {
     },
   ];
 
+  _forceUpdate = debounce(() => this.forceUpdate(), 300);
+
   constructor() {
     super();
     this.conotationValueRef = React.createRef(null);
+  }
+
+  componentDidMount() {
+    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, this._forceUpdate);
+  }
+
+  componentWillUnmount() {
+    eventBus.unsubscribe(this);
   }
 
   _caculateSSMetricValue = () => {
