@@ -32,14 +32,16 @@ export default function TemplateLoading({ projectId, workId }) {
   };
 
   return (
-    <div className="m-3">
-      <TemplateList
-        ref={listRef}
-        onSelectRow={handleSelectTemplate}
-        selectedItemId={selectedId}
-        onSuccessDelete={handleSuccessDelete}
-      />
-      <div className="pt-2 mt-2 border-top d-flex justify-content-end">
+    <div>
+      <div className="mx-3 mt-3">
+        <TemplateList
+          ref={listRef}
+          onSelectRow={handleSelectTemplate}
+          selectedItemId={selectedId}
+          onSuccessDelete={handleSuccessDelete}
+        />
+      </div>
+      <div className="px-3 pt-2 pb-3 border-top d-flex justify-content-end">
         <Button size="sm" color="primary" onClick={handleSubmit}>
           {Language.get('Import')}
         </Button>

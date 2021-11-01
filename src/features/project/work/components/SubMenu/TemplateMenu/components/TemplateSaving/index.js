@@ -55,14 +55,16 @@ export default function TemplateSaving({ projectId, workId }) {
   };
 
   return (
-    <div className="m-3">
-      <TemplateList
-        ref={listRef}
-        onSelectRow={handleSelectTemplate}
-        selectedItemId={data.id}
-        onSuccessDelete={handleSuccessDelete}
-      />
-      <div className="pt-2 mt-2 border-top d-flex justify-content-between">
+    <div>
+      <div className="mx-3 mt-3">
+        <TemplateList
+          ref={listRef}
+          onSelectRow={handleSelectTemplate}
+          selectedItemId={data.id}
+          onSuccessDelete={handleSuccessDelete}
+        />
+      </div>
+      <div className="px-3 pt-2 mb-3 border-top d-flex justify-content-between">
         <label className="form-check-label font-weight-bold" htmlFor="inlineCheckbox1">
           {Language.get('templatename')}
           <input

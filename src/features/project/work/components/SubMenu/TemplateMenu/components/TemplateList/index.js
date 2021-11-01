@@ -1,18 +1,17 @@
 import templateService from 'features/project/work/services/templateService';
-import PropTypes from 'prop-types';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import { Table } from 'reactstrap';
+import { Pagination, PaginationItem, PaginationLink, Table } from 'reactstrap';
 import TemplateItem from '../TemplateItem';
 import './style.scss';
 
-function TemplateList({ onSelectRow, selectedItemId, onSuccessDelete }, ref) {
+function TemplateList({ onSelectRow = () => {}, selectedItemId = null, onSuccessDelete = () => {} }, ref) {
   const [selectedId, setSelectedId] = useState(null);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState({ items: [], page: 1, pageSize: 5, totalRow: 0 });
 
-  const getTemplateList = async () => {
-    const result = await templateService.listAsync();
+  const getTemplateList = async (page) => {
+    const result = await templateService.listAsync(page);
     if (result.data) {
-      setData(result.data.items);
+      setData(result.data);
     }
   };
 
@@ -45,44 +44,60 @@ function TemplateList({ onSelectRow, selectedItemId, onSuccessDelete }, ref) {
     getTemplateList();
   }, []);
 
+  const { page, pageSize, totalRow, items } = data;
+  const totalPage = Math.ceil((totalRow * 1.0) / pageSize);
+
+  const handleChangePage = (page) => {
+    setData({ ...data, page });
+    getTemplateList(page);
+  };
+
   return (
-    <div className="template-list">
-      <Table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Created date</th>
-            <th>Last modified date</th>
-            <th className="text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((item) => {
+    <div>
+      <div className="template-list">
+        <Table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Created date</th>
+              <th>Last modified date</th>
+              <th className="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => {
+              return (
+                <TemplateItem
+                  key={item.id}
+                  item={item}
+                  onDelete={handleDelete}
+                  onClick={handleClick}
+                  selected={item.id === selectedId}
+                />
+              );
+            })}
+          </tbody>
+        </Table>
+      </div>
+      <div className="d-flex justify-content-end mt-2">
+        <Pagination>
+          <PaginationItem disabled={page === 1}>
+            <PaginationLink previous onClick={() => handleChangePage(page - 1)} />
+          </PaginationItem>
+          {[...Array(totalPage)].map((x, index) => {
             return (
-              <TemplateItem
-                item={item}
-                onDelete={handleDelete}
-                onClick={handleClick}
-                selected={item.id === selectedId}
-              />
+              <PaginationItem key={index} active={index + 1 === page}>
+                <PaginationLink onClick={() => handleChangePage(index + 1)}>{index + 1}</PaginationLink>
+              </PaginationItem>
             );
           })}
-        </tbody>
-      </Table>
+          <PaginationItem disabled={page === totalPage}>
+            <PaginationLink next onClick={() => handleChangePage(page + 1)} />
+          </PaginationItem>
+        </Pagination>
+      </div>
     </div>
   );
 }
-
-TemplateList.defaultProps = {
-  onSelectRow: () => {},
-  onSuccessDelete: () => {},
-  selectedItemId: null,
-};
-
-TemplateList.propTypes = {
-  onSelectRow: PropTypes.func,
-  onSuccessDelete: PropTypes.func,
-  selectedItemId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-};
 
 export default forwardRef(TemplateList);

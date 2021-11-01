@@ -25,7 +25,7 @@ BaseSubMenu.propTypes = {
     PropTypes.shape({
       text: PropTypes.string.isRequired,
       code: PropTypes.string.isRequired,
-      shorcutKey: PropTypes.arrayOf(PropTypes.string).isRequired,
+      shorcutKey: PropTypes.arrayOf(PropTypes.string),
     })
   ).isRequired,
   domainEvent: PropTypes.string.isRequired,
