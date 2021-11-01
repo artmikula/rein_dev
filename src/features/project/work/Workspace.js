@@ -125,7 +125,6 @@ class Workspace extends Component {
   };
 
   _handleChangePanelLayout = (layouts, mode) => {
-    console.log('_handleChangePanelLayout', layouts);
     const _layouts = layouts.filter((x) => x.i !== '__dropping-elem__');
     const { viewMode } = this.state;
     const currentMode = mode || viewMode;
