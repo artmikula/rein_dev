@@ -1,4 +1,6 @@
-import { STRING } from 'features/shared/constants';
+import { ContentBlock, ContentState, EditorState, genKey, Modifier, SelectionState } from 'draft-js';
+import { CLASSIFY, STRING } from 'features/shared/constants';
+import { v4 as uuidv4 } from 'uuid';
 
 class TestBasis {
   constructor() {
@@ -104,5 +106,50 @@ class TestBasis {
 
     return false;
   }
+
+  insertCauses = (editorState, data) => {
+    let _editorState = editorState;
+    const causes = [];
+    data.forEach((item) => {
+      const newBlock = new ContentBlock({
+        key: genKey(),
+        type: 'unstyled',
+        text: item,
+      });
+
+      let contentState = _editorState.getCurrentContent();
+      const blocks = contentState.getBlockMap().toArray();
+
+      if (!blocks[blocks.length - 1].text || blocks[blocks.length - 1].text.length === 0) {
+        blocks.pop();
+      }
+      blocks.push(newBlock);
+
+      _editorState = EditorState.push(_editorState, ContentState.createFromBlockArray(blocks));
+      contentState = _editorState.getCurrentContent();
+
+      const cause = {
+        type: CLASSIFY.CAUSE,
+        definitionId: uuidv4(),
+        definition: 'sdfgdfgfd',
+      };
+      causes.push(cause);
+
+      const contentStateWithEntity = contentState.createEntity(STRING.DEFINITION, 'MUTABLE', cause);
+      const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+      const selectionState = new SelectionState({
+        anchorKey: newBlock.getKey(),
+        focusKey: newBlock.getKey(),
+        anchorOffset: 0,
+        focusOffset: item.length,
+        isBackward: false,
+      });
+      const contentStateWithLink = Modifier.applyEntity(contentStateWithEntity, selectionState, entityKey);
+
+      _editorState = EditorState.set(_editorState, { currentContent: contentStateWithLink });
+    });
+
+    return { editorState: _editorState, causes };
+  };
 }
 export default new TestBasis();

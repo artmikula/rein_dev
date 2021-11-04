@@ -202,6 +202,7 @@ const en = {
   savetemplate: 'Save Work as Template',
   loadtemplate: 'Load Template to current Work',
   templatename: 'Template name',
+  importmeta: 'Import Meta',
   /* End Template menu */
 };
 
