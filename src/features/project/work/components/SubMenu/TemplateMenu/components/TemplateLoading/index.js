@@ -1,12 +1,14 @@
 import templateService from 'features/project/work/services/templateService';
 import Language from 'features/shared/languages/Language';
 import React, { useRef, useState } from 'react';
+import { useHistory } from 'react-router';
 import { Button } from 'reactstrap';
 import TemplateList from '../TemplateList';
 
 export default function TemplateLoading({ projectId, workId }) {
   const [selectedId, setSelectedId] = useState(null);
   const listRef = useRef();
+  const history = useHistory();
 
   const handleSelectTemplate = ({ id }) => {
     if (selectedId !== id) {
@@ -21,7 +23,7 @@ export default function TemplateLoading({ projectId, workId }) {
     if (result.error) {
       alert(result.error);
     } else {
-      window.location.reload();
+      history.push(history.location.pathname);
     }
   };
 
