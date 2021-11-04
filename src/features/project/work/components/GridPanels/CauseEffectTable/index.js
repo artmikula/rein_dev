@@ -54,41 +54,51 @@ class CauseEffectTable extends Component {
         title: 'Automatic abridged',
         icon: <i className="bi bi-list-stars" />,
         yesAction: () => {
-          this._handleAddEvent(value, true);
+          this._handleAddEvent([value], true);
         },
         noAction: () => {
-          this._handleAddEvent(value, false);
+          this._handleAddEvent([value], false);
         },
       }
     );
   };
 
   /* Handle event */
-  _handleAddEvent = async (value, confirmedAbbreviate = undefined) => {
-    const { listData, setCauseEffects } = this.props;
+  _handleAddEvent = async (data, confirmedAbbreviate = undefined) => {
+    const { setCauseEffects } = this.props;
+    let { listData } = this.props;
+    const result = [];
+    this.needConfirm = false;
 
-    let parent = null;
-    const checkResult = CauseEffect.checkExistOrSimilarity(value, listData, appConfig);
-    // if existed
-    if (checkResult.similarItem && checkResult.rate > 100) {
-      CauseEffect.alertExistItem();
-      this._raiseEvent({ action: domainEvents.ACTION.NOTACCEPT, value });
-      return;
-    }
-    // if found similar
-    if (checkResult.similarItem) {
-      if (confirmedAbbreviate === undefined) {
-        this._confirmAbbreviate(value, checkResult.similarItem);
-        return;
+    for (let i = 0; i < data.length; i++) {
+      const value = data[i];
+      let parent = null;
+      if (data.lenth === 1) {
+        const checkResult = CauseEffect.checkExistOrSimilarity(value, listData, appConfig);
+        // if existed
+        if (checkResult.similarItem && checkResult.rate > 100) {
+          CauseEffect.alertExistItem();
+          this._raiseEvent({ action: domainEvents.ACTION.NOTACCEPT, value });
+          return;
+        }
+        // if found similar
+        if (checkResult.similarItem) {
+          if (confirmedAbbreviate === undefined) {
+            this._confirmAbbreviate(value, checkResult.similarItem);
+            return;
+          }
+          parent = confirmedAbbreviate ? checkResult.similarItem : null;
+        }
       }
-      parent = confirmedAbbreviate ? checkResult.similarItem : null;
+      // create cause/effect item and set id
+      const newItem = CauseEffect.generateCauseEffectItem(listData, value, parent);
+      newItem.id = uuidv4();
+      result.push(newItem);
+      listData = [...listData, newItem];
     }
-    // create cause/effect item and set id
-    const newItem = CauseEffect.generateCauseEffectItem(listData, value, parent);
-    newItem.id = uuidv4();
 
-    setCauseEffects([...listData, newItem]);
-    this._raiseEvent({ action: domainEvents.ACTION.ADD, value: newItem });
+    this._raiseEvent({ action: domainEvents.ACTION.ADD, value: result });
+    setCauseEffects(listData);
   };
 
   _handleDeleteAction = (item) => {
@@ -200,6 +210,20 @@ class CauseEffectTable extends Component {
     }
   };
 
+  _handleInsertCauses = (data) => {
+    const { setCauseEffects } = this.props;
+    let { listData } = this.props;
+    const causes = [];
+    data.forEach((item) => {
+      const cause = CauseEffect.generateCauseEffectItem(listData, item);
+      causes.push(cause);
+      listData = [...listData, cause];
+    });
+
+    setCauseEffects(listData);
+    this._raiseEvent({ action: domainEvents.ACTION.ADD, value: causes });
+  };
+
   _handleAcceptDeleteEvent = (items) => {
     const { listData, setCauseEffects } = this.props;
     // get causeEffect need remove
@@ -264,7 +288,7 @@ class CauseEffectTable extends Component {
 
           this._raiseEvent({
             action: domainEvents.ACTION.ADD,
-            value: newItem,
+            value: [newItem],
             receivers: [domainEvents.DES.TESTDATA],
           });
         }

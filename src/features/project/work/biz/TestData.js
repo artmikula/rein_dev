@@ -24,14 +24,7 @@ class TestData {
   }
 
   remove(testDatas, item) {
-    const _testDatas = [...testDatas];
-    const index = _testDatas.findIndex((e) => e.nodeId === item.node);
-
-    if (index >= 0) {
-      _testDatas.splice(index, 1);
-    }
-
-    return _testDatas;
+    return testDatas.filter((x) => x.nodeId !== item.node);
   }
 
   update(testDatas, item, index) {

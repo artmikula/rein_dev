@@ -135,7 +135,7 @@ class TestBasis extends Component {
       if (action === domainEvents.ACTION.NOTACCEPT) {
         this._removeCauseEffect(value.definitionId);
       }
-      if (action === domainEvents.ACTION.INSERTCAUSE) {
+      if (action === domainEvents.ACTION.INSERTCAUSES) {
         this._insertCause(value);
       }
     }
@@ -144,6 +144,8 @@ class TestBasis extends Component {
   _insertCause = (data) => {
     const { editorState } = this.state;
     const result = TestBasisManager.insertCauses(editorState, data);
+
+    this._raiseEvent(domainEvents.ACTION.ADD, result.causes);
 
     this._updateEditorState(result.editorState);
   };
@@ -247,7 +249,7 @@ class TestBasis extends Component {
     if (existDefinition.type !== type) {
       const definitionId = uuidv4();
       this._addCauseEffect({ type, definitionId, definition: selectedText });
-      this._raiseEvent(domainEvents.ACTION.ADD, { type, definitionId, definition: selectedText });
+      this._raiseEvent(domainEvents.ACTION.ADD, [{ type, definitionId, definition: selectedText }]);
     }
   };
   /* End Action */

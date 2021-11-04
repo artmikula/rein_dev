@@ -115,15 +115,18 @@ class TemplateMenu extends Component {
       if (ex.toLowerCase() === 'json') {
         readFileContent(file, (content) => {
           const data = allPropertiesInJSON(content);
-          self.raiseEvent({ action: domainEvents.ACTION.INSERTCAUSE, value: data });
+          self.raiseEvent({ action: domainEvents.ACTION.INSERTCAUSES, value: data });
         });
       } else if (ex.toLowerCase() === 'xml') {
         readFileContent(file, (content) => {
           const data = allTagsInXML(content);
-          self.raiseEvent({ action: domainEvents.ACTION.INSERTCAUSE, value: data });
+          self.raiseEvent({ action: domainEvents.ACTION.INSERTCAUSES, value: data });
         });
       }
     }
+    // reset input
+    e.target.type = '';
+    e.target.type = 'file';
   };
 
   render() {

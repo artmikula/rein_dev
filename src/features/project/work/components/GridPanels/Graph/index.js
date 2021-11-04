@@ -173,10 +173,7 @@ class Graph extends Component {
     const { action, receives, value } = message;
     switch (action) {
       case domainEvents.ACTION.ADD: {
-        const { isMerged } = value;
-        if (!isMerged) {
-          this.graphManager.drawCauseEffect(value);
-        }
+        this._handleAddNodes(value);
         break;
       }
       case domainEvents.ACTION.ACCEPTDELETE:
@@ -190,6 +187,15 @@ class Graph extends Component {
       default:
         break;
     }
+  };
+
+  _handleAddNodes = (data) => {
+    data.forEach((item) => {
+      const { isMerged } = item;
+      if (!isMerged) {
+        this.graphManager.drawCauseEffect(item);
+      }
+    });
   };
 
   /* Events */

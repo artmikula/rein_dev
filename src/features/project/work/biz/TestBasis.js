@@ -1,4 +1,4 @@
-import { ContentBlock, ContentState, EditorState, genKey, Modifier, SelectionState } from 'draft-js';
+import { ContentBlock, ContentState, convertToRaw, EditorState, genKey, Modifier, SelectionState } from 'draft-js';
 import { CLASSIFY, STRING } from 'features/shared/constants';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -107,46 +107,69 @@ class TestBasis {
     return false;
   }
 
+  _addBlock = (editorState, text) => {
+    const newBlock = new ContentBlock({
+      key: genKey(),
+      type: 'unstyled',
+      text,
+    });
+
+    const contentState = editorState.getCurrentContent();
+    const blocks = contentState.getBlockMap().toArray();
+
+    if (!blocks[blocks.length - 1].text || blocks[blocks.length - 1].text.length === 0) {
+      blocks.pop();
+    }
+    blocks.push(newBlock);
+
+    return { editorState: EditorState.push(editorState, ContentState.createFromBlockArray(blocks)), block: newBlock };
+  };
+
+  _addEntity = (editorState, blockKey, data) => {
+    const contentState = editorState.getCurrentContent();
+
+    const contentStateWithEntity = contentState.createEntity(STRING.DEFINITION, 'MUTABLE', data);
+    const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+    const selectionState = new SelectionState({
+      anchorKey: blockKey,
+      focusKey: blockKey,
+      anchorOffset: 0,
+      focusOffset: data.definition.length,
+      isBackward: false,
+    });
+    const contentStateWithLink = Modifier.applyEntity(contentStateWithEntity, selectionState, entityKey);
+
+    return EditorState.set(editorState, { currentContent: contentStateWithLink });
+  };
+
+  /**
+   * @param {EditorState} editorState
+   * @param {array} data
+   */
   insertCauses = (editorState, data) => {
     let _editorState = editorState;
+    const entities = Object.values(convertToRaw(editorState.getCurrentContent()).entityMap);
     const causes = [];
+
     data.forEach((item) => {
-      const newBlock = new ContentBlock({
-        key: genKey(),
-        type: 'unstyled',
-        text: item,
-      });
+      const addBlockResult = this._addBlock(_editorState, item);
+      _editorState = addBlockResult.editorState;
 
-      let contentState = _editorState.getCurrentContent();
-      const blocks = contentState.getBlockMap().toArray();
+      if (
+        !entities.some(
+          (entity) =>
+            entity.type === STRING.DEFINITION && entity.data.type === CLASSIFY.CAUSE && entity.data.definition === item
+        )
+      ) {
+        const cause = {
+          type: CLASSIFY.CAUSE,
+          definitionId: uuidv4(),
+          definition: item,
+        };
+        causes.push(cause);
 
-      if (!blocks[blocks.length - 1].text || blocks[blocks.length - 1].text.length === 0) {
-        blocks.pop();
+        _editorState = this._addEntity(_editorState, addBlockResult.block.getKey(), cause);
       }
-      blocks.push(newBlock);
-
-      _editorState = EditorState.push(_editorState, ContentState.createFromBlockArray(blocks));
-      contentState = _editorState.getCurrentContent();
-
-      const cause = {
-        type: CLASSIFY.CAUSE,
-        definitionId: uuidv4(),
-        definition: 'sdfgdfgfd',
-      };
-      causes.push(cause);
-
-      const contentStateWithEntity = contentState.createEntity(STRING.DEFINITION, 'MUTABLE', cause);
-      const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-      const selectionState = new SelectionState({
-        anchorKey: newBlock.getKey(),
-        focusKey: newBlock.getKey(),
-        anchorOffset: 0,
-        focusOffset: item.length,
-        isBackward: false,
-      });
-      const contentStateWithLink = Modifier.applyEntity(contentStateWithEntity, selectionState, entityKey);
-
-      _editorState = EditorState.set(_editorState, { currentContent: contentStateWithLink });
     });
 
     return { editorState: _editorState, causes };

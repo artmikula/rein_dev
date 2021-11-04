@@ -1,6 +1,7 @@
 import { CLASSIFY } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import similarityCosine from 'features/shared/lib/similarityCosine';
+import { v4 as uuidv4 } from 'uuid';
 
 class CauseEffect {
   /**
@@ -71,6 +72,7 @@ class CauseEffect {
     const { type } = value;
     const newItem = {
       ...value,
+      id: uuidv4(),
       node: this.createNode(causeEffectList, type),
     };
     // if Abbreviate is yes
