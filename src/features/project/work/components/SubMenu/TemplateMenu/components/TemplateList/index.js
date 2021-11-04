@@ -53,7 +53,7 @@ function TemplateList({ onSelectRow = () => {}, selectedItemId = null, onSuccess
   };
 
   return (
-    <div>
+    <div className="template-list-wrapper">
       <div className="template-list">
         <Table>
           <thead>

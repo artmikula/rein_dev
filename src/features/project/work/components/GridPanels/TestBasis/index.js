@@ -144,8 +144,9 @@ class TestBasis extends Component {
   _insertCause = (data) => {
     const { editorState } = this.state;
     const result = TestBasisManager.insertCauses(editorState, data);
-
-    this._raiseEvent(domainEvents.ACTION.ADD, result.causes);
+    if (result.causes.length > 0) {
+      this._raiseEvent(domainEvents.ACTION.ADD, result.causes);
+    }
 
     this._updateEditorState(result.editorState);
   };

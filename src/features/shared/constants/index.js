@@ -273,7 +273,7 @@ export const TEMPLATE_SHORTCUT = [
   { code: TEMPLATE_SHORTCUT_CODE.SAVE_TEMPLATE, text: 'savetemplate' },
   { code: TEMPLATE_SHORTCUT_CODE.LOAD_TEMPLATE, text: 'loadtemplate' },
   { code: TEMPLATE_SHORTCUT_CODE.EXPLORER, text: 'explorer' },
-  { code: TEMPLATE_SHORTCUT_CODE.IMPORT_META, text: 'importmeta' },
+  { code: TEMPLATE_SHORTCUT_CODE.IMPORT_META, text: 'loadmeta' },
 ];
 
 export const TEST_DATA = {

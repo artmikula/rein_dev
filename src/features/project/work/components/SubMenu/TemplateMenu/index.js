@@ -9,6 +9,7 @@ import BaseSubMenu from '../BaseSubMenu';
 import TemplateExplorer from './components/TemplateExplorer';
 import TemplateLoading from './components/TemplateLoading';
 import TemplateSaving from './components/TemplateSaving';
+import { LOAD_META_PARAM, LOAD_TEMPLATE_PARAM } from './constant';
 
 class TemplateMenu extends Component {
   constructor(props) {
@@ -59,13 +60,13 @@ class TemplateMenu extends Component {
     window.modal(modaProps);
   };
 
-  _loadTemplate = () => {
+  _loadTemplate = (isLoadMeta) => {
     const { history, match } = this.props;
     const modaProps = {
       title: Language.get('loadtemplate'),
       content: (
         <Router history={history}>
-          <TemplateLoading projectId={match.params.projectId} workId={match.params.workId} />
+          <TemplateLoading projectId={match.params.projectId} workId={match.params.workId} isLoadMeta={isLoadMeta} />
         </Router>
       ),
       actions: null,
@@ -97,8 +98,12 @@ class TemplateMenu extends Component {
     const { location } = this.props;
     const queryParams = new URLSearchParams(location.search);
 
-    if (queryParams.has('load-template')) {
+    if (queryParams.has(LOAD_TEMPLATE_PARAM) && queryParams.has(LOAD_META_PARAM)) {
+      this._loadTemplate(true);
+    } else if (queryParams.has(LOAD_TEMPLATE_PARAM)) {
       this._loadTemplate();
+    } else if (queryParams.has(LOAD_META_PARAM)) {
+      confirm(Language.get('confirmloadmeta'), { yesAction: this._importMeta });
     }
   };
 
