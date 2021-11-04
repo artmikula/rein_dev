@@ -202,6 +202,8 @@ const en = {
   savetemplate: 'Save Work as Template',
   loadtemplate: 'Load Template to current Work',
   templatename: 'Template name',
+  loadmeta: 'Load Meta',
+  confirmloadmeta: 'Do you want load meta?',
   /* End Template menu */
 };
 

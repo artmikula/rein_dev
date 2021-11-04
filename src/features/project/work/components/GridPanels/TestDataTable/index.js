@@ -77,17 +77,19 @@ class TestDataTable extends Component {
     eventBus.publish(domainEvents.TEST_DATA_DOMAINEVENT, message);
   };
 
-  _addData = (value) => {
-    if (value.type !== CLASSIFY.CAUSE || value.isMerged) {
-      return;
-    }
+  _addData = (data) => {
+    let { testDatas } = this.props;
 
-    const item = TestData.createTest(value.node);
+    data.forEach((value) => {
+      if (value.type !== CLASSIFY.CAUSE || value.isMerged) {
+        return;
+      }
 
-    const { testDatas } = this.props;
-    const newTestDatas = TestData.add(testDatas, item);
+      const item = TestData.createTest(value.node);
+      testDatas = TestData.add(testDatas, item);
+    });
 
-    this._setTestDatas(newTestDatas, false);
+    this._setTestDatas(testDatas, false);
   };
 
   _removeData = (item) => {

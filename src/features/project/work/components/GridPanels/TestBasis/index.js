@@ -40,6 +40,10 @@ class TestBasis extends Component {
       const { message } = event;
       this._handleEventBus(message);
     });
+    eventBus.subscribe(this, domainEvents.TEMPLATE_MENU_DOMAINEVENT, (event) => {
+      const { message } = event;
+      this._handleEventBus(message);
+    });
 
     this._initTestBasis();
     this.ready = true;
@@ -131,7 +135,20 @@ class TestBasis extends Component {
       if (action === domainEvents.ACTION.NOTACCEPT) {
         this._removeCauseEffect(value.definitionId);
       }
+      if (action === domainEvents.ACTION.INSERTCAUSES) {
+        this._insertCause(value);
+      }
     }
+  };
+
+  _insertCause = (data) => {
+    const { editorState } = this.state;
+    const result = TestBasisManager.insertCauses(editorState, data);
+    if (result.causes.length > 0) {
+      this._raiseEvent(domainEvents.ACTION.ADD, result.causes);
+    }
+
+    this._updateEditorState(result.editorState);
   };
 
   _raiseEvent = (action, value) => {
@@ -233,7 +250,7 @@ class TestBasis extends Component {
     if (existDefinition.type !== type) {
       const definitionId = uuidv4();
       this._addCauseEffect({ type, definitionId, definition: selectedText });
-      this._raiseEvent(domainEvents.ACTION.ADD, { type, definitionId, definition: selectedText });
+      this._raiseEvent(domainEvents.ACTION.ADD, [{ type, definitionId, definition: selectedText }]);
     }
   };
   /* End Action */

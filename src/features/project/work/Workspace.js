@@ -3,9 +3,11 @@ import { defaultTestCoverageData, setWork } from 'features/project/work/slices/w
 import { ModalForm } from 'features/shared/components';
 import alert from 'features/shared/components/Alert';
 import { DEFAULT_LAYOUTS, DEFAULT_LAYOUTS_SINGLE, STRING, VIEW_MODE, WORK_FORM_NAME } from 'features/shared/constants';
+import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
+import eventBus from 'features/shared/lib/eventBus';
 import LocalStorage from 'features/shared/lib/localStorage';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, debounce } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -20,6 +22,18 @@ import workService from './services/workService';
 import WorkSyncData from './WorkSyncData';
 
 class Workspace extends Component {
+  _raiseEventLoadMeta = debounce(() => {
+    const meta = localStorage.getItem('meta-data');
+
+    if (meta) {
+      localStorage.removeItem('meta-data');
+      eventBus.publish(domainEvents.TEMPLATE_MENU_DOMAINEVENT, {
+        action: domainEvents.ACTION.INSERTCAUSES,
+        value: meta.split(','),
+      });
+    }
+  }, 300);
+
   constructor(props) {
     super(props);
     const initialViewMode = LocalStorage.get(STRING.GRID_PANEL_VIEW_MODE);
@@ -51,6 +65,13 @@ class Workspace extends Component {
         window.location.reload();
       }
     });
+  }
+
+  componentDidUpdate() {
+    const { loadedWork } = this.props;
+    if (loadedWork) {
+      this._raiseEventLoadMeta();
+    }
   }
 
   componentWillUnmount() {
@@ -330,6 +351,10 @@ Workspace.propTypes = {
 };
 
 const mapDispatchToProps = { setWork };
-const mapStateToProps = (state) => ({ workName: state.work.name, projectName: state.work.projectName });
+const mapStateToProps = (state) => ({
+  loadedWork: state.work.loaded,
+  workName: state.work.name,
+  projectName: state.work.projectName,
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(Workspace);

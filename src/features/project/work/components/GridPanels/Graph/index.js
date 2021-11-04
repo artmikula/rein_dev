@@ -9,6 +9,7 @@ import {
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
+import { debounce } from 'lodash';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -31,6 +32,14 @@ import {
 } from './utils';
 
 class Graph extends Component {
+  _raiseEventUpdate = debounce(() => {
+    this._raiseEvent({ action: domainEvents.ACTION.GRAPH_UPDATE });
+  }, 300);
+
+  _raiseEvenGraphAligning = debounce(() => {
+    this._raiseEvent({ action: domainEvents.ACTION.GRAPH_ALIGN });
+  }, 300);
+
   constructor(props) {
     super(props);
     this.graphManager = null;
@@ -93,7 +102,7 @@ class Graph extends Component {
 
   _handleGraphChange = (graphAligning = false) => {
     if (graphAligning) {
-      this._raiseEvent({ action: domainEvents.ACTION.GRAPH_ALIGN });
+      this._raiseEvenGraphAligning({ action: domainEvents.ACTION.GRAPH_ALIGN });
     } else {
       const { setGraph, graph } = this.props;
 
@@ -111,8 +120,7 @@ class Graph extends Component {
           });
         }
 
-        this._raiseEvent({ action: domainEvents.ACTION.GRAPH_UPDATE });
-
+        this._raiseEventUpdate();
         setGraph(data);
       }
     }
@@ -173,10 +181,7 @@ class Graph extends Component {
     const { action, receives, value } = message;
     switch (action) {
       case domainEvents.ACTION.ADD: {
-        const { isMerged } = value;
-        if (!isMerged) {
-          this.graphManager.drawCauseEffect(value);
-        }
+        this._handleAddNodes(value);
         break;
       }
       case domainEvents.ACTION.ACCEPTDELETE:
@@ -190,6 +195,15 @@ class Graph extends Component {
       default:
         break;
     }
+  };
+
+  _handleAddNodes = (data) => {
+    data.forEach((item) => {
+      const { isMerged } = item;
+      if (!isMerged) {
+        this.graphManager.drawCauseEffect(item);
+      }
+    });
   };
 
   /* Events */
