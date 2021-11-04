@@ -40,6 +40,10 @@ class TestBasis extends Component {
       const { message } = event;
       this._handleEventBus(message);
     });
+    eventBus.subscribe(this, domainEvents.TEMPLATE_MENU_DOMAINEVENT, (event) => {
+      const { message } = event;
+      this._handleEventBus(message);
+    });
 
     this._initTestBasis();
     this.ready = true;
@@ -131,7 +135,17 @@ class TestBasis extends Component {
       if (action === domainEvents.ACTION.NOTACCEPT) {
         this._removeCauseEffect(value.definitionId);
       }
+      if (action === domainEvents.ACTION.INSERTCAUSE) {
+        this._insertCause(value);
+      }
     }
+  };
+
+  _insertCause = (data) => {
+    const { editorState } = this.state;
+    const result = TestBasisManager.insertCauses(editorState, data);
+
+    this._updateEditorState(result.editorState);
   };
 
   _raiseEvent = (action, value) => {

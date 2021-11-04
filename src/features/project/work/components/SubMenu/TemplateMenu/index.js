@@ -102,11 +102,12 @@ class TemplateMenu extends Component {
     }
   };
 
-  raiseEvent = (data) => {
-    eventBus.publish(domainEvents.TEMPLATE_MENU_DOMAINEVENT, { data });
+  raiseEvent = (message) => {
+    eventBus.publish(domainEvents.TEMPLATE_MENU_DOMAINEVENT, message);
   };
 
   hanldeChangeFile = (e) => {
+    const self = this;
     const file = e.target.files[0];
     if (file) {
       const fileName = file.name;
@@ -114,12 +115,12 @@ class TemplateMenu extends Component {
       if (ex.toLowerCase() === 'json') {
         readFileContent(file, (content) => {
           const data = allPropertiesInJSON(content);
-          this.raiseEvent(data);
+          self.raiseEvent({ action: domainEvents.ACTION.INSERTCAUSE, value: data });
         });
       } else if (ex.toLowerCase() === 'xml') {
         readFileContent(file, (content) => {
           const data = allTagsInXML(content);
-          this.raiseEvent(data);
+          self.raiseEvent({ action: domainEvents.ACTION.INSERTCAUSE, value: data });
         });
       }
     }
