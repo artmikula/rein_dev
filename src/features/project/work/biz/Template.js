@@ -1,12 +1,21 @@
 import { parseString } from 'xml2js';
 
-const getAllProperties = (obj, result = new Set()) => {
+const getAllLeafProperties = (obj, parentKey, result = new Set()) => {
   if (Array.isArray(obj)) {
-    obj.forEach((item) => getAllProperties(item, result));
+    if (obj.length === 0 || typeof obj[0] !== 'object') {
+      if (parentKey) {
+        result.add(parentKey);
+      }
+    } else {
+      obj.forEach((item) => getAllLeafProperties(item, null, result));
+    }
   } else if (typeof obj === 'object') {
     Object.keys(obj).forEach((key) => {
-      result.add(key);
-      getAllProperties(obj[key], result);
+      if (typeof obj[key] !== 'object') {
+        result.add(key);
+      } else {
+        getAllLeafProperties(obj[key], key, result);
+      }
     });
   }
 
@@ -16,7 +25,7 @@ const getAllProperties = (obj, result = new Set()) => {
 export const allPropertiesInJSON = (json) => {
   try {
     const obj = JSON.parse(json);
-    const properties = getAllProperties(obj);
+    const properties = getAllLeafProperties(obj);
 
     return [...properties];
   } catch (e) {
@@ -30,7 +39,7 @@ export const allTagsInXML = (xml) => {
     parseString(xml, (err, result) => {
       json = result;
     });
-    const properties = getAllProperties(json);
+    const properties = getAllLeafProperties(json);
 
     return [...properties];
   } catch (e) {
