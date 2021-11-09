@@ -68,10 +68,12 @@ class TestScenarioAndCase extends Component {
     });
 
     TEST_CASE_SHORTCUT.forEach(({ code, shortcutKeys }) => {
-      Mousetrap.bind(shortcutKeys.join('+'), (e) => {
-        e.preventDefault();
-        this._handleShortCutEvents(code);
-      });
+      if (shortcutKeys) {
+        Mousetrap.bind(shortcutKeys.join('+'), (e) => {
+          e.preventDefault();
+          this._handleShortCutEvents(code);
+        });
+      }
     });
 
     this._initData();
@@ -212,6 +214,12 @@ class TestScenarioAndCase extends Component {
       case TEST_CASE_SHORTCUT_CODE.CONTRACTION:
         console.log('CONTRACTION');
         break;
+      case TEST_CASE_SHORTCUT_CODE.EXPORT_TEST_SCENARIO:
+        this._exportTestScenario();
+        break;
+      case TEST_CASE_SHORTCUT_CODE.EXPORT_TEST_CASE:
+        this._exportTestCase();
+        break;
       default:
         break;
     }
@@ -277,6 +285,32 @@ class TestScenarioAndCase extends Component {
 
     rows.forEach((testScenario) => {
       dataToConvert.push(this._createExportRowData(testScenario, columns));
+      testScenario.testCases.forEach((testCase) => {
+        dataToConvert.push(this._createExportRowData(testCase, columns));
+      });
+    });
+    const csvFile = arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
+    Download(csvFile, FILE_NAME.EXPORT_TEST_CASE.replace('workname', workName), 'text/csv;charset=utf-8');
+  }
+
+  _exportTestScenario() {
+    const { workName, graph } = this.props;
+    const { columns, rows } = this.state;
+    const dataToConvert = [];
+
+    rows.forEach((testScenario) => {
+      dataToConvert.push(this._createExportRowData(testScenario, columns));
+    });
+    const csvFile = arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
+    Download(csvFile, FILE_NAME.EXPORT_TEST_SCENARIO.replace('workname', workName), 'text/csv;charset=utf-8');
+  }
+
+  _exportTestCase() {
+    const { workName, graph } = this.props;
+    const { columns, rows } = this.state;
+    const dataToConvert = [];
+
+    rows.forEach((testScenario) => {
       testScenario.testCases.forEach((testCase) => {
         dataToConvert.push(this._createExportRowData(testCase, columns));
       });

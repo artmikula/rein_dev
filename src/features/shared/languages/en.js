@@ -205,6 +205,8 @@ const en = {
   loadmeta: 'Load Meta',
   confirmloadmeta: 'Do you want load meta?',
   /* End Template menu */
+  exporttestscenario: 'Export test scenario',
+  exporttestcase: 'Export test case',
 };
 
 export default en;
