@@ -15,7 +15,7 @@ export default function MetaImportation({ onSubmit }) {
 
   return (
     <div>
-      <div className="mx-3 mt-3">
+      <div className="mx-3 my-3">
         <Input className="mt-1" type="file" accept=".json,.xml" onChange={handleChangeFile} />
       </div>
       <div className="px-3 pt-2 pb-3 border-top d-flex justify-content-end">
