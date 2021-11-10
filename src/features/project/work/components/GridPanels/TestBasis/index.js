@@ -40,7 +40,7 @@ class TestBasis extends Component {
       const { message } = event;
       this._handleEventBus(message);
     });
-    eventBus.subscribe(this, domainEvents.TEMPLATE_MENU_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.REIN_MENU_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleEventBus(message);
     });

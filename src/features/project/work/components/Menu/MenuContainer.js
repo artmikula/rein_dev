@@ -16,21 +16,21 @@ export default function MenuContainer() {
         <MenuItem
           iconClassName="bi bi-journal-richtext"
           text={Language.get('project')}
-          key="project"
+          id="project"
           dropdown={<ProjectMenu />}
         />
       </NavItem>
       <NavItem className="mx-1">
-        <MenuItem iconClassName="bi bi-list-task" text={Language.get('work')} key="work" dropdown={<WorkMenu />} />
+        <MenuItem iconClassName="bi bi-list-task" text={Language.get('work')} id="work" dropdown={<WorkMenu />} />
       </NavItem>
       <NavItem className="mx-1">
-        <MenuItem iconClassName="bi bi-graph-up" text={Language.get('graph')} key="graph" dropdown={<GraphMenu />} />
+        <MenuItem iconClassName="bi bi-graph-up" text={Language.get('graph')} id="graph" dropdown={<GraphMenu />} />
       </NavItem>
       <NavItem className="mx-1">
         <MenuItem
           iconClassName="bi bi-file-bar-graph"
           text={Language.get('testdata')}
-          key="testdata"
+          id="testdata"
           dropdown={<TestDataMenu />}
         />
       </NavItem>
@@ -38,12 +38,12 @@ export default function MenuContainer() {
         <MenuItem
           iconClassName="bi bi-diagram-3"
           text={Language.get('testcase')}
-          key="testcase"
+          id="testcase"
           dropdown={<TestCaseMenu />}
         />
       </NavItem>
       <NavItem className="mx-1">
-        <MenuItem iconClassName="bi bi-diagram-3" text={Language.get('rein')} key="rein" dropdown={<ReInMenu />} />
+        <MenuItem iconClassName="bi bi-diagram-3" text={Language.get('rein')} id="rein" dropdown={<ReInMenu />} />
       </NavItem>
     </Nav>
   );

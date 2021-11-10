@@ -18,7 +18,7 @@ class ReInMenu extends Component {
   }
 
   componentDidMount() {
-    eventBus.subscribe(this, domainEvents.TEMPLATE_MENU_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.REIN_MENU_DOMAINEVENT, (event) => {
       this._handleEvent(event.message);
     });
     this.checkQuery();
@@ -41,9 +41,6 @@ class ReInMenu extends Component {
         break;
       case TEMPLATE_SHORTCUT_CODE.IMPORT_META:
         this._importMeta();
-        break;
-      case TEMPLATE_SHORTCUT_CODE.UPLOAD_TEST_CASE:
-        this._uploadTestCase();
         break;
       default:
     }
@@ -97,8 +94,6 @@ class ReInMenu extends Component {
     }
   };
 
-  _uploadTestCase = () => console.log('_uploadTestCase');
-
   checkQuery = () => {
     const { location } = this.props;
     const queryParams = new URLSearchParams(location.search);
@@ -113,7 +108,7 @@ class ReInMenu extends Component {
   };
 
   raiseEvent = (message) => {
-    eventBus.publish(domainEvents.TEMPLATE_MENU_DOMAINEVENT, message);
+    eventBus.publish(domainEvents.REIN_MENU_DOMAINEVENT, message);
   };
 
   hanldeChangeFile = (e) => {
@@ -144,7 +139,7 @@ class ReInMenu extends Component {
       <>
         <BaseSubMenu
           shortcuts={TEMPLATE_SHORTCUT}
-          domainEvent={domainEvents.TEMPLATE_MENU_DOMAINEVENT}
+          domainEvent={domainEvents.REIN_MENU_DOMAINEVENT}
           className="mh-100"
         />
         <input type="file" onChange={this.hanldeChangeFile} ref={this.fileInputRef} accept=".json,.xml" hidden />

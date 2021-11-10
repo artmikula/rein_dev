@@ -1,3 +1,4 @@
+import reInCloudService from 'features/project/work/services/reInCloudService';
 import restService from 'features/shared/services/restService';
 import React, { Component } from 'react';
 
@@ -17,6 +18,7 @@ class GlobalProvider extends Component {
 
   setAuthContext = (authContext) => {
     restService.setToken(authContext.token);
+    reInCloudService.setToken(authContext.token);
     this.setState({ authContext });
   };
 
