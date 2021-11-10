@@ -207,6 +207,9 @@ const en = {
   /* End Template menu */
   exporttestscenario: 'Export test scenario',
   exporttestcase: 'Export test case',
+  rein: 'Re:In',
+  listoftemplate: 'List of template',
+  uploadtestcasetocloud: 'Upload test cases to cloud',
 };
 
 export default en;

@@ -11,7 +11,7 @@ import TemplateLoading from './components/TemplateLoading';
 import TemplateSaving from './components/TemplateSaving';
 import { LOAD_META_PARAM, LOAD_TEMPLATE_PARAM } from './constant';
 
-class TemplateMenu extends Component {
+class ReInMenu extends Component {
   constructor(props) {
     super(props);
     this.fileInputRef = createRef(null);
@@ -36,11 +36,14 @@ class TemplateMenu extends Component {
       case TEMPLATE_SHORTCUT_CODE.LOAD_TEMPLATE:
         this._loadTemplate();
         break;
-      case TEMPLATE_SHORTCUT_CODE.EXPLORER:
+      case TEMPLATE_SHORTCUT_CODE.LIST_OF_TEMPLATE:
         this._explorer();
         break;
       case TEMPLATE_SHORTCUT_CODE.IMPORT_META:
         this._importMeta();
+        break;
+      case TEMPLATE_SHORTCUT_CODE.UPLOAD_TEST_CASE:
+        this._uploadTestCase();
         break;
       default:
     }
@@ -93,6 +96,8 @@ class TemplateMenu extends Component {
       this.fileInputRef.current.click();
     }
   };
+
+  _uploadTestCase = () => console.log('_uploadTestCase');
 
   checkQuery = () => {
     const { location } = this.props;
@@ -148,4 +153,4 @@ class TemplateMenu extends Component {
   }
 }
 
-export default withRouter(TemplateMenu);
+export default withRouter(ReInMenu);

@@ -3,8 +3,8 @@ import React from 'react';
 import { DropdownMenu, DropdownToggle, UncontrolledDropdown, UncontrolledTooltip } from 'reactstrap';
 import './style.scss';
 
-export default function MenuItem({ iconClassName, text, dropdown }) {
-  const id = `${text.replace(/\s+/, '-')}menu-item`;
+export default function MenuItem({ iconClassName, text, key, dropdown }) {
+  const id = `${key}-menu-item`;
   const hasCaret = Boolean(dropdown);
   return (
     <UncontrolledDropdown inNavbar>
@@ -25,6 +25,7 @@ MenuItem.defaultProps = {
 };
 
 MenuItem.propTypes = {
+  key: PropTypes.string.isRequired,
   iconClassName: PropTypes.string.isRequired,
   text: PropTypes.string.isRequired,
   dropdown: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
