@@ -27,7 +27,7 @@ class Workspace extends Component {
 
     if (meta) {
       localStorage.removeItem('meta-data');
-      eventBus.publish(domainEvents.TEMPLATE_MENU_DOMAINEVENT, {
+      eventBus.publish(domainEvents.REIN_MENU_DOMAINEVENT, {
         action: domainEvents.ACTION.INSERTCAUSES,
         value: meta.split(','),
       });

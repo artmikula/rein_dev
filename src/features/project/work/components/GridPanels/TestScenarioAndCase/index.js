@@ -4,9 +4,16 @@ import testCaseHelper from 'features/project/work/biz/TestCase';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
+import reInCloudService from 'features/project/work/services/reInCloudService';
 import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import { setGraph } from 'features/project/work/slices/workSlice';
-import { FILE_NAME, TEST_CASE_METHOD, TEST_CASE_SHORTCUT, TEST_CASE_SHORTCUT_CODE } from 'features/shared/constants';
+import {
+  FILE_NAME,
+  TEMPLATE_SHORTCUT_CODE,
+  TEST_CASE_METHOD,
+  TEST_CASE_SHORTCUT,
+  TEST_CASE_SHORTCUT_CODE,
+} from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
@@ -67,11 +74,18 @@ class TestScenarioAndCase extends Component {
       this._handleWorkMenuEvents(event);
     });
 
+    eventBus.subscribe(this, domainEvents.REIN_MENU_DOMAINEVENT, (event) => {
+      const { code } = event.message;
+      this._handleShortCutEvents(code);
+    });
+
     TEST_CASE_SHORTCUT.forEach(({ code, shortcutKeys }) => {
-      Mousetrap.bind(shortcutKeys.join('+'), (e) => {
-        e.preventDefault();
-        this._handleShortCutEvents(code);
-      });
+      if (shortcutKeys) {
+        Mousetrap.bind(shortcutKeys.join('+'), (e) => {
+          e.preventDefault();
+          this._handleShortCutEvents(code);
+        });
+      }
     });
 
     this._initData();
@@ -212,6 +226,15 @@ class TestScenarioAndCase extends Component {
       case TEST_CASE_SHORTCUT_CODE.CONTRACTION:
         console.log('CONTRACTION');
         break;
+      case TEST_CASE_SHORTCUT_CODE.EXPORT_TEST_SCENARIO:
+        this._exportTestScenario();
+        break;
+      case TEST_CASE_SHORTCUT_CODE.EXPORT_TEST_CASE:
+        this._exportTestCase();
+        break;
+      case TEMPLATE_SHORTCUT_CODE.UPLOAD_TEST_CASE:
+        this._uploadTestCasesToCloud();
+        break;
       default:
         break;
     }
@@ -283,6 +306,65 @@ class TestScenarioAndCase extends Component {
     });
     const csvFile = arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
     Download(csvFile, FILE_NAME.EXPORT_TEST_CASE.replace('workname', workName), 'text/csv;charset=utf-8');
+  }
+
+  _exportTestScenario() {
+    const { workName, graph } = this.props;
+    const { columns, rows } = this.state;
+    const dataToConvert = [];
+
+    rows.forEach((testScenario) => {
+      dataToConvert.push(this._createExportRowData(testScenario, columns));
+    });
+    const csvFile = arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
+    Download(csvFile, FILE_NAME.EXPORT_TEST_SCENARIO.replace('workname', workName), 'text/csv;charset=utf-8');
+  }
+
+  _createTestCasesFile = () => {
+    const { graph } = this.props;
+    const { columns, rows } = this.state;
+    const dataToConvert = [];
+
+    rows.forEach((testScenario) => {
+      testScenario.testCases.forEach((testCase) => {
+        dataToConvert.push(this._createExportRowData(testCase, columns));
+      });
+    });
+    return arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
+  };
+
+  _exportTestCase() {
+    const { workName } = this.props;
+    const csvFile = this._createTestCasesFile();
+
+    Download(csvFile, FILE_NAME.EXPORT_TEST_CASE.replace('workname', workName), 'text/csv;charset=utf-8');
+  }
+
+  async _uploadTestCasesToCloud() {
+    const alertCloseFunction = alert(Language.get('uploadingtestcase'), {
+      title: Language.get('uploading'),
+      iconClassName: 'bi bi-cloud-arrow-up',
+    });
+    const { workName, match } = this.props;
+    const { workId, projectId } = match.params;
+    const csvFile = new Blob([this._createTestCasesFile()], { type: 'text/csv;charset=UTF-8' });
+    const formData = new FormData();
+
+    formData.append('workId', workId);
+    formData.append('projectId', projectId);
+    console.log(typeof csvFile, csvFile);
+    formData.append('file', csvFile, FILE_NAME.EXPORT_TEST_CASE.replace('workname', workName));
+
+    const result = await reInCloudService.uploadTestCases(formData);
+    alertCloseFunction();
+    if (result.error) {
+      alert(result.error, { title: 'error', iconClassName: 'bi bi-cloud-arrow-up' });
+    } else {
+      alert(Language.get('uploadtestcasesuccess'), {
+        title: Language.get('success'),
+        iconClassName: 'bi bi-cloud-arrow-up',
+      });
+    }
   }
 
   render() {

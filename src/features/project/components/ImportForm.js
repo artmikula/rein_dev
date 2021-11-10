@@ -1,16 +1,13 @@
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
-import React, { useContext } from 'react';
+import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { ModalForm } from '../../shared/components';
 import projectService from '../services/projectService';
-import GlobalContext from '../../../security/GlobalContext';
 
 export default function ImportForm(props) {
   const { isOpenModel, onToggleModal } = props;
   const history = useHistory();
-
-  const context = useContext(GlobalContext);
 
   const formSchema = {
     formTitle: Language.get('importproject'),
@@ -33,11 +30,9 @@ export default function ImportForm(props) {
   };
 
   const _handleSubmit = async (values, { setErrors, setSubmitting }) => {
-    const { getToken } = context;
-    const token = getToken();
     const form = new FormData();
     form.append('file', values?.projectList[0]);
-    const result = await projectService.importAsync(token, form);
+    const result = await projectService.importAsync(form);
     setSubmitting(false);
     if (result.data) {
       history.push(`/projects`);

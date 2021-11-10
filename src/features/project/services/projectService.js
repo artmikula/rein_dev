@@ -34,10 +34,9 @@ class ProjectService {
     }
   }
 
-  async importAsync(token, data) {
+  async importAsync(data) {
     const url = `/project/import`;
     try {
-      restService.setToken(token);
       const response = await restService.postAsync(url, data);
       return restServiceHelper.handleResponse(response);
     } catch (error) {
@@ -55,10 +54,9 @@ class ProjectService {
     }
   }
 
-  async exportAsync(token, id) {
+  async exportAsync(id) {
     const url = `/project/${id}/export`;
     try {
-      restService.setToken(token);
       const response = await restService.postAsync(url);
       return restServiceHelper.handleResponse(response);
     } catch (error) {

@@ -247,9 +247,11 @@ export const TEST_DATA_SHORTCUT = [
 ];
 
 export const TEST_CASE_SHORTCUT_CODE = {
-  EXPORT: 'EXPORT_TEST_CASE',
+  EXPORT: 'EXPORT',
   METHOLOGY: 'METHOLOGY',
   CONTRACTION: 'CONTRACTION',
+  EXPORT_TEST_SCENARIO: 'EXPORT_TEST_SCENARIO',
+  EXPORT_TEST_CASE: 'EXPORT_TEST_CASE',
 };
 
 export const TEST_CASE_SHORTCUT = [
@@ -260,20 +262,24 @@ export const TEST_CASE_SHORTCUT = [
     text: 'contractionhideorview',
     shortcutKeys: [ctrlCode, 'shift', 'c'],
   },
+  { code: TEST_CASE_SHORTCUT_CODE.EXPORT_TEST_SCENARIO, text: 'exporttestscenario' },
+  { code: TEST_CASE_SHORTCUT_CODE.EXPORT_TEST_CASE, text: 'exporttestcase' },
 ];
 
 export const TEMPLATE_SHORTCUT_CODE = {
   SAVE_TEMPLATE: 'SAVE_TEMPLATE',
   LOAD_TEMPLATE: 'LOAD_TEMPLATE',
-  EXPLORER: 'EXPLORER',
+  LIST_OF_TEMPLATE: 'LIST_OF_TEMPLATE',
   IMPORT_META: 'IMPORT_META',
+  UPLOAD_TEST_CASE: 'UPLOAD_TEST_CASE',
 };
 
 export const TEMPLATE_SHORTCUT = [
   { code: TEMPLATE_SHORTCUT_CODE.SAVE_TEMPLATE, text: 'savetemplate' },
   { code: TEMPLATE_SHORTCUT_CODE.LOAD_TEMPLATE, text: 'loadtemplate' },
-  { code: TEMPLATE_SHORTCUT_CODE.EXPLORER, text: 'explorer' },
+  { code: TEMPLATE_SHORTCUT_CODE.LIST_OF_TEMPLATE, text: 'listoftemplate' },
   { code: TEMPLATE_SHORTCUT_CODE.IMPORT_META, text: 'loadmeta' },
+  { code: TEMPLATE_SHORTCUT_CODE.UPLOAD_TEST_CASE, text: 'uploadtestcasetocloud' },
 ];
 
 export const TEST_DATA = {
@@ -325,6 +331,7 @@ export const FILE_NAME = {
   REPORT_WORK: 'ceta_workname_report.pdf',
   EXPORT_TEST_DATA: 'ceta_workname_test_data.csv',
   EXPORT_TEST_CASE: 'ceta_workname_test_case.csv',
+  EXPORT_TEST_SCENARIO: 'ceta_workname_test_scenario.csv',
   GRAPH_IMAGE: 'ceta_workname_graph.png',
 };
 

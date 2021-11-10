@@ -11,14 +11,14 @@ import TemplateLoading from './components/TemplateLoading';
 import TemplateSaving from './components/TemplateSaving';
 import { LOAD_META_PARAM, LOAD_TEMPLATE_PARAM } from './constant';
 
-class TemplateMenu extends Component {
+class ReInMenu extends Component {
   constructor(props) {
     super(props);
     this.fileInputRef = createRef(null);
   }
 
   componentDidMount() {
-    eventBus.subscribe(this, domainEvents.TEMPLATE_MENU_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.REIN_MENU_DOMAINEVENT, (event) => {
       this._handleEvent(event.message);
     });
     this.checkQuery();
@@ -36,7 +36,7 @@ class TemplateMenu extends Component {
       case TEMPLATE_SHORTCUT_CODE.LOAD_TEMPLATE:
         this._loadTemplate();
         break;
-      case TEMPLATE_SHORTCUT_CODE.EXPLORER:
+      case TEMPLATE_SHORTCUT_CODE.LIST_OF_TEMPLATE:
         this._explorer();
         break;
       case TEMPLATE_SHORTCUT_CODE.IMPORT_META:
@@ -108,7 +108,7 @@ class TemplateMenu extends Component {
   };
 
   raiseEvent = (message) => {
-    eventBus.publish(domainEvents.TEMPLATE_MENU_DOMAINEVENT, message);
+    eventBus.publish(domainEvents.REIN_MENU_DOMAINEVENT, message);
   };
 
   hanldeChangeFile = (e) => {
@@ -139,7 +139,7 @@ class TemplateMenu extends Component {
       <>
         <BaseSubMenu
           shortcuts={TEMPLATE_SHORTCUT}
-          domainEvent={domainEvents.TEMPLATE_MENU_DOMAINEVENT}
+          domainEvent={domainEvents.REIN_MENU_DOMAINEVENT}
           className="mh-100"
         />
         <input type="file" onChange={this.hanldeChangeFile} ref={this.fileInputRef} accept=".json,.xml" hidden />
@@ -148,4 +148,4 @@ class TemplateMenu extends Component {
   }
 }
 
-export default withRouter(TemplateMenu);
+export default withRouter(ReInMenu);

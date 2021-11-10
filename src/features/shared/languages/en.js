@@ -205,6 +205,15 @@ const en = {
   loadmeta: 'Load Meta',
   confirmloadmeta: 'Do you want load meta?',
   /* End Template menu */
+  exporttestscenario: 'Export test scenario',
+  exporttestcase: 'Export test case',
+  rein: 'Re:In',
+  listoftemplate: 'List of template',
+  uploadtestcasetocloud: 'Upload test cases to cloud',
+  success: 'Success',
+  uploadtestcasesuccess: 'Upload test cases to cloud successfully.',
+  uploading: 'Uploading',
+  uploadingtestcase: 'Uploading test cases to cloud ...',
 };
 
 export default en;
