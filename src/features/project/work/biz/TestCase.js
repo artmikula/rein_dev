@@ -19,11 +19,8 @@ class TestCase {
       let testCasesOfScenario = [];
       const causeAssertions = testScenarios[i].testAssertions.filter((x) => x.graphNode);
       for (let j = 0; j < causeAssertions.length; j++) {
-        let testDatas = '';
-        const testData = this.testDataService.getTestData(allTestDatas, causeAssertions[j].graphNode.nodeId);
-        if (testData) {
-          testDatas = causeAssertions[j].result ? testData.trueDatas : testData.falseDatas;
-        }
+        const causeAssertion = causeAssertions[j];
+        const testDatas = this.testDataService.getTestData(allTestDatas, causeAssertion);
 
         if (testCasesOfScenario.length > 0) {
           const tmp = [];

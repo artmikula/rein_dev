@@ -128,7 +128,7 @@ class TestDataTable extends Component {
     }
 
     const newTestDatas = TestData.update(testDatas, item, index);
-    this._setTestDatas(newTestDatas);
+    this._setTestDatas(newTestDatas, false);
   };
 
   _handleCauseEffectEvents = (message) => {
@@ -200,6 +200,15 @@ class TestDataTable extends Component {
     }
   };
 
+  _onBlurInputData = () => {
+    const { testDatas } = this.props;
+    this._raiseEvent({
+      action: domainEvents.ACTION.UPDATE,
+      value: { ...testDatas },
+      receivers: [domainEvents.DES.TESTSCENARIOS],
+    });
+  };
+
   render() {
     const { importFormOpen } = this.state;
     const { testDatas } = this.props;
@@ -266,6 +275,7 @@ class TestDataTable extends Component {
                       bsSize="sm"
                       value={data.trueDatas ?? ''}
                       onChange={(e) => this._onTrueFalseDataChange(testIndex, TESTDATA_TYPE.TrueData, e.target.value)}
+                      onBlur={this._onBlurInputData}
                     />
                   </FormGroup>
                 </td>
@@ -277,6 +287,7 @@ class TestDataTable extends Component {
                       bsSize="sm"
                       value={data.falseDatas ?? ''}
                       onChange={(e) => this._onTrueFalseDataChange(testIndex, TESTDATA_TYPE.FalseData, e.target.value)}
+                      onBlur={this._onBlurInputData}
                     />
                   </FormGroup>
                 </td>
