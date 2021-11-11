@@ -65,7 +65,8 @@ export default function ModalForm(props) {
   };
 
   const _handleSubmit = (values, formProps) => {
-    formProps.setSubmitting(true);
+    const { setSubmitting } = formProps;
+    setSubmitting(true);
     props.onSubmit(values, formProps);
   };
 
