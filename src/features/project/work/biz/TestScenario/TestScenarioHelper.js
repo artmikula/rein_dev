@@ -438,10 +438,17 @@ class TestScenarioHelper {
       },
     ];
 
-    const orderdGraphNodes = Enumerable.from(graphNodes)
-      .orderBy((x) => x.nodeId)
+    const orderdCauseNodes = Enumerable.from(graphNodes)
+      .where((x) => x.type === GRAPH_NODE_TYPE.CAUSE)
+      .orderBy((x) => parseInt(x.nodeId.substr(1, x.nodeId.length), 10))
       .toArray();
 
+    const orderdGroupNodes = Enumerable.from(graphNodes)
+      .where((x) => x.type === GRAPH_NODE_TYPE.GROUP)
+      .orderBy((x) => parseInt(x.nodeId.substr(1, x.nodeId.length), 10))
+      .toArray();
+
+    const orderdGraphNodes = orderdCauseNodes.concat(orderdGroupNodes);
     const graphNodeHeaders = orderdGraphNodes.map((x) => {
       return {
         headerName: x.nodeId,
