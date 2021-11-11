@@ -6,6 +6,7 @@ import eventBus from 'features/shared/lib/eventBus';
 import React, { Component, createRef } from 'react';
 import { Router, withRouter } from 'react-router';
 import BaseSubMenu from '../BaseSubMenu';
+import MetaImportation from './components/MetaImportation';
 import TemplateExplorer from './components/TemplateExplorer';
 import TemplateLoading from './components/TemplateLoading';
 import TemplateSaving from './components/TemplateSaving';
@@ -40,7 +41,7 @@ class ReInMenu extends Component {
         this._explorer();
         break;
       case TEMPLATE_SHORTCUT_CODE.IMPORT_META:
-        this._importMeta();
+        this._loadMeta();
         break;
       default:
     }
@@ -88,35 +89,17 @@ class ReInMenu extends Component {
     window.modal(modaProps);
   };
 
-  _importMeta = () => {
-    if (this.fileInputRef) {
-      this.fileInputRef.current.click();
+  _handleLoadMeta = (file) => {
+    if (this.closeLoadMetaModal) {
+      this.closeLoadMetaModal();
+      this.closeLoadMetaModal = null;
     }
-  };
 
-  checkQuery = () => {
-    const { location } = this.props;
-    const queryParams = new URLSearchParams(location.search);
-
-    if (queryParams.has(LOAD_TEMPLATE_PARAM) && queryParams.has(LOAD_META_PARAM)) {
-      this._loadTemplate(true);
-    } else if (queryParams.has(LOAD_TEMPLATE_PARAM)) {
-      this._loadTemplate();
-    } else if (queryParams.has(LOAD_META_PARAM)) {
-      confirm(Language.get('confirmloadmeta'), { yesAction: this._importMeta });
-    }
-  };
-
-  raiseEvent = (message) => {
-    eventBus.publish(domainEvents.REIN_MENU_DOMAINEVENT, message);
-  };
-
-  hanldeChangeFile = (e) => {
-    const self = this;
-    const file = e.target.files[0];
     if (file) {
       const fileName = file.name;
       const ex = fileName.split('.').pop();
+      const self = this;
+
       if (ex.toLowerCase() === 'json') {
         readFileContent(file, (content) => {
           const data = allPropertiesInJSON(content);
@@ -129,21 +112,37 @@ class ReInMenu extends Component {
         });
       }
     }
-    // reset input
-    e.target.type = '';
-    e.target.type = 'file';
+  };
+
+  _loadMeta = () => {
+    const modaProps = {
+      title: Language.get('loadmeta'),
+      content: <MetaImportation onSubmit={this._handleLoadMeta} />,
+      actions: null,
+    };
+    this.closeLoadMetaModal = window.modal(modaProps);
+  };
+
+  checkQuery = () => {
+    const { location } = this.props;
+    const queryParams = new URLSearchParams(location.search);
+
+    if (queryParams.has(LOAD_TEMPLATE_PARAM) && queryParams.has(LOAD_META_PARAM)) {
+      this._loadTemplate(true);
+    } else if (queryParams.has(LOAD_TEMPLATE_PARAM)) {
+      this._loadTemplate();
+    } else if (queryParams.has(LOAD_META_PARAM)) {
+      this._loadMeta();
+    }
+  };
+
+  raiseEvent = (message) => {
+    eventBus.publish(domainEvents.REIN_MENU_DOMAINEVENT, message);
   };
 
   render() {
     return (
-      <>
-        <BaseSubMenu
-          shortcuts={TEMPLATE_SHORTCUT}
-          domainEvent={domainEvents.REIN_MENU_DOMAINEVENT}
-          className="mh-100"
-        />
-        <input type="file" onChange={this.hanldeChangeFile} ref={this.fileInputRef} accept=".json,.xml" hidden />
-      </>
+      <BaseSubMenu shortcuts={TEMPLATE_SHORTCUT} domainEvent={domainEvents.REIN_MENU_DOMAINEVENT} className="mh-100" />
     );
   }
 }
