@@ -5,10 +5,15 @@ import Alert from './AlertComponent';
 let index = 0;
 
 const _close = (alertId, containerId) => {
-  const alertElement = document.getElementsByClassName(alertId)[0].parentNode;
-  document.body.removeChild(alertElement);
+  const alertElement = document.getElementsByClassName(alertId)[0];
+  if (alertElement) {
+    document.body.removeChild(alertElement.parentNode);
+  }
+
   const containerElement = document.getElementById(containerId);
-  document.body.removeChild(containerElement);
+  if (containerElement) {
+    document.body.removeChild(containerElement);
+  }
 };
 
 export default function alert(content, options = {}) {

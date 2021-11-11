@@ -5,10 +5,15 @@ import CustomModal from './CustomModal';
 let index = 0;
 
 const _close = (modalId, containerId) => {
-  const alertElement = document.getElementsByClassName(modalId)[0].parentNode;
-  document.body.removeChild(alertElement);
+  const modalElement = document.getElementsByClassName(modalId)[0];
+  if (modalElement) {
+    document.body.removeChild(modalElement.parentNode);
+  }
+
   const containerElement = document.getElementById(containerId);
-  document.body.removeChild(containerElement);
+  if (containerElement) {
+    document.body.removeChild(containerElement);
+  }
 };
 
 export default function modal(props) {
