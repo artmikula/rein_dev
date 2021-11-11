@@ -359,7 +359,6 @@ class TestScenarioAndCase extends Component {
 
     formData.append('workId', workId);
     formData.append('projectId', projectId);
-    console.log(typeof csvFile, csvFile);
     formData.append('file', csvFile, FILE_NAME.EXPORT_TEST_CASE.replace('workname', workName));
 
     const result = await reInCloudService.uploadTestCases(formData);
