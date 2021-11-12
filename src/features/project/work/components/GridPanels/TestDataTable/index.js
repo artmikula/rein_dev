@@ -13,6 +13,7 @@ import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
+import Enumerable from 'linq';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -97,8 +98,9 @@ class TestDataTable extends Component {
     this._setTestDatas(TestData.remove(testDatas, item), false);
   };
 
-  _updateData = (index, type, strength = 1) => {
+  _updateData = (nodeId, type, strength = 1) => {
     const { testDatas } = this.props;
+    const index = testDatas.findIndex((x) => x.nodeId === nodeId);
     const item = { ...testDatas[index] };
     const strengthCase = appConfig.testData[type].find((x) => x.intensity === strength);
 
@@ -112,8 +114,9 @@ class TestDataTable extends Component {
     this._setTestDatas(newTestDatas);
   };
 
-  _onTrueFalseDataChange = async (index, valueType, value) => {
+  _onTrueFalseDataChange = async (nodeId, valueType, value) => {
     const { testDatas } = this.props;
+    const index = testDatas.findIndex((x) => x.nodeId === nodeId);
     const item = { ...testDatas[index] };
 
     switch (valueType) {
@@ -128,7 +131,7 @@ class TestDataTable extends Component {
     }
 
     const newTestDatas = TestData.update(testDatas, item, index);
-    this._setTestDatas(newTestDatas);
+    this._setTestDatas(newTestDatas, false);
   };
 
   _handleCauseEffectEvents = (message) => {
@@ -200,11 +203,24 @@ class TestDataTable extends Component {
     }
   };
 
+  _onBlurInputData = () => {
+    const { testDatas } = this.props;
+    this._raiseEvent({
+      action: domainEvents.ACTION.UPDATE,
+      value: { ...testDatas },
+      receivers: [domainEvents.DES.TESTSCENARIOS],
+    });
+  };
+
   render() {
     const { importFormOpen } = this.state;
     const { testDatas } = this.props;
     const { match } = this.props;
     const { projectId, workId } = match.params;
+
+    const orderedTestDatas = Enumerable.from(testDatas)
+      .orderBy((x) => parseInt(x.nodeId.substr(1, x.nodeId.length), 10))
+      .toArray();
 
     return (
       <>
@@ -219,8 +235,8 @@ class TestDataTable extends Component {
             </tr>
           </thead>
           <tbody>
-            {testDatas.map((data, testIndex) => (
-              <tr key={testIndex}>
+            {orderedTestDatas.map((data) => (
+              <tr key={data.nodeId}>
                 <td className="bg-light-gray">{data.nodeId}</td>
                 <td className="position-relative p-0 test-data-type">
                   <FormGroup className="test-data-input">
@@ -229,7 +245,7 @@ class TestDataTable extends Component {
                       name="type"
                       bsSize="sm"
                       value={data.type}
-                      onChange={(e) => this._updateData(testIndex, e.target.value)}
+                      onChange={(e) => this._updateData(data.nodeId, e.target.value)}
                     >
                       {Object.keys(appConfig.testData).map((type, index) => (
                         <option key={index} value={type}>
@@ -247,7 +263,7 @@ class TestDataTable extends Component {
                         name="strength"
                         bsSize="sm"
                         value={data.strength}
-                        onChange={(e) => this._updateData(testIndex, data.type, parseInt(e.target.value, 10))}
+                        onChange={(e) => this._updateData(data.nodeId, data.type, parseInt(e.target.value, 10))}
                       >
                         {appConfig.testData[data.type].map((item, index) => (
                           <option key={index} value={item.intensity}>
@@ -265,7 +281,8 @@ class TestDataTable extends Component {
                       name="strength"
                       bsSize="sm"
                       value={data.trueDatas ?? ''}
-                      onChange={(e) => this._onTrueFalseDataChange(testIndex, TESTDATA_TYPE.TrueData, e.target.value)}
+                      onChange={(e) => this._onTrueFalseDataChange(data.nodeId, TESTDATA_TYPE.TrueData, e.target.value)}
+                      onBlur={this._onBlurInputData}
                     />
                   </FormGroup>
                 </td>
@@ -276,7 +293,10 @@ class TestDataTable extends Component {
                       name="strength"
                       bsSize="sm"
                       value={data.falseDatas ?? ''}
-                      onChange={(e) => this._onTrueFalseDataChange(testIndex, TESTDATA_TYPE.FalseData, e.target.value)}
+                      onChange={(e) =>
+                        this._onTrueFalseDataChange(data.nodeId, TESTDATA_TYPE.FalseData, e.target.value)
+                      }
+                      onBlur={this._onBlurInputData}
                     />
                   </FormGroup>
                 </td>

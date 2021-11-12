@@ -146,39 +146,46 @@ class TestScenarioAndCase extends Component {
       scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
     }
 
-    const testCases = testCaseHelper.updateTestCase(scenarioAndGraphNodes.scenarios, testDatas, graph.graphNodes);
-
-    this._setColumnsAndRows(testCases, scenarioAndGraphNodes.scenarios, scenarioAndGraphNodes.graphNodes);
-
-    const newTestScenariosAndCases = scenarioAndGraphNodes.scenarios.map((x) => {
+    const newTestScenarios = scenarioAndGraphNodes.scenarios.map((x) => {
       const scenario = {
         ...x,
         testAssertions: x.testAssertions.map((y) => {
-          const assertion = {
+          const graphNode = graph.graphNodes.find((x) => x.id === y.graphNode.id);
+          return {
             ...y,
             result: y.result,
             graphNodeId: y.graphNode.id,
-            graphNode: y.graphNode,
+            graphNode,
             workId,
           };
-          return assertion;
         }),
         testResults: x.testResults.map((y) => {
-          const testResult = {
+          return {
             ...y,
             workId,
           };
-          return testResult;
         }),
+      };
+
+      return scenario;
+    });
+
+    const newGraphNodes = scenarioAndGraphNodes.graphNodes;
+
+    const testCases = testCaseHelper.updateTestCase(newTestScenarios, testDatas, newGraphNodes);
+
+    this._setColumnsAndRows(testCases, newTestScenarios, newGraphNodes);
+
+    const newTestScenariosAndCases = newTestScenarios.map((x) => {
+      const scenario = {
+        ...x,
         testCases: testCases
           .filter((e) => e.testScenarioId === x.id)
           .map((y) => {
-            const testCase = {
+            return {
               ...y,
               workId,
             };
-
-            return testCase;
           }),
       };
 
@@ -186,11 +193,11 @@ class TestScenarioAndCase extends Component {
     });
 
     testScenarioAnsCaseStorage.set(newTestScenariosAndCases);
-    setGraph({ ...graph, graphNodes: scenarioAndGraphNodes.graphNodes });
+    setGraph({ ...graph, graphNodes: newGraphNodes });
 
     this._raiseEvent({
       action: domainAction,
-      value: scenarioAndGraphNodes.graphNodes,
+      value: newGraphNodes,
       receivers: [domainEvents.DES.GRAPH, domainEvents.DES.SSMETRIC],
     });
   };
@@ -352,7 +359,6 @@ class TestScenarioAndCase extends Component {
 
     formData.append('workId', workId);
     formData.append('projectId', projectId);
-    console.log(typeof csvFile, csvFile);
     formData.append('file', csvFile, FILE_NAME.EXPORT_TEST_CASE.replace('workname', workName));
 
     const result = await reInCloudService.uploadTestCases(formData);

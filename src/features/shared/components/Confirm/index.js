@@ -5,10 +5,15 @@ import ConfirmComponent from './ConfirmComponent';
 let index = 0;
 
 const _close = (confirmId, containerId) => {
-  const alertElement = document.getElementsByClassName(confirmId)[0].parentNode;
-  document.body.removeChild(alertElement);
+  const confirmElement = document.getElementsByClassName(confirmId)[0];
+  if (confirmElement) {
+    document.body.removeChild(confirmElement.parentNode);
+  }
+
   const containerElement = document.getElementById(containerId);
-  document.body.removeChild(containerElement);
+  if (containerElement) {
+    document.body.removeChild(containerElement);
+  }
 };
 
 export default function confirm(content, options = {}) {

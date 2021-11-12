@@ -34,8 +34,12 @@ class TestData {
     return _testDatas;
   }
 
-  getTestData(testDatas, nodeId) {
-    return testDatas.find((x) => x.nodeId === nodeId);
+  getTestData(testDatas, assertion) {
+    const testData = testDatas.find((x) => x.nodeId === assertion.graphNode.nodeId);
+    if (testData) {
+      return assertion.result ? testData.trueDatas : testData.falseDatas;
+    }
+    return '';
   }
 }
 export default new TestData();

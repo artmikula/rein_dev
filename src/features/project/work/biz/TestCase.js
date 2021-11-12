@@ -1,29 +1,17 @@
 /* eslint-disable no-loop-func */
 import { CLASSIFY, RESULT_TYPE } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
-import TestData from './TestData';
+import testDataService from './TestData';
 
 class TestCase {
-  constructor() {
-    this.allTestDatas = [];
-    this.graphNodes = [];
-    this.testDataService = TestData;
-  }
-
   updateTestCase(testScenarios = [], allTestDatas = [], graphNodes) {
-    this.allTestDatas = allTestDatas;
-    this.graphNodes = graphNodes;
-
     const totalTCs = [];
     for (let i = 0; i < testScenarios.length; i++) {
       let testCasesOfScenario = [];
       const causeAssertions = testScenarios[i].testAssertions.filter((x) => x.graphNode);
       for (let j = 0; j < causeAssertions.length; j++) {
-        let testDatas = '';
-        const testData = this.testDataService.getTestData(allTestDatas, causeAssertions[j].graphNode.nodeId);
-        if (testData) {
-          testDatas = causeAssertions[j].result ? testData.trueDatas : testData.falseDatas;
-        }
+        const causeAssertion = causeAssertions[j];
+        const testDatas = testDataService.getTestData(allTestDatas, causeAssertion, graphNodes);
 
         if (testCasesOfScenario.length > 0) {
           const tmp = [];
@@ -56,9 +44,9 @@ class TestCase {
             const { testResults } = testScenarios[i];
             for (let k = 0; k < testResults.length; k++) {
               if (testResults[k].type === RESULT_TYPE.False) {
-                newCase.results.push(`NOT(${this._getDesciptionOfGraphNode(testResults[k].graphNodeId)})`);
+                newCase.results.push(`NOT(${this._getDesciptionOfGraphNode(graphNodes, testResults[k].graphNodeId)})`);
               } else {
-                newCase.results.push(this._getDesciptionOfGraphNode(testResults[k].graphNodeId));
+                newCase.results.push(this._getDesciptionOfGraphNode(graphNodes, testResults[k].graphNodeId));
               }
             }
             testCasesOfScenario.push(newCase);
@@ -72,8 +60,8 @@ class TestCase {
     return totalTCs;
   }
 
-  _getDesciptionOfGraphNode(graphNodeId) {
-    const graphNode = this.graphNodes.find((x) => x.id === graphNodeId);
+  _getDesciptionOfGraphNode(graphNodes, graphNodeId) {
+    const graphNode = graphNodes.find((x) => x.id === graphNodeId);
 
     return graphNode ? graphNode.definition : '';
   }
