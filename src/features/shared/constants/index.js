@@ -275,9 +275,7 @@ export const TEMPLATE_SHORTCUT_CODE = {
 };
 
 export const TEMPLATE_SHORTCUT = [
-  { code: TEMPLATE_SHORTCUT_CODE.SAVE_TEMPLATE, text: 'savetemplate' },
-  { code: TEMPLATE_SHORTCUT_CODE.LOAD_TEMPLATE, text: 'loadtemplate' },
-  { code: TEMPLATE_SHORTCUT_CODE.LIST_OF_TEMPLATE, text: 'listoftemplate' },
+  { code: TEMPLATE_SHORTCUT_CODE.SAVE_TEMPLATE, text: 'inspectiontemplates' },
   { code: TEMPLATE_SHORTCUT_CODE.IMPORT_META, text: 'loadmeta' },
   { code: TEMPLATE_SHORTCUT_CODE.UPLOAD_TEST_CASE, text: 'uploadtestcasetocloud' },
 ];

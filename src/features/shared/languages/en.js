@@ -199,8 +199,7 @@ const en = {
   /* End Logout successfullly */
   /* Template menu */
   template: 'Template',
-  savetemplate: 'Save Work as Template',
-  loadtemplate: 'Load Template to current Work',
+  inspectiontemplates: 'Inspection Templates',
   templatename: 'Template name',
   loadmeta: 'Load Meta',
   confirmloadmeta: 'Do you want load meta?',

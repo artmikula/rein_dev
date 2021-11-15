@@ -7,8 +7,6 @@ import React, { Component, createRef } from 'react';
 import { Router, withRouter } from 'react-router';
 import BaseSubMenu from '../BaseSubMenu';
 import MetaImportation from './components/MetaImportation';
-import TemplateExplorer from './components/TemplateExplorer';
-import TemplateLoading from './components/TemplateLoading';
 import TemplateSaving from './components/TemplateSaving';
 import { LOAD_META_PARAM, LOAD_TEMPLATE_PARAM } from './constant';
 
@@ -50,38 +48,10 @@ class ReInMenu extends Component {
   _saveTemplate = () => {
     const { history, match } = this.props;
     const modaProps = {
-      title: Language.get('savetemplate'),
+      title: Language.get('inspectiontemplates'),
       content: (
         <Router history={history}>
           <TemplateSaving projectId={match.params.projectId} workId={match.params.workId} />
-        </Router>
-      ),
-      actions: null,
-    };
-    window.modal(modaProps);
-  };
-
-  _loadTemplate = (isLoadMeta) => {
-    const { history, match } = this.props;
-    const modaProps = {
-      title: Language.get('loadtemplate'),
-      content: (
-        <Router history={history}>
-          <TemplateLoading projectId={match.params.projectId} workId={match.params.workId} isLoadMeta={isLoadMeta} />
-        </Router>
-      ),
-      actions: null,
-    };
-    window.modal(modaProps);
-  };
-
-  _explorer = () => {
-    const { history, match } = this.props;
-    const modaProps = {
-      title: Language.get('explorer'),
-      content: (
-        <Router history={history}>
-          <TemplateExplorer projectId={match.params.projectId} workId={match.params.workId} />
         </Router>
       ),
       actions: null,
