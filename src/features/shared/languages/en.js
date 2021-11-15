@@ -213,6 +213,9 @@ const en = {
   uploadtestcasesuccess: 'Upload test cases to cloud successfully.',
   uploading: 'Uploading',
   uploadingtestcase: 'Uploading test cases to cloud ...',
+  createnewtemplate: 'Create new Template',
+  newtemplatename: 'New Template name',
+  create: 'Create',
 };
 
 export default en;

@@ -7,7 +7,7 @@ import React, { Component, createRef } from 'react';
 import { Router, withRouter } from 'react-router';
 import BaseSubMenu from '../BaseSubMenu';
 import MetaImportation from './components/MetaImportation';
-import TemplateSaving from './components/TemplateSaving';
+import InspectionTemplate from './components/InspectionTemplate';
 import { LOAD_META_PARAM, LOAD_TEMPLATE_PARAM } from './constant';
 
 class ReInMenu extends Component {
@@ -51,7 +51,7 @@ class ReInMenu extends Component {
       title: Language.get('inspectiontemplates'),
       content: (
         <Router history={history}>
-          <TemplateSaving projectId={match.params.projectId} workId={match.params.workId} />
+          <InspectionTemplate projectId={match.params.projectId} workId={match.params.workId} />
         </Router>
       ),
       actions: null,
