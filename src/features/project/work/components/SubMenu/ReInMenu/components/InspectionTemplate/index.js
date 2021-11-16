@@ -1,20 +1,9 @@
+import templateService from 'features/project/work/services/templateService';
 import Language from 'features/shared/languages/Language';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, FormGroup, Input, Label } from 'reactstrap';
+import { v4 as uuidv4 } from 'uuid';
 import List from '../List';
-
-const templates = [
-  { id: '1', name: 'Template 1' },
-  { id: '2', name: 'Template 2' },
-  { id: '3', name: 'Template 3' },
-  { id: '4', name: 'Template 4' },
-  { id: '5', name: 'Template 5' },
-  { id: '6', name: 'Template 6' },
-  { id: '7', name: 'Template 7' },
-  { id: '8', name: 'Template 8' },
-  { id: '9', name: 'Template 9' },
-  { id: '10', name: 'Template 10' },
-];
 
 const rules = [
   { code: '1', name: 'Rule A' },
@@ -29,15 +18,18 @@ const rules = [
   { code: '10', name: 'Rule J' },
 ];
 
-export default function InspectionTemplate({ projectId, workId }) {
-  const [state, setState] = useState({
-    inspectionTemplates: [...templates],
-    ruleSet: [...rules],
-    selectedRuleKeys: {},
-    selectedTemplateIds: {},
-  });
-
-  const { inspectionTemplates, ruleSet, selectedRuleKeys, selectedTemplateIds } = state;
+export default function InspectionTemplate({
+  projectId,
+  workId,
+  workInspectionTemplates,
+  setInspectionTemplates,
+  modalProps,
+}) {
+  const [templates, setTemplates] = useState([]);
+  const [ruleSet, setRuleSet] = useState([...rules]);
+  const [selectedRuleKeys, setSelectedRuleKeys] = useState({});
+  const [selectedTemplateIds, setSelectedTemplateIds] = useState({});
+  const [templateName, setTemplateName] = useState('');
 
   const onSelectTemplate = (id) => {
     if (selectedTemplateIds[id]) {
@@ -45,7 +37,16 @@ export default function InspectionTemplate({ projectId, workId }) {
     } else {
       selectedTemplateIds[id] = true;
     }
-    setState({ ...state });
+    const rules = {};
+    templates
+      .filter((x) => selectedTemplateIds[x.id])
+      .forEach((x) =>
+        x.ruleSet.split(',').forEach((x) => {
+          rules[x] = true;
+        })
+      );
+    setSelectedTemplateIds({ ...selectedTemplateIds });
+    setSelectedRuleKeys(rules);
   };
 
   const onSelectRuleSet = (code) => {
@@ -54,10 +55,23 @@ export default function InspectionTemplate({ projectId, workId }) {
     } else {
       selectedRuleKeys[code] = true;
     }
-    setState({ ...state });
+    setSelectedRuleKeys({ ...selectedRuleKeys });
   };
 
-  const handleSave = () => {};
+  const handleSave = () => {
+    setInspectionTemplates(templates.filter((x) => selectedTemplateIds[x.id]));
+  };
+
+  const handleChangeTemplateName = (e) => setTemplateName(e.target.value);
+
+  const handleCreate = async () => {
+    const template = { id: uuidv4(), name: templateName.trim(), ruleSet: Object.keys(selectedRuleKeys).join(',') };
+    const result = await templateService.createAsync(template);
+    if (result.data) {
+      setTemplateName('');
+      setTemplates([...templates, template]);
+    }
+  };
 
   const getTemplateLabel = (item) => item.name;
 
@@ -71,14 +85,45 @@ export default function InspectionTemplate({ projectId, workId }) {
 
   const getRuleSelected = (item) => selectedRuleKeys[item.code];
 
+  const getTemplates = async () => {
+    const result = await templateService.listAsync();
+    if (result.data) {
+      setTemplates(result.data);
+    }
+  };
+
+  useEffect(() => {
+    getTemplates();
+  }, []);
+
+  useEffect(() => {
+    const templateIds = {};
+    const rules = {};
+    workInspectionTemplates.forEach((x) => {
+      templateIds[x.id] = true;
+      x.ruleSet.split(',').forEach((y) => {
+        rules[y] = true;
+      });
+    });
+    setSelectedTemplateIds(templateIds);
+    setSelectedRuleKeys(rules);
+  }, workInspectionTemplates);
+
+  const canCreate = Object.keys(selectedRuleKeys).length > 0 && templateName.trim().length > 0;
+  const canSave =
+    workInspectionTemplates.length !== Object.keys(selectedTemplateIds).length ||
+    workInspectionTemplates.some((x) => !selectedTemplateIds[x.id]);
+
   return (
     <div>
       <div className="list-border-color d-flex m-2 border">
-        <div className="w-50">
-          <p className="list-border-color border-bottom p-2 mb-0">Inspection Templates</p>
-          <div className="p-2">
+        <div className="w-50 d-flex flex-column">
+          <p className="list-border-color border-bottom p-2 mb-0" style={{ fontWeight: 500 }}>
+            Inspection Templates
+          </p>
+          <div className="p-2 flex-grow-1" style={{ overflowY: 'auto', height: '372px' }}>
             <List
-              data={inspectionTemplates}
+              data={templates}
               selectedTemplateIds={selectedTemplateIds}
               onSelect={onSelectTemplate}
               getLabel={getTemplateLabel}
@@ -89,8 +134,10 @@ export default function InspectionTemplate({ projectId, workId }) {
           </div>
         </div>
         <div className="list-border-color w-50 border-left d-flex flex-column">
-          <p className="list-border-color border-bottom p-2 mb-0">Inspection Rules</p>
-          <div className="p-2 flex-grow-1">
+          <p className="list-border-color border-bottom p-2 mb-0" style={{ fontWeight: 500 }}>
+            Inspection Rules
+          </p>
+          <div className="p-2 flex-grow-1 overflow-auto" style={{ height: '300px' }}>
             <List
               data={ruleSet}
               selectedRuleKeys={selectedRuleKeys}
@@ -107,8 +154,15 @@ export default function InspectionTemplate({ projectId, workId }) {
                 {Language.get('createnewtemplate')}
               </Label>
               <div className="d-flex">
-                <Input type="text" id="template-name" placeholder={Language.get('newtemplatname')} bsSize="sm" />
-                <Button className="ml-2" size="sm">
+                <Input
+                  type="text"
+                  id="template-name"
+                  placeholder={Language.get('newtemplatename')}
+                  bsSize="sm"
+                  value={templateName}
+                  onChange={handleChangeTemplateName}
+                />
+                <Button className="ml-2" size="sm" disabled={!canCreate} onClick={handleCreate}>
                   {Language.get('create')}
                 </Button>
               </div>
@@ -117,10 +171,10 @@ export default function InspectionTemplate({ projectId, workId }) {
         </div>
       </div>
       <div className="d-flex justify-content-end m-2">
-        <Button size="sm" color="primary" onClick={handleSave}>
+        <Button size="sm" color="primary" onClick={handleSave} disabled={!canSave}>
           {Language.get('save')}
         </Button>
-        <Button size="sm" onClick={handleSave} className="ml-3">
+        <Button size="sm" onClick={modalProps.onClose} className="ml-3">
           {Language.get('cancel')}
         </Button>
       </div>

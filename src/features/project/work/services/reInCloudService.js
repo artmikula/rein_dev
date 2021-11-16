@@ -15,7 +15,8 @@ class ReInCloudService {
         Authorization: `Bearer ${token}`,
         ...customHeader,
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*',
       },
     };
   };

@@ -1,13 +1,15 @@
 import { allPropertiesInJSON, allTagsInXML, readFileContent } from 'features/project/work/biz/Template';
+import { setInspectionTemplates } from 'features/project/work/slices/workSlice';
 import { TEMPLATE_SHORTCUT, TEMPLATE_SHORTCUT_CODE } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import React, { Component, createRef } from 'react';
+import { connect } from 'react-redux';
 import { Router, withRouter } from 'react-router';
 import BaseSubMenu from '../BaseSubMenu';
-import MetaImportation from './components/MetaImportation';
 import InspectionTemplate from './components/InspectionTemplate';
+import MetaImportation from './components/MetaImportation';
 import { LOAD_META_PARAM, LOAD_TEMPLATE_PARAM } from './constant';
 
 class ReInMenu extends Component {
@@ -46,17 +48,24 @@ class ReInMenu extends Component {
   };
 
   _saveTemplate = () => {
-    const { history, match } = this.props;
+    const { history, match, workInspectionTemplates, setInspectionTemplates } = this.props;
+    const modalProps = { onClose: null };
     const modaProps = {
       title: Language.get('inspectiontemplates'),
       content: (
         <Router history={history}>
-          <InspectionTemplate projectId={match.params.projectId} workId={match.params.workId} />
+          <InspectionTemplate
+            projectId={match.params.projectId}
+            workId={match.params.workId}
+            workInspectionTemplates={workInspectionTemplates}
+            setInspectionTemplates={setInspectionTemplates}
+            modalProps={modalProps}
+          />
         </Router>
       ),
       actions: null,
     };
-    window.modal(modaProps);
+    modalProps.onClose = window.modal(modaProps);
   };
 
   _handleLoadMeta = (file) => {
@@ -117,4 +126,7 @@ class ReInMenu extends Component {
   }
 }
 
-export default withRouter(ReInMenu);
+const mapStateToProps = (state) => ({ workInspectionTemplates: state.work.inspectionTemplates });
+const mapDispatchToProps = { setInspectionTemplates };
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(ReInMenu));

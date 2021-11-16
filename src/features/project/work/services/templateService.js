@@ -1,35 +1,63 @@
-import restServiceHelper from 'features/shared/lib/restServiceHelper';
-import restService from 'features/shared/services/restService';
+const templates = [
+  { id: '0', name: 'Default', ruleSet: '1,2,3,5' },
+  { id: '1', name: 'Template 1', ruleSet: '1,2,3' },
+  { id: '2', name: 'Template 2', ruleSet: '1,2,3,5,6' },
+  { id: '3', name: 'Template 3', ruleSet: '1,2,3,7,8' },
+  { id: '4', name: 'Template 4', ruleSet: '7,8,9' },
+  { id: '5', name: 'Template 5', ruleSet: '1,2,3,5,6,7' },
+  { id: '6', name: 'Template 6', ruleSet: '3,6,9' },
+  { id: '7', name: 'Template 7', ruleSet: '1,2' },
+  { id: '8', name: 'Template 8', ruleSet: '4,5,6,7,8,9' },
+  { id: '9', name: 'Template 9', ruleSet: '1,2,3,4,5,6,7,8,9' },
+  { id: '10', name: 'Template 10', ruleSet: '1,3,5,7,9' },
+];
 
 class TemPlateService {
-  createAsync = (projectId, workId, data) => {
-    const url = `/re-in/template/${projectId}/${workId}`;
+  constructor() {
+    this._key = 'inspection_template';
+  }
 
-    return restServiceHelper.requestAsync(restService.postAsync(url, data));
+  _get = () => {
+    const data = localStorage.getItem(this._key);
+    if (data) {
+      return JSON.parse(data);
+    }
+
+    return templates;
   };
 
-  loadTemplate = (projectId, workId, templateId) => {
-    const url = `/re-in/template/${templateId}/${projectId}/${workId}/import`;
-
-    return restServiceHelper.requestAsync(restService.postAsync(url));
+  _set = (data) => {
+    localStorage.setItem(this._key, JSON.stringify(data));
   };
 
-  updateAsync = (projectId, workId, data) => {
-    const url = `/re-in/template/${data.id}/${projectId}/${workId}`;
+  createAsync = async (item) => {
+    const data = this._get();
+    this._set([...data, item]);
 
-    return restServiceHelper.requestAsync(restService.putAsync(url, data));
+    return { data: true };
   };
 
-  deleteAsync = (templateId) => {
-    const url = `/re-in/template/${templateId}`;
+  updateAsync = async (item) => {
+    const data = this._get();
+    const index = data.findIndex((x) => x.id === item.id);
+    if (index) {
+      data[index] = { ...item };
+      this._set(data);
+    }
 
-    return restServiceHelper.requestAsync(restService.deleteAsync(url));
+    return { data: true };
   };
 
-  listAsync = (page = 1, pageSize = 10, filter = '') => {
-    const url = `/re-in/template?page=${page}&pageSize=${pageSize}&filter=${filter}`;
+  deleteAsync = async (templateId) => {
+    const data = this._get();
+    this._set(data.filter((x) => x.id !== templateId));
 
-    return restServiceHelper.requestAsync(restService.getAsync(url));
+    return { data: true };
+  };
+
+  listAsync = async () => {
+    const data = this._get();
+    return { data };
   };
 }
 

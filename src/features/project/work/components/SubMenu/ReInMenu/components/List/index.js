@@ -4,7 +4,7 @@ import ListItem from '../ListItem';
 
 function List({ data, getValue, getLabel, getSelected, onSelect, getKey }) {
   return (
-    <div style={{ height: '300px' }} className="overflow-auto">
+    <div>
       {data.map((item) => {
         return (
           <ListItem
