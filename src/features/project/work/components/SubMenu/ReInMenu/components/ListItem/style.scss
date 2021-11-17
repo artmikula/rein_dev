@@ -1,0 +1,16 @@
+.list-item {
+  height: 28px;
+
+  & button {
+    display: none;
+  }
+
+  &:hover {
+    background-color: lightgray;
+    cursor: pointer;
+  }
+
+  &:hover .icon-btn {
+    display: block;
+  }
+}

@@ -31,25 +31,29 @@ export default function InspectionTemplate({
   const [selectedTemplateIds, setSelectedTemplateIds] = useState({});
   const [templateName, setTemplateName] = useState('');
 
-  const onSelectTemplate = (id) => {
+  const getSelectedRuleKeys = (templates) => {
+    const rules = {};
+    templates.forEach((x) =>
+      x.ruleSet.split(',').forEach((x) => {
+        rules[x] = true;
+      })
+    );
+
+    return rules;
+  };
+
+  const handleSelectTemplate = (id) => {
     if (selectedTemplateIds[id]) {
       delete selectedTemplateIds[id];
     } else {
       selectedTemplateIds[id] = true;
     }
-    const rules = {};
-    templates
-      .filter((x) => selectedTemplateIds[x.id])
-      .forEach((x) =>
-        x.ruleSet.split(',').forEach((x) => {
-          rules[x] = true;
-        })
-      );
+
     setSelectedTemplateIds({ ...selectedTemplateIds });
-    setSelectedRuleKeys(rules);
+    setSelectedRuleKeys(getSelectedRuleKeys(templates.filter((x) => selectedTemplateIds[x.id])));
   };
 
-  const onSelectRuleSet = (code) => {
+  const handleSelectRuleSet = (code) => {
     if (selectedRuleKeys[code]) {
       delete selectedRuleKeys[code];
     } else {
@@ -92,21 +96,31 @@ export default function InspectionTemplate({
     }
   };
 
+  const deleteTemplate = (id) => {
+    delete selectedTemplateIds[id];
+    const newTemplates = templates.filter((x) => x.id !== id);
+
+    setTemplates(newTemplates);
+    setInspectionTemplates(newTemplates);
+    setSelectedRuleKeys(getSelectedRuleKeys(templates.filter((x) => selectedTemplateIds[x.id])));
+  };
+
+  const handleDeleteTemplate = (id) => {
+    confirm(undefined, { title: 'Delete confirm', yesAction: () => deleteTemplate(id) });
+  };
+
   useEffect(() => {
     getTemplates();
   }, []);
 
   useEffect(() => {
     const templateIds = {};
-    const rules = {};
     workInspectionTemplates.forEach((x) => {
       templateIds[x.id] = true;
-      x.ruleSet.split(',').forEach((y) => {
-        rules[y] = true;
-      });
     });
+
     setSelectedTemplateIds(templateIds);
-    setSelectedRuleKeys(rules);
+    setSelectedRuleKeys(getSelectedRuleKeys(workInspectionTemplates));
   }, workInspectionTemplates);
 
   const canCreate = Object.keys(selectedRuleKeys).length > 0 && templateName.trim().length > 0;
@@ -121,15 +135,17 @@ export default function InspectionTemplate({
           <p className="list-border-color border-bottom p-2 mb-0" style={{ fontWeight: 500 }}>
             Inspection Templates
           </p>
-          <div className="p-2 flex-grow-1" style={{ overflowY: 'auto', height: '372px' }}>
+          <div className="flex-grow-1" style={{ overflowY: 'auto', height: '372px' }}>
             <List
               data={templates}
               selectedTemplateIds={selectedTemplateIds}
-              onSelect={onSelectTemplate}
+              onSelect={handleSelectTemplate}
               getLabel={getTemplateLabel}
               getValue={getTemplateValue}
               getSelected={getTemplateSelected}
               getKey={getTemplateValue}
+              onDelete={handleDeleteTemplate}
+              removable
             />
           </div>
         </div>
@@ -137,11 +153,11 @@ export default function InspectionTemplate({
           <p className="list-border-color border-bottom p-2 mb-0" style={{ fontWeight: 500 }}>
             Inspection Rules
           </p>
-          <div className="p-2 flex-grow-1 overflow-auto" style={{ height: '300px' }}>
+          <div className="flex-grow-1 overflow-auto" style={{ height: '300px' }}>
             <List
               data={ruleSet}
               selectedRuleKeys={selectedRuleKeys}
-              onSelect={onSelectRuleSet}
+              onSelect={handleSelectRuleSet}
               getLabel={getRuleLabel}
               getValue={getRuleValue}
               getSelected={getRuleSelected}
