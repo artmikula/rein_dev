@@ -266,18 +266,18 @@ export const TEST_CASE_SHORTCUT = [
   { code: TEST_CASE_SHORTCUT_CODE.EXPORT_TEST_CASE, text: 'exporttestcase' },
 ];
 
-export const TEMPLATE_SHORTCUT_CODE = {
-  SAVE_TEMPLATE: 'SAVE_TEMPLATE',
-  LOAD_TEMPLATE: 'LOAD_TEMPLATE',
-  LIST_OF_TEMPLATE: 'LIST_OF_TEMPLATE',
+export const REIN_SHORTCUT_CODE = {
+  CHOOSE_TEMPLATE: 'CHOOSE_TEMPLATE',
+  CREATE_UPDATE_TEMPLATE: 'CREATE_UPDATE_TEMPLATE',
   IMPORT_META: 'IMPORT_META',
   UPLOAD_TEST_CASE: 'UPLOAD_TEST_CASE',
 };
 
 export const TEMPLATE_SHORTCUT = [
-  { code: TEMPLATE_SHORTCUT_CODE.SAVE_TEMPLATE, text: 'inspectiontemplates' },
-  { code: TEMPLATE_SHORTCUT_CODE.IMPORT_META, text: 'loadmeta' },
-  { code: TEMPLATE_SHORTCUT_CODE.UPLOAD_TEST_CASE, text: 'uploadtestcasetocloud' },
+  { code: REIN_SHORTCUT_CODE.CHOOSE_TEMPLATE, text: 'chooseinpectiontemplate' },
+  { code: REIN_SHORTCUT_CODE.CREATE_UPDATE_TEMPLATE, text: 'createupdateinspectiontemplate' },
+  { code: REIN_SHORTCUT_CODE.IMPORT_META, text: 'loadmeta' },
+  { code: REIN_SHORTCUT_CODE.UPLOAD_TEST_CASE, text: 'uploadtestcasetocloud' },
 ];
 
 export const TEST_DATA = {

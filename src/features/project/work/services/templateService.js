@@ -1,15 +1,17 @@
+import { v4 as uuidv4 } from 'uuid';
+
 const templates = [
-  { id: '0', name: 'Default', ruleSet: '1,2,3,5' },
-  { id: '1', name: 'Template 1', ruleSet: '1,2,3' },
-  { id: '2', name: 'Template 2', ruleSet: '1,2,3,5,6' },
-  { id: '3', name: 'Template 3', ruleSet: '1,2,3,7,8' },
-  { id: '4', name: 'Template 4', ruleSet: '7,8,9' },
-  { id: '5', name: 'Template 5', ruleSet: '1,2,3,5,6,7' },
-  { id: '6', name: 'Template 6', ruleSet: '3,6,9' },
-  { id: '7', name: 'Template 7', ruleSet: '1,2' },
-  { id: '8', name: 'Template 8', ruleSet: '4,5,6,7,8,9' },
-  { id: '9', name: 'Template 9', ruleSet: '1,2,3,4,5,6,7,8,9' },
-  { id: '10', name: 'Template 10', ruleSet: '1,3,5,7,9' },
+  { id: uuidv4(), name: 'Default', ruleSet: '1,2,3,5' },
+  { id: uuidv4(), name: 'Template 1', ruleSet: '1,2,3' },
+  { id: uuidv4(), name: 'Template 2', ruleSet: '1,2,3,5,6' },
+  { id: uuidv4(), name: 'Template 3', ruleSet: '1,2,3,7,8' },
+  { id: uuidv4(), name: 'Template 4', ruleSet: '7,8,9' },
+  { id: uuidv4(), name: 'Template 5', ruleSet: '1,2,3,5,6,7' },
+  { id: uuidv4(), name: 'Template 6', ruleSet: '3,6,9' },
+  { id: uuidv4(), name: 'Template 7', ruleSet: '1,2' },
+  { id: uuidv4(), name: 'Template 8', ruleSet: '4,5,6,7,8,9' },
+  { id: uuidv4(), name: 'Template 9', ruleSet: '1,2,3,4,5,6,7,8,9' },
+  { id: uuidv4(), name: 'Template 10', ruleSet: '1,3,5,7,9' },
 ];
 
 class TemPlateService {

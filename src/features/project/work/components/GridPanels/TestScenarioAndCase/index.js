@@ -9,7 +9,7 @@ import testScenarioAnsCaseStorage from 'features/project/work/services/TestScena
 import { setGraph } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
-  TEMPLATE_SHORTCUT_CODE,
+  REIN_SHORTCUT_CODE,
   TEST_CASE_METHOD,
   TEST_CASE_SHORTCUT,
   TEST_CASE_SHORTCUT_CODE,
@@ -239,7 +239,7 @@ class TestScenarioAndCase extends Component {
       case TEST_CASE_SHORTCUT_CODE.EXPORT_TEST_CASE:
         this._exportTestCase();
         break;
-      case TEMPLATE_SHORTCUT_CODE.UPLOAD_TEST_CASE:
+      case REIN_SHORTCUT_CODE.UPLOAD_TEST_CASE:
         this._uploadTestCasesToCloud();
         break;
       default:

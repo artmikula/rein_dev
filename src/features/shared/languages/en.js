@@ -215,7 +215,10 @@ const en = {
   uploadingtestcase: 'Uploading test cases to cloud ...',
   createnewtemplate: 'Create new Template',
   newtemplatename: 'New Template name',
+  newkeyword: 'New Keyword',
   create: 'Create',
+  chooseinpectiontemplate: 'Choose Inspection Template',
+  createupdateinspectiontemplate: 'Create/Update Inspection Template',
 };
 
 export default en;

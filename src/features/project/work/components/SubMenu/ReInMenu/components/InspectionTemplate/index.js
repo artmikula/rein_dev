@@ -1,35 +1,20 @@
 import templateService from 'features/project/work/services/templateService';
 import Language from 'features/shared/languages/Language';
 import React, { useEffect, useState } from 'react';
-import { Button, FormGroup, Input, Label } from 'reactstrap';
-import { v4 as uuidv4 } from 'uuid';
+import { Button } from 'reactstrap';
+import { rules } from '../../constant';
 import List from '../List';
-
-const rules = [
-  { code: '1', name: 'Rule A' },
-  { code: '2', name: 'Rule B' },
-  { code: '3', name: 'Rule C' },
-  { code: '4', name: 'Rule D' },
-  { code: '5', name: 'Rule E' },
-  { code: '6', name: 'Rule F' },
-  { code: '7', name: 'Rule G' },
-  { code: '8', name: 'Rule H' },
-  { code: '9', name: 'Rule F' },
-  { code: '10', name: 'Rule J' },
-];
 
 export default function InspectionTemplate({
   projectId,
   workId,
   workInspectionTemplates,
   setInspectionTemplates,
-  modalProps,
+  onClose,
 }) {
   const [templates, setTemplates] = useState([]);
   const [ruleSet, setRuleSet] = useState([...rules]);
-  const [selectedRuleKeys, setSelectedRuleKeys] = useState({});
   const [selectedTemplateIds, setSelectedTemplateIds] = useState({});
-  const [templateName, setTemplateName] = useState('');
 
   const getSelectedRuleKeys = (templates) => {
     const rules = {};
@@ -50,31 +35,10 @@ export default function InspectionTemplate({
     }
 
     setSelectedTemplateIds({ ...selectedTemplateIds });
-    setSelectedRuleKeys(getSelectedRuleKeys(templates.filter((x) => selectedTemplateIds[x.id])));
-  };
-
-  const handleSelectRuleSet = (code) => {
-    if (selectedRuleKeys[code]) {
-      delete selectedRuleKeys[code];
-    } else {
-      selectedRuleKeys[code] = true;
-    }
-    setSelectedRuleKeys({ ...selectedRuleKeys });
   };
 
   const handleSave = () => {
     setInspectionTemplates(templates.filter((x) => selectedTemplateIds[x.id]));
-  };
-
-  const handleChangeTemplateName = (e) => setTemplateName(e.target.value);
-
-  const handleCreate = async () => {
-    const template = { id: uuidv4(), name: templateName.trim(), ruleSet: Object.keys(selectedRuleKeys).join(',') };
-    const result = await templateService.createAsync(template);
-    if (result.data) {
-      setTemplateName('');
-      setTemplates([...templates, template]);
-    }
   };
 
   const getTemplateLabel = (item) => item.name;
@@ -87,26 +51,11 @@ export default function InspectionTemplate({
 
   const getTemplateSelected = (item) => selectedTemplateIds[item.id];
 
-  const getRuleSelected = (item) => selectedRuleKeys[item.code];
-
   const getTemplates = async () => {
     const result = await templateService.listAsync();
     if (result.data) {
       setTemplates(result.data);
     }
-  };
-
-  const deleteTemplate = (id) => {
-    delete selectedTemplateIds[id];
-    const newTemplates = templates.filter((x) => x.id !== id);
-
-    setTemplates(newTemplates);
-    setInspectionTemplates(newTemplates);
-    setSelectedRuleKeys(getSelectedRuleKeys(templates.filter((x) => selectedTemplateIds[x.id])));
-  };
-
-  const handleDeleteTemplate = (id) => {
-    confirm(undefined, { title: 'Delete confirm', yesAction: () => deleteTemplate(id) });
   };
 
   useEffect(() => {
@@ -120,13 +69,17 @@ export default function InspectionTemplate({
     });
 
     setSelectedTemplateIds(templateIds);
-    setSelectedRuleKeys(getSelectedRuleKeys(workInspectionTemplates));
   }, workInspectionTemplates);
 
-  const canCreate = Object.keys(selectedRuleKeys).length > 0 && templateName.trim().length > 0;
   const canSave =
     workInspectionTemplates.length !== Object.keys(selectedTemplateIds).length ||
     workInspectionTemplates.some((x) => !selectedTemplateIds[x.id]);
+
+  const selectedRuleKeys = getSelectedRuleKeys(templates.filter((x) => selectedTemplateIds[x.id]));
+
+  const getRuleSelected = () => true;
+
+  const selectedRuleSet = ruleSet.filter((x) => selectedRuleKeys[x.code]);
 
   return (
     <div>
@@ -135,7 +88,7 @@ export default function InspectionTemplate({
           <p className="list-border-color border-bottom p-2 mb-0" style={{ fontWeight: 500 }}>
             Inspection Templates
           </p>
-          <div className="flex-grow-1" style={{ overflowY: 'auto', height: '372px' }}>
+          <div className="flex-grow-1" style={{ overflowY: 'auto', height: '300px' }}>
             <List
               data={templates}
               selectedTemplateIds={selectedTemplateIds}
@@ -144,8 +97,7 @@ export default function InspectionTemplate({
               getValue={getTemplateValue}
               getSelected={getTemplateSelected}
               getKey={getTemplateValue}
-              onDelete={handleDeleteTemplate}
-              removable
+              selectable
             />
           </div>
         </div>
@@ -155,34 +107,13 @@ export default function InspectionTemplate({
           </p>
           <div className="flex-grow-1 overflow-auto" style={{ height: '300px' }}>
             <List
-              data={ruleSet}
-              selectedRuleKeys={selectedRuleKeys}
-              onSelect={handleSelectRuleSet}
+              data={selectedRuleSet}
+              selectedTemplateIds={selectedTemplateIds}
               getLabel={getRuleLabel}
               getValue={getRuleValue}
               getSelected={getRuleSelected}
               getKey={getRuleValue}
             />
-          </div>
-          <div className="border-top mt-2 p-2">
-            <FormGroup className="mb-0">
-              <Label check htmlFor="template-name">
-                {Language.get('createnewtemplate')}
-              </Label>
-              <div className="d-flex">
-                <Input
-                  type="text"
-                  id="template-name"
-                  placeholder={Language.get('newtemplatename')}
-                  bsSize="sm"
-                  value={templateName}
-                  onChange={handleChangeTemplateName}
-                />
-                <Button className="ml-2" size="sm" disabled={!canCreate} onClick={handleCreate}>
-                  {Language.get('create')}
-                </Button>
-              </div>
-            </FormGroup>
           </div>
         </div>
       </div>
@@ -190,7 +121,7 @@ export default function InspectionTemplate({
         <Button size="sm" color="primary" onClick={handleSave} disabled={!canSave}>
           {Language.get('save')}
         </Button>
-        <Button size="sm" onClick={modalProps.onClose} className="ml-3">
+        <Button size="sm" onClick={onClose} className="ml-3">
           {Language.get('cancel')}
         </Button>
       </div>

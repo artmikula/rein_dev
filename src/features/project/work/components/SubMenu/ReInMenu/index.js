@@ -1,6 +1,6 @@
 import { allPropertiesInJSON, allTagsInXML, readFileContent } from 'features/project/work/biz/Template';
 import { setInspectionTemplates } from 'features/project/work/slices/workSlice';
-import { TEMPLATE_SHORTCUT, TEMPLATE_SHORTCUT_CODE } from 'features/shared/constants';
+import { REIN_SHORTCUT_CODE, TEMPLATE_SHORTCUT } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
@@ -8,9 +8,10 @@ import React, { Component, createRef } from 'react';
 import { connect } from 'react-redux';
 import { Router, withRouter } from 'react-router';
 import BaseSubMenu from '../BaseSubMenu';
+import CreateUpdateInspectionTemplate from './components/CreateUpdateInspectionTemplate';
 import InspectionTemplate from './components/InspectionTemplate';
 import MetaImportation from './components/MetaImportation';
-import { LOAD_META_PARAM, LOAD_TEMPLATE_PARAM } from './constant';
+import { LOAD_META_PARAM } from './constant';
 
 class ReInMenu extends Component {
   constructor(props) {
@@ -31,25 +32,24 @@ class ReInMenu extends Component {
 
   _handleEvent = (message) => {
     switch (message.code) {
-      case TEMPLATE_SHORTCUT_CODE.SAVE_TEMPLATE:
-        this._saveTemplate();
+      case REIN_SHORTCUT_CODE.CHOOSE_TEMPLATE:
+        this._chooseTemplate();
         break;
-      case TEMPLATE_SHORTCUT_CODE.LOAD_TEMPLATE:
-        this._loadTemplate();
+      case REIN_SHORTCUT_CODE.CREATE_UPDATE_TEMPLATE:
+        this._createUpdateTemplate();
         break;
-      case TEMPLATE_SHORTCUT_CODE.LIST_OF_TEMPLATE:
-        this._explorer();
-        break;
-      case TEMPLATE_SHORTCUT_CODE.IMPORT_META:
+      case REIN_SHORTCUT_CODE.IMPORT_META:
         this._loadMeta();
         break;
       default:
     }
   };
 
-  _saveTemplate = () => {
+  _chooseTemplate = () => {
     const { history, match, workInspectionTemplates, setInspectionTemplates } = this.props;
-    const modalProps = { onClose: null };
+    let _closeModal = () => {};
+    const handleClose = () => _closeModal();
+
     const modaProps = {
       title: Language.get('inspectiontemplates'),
       content: (
@@ -59,13 +59,38 @@ class ReInMenu extends Component {
             workId={match.params.workId}
             workInspectionTemplates={workInspectionTemplates}
             setInspectionTemplates={setInspectionTemplates}
-            modalProps={modalProps}
+            onClose={handleClose}
           />
         </Router>
       ),
       actions: null,
     };
-    modalProps.onClose = window.modal(modaProps);
+
+    _closeModal = window.modal(modaProps);
+  };
+
+  _createUpdateTemplate = () => {
+    const { history, match, workInspectionTemplates, setInspectionTemplates } = this.props;
+    let _closeModal = () => {};
+    const handleClose = () => _closeModal();
+
+    const modaProps = {
+      title: Language.get('inspectiontemplates'),
+      content: (
+        <Router history={history}>
+          <CreateUpdateInspectionTemplate
+            projectId={match.params.projectId}
+            workId={match.params.workId}
+            workInspectionTemplates={workInspectionTemplates}
+            setInspectionTemplates={setInspectionTemplates}
+            onClose={handleClose}
+          />
+        </Router>
+      ),
+      actions: null,
+    };
+
+    _closeModal = window.modal(modaProps);
   };
 
   _handleLoadMeta = (file) => {
@@ -106,11 +131,7 @@ class ReInMenu extends Component {
     const { location } = this.props;
     const queryParams = new URLSearchParams(location.search);
 
-    if (queryParams.has(LOAD_TEMPLATE_PARAM) && queryParams.has(LOAD_META_PARAM)) {
-      this._loadTemplate(true);
-    } else if (queryParams.has(LOAD_TEMPLATE_PARAM)) {
-      this._loadTemplate();
-    } else if (queryParams.has(LOAD_META_PARAM)) {
+    if (queryParams.has(LOAD_META_PARAM)) {
       this._loadMeta();
     }
   };
