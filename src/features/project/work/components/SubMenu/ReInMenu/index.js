@@ -70,7 +70,7 @@ class ReInMenu extends Component {
   };
 
   _createUpdateTemplate = () => {
-    const { history, match, workInspectionTemplates, setInspectionTemplates } = this.props;
+    const { history, match } = this.props;
     let _closeModal = () => {};
     const handleClose = () => _closeModal();
 
@@ -81,8 +81,6 @@ class ReInMenu extends Component {
           <CreateUpdateInspectionTemplate
             projectId={match.params.projectId}
             workId={match.params.workId}
-            workInspectionTemplates={workInspectionTemplates}
-            setInspectionTemplates={setInspectionTemplates}
             onClose={handleClose}
           />
         </Router>

@@ -219,6 +219,7 @@ const en = {
   create: 'Create',
   chooseinpectiontemplate: 'Choose Inspection Template',
   createupdateinspectiontemplate: 'Create/Update Inspection Template',
+  ok: 'Ok',
 };
 
 export default en;
