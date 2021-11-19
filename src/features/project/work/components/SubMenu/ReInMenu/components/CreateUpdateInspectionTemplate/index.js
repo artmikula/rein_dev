@@ -135,7 +135,7 @@ export default function CreateUpdateInspectionTemplate({ projectId, workId, onCl
             />
           </div>
         </div>
-        <div className="list-border-color w-50 border-left d-flex flex-column">
+        <div className="list-border-color w-50 border-left d-flex flex-column border-3">
           <p className="list-border-color border-bottom p-2 mb-0" style={{ fontWeight: 500 }}>
             Inspection Rules
           </p>

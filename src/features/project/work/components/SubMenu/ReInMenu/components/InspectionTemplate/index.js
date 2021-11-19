@@ -39,6 +39,7 @@ export default function InspectionTemplate({
 
   const handleSave = () => {
     setInspectionTemplates(templates.filter((x) => selectedTemplateIds[x.id]));
+    onClose();
   };
 
   const getTemplateLabel = (item) => item.name;
@@ -101,7 +102,7 @@ export default function InspectionTemplate({
             />
           </div>
         </div>
-        <div className="list-border-color w-50 border-left d-flex flex-column">
+        <div className="list-border-color w-50 border-left d-flex flex-column border-3">
           <p className="list-border-color border-bottom p-2 mb-0" style={{ fontWeight: 500 }}>
             Inspection Rules
           </p>
