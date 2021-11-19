@@ -42,7 +42,7 @@ class TemPlateService {
   updateAsync = async (item) => {
     const data = this._get();
     const index = data.findIndex((x) => x.id === item.id);
-    if (index) {
+    if (index >= 0) {
       data[index] = { ...item };
       this._set(data);
     }
