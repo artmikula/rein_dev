@@ -133,75 +133,91 @@ class SSMertic extends Component {
   }
 
   _caculateSSMetricValue = () => {
-    const { testBasis, causeEffects, graph } = this.props;
-    const testScenariosAndCases = testScenarioAnsCaseStorage.get();
+    try {
+      const { testBasis, causeEffects, graph } = this.props;
+      const testScenariosAndCases = testScenarioAnsCaseStorage.get();
 
-    SSMetricHelper.initValue(graph.graphNodes, graph.graphLinks, graph.constraints, causeEffects);
-    const newChartDatas = this.baseChartDatas.map((x) => {
-      const constraintValue = SSMetricHelper.calculateConstraints();
+      SSMetricHelper.initValue(graph.graphNodes, graph.graphLinks, graph.constraints, causeEffects);
+      const newChartDatas = this.baseChartDatas.map((x) => {
+        const constraintValue = SSMetricHelper.calculateConstraints();
+        return {
+          ...x,
+          value: constraintValue ? constraintValue[x.key] : 0,
+        };
+      });
+      const logicGraphValue = SSMetricHelper.calculateLogicGraph();
+      const newConotationValue = SSMetricHelper.calculateConnotation(testBasis);
+      this._setConotationPosition(newConotationValue);
+
+      const brevity = this.baseLeftCircles.find((x) => x.key === 'brevity');
+      brevity.percent = parseFloat(SSMetricHelper.calculateBrevity(testScenariosAndCases)) * 100;
+      brevity.valueDisplay = SSMetricHelper.calculateBrevity(testScenariosAndCases);
+
+      const percentAnd = this.baseLeftCircles.find((x) => x.key === 'percentAnd');
+      percentAnd.percent = parseFloat(logicGraphValue.percentAnd) * 100;
+      percentAnd.valueDisplay = logicGraphValue.percentAnd;
+
+      const percentOr = this.baseLeftCircles.find((x) => x.key === 'percentOr');
+      percentOr.percent = parseFloat(logicGraphValue.percentOr) * 100;
+      percentOr.valueDisplay = logicGraphValue.percentOr;
+
+      const efferent = this.baseRightCircles.find((x) => x.key === 'efferent');
+      efferent.percent = parseFloat(SSMetricHelper.calculateEfferent()) * 100;
+      efferent.valueDisplay = SSMetricHelper.calculateEfferent();
+
+      const afferent = this.baseRightCircles.find((x) => x.key === 'afferent');
+      afferent.percent = parseFloat(logicGraphValue.afferent) * 100;
+      afferent.valueDisplay = logicGraphValue.afferent;
+
+      const complexity = this.baseRightCircles.find((x) => x.key === 'complexity');
+      complexity.percent = parseFloat(logicGraphValue.complexity) * 100;
+      complexity.valueDisplay = logicGraphValue.complexity;
+
+      const sameSoundAmbiguity = this.baseRecTangles.find((x) => x.key === 'sameSoundAmbiguity');
+      sameSoundAmbiguity.value = SSMetricHelper.countNodes().sameSoundAmbiguity;
+
+      const sameMeaningAmbiguity = this.baseRecTangles.find((x) => x.key === 'sameMeaningAmbiguity');
+      sameMeaningAmbiguity.value = SSMetricHelper.countNodes().sameMeaningAmbiguity;
+
+      const orphanNode = this.baseRecTangles.find((x) => x.key === 'orphanNode');
+      orphanNode.value = SSMetricHelper.countLinkedNodes().orphanNode;
+
+      const arcLevel = this.baseRecTangles.find((x) => x.key === 'arcLevel');
+      arcLevel.value = SSMetricHelper.countLinkedNodes().arcLevel;
+
+      const newRightCircles = [...this.baseRightCircles];
+      const newLeftCircles = [...this.baseLeftCircles];
+      const newRecTangles = [...this.baseRecTangles];
+
+      const newAbridgedValue = parseFloat(SSMetricHelper.calculateNodesPercentage().abridged) * 100;
+      const newDuplicationValue = parseFloat(SSMetricHelper.calculateNodesPercentage().duplication) * 100;
+
+      SSMetricHelper.calculateLogicGraph();
+
       return {
-        ...x,
-        value: constraintValue ? constraintValue[x.key] : 0,
+        chartDatas: newChartDatas,
+        rightCircles: newRightCircles,
+        leftCircles: newLeftCircles,
+        recTangles: newRecTangles,
+        abridged: newAbridgedValue,
+        duplication: newDuplicationValue,
+        conotationValue: newConotationValue,
+        error: null,
       };
-    });
-    const logicGraphValue = SSMetricHelper.calculateLogicGraph();
-    const newConotationValue = SSMetricHelper.calculateConnotation(testBasis);
-    this._setConotationPosition(newConotationValue);
+    } catch (err) {
+      console.error('Error calculcate SSMetric:', err);
 
-    const brevity = this.baseLeftCircles.find((x) => x.key === 'brevity');
-    brevity.percent = parseFloat(SSMetricHelper.calculateBrevity(testScenariosAndCases)) * 100;
-    brevity.valueDisplay = SSMetricHelper.calculateBrevity(testScenariosAndCases);
-
-    const percentAnd = this.baseLeftCircles.find((x) => x.key === 'percentAnd');
-    percentAnd.percent = parseFloat(logicGraphValue.percentAnd) * 100;
-    percentAnd.valueDisplay = logicGraphValue.percentAnd;
-
-    const percentOr = this.baseLeftCircles.find((x) => x.key === 'percentOr');
-    percentOr.percent = parseFloat(logicGraphValue.percentOr) * 100;
-    percentOr.valueDisplay = logicGraphValue.percentOr;
-
-    const efferent = this.baseRightCircles.find((x) => x.key === 'efferent');
-    efferent.percent = parseFloat(SSMetricHelper.calculateEfferent()) * 100;
-    efferent.valueDisplay = SSMetricHelper.calculateEfferent();
-
-    const afferent = this.baseRightCircles.find((x) => x.key === 'afferent');
-    afferent.percent = parseFloat(logicGraphValue.afferent) * 100;
-    afferent.valueDisplay = logicGraphValue.afferent;
-
-    const complexity = this.baseRightCircles.find((x) => x.key === 'complexity');
-    complexity.percent = parseFloat(logicGraphValue.complexity) * 100;
-    complexity.valueDisplay = logicGraphValue.complexity;
-
-    const sameSoundAmbiguity = this.baseRecTangles.find((x) => x.key === 'sameSoundAmbiguity');
-    sameSoundAmbiguity.value = SSMetricHelper.countNodes().sameSoundAmbiguity;
-
-    const sameMeaningAmbiguity = this.baseRecTangles.find((x) => x.key === 'sameMeaningAmbiguity');
-    sameMeaningAmbiguity.value = SSMetricHelper.countNodes().sameMeaningAmbiguity;
-
-    const orphanNode = this.baseRecTangles.find((x) => x.key === 'orphanNode');
-    orphanNode.value = SSMetricHelper.countLinkedNodes().orphanNode;
-
-    const arcLevel = this.baseRecTangles.find((x) => x.key === 'arcLevel');
-    arcLevel.value = SSMetricHelper.countLinkedNodes().arcLevel;
-
-    const newRightCircles = [...this.baseRightCircles];
-    const newLeftCircles = [...this.baseLeftCircles];
-    const newRecTangles = [...this.baseRecTangles];
-
-    const newAbridgedValue = parseFloat(SSMetricHelper.calculateNodesPercentage().abridged) * 100;
-    const newDuplicationValue = parseFloat(SSMetricHelper.calculateNodesPercentage().duplication) * 100;
-
-    SSMetricHelper.calculateLogicGraph();
-
-    return {
-      chartDatas: newChartDatas,
-      rightCircles: newRightCircles,
-      leftCircles: newLeftCircles,
-      recTangles: newRecTangles,
-      abridged: newAbridgedValue,
-      duplication: newDuplicationValue,
-      conotationValue: newConotationValue,
-    };
+      return {
+        chartDatas: [],
+        rightCircles: [...this.baseRightCircles],
+        leftCircles: [...this.baseLeftCircles],
+        recTangles: [...this.baseRecTangles],
+        abridged: 0,
+        duplication: 0,
+        conotationValue: '',
+        error: 'Error calculcate SSMetric !',
+      };
+    }
   };
 
   _setConotationPosition = (value) => {
@@ -214,78 +230,93 @@ class SSMertic extends Component {
   };
 
   render() {
-    const { leftCircles, rightCircles, recTangles, chartDatas, duplication, abridged, conotationValue } =
+    const { leftCircles, rightCircles, recTangles, chartDatas, duplication, abridged, conotationValue, error } =
       this._caculateSSMetricValue();
 
     return (
-      <div className="d-md-flex p-3">
-        <div className="metric-area text-muted">
-          <div className="metric-wrapper">
-            <div>
-              <div className="d-flex">
-                {leftCircles.map((circle) => {
-                  return (
-                    <CircleProgress
-                      percent={circle.percent}
-                      valueDisplay={circle.valueDisplay}
-                      lineColor={circle.color}
-                      label={circle.label}
-                      key={circle.label}
-                    />
-                  );
-                })}
-              </div>
-              <Label className="text-dark font-weight-500">{Language.get('logiccombination')}</Label>
-            </div>
-            <div className="position-relative ml-3 mr-4">
-              <span className="conotation min position-absolute text-14">0</span>
-              <input type="range" min="1" max="100" defaultValue={conotationValue * 100} className="slider" />
-              <span ref={this.conotationValueRef} className="position-absolute conotation-container">
-                <input readOnly className="text-center conotation-value small" value={conotationValue} />
-              </span>
-              <span className="conotation max position-absolute text-14">1</span>
-              <Label>{Language.get('connotation')}</Label>
-            </div>
-            {rightCircles.map((circle) => {
-              return (
-                <CircleProgress
-                  percent={circle.percent}
-                  valueDisplay={circle.valueDisplay}
-                  lineColor={circle.color}
-                  label={circle.label}
-                  key={circle.label}
-                />
-              );
-            })}
+      <div>
+        {error && (
+          <div
+            style={{
+              color: 'red',
+              position: 'absolute',
+              right: 5,
+              background: '#fff',
+              fontSize: '14px',
+            }}
+          >
+            {error}
           </div>
-          <div className="dropdown-divider" />
-          <div className="metric-wrapper pt-2">
-            {recTangles.map((x, index) => {
-              return (
-                <div className="metric-container mr-2" key={index}>
-                  <div className={`gradient-block ${x.color} d-flex justify-content-between align-items-center`}>
-                    <span className="ml-1 small">{x.value}</span>
-                    <span className="metric-unit">EA</span>
-                  </div>
-                  <Label>{x.label}</Label>
+        )}
+        <div className="d-md-flex p-3">
+          <div className="metric-area text-muted">
+            <div className="metric-wrapper">
+              <div>
+                <div className="d-flex">
+                  {leftCircles.map((circle) => {
+                    return (
+                      <CircleProgress
+                        percent={circle.percent}
+                        valueDisplay={circle.valueDisplay}
+                        lineColor={circle.color}
+                        label={circle.label}
+                        key={circle.label}
+                      />
+                    );
+                  })}
                 </div>
-              );
-            })}
-            <div className="metric-container mx-2">
-              <CircleProgress
-                lineDot
-                percent={abridged}
-                valueDisplay={`${abridged}%`}
-                label={Language.get('abridgedpercentage')}
-              />
+                <Label className="text-dark font-weight-500">{Language.get('logiccombination')}</Label>
+              </div>
+              <div className="position-relative ml-3 mr-4">
+                <span className="conotation min position-absolute text-14">0</span>
+                <input type="range" min="1" max="100" defaultValue={conotationValue * 100} className="slider" />
+                <span ref={this.conotationValueRef} className="position-absolute conotation-container">
+                  <input readOnly className="text-center conotation-value small" value={conotationValue} />
+                </span>
+                <span className="conotation max position-absolute text-14">1</span>
+                <Label>{Language.get('connotation')}</Label>
+              </div>
+              {rightCircles.map((circle) => {
+                return (
+                  <CircleProgress
+                    percent={circle.percent}
+                    valueDisplay={circle.valueDisplay}
+                    lineColor={circle.color}
+                    label={circle.label}
+                    key={circle.label}
+                  />
+                );
+              })}
             </div>
-            <div className="metric-container ml-2">
-              <CircleProgress percent={duplication} valueDisplay={duplication} label={Language.get('duplication')} />
+            <div className="dropdown-divider" />
+            <div className="metric-wrapper pt-2">
+              {recTangles.map((x, index) => {
+                return (
+                  <div className="metric-container mr-2" key={index}>
+                    <div className={`gradient-block ${x.color} d-flex justify-content-between align-items-center`}>
+                      <span className="ml-1 small">{x.value}</span>
+                      <span className="metric-unit">EA</span>
+                    </div>
+                    <Label>{x.label}</Label>
+                  </div>
+                );
+              })}
+              <div className="metric-container mx-2">
+                <CircleProgress
+                  lineDot
+                  percent={abridged}
+                  valueDisplay={`${abridged}%`}
+                  label={Language.get('abridgedpercentage')}
+                />
+              </div>
+              <div className="metric-container ml-2">
+                <CircleProgress percent={duplication} valueDisplay={duplication} label={Language.get('duplication')} />
+              </div>
             </div>
           </div>
-        </div>
-        <div className="chart-area">
-          <RadarChart data={chartDatas} />
+          <div className="chart-area">
+            <RadarChart data={chartDatas} />
+          </div>
         </div>
       </div>
     );
