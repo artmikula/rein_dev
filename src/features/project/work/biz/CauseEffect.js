@@ -101,8 +101,10 @@ class CauseEffect {
     _data.forEach((item) => {
       if (item.isMerged) {
         const parent = listData.get(item.parent);
-        parent.mergedChildren.push({ ...item });
-        parent.mergedNodes.push(item.node);
+        if (parent) {
+          parent.mergedChildren.push({ ...item });
+          parent.mergedNodes.push(item.node);
+        }
       }
     });
 
