@@ -34,7 +34,20 @@ class MyerTechnique {
 
   buildTestScenario(graphLinks = [], constraints = [], graphNodes = []) {
     this._initValue(graphLinks, constraints, graphNodes);
+
+    if (window.isDebugMode) {
+      console.log('================== START BUILD SCENARIO with MyersTechnique =============');
+      console.log('graphLinks', this.graphLinks);
+      console.log('constraints', this.constraints);
+      console.log('graphNodes', this.graphNodes);
+    }
+
     const assertionDictionary = TestScenarioHelper.buildAssertionDictionary(this.graphLinks);
+
+    if (window.isDebugMode) {
+      console.log('assertionDictionary', assertionDictionary);
+    }
+
     return this.updateTestScenario(assertionDictionary);
   }
 

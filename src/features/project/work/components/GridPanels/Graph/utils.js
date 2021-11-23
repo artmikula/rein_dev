@@ -110,7 +110,7 @@ export const createGraphNode = (
   type,
   positionX,
   positionY,
-  targetType: OPERATOR_TYPE.AND,
+  targetType: type === 'Group' ? OPERATOR_TYPE.AND : OPERATOR_TYPE.OR,
   isLocked: false,
   effectGroup: 1,
   inspection,
