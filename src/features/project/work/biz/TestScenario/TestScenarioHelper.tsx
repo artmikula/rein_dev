@@ -1,20 +1,22 @@
 /* eslint-disable no-bitwise */
 import { GRAPH_NODE_TYPE, OPERATOR_TYPE, RESULT_TYPE, SCENARIO_PROPERTIES } from 'features/shared/constants';
 import Enumerable from 'linq';
+import { IGraphLink, IGraphNode, ITestScenario, ITestAssertion, ITestResult } from 'types/models';
 import { v4 as uuid } from 'uuid';
 
 class TestScenarioHelper {
-  buildAssertionDictionary(graphLinks) {
-    const assertionDictionary = new Map();
-    const effectToEffectLinks = [];
-    for (let i = 0; i < graphLinks.length; i++) {
-      const { source } = graphLinks[i];
-      const { target } = graphLinks[i];
+  buildAssertionDictionary(graphLinks: IGraphLink[]) {
+    // CalculateAssertionDictionary
+    const assertionDictionary = new Map<string, ITestScenario>();
+    const effectToEffectRelationList = [];
 
-      if (source !== null && target !== null) {
+    for (let i = 0; i < graphLinks.length; i++) {
+      const { source, target } = graphLinks[i];
+
+      if (source && source !== null && target && target !== null) {
         const scenario = assertionDictionary.get(target.id);
         if (source.type === GRAPH_NODE_TYPE.EFFECT) {
-          effectToEffectLinks.push(graphLinks[i]);
+          effectToEffectRelationList.push(graphLinks[i]);
         } else if (scenario) {
           const assertion = {
             graphNode: source,
@@ -39,8 +41,8 @@ class TestScenarioHelper {
       }
     }
 
-    for (let i = 0; i < effectToEffectLinks.length; i++) {
-      const link = effectToEffectLinks[i];
+    for (let i = 0; i < effectToEffectRelationList.length; i++) {
+      const link = effectToEffectRelationList[i];
       const { source, target } = link;
 
       assertionDictionary.forEach((value) => {
@@ -57,16 +59,16 @@ class TestScenarioHelper {
     return assertionDictionary;
   }
 
-  findBaseScenario(scenarios = [], causeNodes = []) {
+  findBaseScenario(scenarios: ITestScenario[] = [], causeNodes: IGraphNode[] = []) {
     if (scenarios.length > 0) {
       const maxCount = Enumerable.from(scenarios).max(
-        (x) => x.testAssertions.filter((y) => causeNodes.some((z) => y.graphNode.id === z.id)).length
+        (x) => x.testAssertions.filter((y) => causeNodes.some((z) => y.graphNode?.id === z.id)).length
       );
       const results = [...scenarios];
       for (let i = 0; i < results.length; i++) {
         const { testAssertions } = results[i];
         const isBaseScenario =
-          testAssertions.filter((x) => causeNodes.some((y) => x.graphNode.id === y.id)).length >= maxCount;
+          testAssertions.filter((x) => causeNodes.some((y) => x.graphNode?.id === y.id)).length >= maxCount;
         if (isBaseScenario) {
           results[i].isBaseScenario = true;
         }
@@ -78,7 +80,7 @@ class TestScenarioHelper {
     return scenarios;
   }
 
-  invertedCloneWithExceptId(testScenario, exceptId = null) {
+  invertedCloneWithExceptId(testScenario: ITestScenario, exceptId = null) {
     const cloneAssertions = [];
     const { testAssertions } = testScenario;
     for (let i = 0; i < testAssertions.length; i++) {
@@ -86,8 +88,8 @@ class TestScenarioHelper {
         graphNode: testAssertions[i].graphNode ? { ...testAssertions[i].graphNode } : null,
         testScenario: testAssertions[i].testScenario ? { ...testAssertions[i].testScenario } : null,
         result:
-          ((!!testAssertions[i].graphNode && !!exceptId && testAssertions[i].graphNode.id === exceptId) ||
-            (!!testAssertions[i].testScenario && !!exceptId && testAssertions[i].testScenario.id === exceptId)) ===
+          ((!!testAssertions[i].graphNode && !!exceptId && testAssertions[i].graphNode?.id === exceptId) ||
+            (!!testAssertions[i].testScenario && !!exceptId && testAssertions[i].testScenario?.id === exceptId)) ===
           testAssertions[i].result,
       };
 
@@ -100,12 +102,12 @@ class TestScenarioHelper {
     };
   }
 
-  invertedCloneWithExceptIds(testScenario, exceptIds = []) {
-    const cloneAssertions = [];
+  invertedCloneWithExceptIds(testScenario: ITestScenario, exceptIds = []) {
+    const cloneAssertions: ITestAssertion[] = [];
     const { testAssertions } = testScenario;
     const { length } = testAssertions;
     for (let i = 0; i < length; i++) {
-      const testAssertion = {
+      const testAssertion: any = {
         graphNode: testAssertions[i].graphNode ? { ...testAssertions[i].graphNode } : null,
         testScenario: testAssertions[i].testScenario ? { ...testAssertions[i].testScenario } : null,
         result: !testAssertions[i].result,
@@ -115,7 +117,7 @@ class TestScenarioHelper {
     }
 
     for (let i = 0; i < exceptIds.length; i++) {
-      const assertion = cloneAssertions.find((x) => x.graphNode.id === exceptIds[i]);
+      const assertion = cloneAssertions.find((x) => x.graphNode?.id === exceptIds[i]);
       if (assertion) {
         assertion.result = !assertion.result;
       }
@@ -127,7 +129,7 @@ class TestScenarioHelper {
     };
   }
 
-  clone(scenario) {
+  _clone(scenario: ITestScenario) {
     return {
       ...scenario,
       testAssertions: [
@@ -139,7 +141,7 @@ class TestScenarioHelper {
     };
   }
 
-  mergeAssertion(currentScenario, otherScennario, parentValue = true) {
+  mergeAssertion(currentScenario: ITestScenario, otherScennario: ITestScenario, parentValue = true) {
     const { testAssertions } = otherScennario;
     const scenarioResult = {
       ...currentScenario,
@@ -150,8 +152,8 @@ class TestScenarioHelper {
       const value = parentValue === testAssertions[i].result;
       const assertion = currentScenario.testAssertions.find(
         (x) =>
-          (!!x.graphNode && x.graphNode.id === testAssertions[i].graphNode.id) ||
-          (!!x.testScenario && x.testScenario.id === testAssertions[i].testScenario.id)
+          (!!x.graphNode && x.graphNode.id === testAssertions[i].graphNode?.id) ||
+          (!!x.testScenario && x.testScenario.id === testAssertions[i].testScenario?.id)
       );
       if (assertion && assertion.result !== value) {
         return {
@@ -178,7 +180,7 @@ class TestScenarioHelper {
     };
   }
 
-  buildExpectedResultsOfTestScenario(testResults = [], graphNodes = []) {
+  buildExpectedResultsOfTestScenario(testResults: ITestResult[] = [], graphNodes: IGraphNode[] = []) {
     let result = '';
     const falseResults = testResults.filter((x) => x.type === RESULT_TYPE.False);
     const basicResults = testResults.filter((x) => x.type === RESULT_TYPE.None || x.type === RESULT_TYPE.True);
@@ -188,7 +190,9 @@ class TestScenarioHelper {
 
     const firstBasicResultNode = graphNodes.find((x) => x.id === basicResults[0].graphNodeId);
 
-    result = result.concat(firstBasicResultNode.nodeId);
+    if (firstBasicResultNode?.nodeId) {
+      result = result.concat(firstBasicResultNode.nodeId);
+    }
 
     for (let i = 1; i < basicResults.length; i++) {
       if (falseResults.some((x) => x.graphNodeId === basicResults[i].graphNodeId)) {
@@ -197,7 +201,7 @@ class TestScenarioHelper {
 
       const basicResultNode = graphNodes.find((x) => x.id === basicResults[i].graphNodeId);
 
-      result = `${result}, ${basicResultNode.nodeId}`;
+      result = `${result}, ${basicResultNode?.nodeId}`;
     }
 
     return result;
@@ -208,7 +212,7 @@ class TestScenarioHelper {
     const { length } = inputs;
     const k = 1 << length;
     for (let i = 0; i < k; i++) {
-      const combination = [];
+      const combination: any[] = [];
       let count = 0;
       for (count; count < length; count++) {
         const conditionValue = i & (1 << count);
@@ -226,17 +230,19 @@ class TestScenarioHelper {
   }
 
   // TODO - implement
-  validate(testScenario, otherScenario, trueAssertion) {
+  validate(testScenario: any, otherScenario: any, trueAssertion: any) {
     return true;
   }
 
-  applyDeMorgansLaw(testScenario) {
+  applyDeMorgansLaw(testScenario: ITestScenario) {
     const result = this._clone(testScenario);
     result.targetType = result.targetType === OPERATOR_TYPE.AND ? OPERATOR_TYPE.OR : OPERATOR_TYPE.AND;
     const { testAssertions } = testScenario;
     for (let i = 0; i < testAssertions.length; i++) {
-      const testAssertion = result.testAssertions.find((x) => x.graphNode.id === testAssertions[i].graphNode.id);
-      testAssertion.result = !testAssertions[i].result;
+      const testAssertion = result.testAssertions.find((x) => x.graphNode?.id === testAssertions[i].graphNode?.id);
+      if (testAssertion) {
+        testAssertion.result = !testAssertions[i].result;
+      }
     }
 
     return result;
@@ -260,15 +266,15 @@ class TestScenarioHelper {
     return results;
   }
 
-  toString(testScenario, graphNodes = []) {
+  toString(testScenario: ITestScenario, graphNodes: IGraphNode[] = []) {
     const testAssertions = Enumerable.from(testScenario.testAssertions)
-      .orderBy((x) => x.graphNode.nodeId)
-      .where((x) => x.graphNode)
+      .orderBy((x) => x.graphNode?.nodeId)
+      .where((x) => !!x.graphNode)
       .toArray();
     let assertionString = '';
     for (let i = 0; i < testAssertions.length; i++) {
       const trueFalseString = testAssertions[i].result ? 'T' : 'F';
-      assertionString += `${testAssertions[i].graphNode.nodeId}:${trueFalseString}${
+      assertionString += `${testAssertions[i].graphNode?.nodeId}:${trueFalseString}${
         i === testAssertions.length - 1 ? ', ' : ''
       }`;
     }
@@ -278,7 +284,7 @@ class TestScenarioHelper {
     }{${assertionString}} = ${this.buildExpectedResultsOfTestScenario(testScenario.testResults, graphNodes)}`;
   }
 
-  _compareScenario(scenario1, scenario2) {
+  _compareScenario(scenario1: ITestScenario, scenario2: ITestScenario) {
     if (!scenario1 || !scenario2) {
       return false;
     }
@@ -299,6 +305,7 @@ class TestScenarioHelper {
       return false;
     }
 
+    // TODO: check this
     if (!this._compareTestAssertions(scenario1.testResult, scenario2.testResult)) {
       return false;
     }
@@ -306,7 +313,7 @@ class TestScenarioHelper {
     return true;
   }
 
-  _compareScenarioProperty(scenario1, scenario2, propertyName) {
+  _compareScenarioProperty(scenario1: any, scenario2: any, propertyName: string) {
     if (scenario1[propertyName] && scenario2[propertyName] && scenario1[propertyName] !== scenario2[propertyName]) {
       return false;
     }
@@ -314,7 +321,7 @@ class TestScenarioHelper {
     return true;
   }
 
-  _compareTestAssertions(testAssertions1 = [], testAssertions2 = []) {
+  _compareTestAssertions(testAssertions1: ITestAssertion[] = [], testAssertions2: ITestAssertion[] = []) {
     if (!testAssertions1 || !testAssertions2) {
       return false;
     }
@@ -324,16 +331,16 @@ class TestScenarioHelper {
     }
 
     const orderedArray1 = Enumerable.from(testAssertions1)
-      .orderBy((x) => x.graphNode.id)
+      .orderBy((x) => x.graphNode?.id)
       .toArray();
 
     const orderedArray2 = Enumerable.from(testAssertions2)
-      .orderBy((x) => x.graphNode.id)
+      .orderBy((x) => x.graphNode?.id)
       .toArray();
 
     const isDifferent = orderedArray1.some(
       (x, index) =>
-        (!!x.graphNode && !!orderedArray2[index].graphNode && x.graphNode.id !== orderedArray2[index].graphNode.id) ||
+        (!!x.graphNode && !!orderedArray2[index].graphNode && x.graphNode.id !== orderedArray2[index].graphNode?.id) ||
         x.result !== orderedArray2[index].result
     );
 
@@ -344,7 +351,7 @@ class TestScenarioHelper {
     return true;
   }
 
-  _compareTestResults(testResults1 = [], testResults2 = []) {
+  _compareTestResults(testResults1: any[] = [], testResults2: any[] = []) {
     if (!testResults1 || !testResults2) {
       return false;
     }
@@ -372,15 +379,15 @@ class TestScenarioHelper {
     return true;
   }
 
-  convertToRows(testCases = [], scenarios = [], columns = []) {
+  convertToRows(testCases: any[] = [], scenarios: ITestScenario[] = [], columns: any[] = []) {
     const rows = scenarios.map((scenario) => ({
       ...scenario,
       testCases: testCases.filter((e) => e.testScenarioId === scenario.id),
       isSelected: !testCases.filter((e) => e.testScenarioId === scenario.id).some((x) => !x.isSelected),
     }));
 
-    const testScenarios = rows.map((testScenario, testScenarioIndex) => {
-      const testScenarioItem = {};
+    const testScenarios = rows.map((testScenario: any, testScenarioIndex: number) => {
+      const testScenarioItem: any = {};
       testScenarioItem.Name = `TS#${testScenarioIndex + 1}(${testScenario.scenarioType})`;
       testScenarioItem.isSelected = !!testScenario.isSelected;
       testScenarioItem.id = testScenario.id;
@@ -391,7 +398,7 @@ class TestScenarioHelper {
         } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
           testScenarioItem[column.key] = !!testScenario[column.key];
         } else {
-          const testAssertion = testScenario.testAssertions.find((x) => x.graphNode.id === column.key);
+          const testAssertion = testScenario.testAssertions.find((x: any) => x.graphNode.id === column.key);
           if (testAssertion) {
             testScenarioItem[column.key] = testAssertion.result ? 'T' : 'F';
           } else {
@@ -400,8 +407,8 @@ class TestScenarioHelper {
         }
       });
 
-      testScenarioItem.testCases = testScenario.testCases.map((testCase, testCaseIndex) => {
-        const testCaseItem = {};
+      testScenarioItem.testCases = testScenario.testCases.map((testCase: any, testCaseIndex: number) => {
+        const testCaseItem: any = {};
         testCaseItem.Name = `TC#${testScenarioIndex + 1}-${testCaseIndex + 1}`;
         testCaseItem.isSelected = !!testCase.isSelected;
         testCaseItem.id = testCase.id;
@@ -412,7 +419,7 @@ class TestScenarioHelper {
           } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
             testCaseItem[column.key] = '';
           } else {
-            const testData = testCase.testDatas.find((x) => x.graphNodeId === column.key);
+            const testData = testCase.testDatas.find((x: any) => x.graphNodeId === column.key);
             testCaseItem[column.key] = testData ? testData.data : '';
           }
         });
@@ -426,7 +433,7 @@ class TestScenarioHelper {
     return testScenarios;
   }
 
-  convertToColumns(graphNodes = [], language) {
+  convertToColumns(graphNodes: IGraphNode[] = [], language: any) {
     const columns = [
       {
         headerName: 'V',

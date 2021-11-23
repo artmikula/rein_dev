@@ -14,6 +14,9 @@ const rootElement = document.getElementById('root');
 
 const language = languageService.get();
 
+const { NODE_ENV } = process.env;
+window.isDebugMode = NODE_ENV === 'development';
+
 import(/* webpackPrefetch: true  */ `./features/shared/languages/${language.code}.js`).then((module) => {
   Language.add(language.code, module);
 });
