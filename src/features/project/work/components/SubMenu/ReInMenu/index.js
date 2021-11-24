@@ -1,15 +1,12 @@
 import { allPropertiesInJSON, allTagsInXML, readFileContent } from 'features/project/work/biz/Template';
-import { setInspectionTemplates } from 'features/project/work/slices/workSlice';
 import { REIN_SHORTCUT_CODE, TEMPLATE_SHORTCUT } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import React, { Component, createRef } from 'react';
-import { connect } from 'react-redux';
 import { Router, withRouter } from 'react-router';
 import BaseSubMenu from '../BaseSubMenu';
-import CreateUpdateInspectionTemplate from './components/CreateUpdateInspectionTemplate';
-import InspectionTemplate from './components/InspectionTemplate';
+import InspectionTemplate from './components/InspectionPalette';
 import MetaImportation from './components/MetaImportation';
 import { LOAD_META_PARAM } from './constant';
 
@@ -32,11 +29,8 @@ class ReInMenu extends Component {
 
   _handleEvent = (message) => {
     switch (message.code) {
-      case REIN_SHORTCUT_CODE.CHOOSE_TEMPLATE:
+      case REIN_SHORTCUT_CODE.VIEW_PALETTE:
         this._chooseTemplate();
-        break;
-      case REIN_SHORTCUT_CODE.CREATE_UPDATE_TEMPLATE:
-        this._createUpdateTemplate();
         break;
       case REIN_SHORTCUT_CODE.IMPORT_META:
         this._loadMeta();
@@ -46,43 +40,15 @@ class ReInMenu extends Component {
   };
 
   _chooseTemplate = () => {
-    const { history, match, workInspectionTemplates, setInspectionTemplates } = this.props;
-    let _closeModal = () => {};
-    const handleClose = () => _closeModal();
-
-    const modaProps = {
-      title: Language.get('inspectiontemplates'),
-      content: (
-        <Router history={history}>
-          <InspectionTemplate
-            projectId={match.params.projectId}
-            workId={match.params.workId}
-            workInspectionTemplates={workInspectionTemplates}
-            setInspectionTemplates={setInspectionTemplates}
-            onClose={handleClose}
-          />
-        </Router>
-      ),
-      actions: null,
-    };
-
-    _closeModal = window.modal(modaProps);
-  };
-
-  _createUpdateTemplate = () => {
     const { history, match } = this.props;
     let _closeModal = () => {};
     const handleClose = () => _closeModal();
 
     const modaProps = {
-      title: Language.get('inspectiontemplates'),
+      title: Language.get('viewinspectionpalette'),
       content: (
         <Router history={history}>
-          <CreateUpdateInspectionTemplate
-            projectId={match.params.projectId}
-            workId={match.params.workId}
-            onClose={handleClose}
-          />
+          <InspectionTemplate projectId={match.params.projectId} workId={match.params.workId} onClose={handleClose} />
         </Router>
       ),
       actions: null,
@@ -145,7 +111,4 @@ class ReInMenu extends Component {
   }
 }
 
-const mapStateToProps = (state) => ({ workInspectionTemplates: state.work.inspectionTemplates });
-const mapDispatchToProps = { setInspectionTemplates };
-
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(ReInMenu));
+export default withRouter(ReInMenu);

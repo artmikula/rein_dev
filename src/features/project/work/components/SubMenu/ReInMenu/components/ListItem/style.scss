@@ -1,5 +1,11 @@
 .list-item {
   height: 28px;
+  border: 1px solid #fff;
+  cursor: pointer;
+
+  & > * {
+    cursor: pointer;
+  }
 
   & button {
     display: none;
@@ -7,10 +13,14 @@
 
   &:hover {
     background-color: lightgray;
-    cursor: pointer;
+    border-color: #f1f1f1;
   }
 
   &:hover .icon-btn {
     display: block;
+  }
+
+  &.selected {
+    background-color: lightgray;
   }
 }

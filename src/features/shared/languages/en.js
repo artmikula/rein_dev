@@ -197,13 +197,10 @@ const en = {
   processinglogoutcallback: 'Processing logout callback',
   alert: 'Alert',
   /* End Logout successfullly */
-  /* Template menu */
-  template: 'Template',
-  inspectiontemplates: 'Inspection Templates',
-  templatename: 'Template name',
+  palettes: 'Palettes',
+  ruleset: 'Ruleset',
   loadmeta: 'Load Meta',
   confirmloadmeta: 'Do you want load meta?',
-  /* End Template menu */
   exporttestscenario: 'Export test scenario',
   exporttestcase: 'Export test case',
   rein: 'Re:In',
@@ -217,8 +214,7 @@ const en = {
   newtemplatename: 'New Template name',
   newkeyword: 'New Keyword',
   create: 'Create',
-  chooseinpectiontemplate: 'Choose Inspection Template',
-  createupdateinspectiontemplate: 'Create/Update Inspection Template',
+  viewinspectionpalette: 'View Inspection Palette',
   ok: 'Ok',
 };
 

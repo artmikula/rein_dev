@@ -267,15 +267,13 @@ export const TEST_CASE_SHORTCUT = [
 ];
 
 export const REIN_SHORTCUT_CODE = {
-  CHOOSE_TEMPLATE: 'CHOOSE_TEMPLATE',
-  CREATE_UPDATE_TEMPLATE: 'CREATE_UPDATE_TEMPLATE',
+  VIEW_PALETTE: 'VIEW_PALETTE',
   IMPORT_META: 'IMPORT_META',
   UPLOAD_TEST_CASE: 'UPLOAD_TEST_CASE',
 };
 
 export const TEMPLATE_SHORTCUT = [
-  { code: REIN_SHORTCUT_CODE.CHOOSE_TEMPLATE, text: 'chooseinpectiontemplate' },
-  { code: REIN_SHORTCUT_CODE.CREATE_UPDATE_TEMPLATE, text: 'createupdateinspectiontemplate' },
+  { code: REIN_SHORTCUT_CODE.VIEW_PALETTE, text: 'viewinspectionpalette' },
   { code: REIN_SHORTCUT_CODE.IMPORT_META, text: 'loadmeta' },
   { code: REIN_SHORTCUT_CODE.UPLOAD_TEST_CASE, text: 'uploadtestcasetocloud' },
 ];
