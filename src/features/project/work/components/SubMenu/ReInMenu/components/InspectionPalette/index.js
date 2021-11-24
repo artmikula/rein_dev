@@ -2,7 +2,7 @@ import { inspectionPalettes, inspectionRules } from 'features/shared/inspection-
 import Language from 'features/shared/languages/Language';
 import React, { useState } from 'react';
 import { Button } from 'reactstrap';
-import List from '../List';
+import List from '../../../../../../../shared/components/List';
 
 export default function InspectionPalette({ projectId, workId, onClose }) {
   const [selectedPaltteId, setSelectedPaltteId] = useState(inspectionPalettes[0].id);

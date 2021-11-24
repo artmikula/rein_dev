@@ -9,7 +9,9 @@ import {
 } from 'features/project/work/biz/Graph';
 import { CLASSIFY, GRAPH_LINK_TYPE, GRAPH_NODE_TYPE, NODE_INSPECTION, OPERATOR_TYPE } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
+import React from 'react';
 import { v4 as uuid } from 'uuid';
+import PaletteAdding from './components/PaletteAdding';
 import contextMenusSetup from './configs/contextmenu';
 import cytoscapeSetup from './configs/cytoscape';
 import definitionTooltipSetup from './configs/definitionTooltip';
@@ -80,7 +82,35 @@ class GraphManager {
     this.graph.on('mouseup', 'node', this._handleMouseUpOnNode);
   };
 
-  _setPalette = () => {};
+  _setPalette = () => {
+    let _closeModal = () => {};
+    const handleClose = () => _closeModal();
+    const nodes = this.graph.nodes(':selected');
+    const nodesData = nodes
+      .map((x) => x.data())
+      .sort((a, b) => {
+        const aIndex = parseInt(a.nodeId.replace(CLASSIFY.CAUSE_PREFIX, ''), 10);
+        const bIndex = parseInt(b.nodeId.replace(CLASSIFY.CAUSE_PREFIX, ''), 10);
+        return aIndex - bIndex;
+      });
+
+    const handleSave = (inspectionPalettes) => {
+      nodes.forEach((x) => {
+        const node = x;
+        node.data().inspectionPalettes = inspectionPalettes;
+      });
+
+      this.onGraphChange();
+    };
+
+    const modaProps = {
+      title: Language.get('setpalettes'),
+      content: <PaletteAdding nodes={nodesData} onClose={handleClose} onSave={handleSave} />,
+      actions: null,
+    };
+
+    _closeModal = window.modal(modaProps);
+  };
 
   _hideOperator = (node) => {
     this._removeOperator(node);

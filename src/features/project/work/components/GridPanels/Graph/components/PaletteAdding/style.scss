@@ -1,0 +1,18 @@
+.cause-effect-node {
+  height: 100%;
+  word-break: break-word;
+  min-width: 4px * 10;
+  padding: 4px 4px * 2;
+  cursor: -webkit-grab;
+  cursor: grab;
+}
+
+.cause-id {
+  color: var(--white);
+  background-color: var(--primary);
+}
+
+.effect-id {
+  color: var(--white);
+  background-color: var(--success);
+}
