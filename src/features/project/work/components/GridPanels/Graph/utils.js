@@ -242,9 +242,12 @@ export const convertNodeToGraphNode = (node) => {
   return { positionX: x, positionY: y, ...others };
 };
 
-export const convertEdgeToGraphLink = (edge) => {
+export const convertEdgeToGraphLink = (edge, nodes) => {
   const { source, target, ...others } = edge;
-  return { sourceId: source, targetId: target, source: { id: source }, target: { id: target }, ...others };
+  const sourceNode = (nodes || []).find((x) => x.id === source);
+  const targetNode = (nodes || []).find((x) => x.id === target);
+
+  return { sourceId: source, targetId: target, source: sourceNode, target: targetNode, ...others };
 };
 
 export const convertNodeToUndirectConstraint = (node) => {
@@ -462,7 +465,7 @@ export const covertGraphStateToSavedData = (graphState) => {
   directConstraints.forEach((x) => constraints.push(convertEdgeToDirectConstraint(x)));
 
   const nodes = graphNodes.map((x) => convertNodeToGraphNode(x));
-  const links = graphLinks.map((x) => convertEdgeToGraphLink(x));
+  const links = graphLinks.map((x) => convertEdgeToGraphLink(x, nodes));
 
   return {
     graphNodes: nodes,

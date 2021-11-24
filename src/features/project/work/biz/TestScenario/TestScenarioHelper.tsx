@@ -129,7 +129,7 @@ class TestScenarioHelper {
     };
   }
 
-  _clone(scenario: ITestScenario) {
+  clone(scenario: ITestScenario) {
     return {
       ...scenario,
       testAssertions: [
@@ -235,7 +235,7 @@ class TestScenarioHelper {
   }
 
   applyDeMorgansLaw(testScenario: ITestScenario) {
-    const result = this._clone(testScenario);
+    const result = this.clone(testScenario);
     result.targetType = result.targetType === OPERATOR_TYPE.AND ? OPERATOR_TYPE.OR : OPERATOR_TYPE.AND;
     const { testAssertions } = testScenario;
     for (let i = 0; i < testAssertions.length; i++) {
