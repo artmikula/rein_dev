@@ -16,7 +16,7 @@ export default function InspectionPalette({ projectId, workId, onClose }) {
   return (
     <div>
       <div className="list-border-color d-flex m-2 border">
-        <div className="w-50 d-flex flex-column">
+        <div className="d-flex flex-column" style={{ width: '40%' }}>
           <p className="list-border-color border-bottom p-2 mb-0" style={{ fontWeight: 500 }}>
             {Language.get('palettes')}
           </p>
@@ -33,7 +33,7 @@ export default function InspectionPalette({ projectId, workId, onClose }) {
             />
           </div>
         </div>
-        <div className="list-border-color w-50 border-left d-flex flex-column border-3">
+        <div className="list-border-color border-left d-flex flex-column border-3" style={{ width: '60%' }}>
           <p className="list-border-color border-bottom p-2 mb-0" style={{ fontWeight: 500 }}>
             {Language.get('ruleset')}
           </p>
@@ -49,7 +49,7 @@ export default function InspectionPalette({ projectId, workId, onClose }) {
         </div>
       </div>
       <div className="d-flex justify-content-end m-2">
-        <Button size="sm" onClick={onClose} className="ml-3" color="primary">
+        <Button size="sm" onClick={onClose} className="ml-3 px-4" color="primary">
           {Language.get('Ok')}
         </Button>
       </div>
