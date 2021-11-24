@@ -27,9 +27,11 @@ class ReInCloudService {
 
   async uploadTestCases(data) {
     const url = '/api/design-result/upload';
+    const fullUrl = this._cloudUrl + url;
+    // const fullUrl1 = 'https://localhost:44320/api/projects/UploadFile';
 
     return restServiceHelper.requestAsync(
-      axios.post(this._cloudUrl + url, data, this.config(this._token, { 'Content-Type': 'multipart/form-data' }))
+      axios.post(fullUrl, data, this.config(this._token, { 'Content-Type': 'multipart/form-data' }))
     );
   }
 }
