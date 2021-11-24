@@ -216,6 +216,7 @@ const en = {
   createnewtemplate: 'Create new Template',
   newtemplatename: 'New Template name',
   create: 'Create',
+  setpalette: 'Set Palettes',
 };
 
 export default en;

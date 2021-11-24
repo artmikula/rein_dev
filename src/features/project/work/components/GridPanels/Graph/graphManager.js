@@ -65,6 +65,7 @@ class GraphManager {
       unlockPosition: this.unlockPosition,
       addRequire: () => this.addDirectConstraint(GRAPH_LINK_TYPE.REQUIRE),
       addMask: () => this.addDirectConstraint(GRAPH_LINK_TYPE.MASK),
+      setPalette: () => this._setPalette(),
     });
     this.graph.on('ehcomplete', this._handleDrawEdgeComplete);
     this.graph.on('select', 'node', this._handleSelect);
@@ -78,6 +79,8 @@ class GraphManager {
     this.graph.on('mousedown', 'node', this._handleMouseDownOnNode);
     this.graph.on('mouseup', 'node', this._handleMouseUpOnNode);
   };
+
+  _setPalette = () => {};
 
   _hideOperator = (node) => {
     this._removeOperator(node);
