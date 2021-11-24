@@ -10,6 +10,7 @@ class ReInCloudService {
   }
 
   config = (token, customHeader = {}) => {
+    const { origin } = window.location;
     return {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -17,6 +18,8 @@ class ReInCloudService {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': '*',
         'Access-Control-Allow-Headers': '*',
+        Host: 'https://dev.userinsight.co.kr',
+        Origin: origin,
       },
     };
   };
