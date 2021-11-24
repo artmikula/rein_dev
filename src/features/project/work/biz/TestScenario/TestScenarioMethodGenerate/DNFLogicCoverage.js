@@ -136,29 +136,44 @@ class DNFLogicCoverage {
     return { scenarios: testScenarios, graphNodes: this.graphNodes };
   }
 
+  // this is TestScenario.Simplify
+  simplifyTestScenario(testScenario, assertionDictionary = new Map(), applyAbsorptionLaw = true) {
+    const result = TestScenarioHelper.clone(testScenario);
+    return result;
+  }
+
+  // this is TestScenario.SimplifyExt in C# code
   simplify(testScenario, assertionDictionary = new Map(), applyAbsorptionLaw = true) {
     let result = TestScenarioHelper.clone(testScenario);
-    const groups = result.testAssertions.filter((x) => x.graphNode && x.graphNode.type === GRAPH_NODE_TYPE.GROUP);
 
-    for (let group = groups[0]; groups.length > 0; [group] = groups) {
-      let groupExpression = assertionDictionary.get(group.graphNode.id);
-      if (groupExpression) {
-        const testAssertion = result.testAssertions.find((x) => x.graphNode && x.graphNode.id === group.graphNode.id);
+    const getFirstGroupInTestAssertions = (assertions) => {
+      return assertions.find((x) => x.graphNode && x.graphNode.type === GRAPH_NODE_TYPE.GROUP);
+    };
+
+    let group = getFirstGroupInTestAssertions(result.testAssertions);
+
+    while (group) {
+      // for (let group = groups[0]; groups.length > 0; [group] = groups) {
+      const groupGraphNodeId = group.graphNode.id;
+      let testScenario1 = assertionDictionary.get(group.graphNode.id);
+      if (testScenario1) {
+        const testAssertion = result.testAssertions.find((x) => x.graphNode && x.graphNode.id === groupGraphNodeId);
         if (testAssertion) {
-          const existed = result.testAssertions.some((x) => x.graphNode && x.graphNode.id === group.graphNode.id);
-          groupExpression = existed ? groupExpression : TestScenarioHelper.applyDeMorgansLaw(groupExpression);
-          groupExpression = this.simplify(groupExpression, assertionDictionary, false);
+          const groupT = result.testAssertions.find((x) => x.graphNode && x.graphNode.id === groupGraphNodeId);
+          const groupResult = groupT ? groupT.result : false;
+          testScenario1 = groupResult ? testScenario1 : TestScenarioHelper.applyDeMorgansLaw(testScenario1);
+          testScenario1 = this.simplifyTestScenario(testScenario1, assertionDictionary, false);
 
-          if (groupExpression.targetType === OPERATOR_TYPE.OR && result.targetType === OPERATOR_TYPE.AND) {
+          if (testScenario1.targetType === OPERATOR_TYPE.OR && result.targetType === OPERATOR_TYPE.AND) {
             const r = {
               id: uuid(),
-              targetType: groupExpression.targetType,
+              targetType: testScenario1.targetType,
               trueResults: result.trueResults,
               falseResults: result.falseResults,
               testAssertions: [],
             };
-            const groupExpressionAssertions = groupExpression.testAssertions;
-            for (let j = 0; j < groupExpressionAssertions.length; j++) {
+            const testScenario1Assertions = testScenario1.testAssertions;
+            for (let j = 0; j < testScenario1Assertions.length; j++) {
               const child = {
                 id: uuid(),
                 targetType: result.targetType,
@@ -166,43 +181,43 @@ class DNFLogicCoverage {
                 testAssertions: [],
               };
 
-              child.testResults.push({ type: RESULT_TYPE.True, graphNodeId: group.graphNode.id });
+              child.testResults.push({ type: RESULT_TYPE.True, graphNodeId: groupGraphNodeId });
               const assertions = result.testAssertions.filter(
-                (x) => x.graphNode && x.graphNode.id !== group.graphNode.id
+                (x) => x.graphNode && x.graphNode.id !== groupGraphNodeId
               );
               child.testAssertions.push(...assertions);
 
               const assertion = child.testAssertions.find(
-                (x) => x.graphNode && x.graphNode.id === groupExpressionAssertions[j].graphNode.id
+                (x) => x.graphNode && x.graphNode.id === testScenario1Assertions[j].graphNode.id
               );
 
               if (!assertion) {
                 child.testAssertions.push({
-                  graphNode: groupExpressionAssertions[j].graphNode,
-                  result: groupExpressionAssertions[j].result,
+                  graphNode: testScenario1Assertions[j].graphNode,
+                  result: testScenario1Assertions[j].result,
                 });
               }
 
-              const simplifiedChild = this.simplify(child, assertionDictionary, false);
+              const simplifiedChild = this.simplifyTestScenario(child, assertionDictionary, false);
 
               r.testAssertions.push({ testScenario: simplifiedChild, result: true });
 
-              result = this.simplify(r, assertionDictionary, false);
+              result = this.simplifyTestScenario(r, assertionDictionary, false);
             }
-          } else if (groupExpression.targetType === OPERATOR_TYPE.AND && result.targetType === OPERATOR_TYPE.OR) {
-            result.testAssertions.push({ testScenario: groupExpression, result: true });
+          } else if (testScenario1.targetType === OPERATOR_TYPE.AND && result.targetType === OPERATOR_TYPE.OR) {
+            result.testAssertions.push({ testScenario: testScenario1, result: true });
           } else {
-            const groupExpressionAssertions = groupExpression.testAssertions;
-            for (let j = 0; j < groupExpressionAssertions.length; j++) {
+            const testScenario1Assertions = testScenario1.testAssertions;
+            for (let j = 0; j < testScenario1Assertions.length; j++) {
               const assertion = result.testAssertions.find(
-                (x) => x.graphNode && x.graphNode.id === groupExpressionAssertions[j].graphNode.id
+                (x) => x.graphNode && x.graphNode.id === testScenario1Assertions[j].graphNode?.id
               );
               if (assertion) {
-                assertion.result = groupExpressionAssertions[j].result;
+                assertion.result = testScenario1Assertions[j].result;
               } else {
                 result.testAssertions.push({
-                  graphNode: groupExpressionAssertions[j].graphNode,
-                  result: groupExpressionAssertions[j].result,
+                  graphNode: testScenario1Assertions[j].graphNode,
+                  result: testScenario1Assertions[j].result,
                 });
               }
             }
@@ -210,19 +225,18 @@ class DNFLogicCoverage {
         }
       }
 
-      const index = groups.findIndex((x) => x.graphNode && x.graphNode.id === group.graphNode.id);
       const grounpIndexInResult = result.testAssertions.findIndex(
-        (x) => x.graphNode && x.graphNode.id === group.graphNode.id
+        (x) => x.graphNode && x.graphNode.id === groupGraphNodeId
       );
-      groups.splice(index, 1);
       result.testAssertions.splice(grounpIndexInResult, 1);
+      group = getFirstGroupInTestAssertions(result.testAssertions);
     }
 
     if (result.testAssertions.length === 1) {
       const child = result.testAssertions[0].testScenario;
       if (child) {
         child.testResults = result.testResults ? [...result.testResults] : [];
-        result = this.simplify(child, assertionDictionary, false);
+        result = this.simplifyTestScenario(child, assertionDictionary, false);
       }
     } else {
       const testScenarios = result.testAssertions
