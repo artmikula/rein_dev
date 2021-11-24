@@ -1,38 +1,78 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import PropTypes from 'prop-types';
 import React from 'react';
 import './style.scss';
 
-export default function ListItem({ value, label, selected, onSelect, onDelete, removable }) {
-  const handleCheck = (e) => onSelect(value, e.target.checked);
-  const handleDelete = (e) => onDelete(value);
+export default function ListItem({
+  value,
+  label,
+  selected,
+  selectable,
+  onSelect,
+  onRemove,
+  removable,
+  checked,
+  checkable,
+  onCheck,
+}) {
+  const handleCheck = (e) => {
+    e.stopPropagation();
+    if (checkable) {
+      onCheck(value, e.target.checked);
+    }
+  };
+
+  const handleRemove = (e) => {
+    e.stopPropagation();
+    if (removable) {
+      onRemove(value);
+    }
+  };
+
+  const handleSelect = (e) => {
+    e.stopPropagation();
+    if (selectable) {
+      onSelect(value);
+    }
+  };
 
   return (
-    <div className="d-flex px-2 list-item align-items-center">
-      <input type="checkbox" checked={selected} onChange={handleCheck} id={value} />
-      <label htmlFor={value} className="flex-grow-1 mb-0 ml-2">
+    <div className={`d-flex px-2 list-item align-items-center ${selected && 'selected'}`} onClick={handleSelect}>
+      {checkable && <input type="checkbox" checked={checked} onChange={handleCheck} disabled={!selectable} />}
+      <label className="flex-grow-1 mb-0 ml-2" htmlFor="">
         {label}
       </label>
-      {removable ? (
-        <button type="button" className="border-0 outline-0 icon-btn bg" onClick={handleDelete}>
+      {removable && (
+        <button type="button" className="border-0 outline-0 icon-btn bg" onClick={handleRemove}>
           <i className="bi bi-trash-fill text-danger" />
         </button>
-      ) : null}
+      )}
     </div>
   );
 }
 
 ListItem.defaultProps = {
   onSelect: () => {},
-  onDelete: () => {},
-  selected: false,
+  onRemove: () => {},
+  onCheck: () => {},
   removable: false,
+  selected: false,
+  selectable: false,
+  checkable: false,
+  checked: false,
 };
 
 ListItem.propTypes = {
-  value: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
   label: PropTypes.string.isRequired,
   selected: PropTypes.bool,
   removable: PropTypes.bool,
   onSelect: PropTypes.func,
-  onDelete: PropTypes.func,
+  onRemove: PropTypes.func,
+  selectable: PropTypes.bool,
+  checkable: PropTypes.bool,
+  checked: PropTypes.bool,
+  onCheck: PropTypes.func,
 };
