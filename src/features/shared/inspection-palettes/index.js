@@ -1,7 +1,7 @@
 export const RULE_CODE = {
-  RULE1: 'RULE1',
-  RULE2: 'RULE2',
-  RULE3: 'RULE3',
+  RULE1: 'rule1',
+  RULE2: 'rule2',
+  RULE3: 'rule3',
 };
 
 export const inspectionPalettes = [
