@@ -40,7 +40,7 @@ export default function ListItem({
 
   return (
     <div className={`d-flex px-2 list-item align-items-center ${selected && 'selected'}`} onClick={handleSelect}>
-      {checkable && <input type="checkbox" checked={checked} onChange={handleCheck} disabled={!selectable} />}
+      {checkable && <input type="checkbox" checked={checked} onChange={handleCheck} />}
       <label className="flex-grow-1 mb-0 ml-2" htmlFor="">
         {label}
       </label>
@@ -66,7 +66,7 @@ ListItem.defaultProps = {
 
 ListItem.propTypes = {
   value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-  label: PropTypes.string.isRequired,
+  label: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
   selected: PropTypes.bool,
   removable: PropTypes.bool,
   onSelect: PropTypes.func,
