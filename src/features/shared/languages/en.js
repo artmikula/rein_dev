@@ -214,6 +214,7 @@ const en = {
   newtemplatename: 'New Template name',
   newkeyword: 'New Keyword',
   create: 'Create',
+  setpalettes: 'Set Palettes',
   viewinspectionpalette: 'View Inspection Palette',
   ok: 'Ok',
 };

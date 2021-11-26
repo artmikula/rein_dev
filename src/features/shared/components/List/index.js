@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import ListItem from '../ListItem';
 
-function List({ data, getValue, getLabel, getSelected, onSelect, getKey, onDelete, ...props }) {
+function List({ data, getValue, getLabel, getSelected, getChecked, getKey, ...props }) {
   return (
     <div>
       {data.map((item) => {
@@ -12,8 +12,7 @@ function List({ data, getValue, getLabel, getSelected, onSelect, getKey, onDelet
             value={getValue(item)}
             label={getLabel(item)}
             selected={getSelected(item)}
-            onSelect={onSelect}
-            onDelete={onDelete}
+            checked={getChecked(item)}
             {...props}
           />
         );
@@ -23,9 +22,8 @@ function List({ data, getValue, getLabel, getSelected, onSelect, getKey, onDelet
 }
 
 List.defaultProps = {
-  onSelect: () => {},
-  onDelete: () => {},
   getSelected: () => false,
+  getChecked: () => false,
 };
 
 List.propTypes = {
@@ -33,9 +31,8 @@ List.propTypes = {
   getValue: PropTypes.func.isRequired,
   getLabel: PropTypes.func.isRequired,
   getKey: PropTypes.func.isRequired,
-  onSelect: PropTypes.func,
-  onDelete: PropTypes.func,
   getSelected: PropTypes.func,
+  getChecked: PropTypes.func,
 };
 
 export default List;

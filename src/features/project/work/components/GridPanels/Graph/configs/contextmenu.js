@@ -19,6 +19,7 @@ const contextMenusSetup = (cy, actions) => {
     },
     { id: 'addRequire', languageKey: 'addrequire', selector: `node:selected[type = "${GRAPH_NODE_TYPE.CAUSE}"]` },
     { id: 'addMask', languageKey: 'addmask', selector: `node:selected[type = "${GRAPH_NODE_TYPE.EFFECT}"]` },
+    { id: 'setPalette', languageKey: 'setpalettes', selector: `node:selected[type = "${GRAPH_NODE_TYPE.CAUSE}"]` },
   ];
 
   let contextmenu;
