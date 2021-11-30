@@ -4,6 +4,23 @@ import { differenceWith, isEqual } from 'lodash';
 import { DEFAULT_NODE_X, EDGE_COLOR, NODE_BG_COLOR } from './constants';
 import P5 from './lib/p5';
 
+export const caculateInsplectionPalette = (graphData) => {
+  const graphDataClone = cloneDeep(graphData);
+  graphData.graphNodes.forEach((graphNode) => {
+    if (graphNode.inspectionPalettes) {
+      const inspectionPaletteResults = [];
+      graphNode.inspectionPalettes.split(',').forEach((paletteId) => {
+        // const palette = inspectionPalettes[]
+        // if(palette.rules){
+        //   palette.rules.forEach(rule=>{
+        //     if(ruleDefine[])
+        //   })
+        // }
+      });
+    }
+  });
+};
+
 export const isUndirectConstraint = (type) =>
   type === GRAPH_LINK_TYPE.EXCLUSIVE || type === GRAPH_LINK_TYPE.INCLUSIVE || type === GRAPH_LINK_TYPE.ONLYONE;
 

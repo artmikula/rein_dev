@@ -1,5 +1,5 @@
 import List from 'features/shared/components/List';
-import { inspectionPalettes } from 'features/shared/inspection-palettes';
+import { INSPECTION_PALETTES } from 'features/shared/inspection-palettes';
 import Language from 'features/shared/languages/Language';
 import React, { useState } from 'react';
 import { Button } from 'reactstrap';
@@ -49,7 +49,7 @@ export default function PaletteAdding({ nodes, onClose, onSave }) {
           </p>
           <div className="flex-grow-1 overflow-auto" style={{ height: '300px' }}>
             <List
-              data={inspectionPalettes}
+              data={Object.values(INSPECTION_PALETTES)}
               selectedPaltteIds={selectedPaltteIds}
               getLabel={(item) => item.name}
               getKey={(item) => item.id}

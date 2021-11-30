@@ -1,17 +1,21 @@
-import { inspectionPalettes, inspectionRules } from 'features/shared/inspection-palettes';
+import { INSPECTION_PALETTES, INSPECTION_RULES } from 'features/shared/inspection-palettes';
 import Language from 'features/shared/languages/Language';
 import React, { useState } from 'react';
 import { Button } from 'reactstrap';
 import List from '../../../../../../../shared/components/List';
 
 export default function InspectionPalette({ projectId, workId, onClose }) {
-  const [selectedPaltteId, setSelectedPaltteId] = useState(inspectionPalettes[0].id);
+  const [selectedPaltteCode, setSelectedPaletteCode] = useState(Object.values(INSPECTION_PALETTES)[0].code);
 
-  const handleSelectTemplate = (id) => setSelectedPaltteId(id);
+  const handleSelectTemplate = (code) => setSelectedPaletteCode(code);
 
-  const selectedPalette = inspectionPalettes.find((x) => x.id === selectedPaltteId);
+  const selectedPalette = INSPECTION_PALETTES[selectedPaltteCode];
 
-  const rules = inspectionRules.filter((x) => selectedPalette.rules.has(x.code));
+  const rules = [];
+
+  selectedPalette.rules.forEach((x) => {
+    rules.push(INSPECTION_RULES[x]);
+  });
 
   return (
     <div>
@@ -23,13 +27,13 @@ export default function InspectionPalette({ projectId, workId, onClose }) {
           <div className="flex-grow-1" style={{ overflowY: 'auto', height: '300px' }}>
             <List
               selectable
-              data={inspectionPalettes}
-              selectedPaltteId={selectedPaltteId}
+              data={Object.values(INSPECTION_PALETTES)}
+              selectedPaltteCode={selectedPaltteCode}
               onSelect={handleSelectTemplate}
-              getSelected={(item) => item.id === selectedPaltteId}
+              getSelected={(item) => item.code === selectedPaltteCode}
               getLabel={(item) => item.name}
-              getValue={(item) => item.id}
-              getKey={(item) => item.id}
+              getValue={(item) => item.code}
+              getKey={(item) => item.code}
             />
           </div>
         </div>
@@ -40,7 +44,7 @@ export default function InspectionPalette({ projectId, workId, onClose }) {
           <div className="flex-grow-1 overflow-auto" style={{ height: '300px' }}>
             <List
               data={rules}
-              selectedPaltteId={selectedPaltteId}
+              selectedPaltteCode={selectedPaltteCode}
               getLabel={(item) => item.name}
               getKey={(item) => item.code}
               getValue={(item) => item.code}

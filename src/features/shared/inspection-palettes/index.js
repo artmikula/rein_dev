@@ -1,16 +1,35 @@
-export const RULE_CODE = {
+export const RULE_CODES = {
   RULE1: 'rule1',
   RULE2: 'rule2',
   RULE3: 'rule3',
 };
 
-export const inspectionPalettes = [
-  { id: 1, name: 'Electronic', rules: new Set([RULE_CODE.RULE1, RULE_CODE.RULE2]) },
-  { id: 2, name: 'Electric power', rules: new Set([RULE_CODE.RULE1, RULE_CODE.RULE3]) },
-  { id: 3, name: 'Electronic current', rules: new Set([RULE_CODE.RULE2, RULE_CODE.RULE3]) },
-];
-export const inspectionRules = [
-  { code: RULE_CODE.RULE1, name: 'SAG and SWELL cannot occur at the same time' },
-  { code: RULE_CODE.RULE2, name: 'SAG and INTERRUPTION cannot occur simultaneously' },
-  { code: RULE_CODE.RULE3, name: 'SWELL and INTERRUPTION cannot occur simultaneously' },
-];
+export const PALETTE_CODES = {
+  PALETTE1: 'palette1',
+  PALETTE2: 'palette2',
+  PALETTE3: 'palette3',
+};
+
+export const INSPECTION_PALETTES = {
+  [PALETTE_CODES.PALETTE1]: {
+    code: PALETTE_CODES.PALETTE1,
+    name: 'Electronic',
+    rules: new Set([RULE_CODES.RULE1, RULE_CODES.RULE2]),
+  },
+  [PALETTE_CODES.PALETTE2]: {
+    code: PALETTE_CODES.PALETTE2,
+    name: 'Electric power',
+    rules: new Set([RULE_CODES.RULE1, RULE_CODES.RULE3]),
+  },
+  [PALETTE_CODES.PALETTE3]: {
+    code: PALETTE_CODES.PALETTE3,
+    name: 'Electronic current',
+    rules: new Set([RULE_CODES.RULE2, RULE_CODES.RULE3]),
+  },
+};
+
+export const INSPECTION_RULES = {
+  [RULE_CODES.RULE1]: { code: RULE_CODES.RULE1, name: 'SAG and SWELL cannot occur at the same time' },
+  [RULE_CODES.RULE2]: { code: RULE_CODES.RULE2, name: 'SAG and INTERRUPTION cannot occur simultaneously' },
+  [RULE_CODES.RULE3]: { code: RULE_CODES.RULE3, name: 'SWELL and INTERRUPTION cannot occur simultaneously' },
+};
