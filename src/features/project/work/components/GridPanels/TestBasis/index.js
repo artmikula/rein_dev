@@ -171,16 +171,16 @@ class TestBasis extends Component {
   };
 
   /* Action */
-  _handleChange = (editorState) => {
-    const { isOpenClassifyPopover } = this.state;
+  _handleChange = (newEditorState) => {
+    const { isOpenClassifyPopover, editorState } = this.state;
     const { setTestBasis } = this.props;
 
     if (!this.ready) {
       return;
     }
 
-    const selectionState = editorState.getSelection();
-    const { selectedText, anchorKey, end, start } = this._getSelection(selectionState, editorState);
+    const selectionState = newEditorState.getSelection();
+    const { selectedText, anchorKey, end, start } = this._getSelection(selectionState, newEditorState);
 
     if (
       selectedText.trim().length > 0 &&
@@ -189,10 +189,25 @@ class TestBasis extends Component {
     ) {
       this.setState({ isOpenClassifyPopover: true, selectionState });
     } else {
-      const drawContent = convertToRaw(editorState.getCurrentContent());
+      const currentContent = newEditorState.getCurrentContent();
+      const drawContent = convertToRaw(currentContent);
+      const currentPlainText = currentContent.getPlainText();
+      const prevContent = editorState.getCurrentContent();
+      const prevPlainText = prevContent.getPlainText();
+
+      if (currentPlainText.length !== prevPlainText.length) {
+        // check if delete definition
+        if (currentPlainText.length !== prevPlainText.length) {
+          const removedEntities = TestBasisManager.findRemovedEntities(drawContent);
+          removedEntities.forEach((item) => {
+            this._raiseEvent(domainEvents.ACTION.REMOVE, { ...item });
+          });
+        }
+      }
+
       TestBasisManager.set(drawContent);
       setTestBasis(JSON.stringify(drawContent));
-      this.setState({ editorState, isOpenClassifyPopover: false });
+      this.setState({ editorState: newEditorState, isOpenClassifyPopover: false });
     }
   };
 
