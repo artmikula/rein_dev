@@ -1,8 +1,36 @@
+/* eslint-disable no-bitwise */
 import { GRAPH_LINK_TYPE, GRAPH_NODE_TYPE, NODE_INSPECTION, OPERATOR_TYPE } from 'features/shared/constants';
+import { INSPECTION_PALETTES } from 'features/shared/inspection-palettes';
 import appConfig from 'features/shared/lib/appConfig';
 import { differenceWith, isEqual } from 'lodash';
 import { DEFAULT_NODE_X, EDGE_COLOR, NODE_BG_COLOR } from './constants';
 import P5 from './lib/p5';
+import ruleDefine from './rule-define';
+
+export const caculateInsplectionPalette = (graphData) => {
+  graphData.graphNodes.forEach((graphNode) => {
+    if (graphNode.inspectionPalettes) {
+      const inspectionPaletteResults = new Set();
+
+      graphNode.inspectionPalettes.split(',').forEach((paletteCode) => {
+        const palette = INSPECTION_PALETTES[paletteCode];
+
+        if (palette) {
+          palette.rules.forEach((ruleCode) => {
+            if (ruleDefine[ruleCode]({ currentNode: graphNode, graphData })) {
+              inspectionPaletteResults.add(ruleCode);
+            }
+          });
+        }
+      });
+
+      const _graphNode = graphNode;
+      _graphNode.inspectionPaletteResults = [...inspectionPaletteResults].sort().join(',');
+    }
+  });
+
+  return graphData;
+};
 
 export const isUndirectConstraint = (type) =>
   type === GRAPH_LINK_TYPE.EXCLUSIVE || type === GRAPH_LINK_TYPE.INCLUSIVE || type === GRAPH_LINK_TYPE.ONLYONE;
@@ -143,15 +171,27 @@ export const createEdge = (id, sourceId, targetId, isNotRelation, type) => {
 };
 
 export const createIconNode = (node, type) => {
-  const { id, inspection, nodeId } = node.data();
+  const { id, inspection, nodeId, inspectionPaletteResults } = node.data();
   let bgImage = type === GRAPH_NODE_TYPE.PIN ? '/img/pinIcon.svg' : '/img/warningIcon.svg';
   if (type === GRAPH_NODE_TYPE.INSPECTION) {
-    // eslint-disable-next-line no-bitwise
-    bgImage = inspection & NODE_INSPECTION.DisconnectedNode ? '/img/errorIcon.svg' : bgImage;
+    bgImage =
+      inspection & NODE_INSPECTION.DisconnectedNode || (inspectionPaletteResults && inspectionPaletteResults.length > 0)
+        ? '/img/errorIcon.svg'
+        : bgImage;
   }
   return {
     group: 'nodes',
-    data: { id: `${type}_${id}`, size: '15px', type, shape: 'rectangle', inspection, node: nodeId, zIndex: 1, bgImage },
+    data: {
+      id: `${type}_${id}`,
+      size: '15px',
+      type,
+      shape: 'rectangle',
+      inspection,
+      node: nodeId,
+      zIndex: 1,
+      bgImage,
+      inspectionPaletteResults,
+    },
     position: getIconPosition(node, type),
     grabbable: false,
     selectable: false,

@@ -19,6 +19,7 @@ import { DELETE_KEY } from './constants';
 import GraphManager from './graphManager';
 import './style.scss';
 import {
+  caculateInsplectionPalette,
   compareNodeArray,
   convertDirectConstraintToEdge,
   convertGraphLinkToEdge,
@@ -100,6 +101,11 @@ class Graph extends Component {
     eventBus.publish(domainEvents.GRAPH_DOMAINEVENT, message);
   };
 
+  _updateInspectionPalettes = (data) => {
+    const updatedData = caculateInsplectionPalette(data);
+    this.graphManager.updateInspections(updatedData.graphNodes);
+  };
+
   _handleGraphChange = (graphAligning = false) => {
     if (graphAligning) {
       this._raiseEvenGraphAligning({ action: domainEvents.ACTION.GRAPH_ALIGN });
@@ -109,6 +115,8 @@ class Graph extends Component {
       if (this.graphState && this.graphManager && !this.dataIniting) {
         const currentState = this.graphManager.getState();
         const data = covertGraphStateToSavedData(currentState);
+        this._updateInspectionPalettes(data);
+        // check remove graphNode
         const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
         const { graphNodes } = separateNodes(removeNodes);
 
@@ -120,6 +128,7 @@ class Graph extends Component {
           });
         }
 
+        // raise update event and save graph data
         this._raiseEventUpdate();
         setGraph(data);
       }
@@ -303,6 +312,10 @@ class Graph extends Component {
 
       this.dataIniting = false;
       this.initiatedGraph = true;
+
+      const currentState = this.graphManager.getState();
+      const data = covertGraphStateToSavedData(currentState);
+      this._updateInspectionPalettes(data);
     }
   };
 

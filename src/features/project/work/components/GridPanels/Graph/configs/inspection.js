@@ -1,4 +1,5 @@
 import { GRAPH_NODE_TYPE, NODE_INSPECTION } from 'features/shared/constants';
+import { INSPECTION_RULES, RULE_TYPE } from 'features/shared/inspection-palettes';
 import Language from 'features/shared/languages/Language';
 import { NODE_INPECTION_TEXT_KEY } from '../constants';
 
@@ -42,6 +43,16 @@ const inspectionSetup = (cy) => {
     return item;
   };
 
+  const _createInspectionPaletteItem = (rule) => {
+    const item = document.createElement('div');
+    item.textContent = rule.name;
+    if (rule.type === RULE_TYPE.ERROR) {
+      item.setAttribute('class', 'text-danger font-weight-bold');
+    }
+
+    return item;
+  };
+
   const _createContainer = (inspectionNode) => {
     const { id, node } = inspectionNode.data();
 
@@ -58,10 +69,18 @@ const inspectionSetup = (cy) => {
   };
 
   const _show = (e, inspectionNode) => {
-    const { inspection } = inspectionNode.data();
+    const { inspection, inspectionPaletteResults } = inspectionNode.data();
 
     const inspectionDOM = _createContainer(inspectionNode);
     // inspection items
+    if (inspectionPaletteResults) {
+      inspectionPaletteResults.split(',').forEach((ruleCode) => {
+        if (INSPECTION_RULES[ruleCode]) {
+          inspectionDOM.appendChild(_createInspectionPaletteItem(INSPECTION_RULES[ruleCode]));
+        }
+      });
+    }
+
     const sortedInspections = _getInspections(inspection).sort((a, b) => a.type - b.type);
     sortedInspections.forEach((inspection) => {
       inspectionDOM.appendChild(_createItem(inspection));

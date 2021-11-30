@@ -5,8 +5,7 @@ export const twoCauseDefinitionDoNotHasASameExclusive = (currentNode, graphData,
     return false;
   }
 
-  const currentDefinition = currentNode.definition.toUpperCase();
-  console.log('currentDefinition', currentDefinition);
+  const currentDefinition = currentNode.definition.trim().toUpperCase();
 
   if (!definitionSet.has(currentDefinition)) {
     return false;
@@ -17,8 +16,7 @@ export const twoCauseDefinitionDoNotHasASameExclusive = (currentNode, graphData,
     const graphNode = graphNodes[i];
 
     if (graphNode.type === GRAPH_NODE_TYPE.CAUSE) {
-      const definition = graphNode.definition.toUpperCase();
-      console.log('definition', definition);
+      const definition = graphNode.definition.trim().toUpperCase();
 
       if (definitionSet.has(definition) && definition !== currentDefinition) {
         const exclusives = constraints.filter((x) => x.type === GRAPH_NODE_TYPE.EXCLUSIVE);
