@@ -217,6 +217,8 @@ const en = {
   setpalettes: 'Set Palettes',
   viewinspectionpalette: 'View Inspection Palette',
   ok: 'Ok',
+  information: 'Information',
+  nodedetail: 'Node detail',
 };
 
 export default en;

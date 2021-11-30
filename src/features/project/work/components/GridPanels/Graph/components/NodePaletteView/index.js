@@ -1,11 +1,11 @@
 import List from 'features/shared/components/List';
 import { INSPECTION_PALETTES } from 'features/shared/inspection-palettes';
 import Language from 'features/shared/languages/Language';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from 'reactstrap';
 import './style.scss';
 
-export default function PaletteAdding({ nodes, onClose, onSave }) {
+export default function NodePaletteView({ nodes, onClose, onSave }) {
   const [selectedPaltteIds, setSelectedPaltteIds] = useState(new Set());
 
   const handleCheckPalette = (id) => {
@@ -22,12 +22,20 @@ export default function PaletteAdding({ nodes, onClose, onSave }) {
     onClose();
   };
 
+  const isSingleNode = nodes.length === 1;
+
+  useEffect(() => {
+    if (isSingleNode && nodes[0].inspectionPalettes) {
+      setSelectedPaltteIds(new Set(nodes[0].inspectionPalettes.split(',')));
+    }
+  }, [nodes]);
+
   return (
     <div>
       <div className="list-border-color d-flex m-2 border">
         <div className="d-flex flex-column" style={{ width: '40%' }}>
           <p className="list-border-color border-bottom p-2 mb-0" style={{ fontWeight: 500 }}>
-            {Language.get('Nodes')}
+            {isSingleNode ? Language.get('Definition') : Language.get('Nodes')}
           </p>
           <div className="flex-grow-1" style={{ overflowY: 'auto', height: '300px' }}>
             <List

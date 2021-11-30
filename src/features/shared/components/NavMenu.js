@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import { Collapse, Navbar, NavbarBrand, NavbarToggler } from 'reactstrap';
-import { MultiLanguageDropdown, ProfileDropdown } from './index';
+import { MultiLanguageDropdown, ProfileDropdown, ReInLinkButton } from './index';
 import './NavMenu.css';
 
 export default class NavMenu extends Component {
@@ -44,6 +44,7 @@ export default class NavMenu extends Component {
             navbar
           >
             <ul className="d-flex justify-content-end m-0 pl-4">
+              <ReInLinkButton />
               <MultiLanguageDropdown />
               <ProfileDropdown />
             </ul>

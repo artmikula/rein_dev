@@ -11,7 +11,7 @@ import { CLASSIFY, GRAPH_LINK_TYPE, GRAPH_NODE_TYPE, NODE_INSPECTION, OPERATOR_T
 import Language from 'features/shared/languages/Language';
 import React from 'react';
 import { v4 as uuid } from 'uuid';
-import PaletteAdding from './components/PaletteAdding';
+import NodePaletteView from './components/NodePaletteView';
 import contextMenusSetup from './configs/contextmenu';
 import cytoscapeSetup from './configs/cytoscape';
 import definitionTooltipSetup from './configs/definitionTooltip';
@@ -46,6 +46,7 @@ class GraphManager {
     this.lastestSelectedNode = null;
     this.tapNode = false;
     this._init(container);
+    this.firstTap = null;
   }
 
   _init = (container) => {
@@ -67,7 +68,7 @@ class GraphManager {
       unlockPosition: this.unlockPosition,
       addRequire: () => this.addDirectConstraint(GRAPH_LINK_TYPE.REQUIRE),
       addMask: () => this.addDirectConstraint(GRAPH_LINK_TYPE.MASK),
-      setPalette: () => this._setPalette(),
+      setPalette: () => this._handleSetPalette(),
     });
     this.graph.on('ehcomplete', this._handleDrawEdgeComplete);
     this.graph.on('select', 'node', this._handleSelect);
@@ -80,13 +81,37 @@ class GraphManager {
     this.graph.on('tap', 'node', this._handleOperatorNodeTap);
     this.graph.on('mousedown', 'node', this._handleMouseDownOnNode);
     this.graph.on('mouseup', 'node', this._handleMouseUpOnNode);
+    this.graph.on('dblclick', 'node', this._handleDblTap);
+    this.graph.on('vdblclick', 'node', this._handleDblTap);
+    this.graph.on('dblclick', 'node', this._handleDblTap);
+    this.graph.on('tap', 'node', this._handleDblTap);
   };
 
-  _setPalette = () => {
+  _handleDblTap = (e) => {
+    if (this.firstTap) {
+      clearTimeout(this.firstTap);
+      this.firstTap = null;
+      this._openPaletteView(e.target);
+    } else {
+      this.firstTap = setTimeout(() => {
+        this.firstTap = null;
+      }, 500);
+    }
+  };
+
+  _handleSetPalette = () => {
+    const nodes = this.graph.nodes(':selected');
+    if (nodes.length === 0) {
+      return;
+    }
+
+    this._openPaletteView(nodes);
+  };
+
+  _openPaletteView = (target) => {
     let _closeModal = () => {};
     const handleClose = () => _closeModal();
-    const nodes = this.graph.nodes(':selected');
-    const nodesData = nodes
+    const nodesData = target
       .map((x) => x.data())
       .sort((a, b) => {
         const aIndex = parseInt(a.nodeId.replace(CLASSIFY.CAUSE_PREFIX, ''), 10);
@@ -95,7 +120,7 @@ class GraphManager {
       });
 
     const handleSave = (inspectionPalettes) => {
-      nodes.forEach((x) => {
+      target.forEach((x) => {
         const node = x;
         node.data().inspectionPalettes = inspectionPalettes;
       });
@@ -104,8 +129,8 @@ class GraphManager {
     };
 
     const modaProps = {
-      title: Language.get('setpalettes'),
-      content: <PaletteAdding nodes={nodesData} onClose={handleClose} onSave={handleSave} />,
+      title: target.length === 1 ? Language.get('nodedetail') : Language.get('setpalettes'),
+      content: <NodePaletteView nodes={nodesData} onClose={handleClose} onSave={handleSave} />,
       actions: null,
     };
 
