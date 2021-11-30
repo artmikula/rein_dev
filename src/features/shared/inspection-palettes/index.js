@@ -10,6 +10,11 @@ export const PALETTE_CODES = {
   PALETTE3: 'palette3',
 };
 
+export const RULE_TYPE = {
+  ERROR: 'ERROR',
+  WARNING: 'WARNING',
+};
+
 export const INSPECTION_PALETTES = {
   [PALETTE_CODES.PALETTE1]: {
     code: PALETTE_CODES.PALETTE1,
@@ -29,7 +34,19 @@ export const INSPECTION_PALETTES = {
 };
 
 export const INSPECTION_RULES = {
-  [RULE_CODES.RULE1]: { code: RULE_CODES.RULE1, name: 'SAG and SWELL cannot occur at the same time' },
-  [RULE_CODES.RULE2]: { code: RULE_CODES.RULE2, name: 'SAG and INTERRUPTION cannot occur simultaneously' },
-  [RULE_CODES.RULE3]: { code: RULE_CODES.RULE3, name: 'SWELL and INTERRUPTION cannot occur simultaneously' },
+  [RULE_CODES.RULE1]: {
+    code: RULE_CODES.RULE1,
+    name: 'SAG and SWELL cannot occur at the same time',
+    type: RULE_TYPE.ERROR,
+  },
+  [RULE_CODES.RULE2]: {
+    code: RULE_CODES.RULE2,
+    name: 'SAG and INTERRUPTION cannot occur simultaneously',
+    type: RULE_TYPE.ERROR,
+  },
+  [RULE_CODES.RULE3]: {
+    code: RULE_CODES.RULE3,
+    name: 'SWELL and INTERRUPTION cannot occur simultaneously',
+    type: RULE_TYPE.ERROR,
+  },
 };

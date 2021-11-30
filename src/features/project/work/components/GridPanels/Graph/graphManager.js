@@ -46,7 +46,8 @@ class GraphManager {
     this.lastestSelectedNode = null;
     this.tapNode = false;
     this._init(container);
-    this.firstTap = null;
+    this.dblTimeout = null;
+    this.targetTap = null;
   }
 
   _init = (container) => {
@@ -88,14 +89,16 @@ class GraphManager {
   };
 
   _handleDblTap = (e) => {
-    if (this.firstTap) {
-      clearTimeout(this.firstTap);
-      this.firstTap = null;
+    const target = e.target[0];
+    if (isActiveNode(target) && !isUndirectConstraintNode(target) && this.targetTap && this.targetTap === target) {
+      clearTimeout(this.dblTimeout);
+      this.targetTap = null;
       this._openPaletteView(e.target);
     } else {
-      this.firstTap = setTimeout(() => {
-        this.firstTap = null;
-      }, 500);
+      this.dblTimeout = setTimeout(() => {
+        this.targetTap = null;
+      }, 300);
+      this.targetTap = target;
     }
   };
 
@@ -255,13 +258,17 @@ class GraphManager {
 
   _handleAddNode = (e) => {
     const node = e.target;
-    const { inspection, isLocked } = node.data();
+    const { inspection, isLocked, inspectionPaletteResults } = node.data();
     // draw pin icon
     if (isLocked && isActiveNode(node)) {
       this._drawIcon(node, GRAPH_NODE_TYPE.PIN);
     }
     // draw inspection icon
-    if (inspection && inspection > 0 && isActiveNode(node) && !isUndirectConstraintNode(node)) {
+    if (
+      ((inspection && inspection > 0) || (inspectionPaletteResults && inspectionPaletteResults.length > 0)) &&
+      isActiveNode(node) &&
+      !isUndirectConstraintNode(node)
+    ) {
       this._drawIcon(node, GRAPH_NODE_TYPE.INSPECTION);
     }
   };
@@ -383,11 +390,18 @@ class GraphManager {
     items.forEach((item) => {
       const node = this.graph.$id(`${item.id}`);
 
-      if (node && node.data().inspection !== item.inspection) {
+      if (
+        (node && node.data().inspection !== item.inspection) ||
+        node.data().inspectionPaletteResults !== item.inspectionPaletteResults
+      ) {
         node.data().inspection = item.inspection;
+        node.data().inspectionPaletteResults = item.inspectionPaletteResults;
         this._removeIcon(node, GRAPH_NODE_TYPE.INSPECTION);
 
-        if (item.inspection !== NODE_INSPECTION.None) {
+        if (
+          item.inspection !== NODE_INSPECTION.None ||
+          (item.inspectionPaletteResults && item.inspectionPaletteResults.length > 0)
+        ) {
           this._drawIcon(node, GRAPH_NODE_TYPE.INSPECTION);
         }
       }

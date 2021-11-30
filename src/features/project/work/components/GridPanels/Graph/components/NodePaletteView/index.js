@@ -60,9 +60,9 @@ export default function NodePaletteView({ nodes, onClose, onSave }) {
               data={Object.values(INSPECTION_PALETTES)}
               selectedPaltteIds={selectedPaltteIds}
               getLabel={(item) => item.name}
-              getKey={(item) => item.id}
-              getValue={(item) => item.id}
-              getChecked={(item) => selectedPaltteIds.has(item.id)}
+              getKey={(item) => item.code}
+              getValue={(item) => item.code}
+              getChecked={(item) => selectedPaltteIds.has(item.code)}
               onCheck={handleCheckPalette}
               checkable
             />
