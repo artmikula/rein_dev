@@ -232,13 +232,13 @@ export const createOperatorNode = (node, angleObj) => {
 };
 
 export const convertGraphNodeToNode = (graphNode) => {
-  const { type, positionX, positionY, isLocked, inspection, ...others } = graphNode;
+  const { type, positionX, positionY, isLocked, inspection, inspectionPaletteResults, ...others } = graphNode;
   const _size = appConfig.graph.nodeSize;
   const size = `${_size}px`;
   const { lineWidth } = appConfig.graph;
   const node = {
     group: 'nodes',
-    data: { size, _size, lineWidth, type, isLocked, zIndex: 1, inspection, ...others },
+    data: { size, _size, lineWidth, type, isLocked, zIndex: 1, inspection, inspectionPaletteResults, ...others },
     position: { x: positionX, y: positionY },
     grabbable: !isLocked,
   };
@@ -266,6 +266,8 @@ export const convertGraphNodeToNode = (graphNode) => {
 
   // eslint-disable-next-line no-bitwise
   node.data.bgColor = inspection & NODE_INSPECTION.DisconnectedNode ? appConfig.graph.errorColor : node.data.bgColor;
+  node.data.bgColor =
+    inspectionPaletteResults && inspectionPaletteResults.length > 0 ? appConfig.graph.errorColor : node.data.bgColor;
 
   return node;
 };
@@ -329,7 +331,7 @@ export const convertUndirectConstraintToNode = (constraint) => {
   return convertGraphNodeToNode(createGraphNode(id, nodeId, type, positionX, positionY, false));
 };
 
-export const convertUndirectConstraintToEdges = (constraint) => {
+export const convertUndirectConstraintToEdge = (constraint) => {
   const { id, type, nodes } = constraint;
 
   return nodes.map((node) => createEdge(`${id}_${node.graphNodeId}`, id, node.graphNodeId, node.isNotRelation, type));

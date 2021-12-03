@@ -24,7 +24,7 @@ import {
   convertDirectConstraintToEdge,
   convertGraphLinkToEdge,
   convertGraphNodeToNode,
-  convertUndirectConstraintToEdges,
+  convertUndirectConstraintToEdge,
   convertUndirectConstraintToNode,
   covertGraphStateToSavedData,
   getGraphSize,
@@ -305,7 +305,7 @@ class Graph extends Component {
         } else {
           const node = convertUndirectConstraintToNode(constraint);
           graphManager.draw(node);
-          const edges = convertUndirectConstraintToEdges(constraint);
+          const edges = convertUndirectConstraintToEdge(constraint);
           edges.forEach((edge) => graphManager.draw(edge));
         }
       });

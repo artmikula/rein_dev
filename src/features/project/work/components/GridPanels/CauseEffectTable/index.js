@@ -73,7 +73,7 @@ class CauseEffectTable extends Component {
     for (let i = 0; i < data.length; i++) {
       const value = data[i];
       let parent = null;
-      if (data.lenth === 1) {
+      if (data.length === 1) {
         const checkResult = CauseEffect.checkExistOrSimilarity(value, listData, appConfig);
         // if existed
         if (checkResult.similarItem && checkResult.rate > 100) {

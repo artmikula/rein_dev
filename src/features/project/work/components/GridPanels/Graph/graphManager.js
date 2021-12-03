@@ -394,15 +394,20 @@ class GraphManager {
         (node && node.data().inspection !== item.inspection) ||
         node.data().inspectionPaletteResults !== item.inspectionPaletteResults
       ) {
-        node.data().inspection = item.inspection;
-        node.data().inspectionPaletteResults = item.inspectionPaletteResults;
-        this._removeIcon(node, GRAPH_NODE_TYPE.INSPECTION);
+        const edges = [...node._private.edges];
+        this.remove(node);
+        edges.forEach((edge) => this.remove(edge));
+        const newNode = this.draw(convertGraphNodeToNode(item));
+        edges.forEach((edge) => {
+          this.draw(edge);
+        });
+        this._removeIcon(newNode, GRAPH_NODE_TYPE.INSPECTION);
 
         if (
           item.inspection !== NODE_INSPECTION.None ||
           (item.inspectionPaletteResults && item.inspectionPaletteResults.length > 0)
         ) {
-          this._drawIcon(node, GRAPH_NODE_TYPE.INSPECTION);
+          this._drawIcon(newNode, GRAPH_NODE_TYPE.INSPECTION);
         }
       }
     });

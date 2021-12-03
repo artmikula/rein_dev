@@ -44,7 +44,7 @@ const en = {
   sentencesimilaritycheck: 'Sentence similarity check',
   testcaseelicitationmethod: 'Test case elicitation method:',
   testdatatype: 'Test data type',
-  viewommitedscenariosandtestcases: 'View ommited scenarios and test cases',
+  viewommitedscenariosandtestcases: 'View ommitted TS&TC',
   usesentencesimilaritycheck: 'Use sentence similarity check',
   complexlogicalrelationtestcoverage: 'Complex logical relation test coverage',
   twosentencearenotsimilar: 'Two sentence are not similar',
