@@ -301,7 +301,7 @@ class TestScenarioAndCase extends Component {
   }
 
   _exportData() {
-    const { workName, graph } = this.props;
+    const { workName, graph, workId } = this.props;
     const { columns, rows } = this.state;
     const dataToConvert = [];
 
@@ -312,7 +312,11 @@ class TestScenarioAndCase extends Component {
       });
     });
     const csvFile = arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
-    Download(csvFile, FILE_NAME.EXPORT_TEST_CASE.replace('workname', workName), 'text/csv;charset=utf-8');
+    Download(
+      csvFile,
+      `${workId}_${FILE_NAME.EXPORT_TEST_CASE.replace('workname', workName)}`,
+      'text/csv;charset=utf-8'
+    );
   }
 
   _exportTestScenario() {
@@ -529,6 +533,7 @@ class TestScenarioAndCase extends Component {
 }
 
 TestScenarioAndCase.propTypes = {
+  workId: PropTypes.string.isRequired,
   workName: PropTypes.string.isRequired,
   graph: PropTypes.shape({
     graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -540,6 +545,7 @@ TestScenarioAndCase.propTypes = {
 };
 
 const mapStateToProps = (state) => ({
+  workId: state.work.id,
   workName: state.work.name,
   graph: state.work.graph,
   testDatas: state.work.testDatas,
