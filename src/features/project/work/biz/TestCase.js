@@ -70,8 +70,22 @@ class TestCase {
     return { ...testCase, testDatas: [...testCase.testDatas], results: [...testCase.results] };
   }
 
+  _splitTupple = (datas) => {
+    let _data = datas.trim();
+    _data = _data.substring(1, _data.length - 1);
+    const arr = _data.split('],[');
+    return arr.map((x) => `[${x}]`);
+  };
+
   _getTrueOrFalseList(datas = '') {
-    return datas ? datas.split(',') : [''];
+    if (datas) {
+      if (datas.includes('],[')) {
+        return this._splitTupple(datas);
+      }
+
+      return datas.split(',');
+    }
+    return [''];
   }
 
   generateReportData(data) {
