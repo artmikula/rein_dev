@@ -11,12 +11,12 @@ class TestCase {
       const causeAssertions = testScenarios[i].testAssertions.filter((x) => x.graphNode);
       for (let j = 0; j < causeAssertions.length; j++) {
         const causeAssertion = causeAssertions[j];
-        const testDatas = testDataService.getTestData(allTestDatas, causeAssertion, graphNodes);
+        const { testDatas, type } = testDataService.getTestData(allTestDatas, causeAssertion, graphNodes);
 
         if (testCasesOfScenario.length > 0) {
           const tmp = [];
           for (let k = 0; k < testCasesOfScenario.length; k++) {
-            const testDataArray = this._getTrueOrFalseList(testDatas);
+            const testDataArray = this._getTrueOrFalseList(testDatas, type);
             testDataArray.forEach((data) => {
               const clone = this._clone(testCasesOfScenario[k]);
               clone.id = uuid();
@@ -32,7 +32,7 @@ class TestCase {
 
           testCasesOfScenario = [...tmp];
         } else {
-          const testDataArray = this._getTrueOrFalseList(testDatas);
+          const testDataArray = this._getTrueOrFalseList(testDatas, type);
           testDataArray.forEach((data) => {
             const newCase = {
               id: uuid(),
@@ -77,9 +77,9 @@ class TestCase {
     return arr.map((x) => `[${x}]`);
   };
 
-  _getTrueOrFalseList(datas = '') {
+  _getTrueOrFalseList(datas = '', type) {
     if (datas) {
-      if (datas.includes('],[')) {
+      if (type === 'Tupple') {
         return this._splitTupple(datas);
       }
 
