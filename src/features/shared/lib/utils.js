@@ -6,7 +6,7 @@ const toLocalTime = (dateTimeString) => {
   return dayjs.utc(dateTimeString).local().format('DD/MM/YYYY H:mm:ss');
 };
 
-const arrayToCsv = (data = []) => {
+const arrayToCsv = (data = [], graphNodes = []) => {
   const columnDelimiter = ',';
   const lineDelimiter = '\n';
   let result = '\ufeff';
@@ -15,7 +15,23 @@ const arrayToCsv = (data = []) => {
     return result;
   }
 
+  let meta = ',,,Meta,';
+  let characteristic = ',,,characteristic,';
   const keys = Object.keys(data[0]);
+
+  for (let i = 5; i < keys.length; i++) {
+    const node = graphNodes.find((x) => x.nodeId === keys[i]);
+    meta += `,${node.definition}`;
+
+    if (node.inspectionPalettes) {
+      characteristic += `,${node.inspectionPalettes.split(',')[0]}`;
+    } else {
+      characteristic += `,`;
+    }
+  }
+
+  result += meta + lineDelimiter;
+  result += characteristic + lineDelimiter;
   result += keys.join(',');
   result += lineDelimiter;
 

@@ -43,6 +43,11 @@ const appConfig = {
       { intensity: 1, trueData: 'True', falseData: 'False' },
       { intensity: 2, trueData: 'False', falseData: 'NULL' },
     ],
+    Tupple: [
+      { intensity: 1, trueData: '[1,2],[2,3]', falseData: '[1,2],[2,3]' },
+      { intensity: 2, trueData: '', falseData: '' },
+      { intensity: 3, trueData: '', falseData: '' },
+    ],
   },
 };
 
