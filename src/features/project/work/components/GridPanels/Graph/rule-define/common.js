@@ -1,43 +1,36 @@
 import { GRAPH_NODE_TYPE } from 'features/shared/constants';
+import { PALETTE_CODES } from 'features/shared/inspection-palettes';
 
-export const twoCauseDefinitionDoNotHasASameExclusive = (currentNode, graphData, definitionSet) => {
+// true: violate rule, false: valid
+export const nodesSagSwellInterruptionHaveToConnectedWithOneAndOnlyConst = (currentNode, graphData) => {
   if (currentNode.type !== GRAPH_NODE_TYPE.CAUSE) {
     return false;
   }
 
-  const currentDefinition = currentNode.definition.trim().toUpperCase();
+  const hasSagSwellInterruptionPalette = (node) => {
+    if (!node.inspectionPalettes) {
+      return false;
+    }
+    const arr = node.inspectionPalettes.split(',');
+    return !!arr.find((x) => x === PALETTE_CODES.Sag || x === PALETTE_CODES.Swell || x === PALETTE_CODES.Interruption);
+  };
 
-  if (!definitionSet.has(currentDefinition)) {
+  const { graphNodes, constraints } = graphData;
+
+  const checkingNodes = graphNodes.filter(hasSagSwellInterruptionPalette);
+  if (checkingNodes.length <= 1) {
     return false;
   }
 
-  const { graphNodes, constraints } = graphData;
-  for (let i = 0; i < graphNodes.length; i++) {
-    const graphNode = graphNodes[i];
+  const onlyOneContrainIncludesAllCheckingNodes = (x) => {
+    const result =
+      x.type === GRAPH_NODE_TYPE.ONLYONE && checkingNodes.every((n) => x.nodes.find((y) => y.graphNodeId === n.id));
+    return result;
+  };
 
-    if (graphNode.type === GRAPH_NODE_TYPE.CAUSE) {
-      const definition = graphNode.definition.trim().toUpperCase();
+  const hasOnlyOneConstrainIncludesAllCheckingNodes = !!constraints.find(onlyOneContrainIncludesAllCheckingNodes);
 
-      if (definitionSet.has(definition) && definition !== currentDefinition) {
-        const exclusives = constraints.filter((x) => x.type === GRAPH_NODE_TYPE.EXCLUSIVE);
-
-        for (let j = 0; j < exclusives.length; j++) {
-          const exclusive = exclusives[j];
-
-          if (
-            exclusive.nodes.some((x) => x.graphNodeId === currentNode.id) &&
-            exclusive.nodes.some((x) => x.graphNodeId === graphNode.id)
-          ) {
-            return false;
-          }
-        }
-
-        return true;
-      }
-    }
-  }
-
-  return false;
+  return !hasOnlyOneConstrainIncludesAllCheckingNodes;
 };
 
 export const a = {};

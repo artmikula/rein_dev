@@ -35,10 +35,11 @@ const inspectionSetup = (cy) => {
   const _createItem = (inspection) => {
     const item = document.createElement('div');
     item.textContent = inspection.text;
-
+    let classAttr = 'inspection-item';
     if (inspection.type === NODE_INSPECTION.DisconnectedNode) {
-      item.setAttribute('class', 'text-danger font-weight-bold');
+      classAttr += ' text-danger font-weight-bold';
     }
+    item.setAttribute('class', classAttr);
 
     return item;
   };
@@ -46,24 +47,39 @@ const inspectionSetup = (cy) => {
   const _createInspectionPaletteItem = (rule) => {
     const item = document.createElement('div');
     item.textContent = rule.name;
+    let classAttr = 'inspection-item';
     if (rule.type === RULE_TYPE.ERROR) {
-      item.setAttribute('class', 'text-danger font-weight-bold');
+      classAttr += ' text-danger font-weight-bold';
     }
 
+    item.setAttribute('class', classAttr);
     return item;
   };
 
   const _createContainer = (inspectionNode) => {
-    const { id, node } = inspectionNode.data();
+    const { id, node, inspectionPalettes } = inspectionNode.data();
 
     const inspectionDOM = document.createElement('div');
     inspectionDOM.setAttribute('id', _getId(id));
     inspectionDOM.setAttribute('class', 'inspection position-fixed bg-white px-2 py-1 small border');
     // inspection title
     const title = document.createElement('div');
-    title.setAttribute('class', 'font-weight-bold');
+    title.setAttribute('class', 'inspection-header font-weight-bold');
     title.textContent = `${Language.get('inspection')} ${node}:`;
     inspectionDOM.appendChild(title);
+
+    // inspection Palettes
+    if (inspectionPalettes) {
+      const paletteDiv = document.createElement('div');
+      paletteDiv.setAttribute('class', 'inspection-palettes');
+      const arr = inspectionPalettes.split(',');
+      arr.forEach((palette) => {
+        const item = document.createElement('span');
+        item.textContent = palette;
+        paletteDiv.appendChild(item);
+      });
+      inspectionDOM.appendChild(paletteDiv);
+    }
 
     return inspectionDOM;
   };
