@@ -1,6 +1,6 @@
 /* eslint-disable no-bitwise */
 import { GRAPH_LINK_TYPE, GRAPH_NODE_TYPE, NODE_INSPECTION, OPERATOR_TYPE } from 'features/shared/constants';
-import { INSPECTION_PALETTES } from 'features/shared/inspection-palettes';
+import { INSPECTION_PALETTES, RULE_TYPE, getHighestRuleType } from 'features/shared/inspection-palettes';
 import appConfig from 'features/shared/lib/appConfig';
 import { differenceWith, isEqual } from 'lodash';
 import { DEFAULT_NODE_X, EDGE_COLOR, NODE_BG_COLOR } from './constants';
@@ -171,12 +171,34 @@ export const createEdge = (id, sourceId, targetId, isNotRelation, type) => {
 };
 
 export const createIconNode = (node, type) => {
-  const { id, inspection, nodeId, inspectionPaletteResults } = node.data();
+  const { id, inspection, nodeId, inspectionPaletteResults, inspectionPalettes } = node.data();
   let bgImage = type === GRAPH_NODE_TYPE.PIN ? '/img/pinIcon.svg' : '/img/warningIcon.svg';
   if (type === GRAPH_NODE_TYPE.INSPECTION) {
+    const getIconImg = () => {
+      if (inspection) {
+        if (inspection & NODE_INSPECTION.DisconnectedNode) {
+          return '/img/errorIcon.svg';
+        }
+        return '/img/warningIcon.svg';
+      }
+
+      if (inspectionPaletteResults && inspectionPaletteResults.length > 0) {
+        const ruleType = getHighestRuleType(inspectionPaletteResults);
+        if (ruleType === RULE_TYPE.ERROR) {
+          return '/img/errorIcon.svg';
+        }
+        if (ruleType === RULE_TYPE.WARNING) {
+          return '/img/warningIcon.svg';
+        }
+        return '/img/infoIcon.png';
+      }
+
+      return '/img/errorIcon.svg';
+    };
+
     bgImage =
       inspection & NODE_INSPECTION.DisconnectedNode || (inspectionPaletteResults && inspectionPaletteResults.length > 0)
-        ? '/img/errorIcon.svg'
+        ? getIconImg()
         : bgImage;
   }
   return {
@@ -190,6 +212,7 @@ export const createIconNode = (node, type) => {
       node: nodeId,
       zIndex: 1,
       bgImage,
+      inspectionPalettes,
       inspectionPaletteResults,
     },
     position: getIconPosition(node, type),
@@ -266,8 +289,11 @@ export const convertGraphNodeToNode = (graphNode) => {
 
   // eslint-disable-next-line no-bitwise
   node.data.bgColor = inspection & NODE_INSPECTION.DisconnectedNode ? appConfig.graph.errorColor : node.data.bgColor;
+  const violateRuleType = getHighestRuleType(inspectionPaletteResults);
   node.data.bgColor =
-    inspectionPaletteResults && inspectionPaletteResults.length > 0 ? appConfig.graph.errorColor : node.data.bgColor;
+    inspectionPaletteResults && inspectionPaletteResults.length > 0 && violateRuleType !== RULE_TYPE.INFO
+      ? appConfig.graph.errorColor
+      : node.data.bgColor;
 
   return node;
 };

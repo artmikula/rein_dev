@@ -13,5 +13,38 @@
 }
 
 .inspection {
-  max-width: 300px;
+  max-width: 400px;
+  box-shadow: 0 2px 5px 1px rgb(64 60 67 / 16%);
+
+  &-header {
+    border-bottom: solid 1px #ccc;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+  }
+  &-palettes {
+    text-align: right;
+    padding-bottom: 10px;
+    span {
+      border: solid 1px #555;
+      font-weight: 500;
+      color: #fff;
+      border-radius: 5px;
+      background: #555;
+      padding: 3px 5px;
+      margin-right: 5px;
+    }
+  }
+  &-item {
+    padding-bottom: 4px;
+    padding-left: 10px;
+    color: gray;
+    &:before {
+      content: "- ";      
+      margin-left: -7px;
+    }
+    &:after {
+      content: "";      
+    }
+  }
 }
+
