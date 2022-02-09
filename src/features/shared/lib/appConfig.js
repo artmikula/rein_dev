@@ -5,7 +5,7 @@ import { COMPLEX_LOGICAL, TEST_CASE_METHOD } from '../constants';
  */
 const appConfig = {
   version: process.env.APP_VERSION,
-  // default option
+  // default option, can be override when user has saved options
   general: {
     testCaseMethod: TEST_CASE_METHOD.MyersTechnique,
     viewOmmited: true,

@@ -18,7 +18,17 @@ export default class Layout extends Component {
     if (result.data) {
       const keys = Object.keys(result.data);
       keys.forEach((key) => {
-        Object.assign(appConfig, { [key]: JSON.parse(result.data[key]) });
+        if (key === 'testData') {
+          const curTestDataConfigKeys = Object.keys(appConfig.testData);
+          const savedConfig = JSON.parse(result.data[key]);
+          curTestDataConfigKeys.forEach((testDataKey) => {
+            if (savedConfig[key]) {
+              Object.assign(appConfig.testData, { [testDataKey]: savedConfig[key] });
+            }
+          });
+        } else {
+          Object.assign(appConfig, { [key]: JSON.parse(result.data[key]) });
+        }
       });
     }
 
