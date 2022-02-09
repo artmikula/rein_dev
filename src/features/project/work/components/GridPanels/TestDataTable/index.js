@@ -7,6 +7,7 @@ import {
   TESTDATA_TYPE,
   TEST_DATA_SHORTCUT,
   TEST_DATA_SHORTCUT_CODE,
+  OPTION_TYPE,
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
@@ -179,15 +180,7 @@ class TestDataTable extends Component {
   };
 
   _setDefaultData = () => {
-    let newTestDatas = [];
-    const { testDatas } = this.props;
-
-    testDatas.forEach((item) => {
-      const newItem = TestData.createTest(item.nodeId);
-      newTestDatas = TestData.add(newTestDatas, newItem);
-    });
-
-    this._setTestDatas(newTestDatas);
+    window.option({ optionType: OPTION_TYPE.TEST_DATA });
   };
 
   _handleWorkMenuEvents = (message) => {
