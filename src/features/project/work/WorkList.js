@@ -8,28 +8,28 @@ import Language from '../../shared/languages/Language';
 import toLocalTime from '../../shared/lib/utils';
 import workService from './services/workService';
 
-const columns = [
-  {
-    headerName: Language.get('work'),
-    key: 'name',
-  },
-  {
-    headerName: Language.get('createddate'),
-    key: 'createdDate',
-    format: (value) => (value ? toLocalTime(value) : null),
-  },
-  {
-    headerName: Language.get('lastmodifieddate'),
-    key: 'lastModifiedDate',
-    format: (value) => (value ? toLocalTime(value) : null),
-  },
-  {
-    headerName: '',
-    key: 'action',
-  },
-];
-
 class WorkList extends Component {
+  columns = [
+    {
+      headerName: Language.get('work'),
+      key: 'name',
+    },
+    {
+      headerName: Language.get('createddate'),
+      key: 'createdDate',
+      format: (value) => (value ? toLocalTime(value) : null),
+    },
+    {
+      headerName: Language.get('lastmodifieddate'),
+      key: 'lastModifiedDate',
+      format: (value) => (value ? toLocalTime(value) : null),
+    },
+    {
+      headerName: '',
+      key: 'action',
+    },
+  ];
+
   constructor(props) {
     super(props);
 
@@ -144,7 +144,7 @@ class WorkList extends Component {
             <Table>
               <thead>
                 <tr>
-                  {columns.map((column, i) => (
+                  {this.columns.map((column, i) => (
                     <th key={i}>{column.headerName}</th>
                   ))}
                 </tr>
@@ -153,7 +153,7 @@ class WorkList extends Component {
                 {works.map((work, index) => {
                   return (
                     <tr key={index}>
-                      {columns.map((column, i) => {
+                      {this.columns.map((column, i) => {
                         const value = work[column.key];
                         if (column.key !== 'action') {
                           if (column.key === 'name') {
