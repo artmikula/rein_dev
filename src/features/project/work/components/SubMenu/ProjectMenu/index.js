@@ -51,9 +51,7 @@ export default function ProjectMenu() {
       key: 3,
       text: Language.get('export'),
       action: async () => {
-        const { getToken } = context;
-        const token = getToken();
-        const response = await projectService.exportAsync(token, projectId);
+        const response = await projectService.exportAsync(projectId);
         if (response.data) {
           const fileContentString = atob(response.data.body);
           Download(fileContentString, response.data.headers.fileDownloadName[0], response.data.headers.contentType[0]);
