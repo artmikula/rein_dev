@@ -5,28 +5,28 @@ import { useHistory } from 'react-router-dom';
 import { ModalForm } from '../../../shared/components';
 import workService from '../services/workService';
 
-const formSchema = {
-  formTitle: Language.get('importwork'),
-  submitBtnName: Language.get('save'),
-  cancleBtnName: Language.get('cancel'),
-  formSchema: [
-    {
-      inputProps: {
-        label: '',
-        id: 'work',
-        name: 'work',
-        placeholder: '',
-        type: 'file',
-        required: true,
-        accept: '.cetawrk',
-      },
-      helperText: Language.get('projectimportedfilesize'),
-    },
-  ],
-};
-
 export default function ImportForm({ isOpenModel, onToggleModal, projectId }) {
   const history = useHistory();
+
+  const formSchema = {
+    formTitle: Language.get('importwork'),
+    submitBtnName: Language.get('save'),
+    cancleBtnName: Language.get('cancel'),
+    formSchema: [
+      {
+        inputProps: {
+          label: '',
+          id: 'work',
+          name: 'work',
+          placeholder: '',
+          type: 'file',
+          required: true,
+          accept: '.cetawrk',
+        },
+        helperText: Language.get('projectimportedfilesize'),
+      },
+    ],
+  };
 
   const _handleSubmit = async (values, { setErrors, setSubmitting }) => {
     const form = new FormData();
