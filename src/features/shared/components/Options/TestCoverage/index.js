@@ -1,7 +1,7 @@
 import InputNumber from 'features/shared/components/InputNumber';
 import { COMPLEX_LOGICAL } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
-import appConfig from 'features/shared/lib/appConfig';
+import appConfig, { defaultOption } from 'features/shared/lib/appConfig';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { CustomInput, Form, FormGroup } from 'reactstrap';
 
@@ -20,7 +20,11 @@ function TestCoverage(props, ref) {
 
   // public for OptionManager reset button call
   const reset = () => {
-    setData(appConfig.testCoverage);
+    setData(defaultOption.testCoverage);
+    return {
+      key: 'testCoverage',
+      value: JSON.parse(JSON.stringify(defaultOption.testCoverage)),
+    };
   };
 
   useImperativeHandle(ref, () => ({ getData, reset }));

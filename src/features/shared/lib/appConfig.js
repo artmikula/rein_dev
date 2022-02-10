@@ -3,9 +3,8 @@ import { COMPLEX_LOGICAL, TEST_CASE_METHOD } from '../constants';
 /**
  * @type {{version: string, deviceId: string}
  */
-const appConfig = {
-  version: process.env.APP_VERSION,
-  // default option, can be override when user has saved options
+
+export const defaultOption = {
   general: {
     testCaseMethod: TEST_CASE_METHOD.MyersTechnique,
     viewOmmited: true,
@@ -49,6 +48,12 @@ const appConfig = {
       { intensity: 3, trueData: '', falseData: '' },
     ],
   },
+};
+
+const appConfig = {
+  version: process.env.APP_VERSION,
+  // default option, can be override when user has saved options
+  ...defaultOption,
 };
 
 export const setDeviceId = (value) => {
