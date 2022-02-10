@@ -23,15 +23,7 @@ export default function OptionsModal({ id, close, optionType }) {
 
   let timeout;
 
-  const _handleReset = () => {
-    if (ref.current) {
-      ref.current.reset();
-    }
-  };
-
-  const _save = async () => {
-    const option = ref.current.getData();
-
+  const _save = async (option) => {
     const result = await optionService.update({ key: option.key, value: JSON.stringify(option.value) });
     if (result.error) {
       if (result.error.detail) {
@@ -53,12 +45,22 @@ export default function OptionsModal({ id, close, optionType }) {
       }
 
       setSaveState(SAVE_STATE.SAVING);
-      const result = await _save();
+
+      const option = ref.current.getData();
+      const result = await _save(option);
+
       setSaveState(result ? SAVE_STATE.SAVE_SUCCESS : SAVE_STATE.SAVE_FAIL);
 
       timeout = setTimeout(() => {
         setSaveState(SAVE_STATE.NONE);
       }, 1500);
+    }
+  };
+
+  const _handleReset = () => {
+    if (ref.current) {
+      const option = ref.current.reset();
+      _save(option);
     }
   };
 

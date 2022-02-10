@@ -1,5 +1,5 @@
 import Language from 'features/shared/languages/Language';
-import appConfig from 'features/shared/lib/appConfig';
+import appConfig, { defaultOption } from 'features/shared/lib/appConfig';
 import similarityCosine from 'features/shared/lib/similarityCosine';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { Button, FormGroup, FormText, Input, Label } from 'reactstrap';
@@ -27,7 +27,11 @@ function SentenceSimilarityCheck(props, ref) {
 
   // public for OptionManager reset button call
   const reset = () => {
-    setData(appConfig.similarity);
+    setData(defaultOption.similarity);
+    return {
+      key: 'similarity',
+      value: JSON.parse(JSON.stringify(defaultOption.similarity)),
+    };
   };
 
   useImperativeHandle(ref, () => ({ getData, reset }));

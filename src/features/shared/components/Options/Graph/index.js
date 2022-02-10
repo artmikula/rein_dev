@@ -1,5 +1,5 @@
 import Language from 'features/shared/languages/Language';
-import appConfig from 'features/shared/lib/appConfig';
+import appConfig, { defaultOption } from 'features/shared/lib/appConfig';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import InputNumber from '../../InputNumber';
 import Constraint from './components/Constraint';
@@ -32,7 +32,11 @@ function Graph(props, ref) {
 
   // public for OptionManager reset button call
   const reset = () => {
-    setData(appConfig.graph);
+    setData(defaultOption.graph);
+    return {
+      key: 'graph',
+      value: JSON.parse(JSON.stringify(defaultOption.graph)),
+    };
   };
 
   useImperativeHandle(ref, () => ({ getData, reset }));

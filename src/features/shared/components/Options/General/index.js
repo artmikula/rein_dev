@@ -1,6 +1,6 @@
 import { TEST_CASE_METHOD } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
-import appConfig from 'features/shared/lib/appConfig';
+import appConfig, { defaultOption } from 'features/shared/lib/appConfig';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { FormGroup, Input, Label } from 'reactstrap';
 
@@ -19,7 +19,11 @@ function General(props, ref) {
 
   // public for OptionManager reset button call
   const reset = () => {
-    setData(appConfig.general);
+    setData(defaultOption.general);
+    return {
+      key: 'general',
+      value: JSON.parse(JSON.stringify(defaultOption.general)),
+    };
   };
 
   useImperativeHandle(ref, () => ({ getData, reset }));

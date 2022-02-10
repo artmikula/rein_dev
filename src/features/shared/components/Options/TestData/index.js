@@ -1,6 +1,6 @@
 import InputNumber from 'features/shared/components/InputNumber';
 import Language from 'features/shared/languages/Language';
-import appConfig from 'features/shared/lib/appConfig';
+import appConfig, { defaultOption } from 'features/shared/lib/appConfig';
 import cloneDeep from 'lodash.clonedeep';
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { Input } from 'reactstrap';
@@ -22,7 +22,11 @@ function TestData(props, ref) {
 
   // public for OptionManager reset button call
   const reset = () => {
-    setData(appConfig.testData);
+    setData(defaultOption.testData);
+    return {
+      key: 'testData',
+      value: JSON.parse(JSON.stringify(defaultOption.testData)),
+    };
   };
 
   useImperativeHandle(ref, () => ({ getData, reset }));
