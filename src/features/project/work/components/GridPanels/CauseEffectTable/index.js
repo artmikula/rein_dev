@@ -285,12 +285,6 @@ class CauseEffectTable extends Component {
             value: mergeItem,
             receivers: [domainEvents.DES.GRAPH, domainEvents.DES.TESTDATA],
           });
-
-          this._raiseEvent({
-            action: domainEvents.ACTION.ADD,
-            value: [newItem],
-            receivers: [domainEvents.DES.TESTDATA],
-          });
         }
 
         this.mergeItem = null;

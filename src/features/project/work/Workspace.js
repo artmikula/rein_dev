@@ -263,7 +263,7 @@ class Workspace extends Component {
 
     return (
       <ProjectLayout menus={menus}>
-        <div className="d-flex flex-wrap align-items-center justify-content-between border-bottom bg-white px-3 small position-relative">
+        <div className="d-flex flex-wrap align-items-center justify-content-between border-bottom bg-white px-3 small position-relative py-1">
           <span>
             <span className="text-muted">{Language.get('project')}: </span>
             {projectName}
@@ -274,11 +274,11 @@ class Workspace extends Component {
             <Button
               color="link"
               size="sm"
-              className="icon-btn mx-2 my-1"
+              className="icon-btn sm mx-2"
               id="create-new-work"
               onClick={this._initCreateWork}
             >
-              <i className="bi bi-plus" />
+              <i className="bi bi-plus central" />
             </Button>
             <UncontrolledTooltip target="create-new-work">
               <small>{Language.get('createnewwork')}</small>
@@ -286,14 +286,15 @@ class Workspace extends Component {
           </span>
           <AlertGenerateReport />
           <span>
+            <WorkSyncData />
             <Button
               color="link"
               size="sm"
-              className="icon-btn my-1"
+              className="icon-btn sm"
               id="tooltip-view-mode"
               onClick={() => this._handleChangeViewMode(isSplitView ? VIEW_MODE.SINGLE : VIEW_MODE.SPLIT)}
             >
-              {isSplitView ? <i className="bi bi-square" /> : <i className="bi bi-layout-split" />}
+              {isSplitView ? <i className="bi bi-square central" /> : <i className="bi bi-layout-split central" />}
             </Button>
             <UncontrolledTooltip target="tooltip-view-mode">
               <small>{isSplitView ? Language.get('changetosingleview') : Language.get('changetosplitview')}</small>
@@ -301,11 +302,15 @@ class Workspace extends Component {
             <Button
               color="link"
               size="sm"
-              className="icon-btn my-1"
+              className="icon-btn sm"
               id="tooltip-lock-panel"
               onClick={this._toggleLockPanel}
             >
-              {isLockedPanel ? <i className="bi bi-lock text-success" /> : <i className="bi bi-unlock text-orange" />}
+              {isLockedPanel ? (
+                <i className="bi bi-lock text-success central" />
+              ) : (
+                <i className="bi bi-unlock text-orange central" />
+              )}
             </Button>
             <UncontrolledTooltip target="tooltip-lock-panel">
               <small>{isLockedPanel ? Language.get('unlockpanel') : Language.get('lockpanel')}</small>
@@ -313,7 +318,7 @@ class Workspace extends Component {
             <Button
               color="link"
               size="sm"
-              className="icon-btn my-1"
+              className="icon-btn sm"
               id="tooltip-reset-grid-panel-layout"
               onClick={this._handleResetLayout}
             >
@@ -338,7 +343,6 @@ class Workspace extends Component {
           onToggle={() => this._closeRenameWorkModal()}
           onSubmit={this._handleSubmitRenameWork}
         />
-        <WorkSyncData />
       </ProjectLayout>
     );
   }
