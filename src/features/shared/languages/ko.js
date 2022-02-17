@@ -197,6 +197,8 @@ const ko = {
   processinglogoutcallback: '로그아웃 콜백 처리',
   alert: '알리다',
   /* End Logout successfullly */
+  saveworkbtntooltip: '작업 저장',
+  savingworkbtntooltip: '절약 일',
 };
 
 export default ko;
