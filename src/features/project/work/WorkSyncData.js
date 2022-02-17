@@ -13,7 +13,7 @@ import workService from './services/workService';
 class WorkSyncData extends Component {
   _syncDebounce = debounce(() => {
     this.sync();
-  }, 5000);
+  }, 30000);
 
   constructor(props) {
     super(props);
