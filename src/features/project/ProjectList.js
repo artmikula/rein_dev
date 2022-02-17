@@ -1,7 +1,17 @@
 import Language from 'features/shared/languages/Language';
 import React, { Component } from 'react';
 import { Link, withRouter } from 'react-router-dom';
-import { Card, Container, Pagination, PaginationItem, PaginationLink, Table } from 'reactstrap';
+import {
+  Button,
+  Card,
+  Container,
+  Input,
+  InputGroup,
+  Pagination,
+  PaginationItem,
+  PaginationLink,
+  Table,
+} from 'reactstrap';
 import { ModalForm } from '../shared/components';
 import Actions from '../shared/components/Actions/Actions';
 import toLocalTime from '../shared/lib/utils';
@@ -40,13 +50,12 @@ class ProjectList extends Component {
       openEditModal: false,
       selectedId: 0,
       isRefresh: false,
+      searchText: '',
     };
   }
 
   async componentDidMount() {
-    const { location } = this.props;
-    const currentPage = this._getPage(location);
-    const data = await projectService.listAsync(currentPage);
+    const data = await this._getData();
     this.setState({
       projects: data.items,
       totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
@@ -61,7 +70,7 @@ class ProjectList extends Component {
     const currentPage = this._getPage(location);
 
     if (prevPage !== currentPage || isRefresh) {
-      const data = await projectService.listAsync(currentPage);
+      const data = await this._getData();
       this._updateState({
         projects: data.items,
         totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
@@ -69,6 +78,15 @@ class ProjectList extends Component {
       });
     }
   }
+
+  _getData = (firstPage = false) => {
+    const { location } = this.props;
+    const currentPage = this._getPage(location);
+    const { searchText } = this.state;
+    const page = firstPage ? 1 : currentPage;
+
+    return projectService.listAsync(page, 5, searchText);
+  };
 
   _updateState = (data) => {
     this.setState(data);
@@ -167,12 +185,32 @@ class ProjectList extends Component {
     };
   };
 
-  render() {
-    const { projects, totalPage, selectedProjectName, openEditModal } = this.state;
-    const { location } = this.props;
-    const currentPage = this._getPage(location);
+  handleChangeSearchText = (e) => this.setState({ searchText: e.target.value });
+
+  handleClickSearch = async () => {
+    const data = await this._getData(true);
+    this._updateState({
+      projects: data.items,
+      totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
+      isRefresh: false,
+    });
+  };
+
+  handlePressEnter = (e) => {
+    if (e.which === 13) {
+      this.handleClickSearch();
+    }
+  };
+
+  getDisplayedPageNums = (currentPage) => {
+    const { totalPage } = this.state;
 
     let minDisplayedPageNum = currentPage - 2;
+
+    if (minDisplayedPageNum + 4 > totalPage) {
+      minDisplayedPageNum = totalPage - 4;
+    }
+
     if (minDisplayedPageNum < 1) {
       minDisplayedPageNum = 1;
     }
@@ -186,10 +224,31 @@ class ProjectList extends Component {
       minDisplayedPageNum++;
     }
 
+    return displayedPageNums;
+  };
+
+  render() {
+    const { location } = this.props;
+    const currentPage = this._getPage(location);
+    const { projects, totalPage, selectedProjectName, openEditModal } = this.state;
+    const displayedPageNums = this.getDisplayedPageNums(currentPage);
+
     return (
       <ProjectLayout>
         <Container>
-          <Card className="mt-5 box-shadow">
+          <div className="mt-5 d-flex justify-content-end">
+            <InputGroup style={{ width: '100%', maxWidth: '300px', margin: '10px' }}>
+              <Input
+                placeholder="Search project by project name"
+                onChange={this.handleChangeSearchText}
+                onKeyPress={this.handlePressEnter}
+              />
+              <Button style={{ height: '36.39px', marginLeft: '8px' }} color="primary" onClick={this.handleClickSearch}>
+                <i className="bi bi-search" />
+              </Button>
+            </InputGroup>
+          </div>
+          <Card className="mt-1 box-shadow">
             <Table>
               <thead>
                 <tr>
