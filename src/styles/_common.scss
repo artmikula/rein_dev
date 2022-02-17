@@ -48,6 +48,11 @@ body {
   &:focus {
     box-shadow: none;
   }
+
+  &.sm {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 .item-hover {
@@ -78,4 +83,19 @@ body {
 
 .border-3 {
   border-width: 3px !important;
+}
+
+.ceta-spinner {
+  border: none !important;
+  display: flex;
+}
+
+.clear-text-decor {
+  text-decoration: none !important;
+}
+
+.central {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
