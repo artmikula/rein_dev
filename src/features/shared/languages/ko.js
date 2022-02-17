@@ -203,6 +203,8 @@ const ko = {
   failed: '실패한',
   workexplorertitle: '작업 탐색기',
   projectexplorertitle: '프로젝트 탐색기',
+  worksearchplaceholder: '작업 이름으로 작업 검색',
+  projectsearchplaceholder: '프로젝트 이름으로 프로젝트 검색',
 };
 
 export default ko;

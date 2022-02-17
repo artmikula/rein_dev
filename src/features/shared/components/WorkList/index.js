@@ -153,9 +153,9 @@ class WorkList extends Component {
     return (
       <div>
         <div className="d-flex justify-content-end">
-          <InputGroup style={{ width: '100%', maxWidth: '300px', margin: '10px' }}>
+          <InputGroup style={{ width: '100%', maxWidth: '350px', margin: '10px' }}>
             <Input
-              placeholder="Search project by project name"
+              placeholder={Language.get('worksearchplaceholder')}
               onChange={this.handleChangeSearchText}
               onKeyPress={this.handlePressEnter}
             />

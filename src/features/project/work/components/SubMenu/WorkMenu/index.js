@@ -197,7 +197,7 @@ class WorkMenu extends Component {
             title: Language.get('workexplorertitle'),
             content: (
               <Router history={history}>
-                <div className="px-3">
+                <div className="px-3 py-2">
                   <WorkList projectId={projectId} />
                 </div>
               </Router>

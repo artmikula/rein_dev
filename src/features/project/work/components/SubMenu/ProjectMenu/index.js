@@ -68,7 +68,7 @@ export default function ProjectMenu() {
           title: Language.get('projectexplorertitle'),
           content: (
             <Router history={history}>
-              <div className="px-3">
+              <div className="px-3 py-2">
                 <ProjectList />
               </div>
             </Router>
