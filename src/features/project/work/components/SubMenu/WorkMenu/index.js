@@ -5,6 +5,7 @@ import ImportForm from 'features/project/work/components/ImportForm';
 import workService from 'features/project/work/services/workService';
 import { setGeneratingReport } from 'features/project/work/slices/workSlice';
 import { ReportDocument, SearchComponent, SubMenu } from 'features/shared/components';
+import WorkList from 'features/shared/components/WorkList';
 import { FILE_NAME } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
@@ -13,6 +14,7 @@ import debounce from 'lodash.debounce';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { Router } from 'react-router';
 import { withRouter } from 'react-router-dom';
 import WorkLink from './WorkLink';
 
@@ -141,7 +143,7 @@ class WorkMenu extends Component {
 
   render() {
     const { recentWorks, searchWorks, createFormOpen, importFormOpen } = this.state;
-    const { match } = this.props;
+    const { match, history } = this.props;
     const { projectId, workId } = match.params;
     const actions = [
       {
@@ -185,6 +187,24 @@ class WorkMenu extends Component {
         text: Language.get('delete'),
         action: () => {
           confirm(undefined, { yesAction: this._confirmDelete });
+        },
+      },
+      {
+        key: 5,
+        text: Language.get('explorer'),
+        action: () => {
+          const modaProps = {
+            title: Language.get('workexplorertitle'),
+            content: (
+              <Router history={history}>
+                <div className="px-3 py-2">
+                  <WorkList projectId={projectId} />
+                </div>
+              </Router>
+            ),
+            actions: null,
+          };
+          window.modal(modaProps);
         },
       },
     ];

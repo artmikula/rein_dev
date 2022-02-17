@@ -223,6 +223,10 @@ const en = {
   savingworkbtntooltip: 'Saving work',
   saving: 'Saving',
   failed: 'Failed',
+  workexplorertitle: 'Work explorer',
+  projectexplorertitle: 'Project explorer',
+  worksearchplaceholder: 'Search work by work name',
+  projectsearchplaceholder: 'Search project by project name',
 };
 
 export default en;
