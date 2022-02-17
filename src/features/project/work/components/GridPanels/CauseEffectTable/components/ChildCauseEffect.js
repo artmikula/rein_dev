@@ -1,8 +1,11 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import IconButton from './IconButton';
 
-export default function ChildCauseEffect({ data, collapsed }) {
+export default function ChildCauseEffect({ data, collapsed, onUnabridge }) {
   const { id, node, definition } = data;
+  const handleUnabridge = () => onUnabridge(id);
+
   return (
     <tr key={id} className={`collapse merged-row ${collapsed ? 'show' : ''}`}>
       <th className="cause-effect-wrapper" scope="row">
@@ -11,7 +14,14 @@ export default function ChildCauseEffect({ data, collapsed }) {
         </div>
       </th>
       <td>{definition}</td>
-      <td />
+      <td>
+        <IconButton
+          id={`unmerge${id}`}
+          tooltip={`Unabridge ${node}`}
+          onClick={handleUnabridge}
+          iconClassName="bi bi-subtract delete-icon"
+        />
+      </td>
     </tr>
   );
 }
@@ -23,8 +33,10 @@ ChildCauseEffect.propTypes = {
     definition: PropTypes.string.isRequired,
   }).isRequired,
   collapsed: PropTypes.bool,
+  onUnabridge: PropTypes.func,
 };
 
 ChildCauseEffect.defaultProps = {
   collapsed: false,
+  onUnabridge: () => {},
 };
