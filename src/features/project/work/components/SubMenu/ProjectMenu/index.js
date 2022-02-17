@@ -1,15 +1,13 @@
 import Download from 'downloadjs';
 import { SearchComponent, SubMenu } from 'features/shared/components';
+import ProjectList from 'features/shared/components/ProjectList';
 import Language from 'features/shared/languages/Language';
 import debounce from 'lodash.debounce';
-import React, { useContext, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react';
 import { Router, useHistory, useParams } from 'react-router';
-import GlobalContext from '../../../../../../security/GlobalContext';
 import CreateForm from '../../../../components/CreateForm';
 import ImportForm from '../../../../components/ImportForm';
 import projectService from '../../../../services/projectService';
-import WorkList from '../../../WorkList';
 import ProjectLink from './ProjectLink';
 
 export default function ProjectMenu() {
@@ -17,11 +15,8 @@ export default function ProjectMenu() {
   const [searchProjects, setSearchProjects] = useState([]);
   const [createFormOpen, toggleCreateForm] = useState(false);
   const [importFormOpen, toggleImportForm] = useState(false);
-  const projectName = useSelector((state) => state.work.projectName);
 
   const history = useHistory();
-
-  const context = useContext(GlobalContext);
 
   const params = useParams();
   const { projectId } = params;
@@ -70,10 +65,12 @@ export default function ProjectMenu() {
       text: Language.get('explorer'),
       action: () => {
         const modaProps = {
-          title: `Project: ${projectName}`,
+          title: Language.get('projectexplorertitle'),
           content: (
             <Router history={history}>
-              <WorkList projectId={projectId} />
+              <div className="px-3">
+                <ProjectList />
+              </div>
             </Router>
           ),
           actions: null,

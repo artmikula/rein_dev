@@ -201,6 +201,8 @@ const ko = {
   savingworkbtntooltip: '절약 일',
   saving: '절약',
   failed: '실패한',
+  workexplorertitle: '작업 탐색기',
+  projectexplorertitle: '프로젝트 탐색기',
 };
 
 export default ko;

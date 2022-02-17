@@ -1,12 +1,13 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { Link, Router, withRouter } from 'react-router-dom';
-import { Card, Container, Pagination, PaginationItem, PaginationLink, Table } from 'reactstrap';
-import { ModalForm } from '../../shared/components';
-import Actions from '../../shared/components/Actions/Actions';
-import Language from '../../shared/languages/Language';
-import toLocalTime from '../../shared/lib/utils';
-import workService from './services/workService';
+import { Button, Card, Input, InputGroup, Table } from 'reactstrap';
+import { ModalForm } from '..';
+import workService from '../../../project/work/services/workService';
+import Language from '../../languages/Language';
+import toLocalTime from '../../lib/utils';
+import Actions from '../Actions/Actions';
+import CustomPagination from '../CustomPagination';
 
 class WorkList extends Component {
   columns = [
@@ -39,6 +40,7 @@ class WorkList extends Component {
       openEditModal: false,
       selectedId: 0,
       currentPage: 1,
+      searchText: '',
     };
   }
 
@@ -57,8 +59,9 @@ class WorkList extends Component {
 
   _getWorkList = async (page) => {
     const { projectId } = this.props;
+    const { searchText } = this.state;
 
-    const data = await workService.listAsync(projectId, page);
+    const data = await workService.listAsync(projectId, page, 5, searchText);
     this.setState({
       works: data.items,
       totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
@@ -134,88 +137,96 @@ class WorkList extends Component {
     };
   };
 
+  handleChangeSearchText = (e) => this.setState({ searchText: e.target.value });
+
+  handleClickSearch = async () => this._getWorkList(1);
+
+  handlePressEnter = (e) => {
+    if (e.which === 13) {
+      this.handleClickSearch();
+    }
+  };
+
   render() {
     const { works, totalPage, openEditModal, selectedWorkName, currentPage } = this.state;
     const { projectId, history } = this.props;
     return (
       <div>
-        <Container>
-          <Card className="mt-5 box-shadow">
-            <Table>
-              <thead>
-                <tr>
-                  {this.columns.map((column, i) => (
-                    <th key={i}>{column.headerName}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {works.map((work, index) => {
-                  return (
-                    <tr key={index}>
-                      {this.columns.map((column, i) => {
-                        const value = work[column.key];
-                        if (column.key !== 'action') {
-                          if (column.key === 'name') {
-                            return (
-                              <td className="align-middle text-primary" key={i}>
-                                <Router history={history}>
-                                  <Link to={`/project/${projectId}/work/${work.id}`}>{value}</Link>
-                                </Router>
-                              </td>
-                            );
-                          }
+        <div className="d-flex justify-content-end">
+          <InputGroup style={{ width: '100%', maxWidth: '300px', margin: '10px' }}>
+            <Input
+              placeholder="Search project by project name"
+              onChange={this.handleChangeSearchText}
+              onKeyPress={this.handlePressEnter}
+            />
+            <Button style={{ height: '36.39px', marginLeft: '8px' }} color="primary" onClick={this.handleClickSearch}>
+              <i className="bi bi-search" />
+            </Button>
+          </InputGroup>
+        </div>
+
+        <Card className="mt-1 box-shadow">
+          <Table>
+            <thead>
+              <tr>
+                {this.columns.map((column, i) => (
+                  <th key={i}>{column.headerName}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {works.map((work, index) => {
+                return (
+                  <tr key={index}>
+                    {this.columns.map((column, i) => {
+                      const value = work[column.key];
+                      if (column.key !== 'action') {
+                        if (column.key === 'name') {
                           return (
-                            <td className="align-middle" key={i}>
-                              {column.format ? column.format(value) : value}
+                            <td className="align-middle text-primary" key={i}>
+                              <Router history={history}>
+                                <Link to={`/project/${projectId}/work/${work.id}`}>{value}</Link>
+                              </Router>
                             </td>
                           );
                         }
                         return (
-                          <td className="align-middle" title="Actions" key={i}>
-                            <Actions
-                              actions={[
-                                {
-                                  icon: <i className="bi bi-trash-fill text-danger" />,
-                                  title: Language.get('delete'),
-                                  action: () => this._deleteWork(work.id),
-                                },
-                                {
-                                  icon: <i className="bi bi-pencil text-success" />,
-                                  title: Language.get('rename'),
-                                  action: () => this._editWork(work.id, work.name),
-                                },
-                              ]}
-                              index={index}
-                            />
+                          <td className="align-middle" key={i}>
+                            {column.format ? column.format(value) : value}
                           </td>
                         );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </Table>
-          </Card>
-
-          <div className="d-flex justify-content-end mt-3">
-            <Pagination>
-              <PaginationItem disabled={currentPage === 1}>
-                <PaginationLink previous onClick={() => this._goToPage(currentPage - 1)} />
-              </PaginationItem>
-              {[...Array(totalPage)].map((x, index) => {
-                return (
-                  <PaginationItem key={index} active={index + 1 === currentPage}>
-                    <PaginationLink onClick={() => this._goToPage(index + 1)}>{index + 1}</PaginationLink>
-                  </PaginationItem>
+                      }
+                      return (
+                        <td className="align-middle" title="Actions" key={i}>
+                          <Actions
+                            actions={[
+                              {
+                                icon: <i className="bi bi-trash-fill text-danger" />,
+                                title: Language.get('delete'),
+                                action: () => this._deleteWork(work.id),
+                              },
+                              {
+                                icon: <i className="bi bi-pencil text-success" />,
+                                title: Language.get('rename'),
+                                action: () => this._editWork(work.id, work.name),
+                              },
+                            ]}
+                            index={index}
+                          />
+                        </td>
+                      );
+                    })}
+                  </tr>
                 );
               })}
-              <PaginationItem disabled={currentPage === totalPage}>
-                <PaginationLink next onClick={() => this._goToPage(currentPage + 1)} />
-              </PaginationItem>
-            </Pagination>
-          </div>
-        </Container>
+            </tbody>
+          </Table>
+        </Card>
+
+        <div className="d-flex justify-content-end mt-3">
+          <CustomPagination page={currentPage} totalPage={totalPage} onChangePage={this._goToPage} />
+        </div>
+
         <ModalForm
           isOpen={openEditModal}
           formData={this._getWorkSchema(selectedWorkName)}

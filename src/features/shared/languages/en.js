@@ -223,6 +223,8 @@ const en = {
   savingworkbtntooltip: 'Saving work',
   saving: 'Saving',
   failed: 'Failed',
+  workexplorertitle: 'Work explorer',
+  projectexplorertitle: 'Project explorer',
 };
 
 export default en;
