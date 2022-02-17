@@ -274,11 +274,11 @@ class Workspace extends Component {
             <Button
               color="link"
               size="sm"
-              className="icon-btn mx-2"
+              className="icon-btn sm mx-2"
               id="create-new-work"
               onClick={this._initCreateWork}
             >
-              <i className="bi bi-plus" />
+              <i className="bi bi-plus central" />
             </Button>
             <UncontrolledTooltip target="create-new-work">
               <small>{Language.get('createnewwork')}</small>
@@ -290,17 +290,27 @@ class Workspace extends Component {
             <Button
               color="link"
               size="sm"
-              className="icon-btn"
+              className="icon-btn sm"
               id="tooltip-view-mode"
               onClick={() => this._handleChangeViewMode(isSplitView ? VIEW_MODE.SINGLE : VIEW_MODE.SPLIT)}
             >
-              {isSplitView ? <i className="bi bi-square" /> : <i className="bi bi-layout-split" />}
+              {isSplitView ? <i className="bi bi-square central" /> : <i className="bi bi-layout-split central" />}
             </Button>
             <UncontrolledTooltip target="tooltip-view-mode">
               <small>{isSplitView ? Language.get('changetosingleview') : Language.get('changetosplitview')}</small>
             </UncontrolledTooltip>
-            <Button color="link" size="sm" className="icon-btn" id="tooltip-lock-panel" onClick={this._toggleLockPanel}>
-              {isLockedPanel ? <i className="bi bi-lock text-success" /> : <i className="bi bi-unlock text-orange" />}
+            <Button
+              color="link"
+              size="sm"
+              className="icon-btn sm"
+              id="tooltip-lock-panel"
+              onClick={this._toggleLockPanel}
+            >
+              {isLockedPanel ? (
+                <i className="bi bi-lock text-success central" />
+              ) : (
+                <i className="bi bi-unlock text-orange central" />
+              )}
             </Button>
             <UncontrolledTooltip target="tooltip-lock-panel">
               <small>{isLockedPanel ? Language.get('unlockpanel') : Language.get('lockpanel')}</small>
@@ -308,7 +318,7 @@ class Workspace extends Component {
             <Button
               color="link"
               size="sm"
-              className="icon-btn"
+              className="icon-btn sm"
               id="tooltip-reset-grid-panel-layout"
               onClick={this._handleResetLayout}
             >

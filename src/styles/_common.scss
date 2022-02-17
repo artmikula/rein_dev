@@ -48,6 +48,11 @@ body {
   &:focus {
     box-shadow: none;
   }
+
+  &.sm {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 .item-hover {
@@ -87,4 +92,10 @@ body {
 
 .clear-text-decor {
   text-decoration: none !important;
+}
+
+.central {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

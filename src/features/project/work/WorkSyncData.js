@@ -65,21 +65,24 @@ class WorkSyncData extends Component {
 
   render() {
     const { syncing } = this.state;
-    const iconClassName = syncing ? 'bi bi-arrow-repeat spinner-border ceta-spinner' : 'bi bi-arrow-repeat';
     const tooltipText = syncing ? Language.get('savingworkbtntooltip') : Language.get('saveworkbtntooltip');
+    let iconClassName = 'central bi bi-arrow-repeat';
+
+    if (syncing) {
+      iconClassName += ' spinner-border ceta-spinner';
+    }
 
     return (
       <>
         <Button
           color="link"
           size="sm"
-          style={{ padding: '1.5px 6px' }}
-          className="icon-btn clear-text-decor"
+          className="icon-btn sm clear-text-decor"
           id="save-work-btn"
           onClick={this.handleClickSaveButton}
           disabled={syncing}
         >
-          <i className={iconClassName} style={{ fontSize: '18px', width: '18px', height: '18px' }} />
+          <i className={iconClassName} style={{ fontSize: '16px', width: '16px', height: '16px' }} />
         </Button>
         <UncontrolledTooltip target="save-work-btn">
           <small>{tooltipText}</small>
