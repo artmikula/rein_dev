@@ -172,6 +172,20 @@ class ProjectList extends Component {
     const { location } = this.props;
     const currentPage = this._getPage(location);
 
+    let minDisplayedPageNum = currentPage - 2;
+    if (minDisplayedPageNum < 1) {
+      minDisplayedPageNum = 1;
+    }
+
+    const displayedPageNums = [];
+    let pageCount = 5;
+
+    while (pageCount > 0 && minDisplayedPageNum <= totalPage) {
+      displayedPageNums.push(minDisplayedPageNum);
+      pageCount--;
+      minDisplayedPageNum++;
+    }
+
     return (
       <ProjectLayout>
         <Container>
@@ -236,17 +250,23 @@ class ProjectList extends Component {
           <div className="d-flex justify-content-end mt-3">
             <Pagination>
               <PaginationItem disabled={currentPage === 1}>
+                <PaginationLink first onClick={() => this._goToPage(1)} />
+              </PaginationItem>
+              <PaginationItem disabled={currentPage === 1}>
                 <PaginationLink previous onClick={() => this._goToPage(currentPage - 1)} />
               </PaginationItem>
-              {[...Array(totalPage)].map((x, index) => {
+              {displayedPageNums.map((displayedPageNum) => {
                 return (
-                  <PaginationItem key={index} active={index + 1 === currentPage}>
-                    <PaginationLink onClick={() => this._goToPage(index + 1)}>{index + 1}</PaginationLink>
+                  <PaginationItem key={displayedPageNum} active={displayedPageNum === currentPage}>
+                    <PaginationLink onClick={() => this._goToPage(displayedPageNum)}>{displayedPageNum}</PaginationLink>
                   </PaginationItem>
                 );
               })}
               <PaginationItem disabled={currentPage === totalPage}>
                 <PaginationLink next onClick={() => this._goToPage(currentPage + 1)} />
+              </PaginationItem>
+              <PaginationItem disabled={currentPage === totalPage}>
+                <PaginationLink last onClick={() => this._goToPage(totalPage)} />
               </PaginationItem>
             </Pagination>
           </div>
