@@ -1,4 +1,5 @@
 import domainEvents from 'features/shared/domainEvents';
+import saveIcon from 'features/shared/icons/save-icon.svg';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import { debounce } from 'lodash';
@@ -10,6 +11,13 @@ import { Button, UncontrolledTooltip } from 'reactstrap';
 import testScenarioAnsCaseStorage from './services/TestScenarioAnsCaseStorage';
 import workService from './services/workService';
 
+const SYNC_STATUS = {
+  NONE: 1,
+  SYNCING: 2,
+  FAILED: 3,
+  SUCCESS: 4,
+};
+
 class WorkSyncData extends Component {
   _syncDebounce = debounce(() => {
     this.sync();
@@ -17,7 +25,7 @@ class WorkSyncData extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { syncing: false };
+    this.state = { syncStatus: SYNC_STATUS.NONE };
   }
 
   componentDidMount() {
@@ -30,14 +38,14 @@ class WorkSyncData extends Component {
   }
 
   _handleEvent = async () => {
-    const { syncing } = this.state;
-    if (!syncing) {
+    const { syncStatus } = this.state;
+    if (syncStatus !== SYNC_STATUS.SYNCING) {
       await this._syncDebounce();
     }
   };
 
   sync = async () => {
-    this.setState({ syncing: true });
+    this.setState({ syncStatus: SYNC_STATUS.SYNCING });
 
     const { testBasis, causeEffects, graph, testCoverage, testDatas, match } = this.props;
     const { projectId, workId } = match.params;
@@ -53,9 +61,14 @@ class WorkSyncData extends Component {
       testScenariosAndCases,
     };
 
-    await workService.updateWorkDataAsync(projectId, workId, data);
+    const result = await workService.updateWorkDataAsync(projectId, workId, data);
+    if (result.error) {
+      this.setState({ syncStatus: SYNC_STATUS.FAILED });
+    } else {
+      this.setState({ syncStatus: SYNC_STATUS.SUCCESS });
+    }
 
-    this.setState({ syncing: false });
+    this.statusTimeOut = setTimeout(() => this.setState({ syncStatus: SYNC_STATUS.NONE }), 2000);
   };
 
   handleClickSaveButton = () => {
@@ -64,25 +77,33 @@ class WorkSyncData extends Component {
   };
 
   render() {
-    const { syncing } = this.state;
-    const tooltipText = syncing ? Language.get('savingworkbtntooltip') : Language.get('saveworkbtntooltip');
+    const { syncStatus } = this.state;
+    const isSyncing = syncStatus === SYNC_STATUS.SYNCING;
+    const tooltipText = isSyncing ? Language.get('savingworkbtntooltip') : Language.get('saveworkbtntooltip');
     let iconClassName = 'central bi bi-arrow-repeat';
 
-    if (syncing) {
+    if (isSyncing) {
       iconClassName += ' spinner-border ceta-spinner';
     }
 
     return (
       <>
+        {isSyncing && <span>{Language.get('saving')}</span>}
+        {syncStatus === SYNC_STATUS.FAILED && <span className="text-danger">{Language.get('failed')}</span>}
+        {syncStatus === SYNC_STATUS.SUCCESS && <span className="text-success">{Language.get('success')}</span>}
         <Button
           color="link"
           size="sm"
           className="icon-btn sm clear-text-decor"
           id="save-work-btn"
           onClick={this.handleClickSaveButton}
-          disabled={syncing}
+          disabled={isSyncing}
         >
-          <i className={iconClassName} style={{ fontSize: '16px', width: '16px', height: '16px' }} />
+          {!isSyncing ? (
+            <img src={saveIcon} alt="" style={{ width: '15px', height: '15px' }} />
+          ) : (
+            <i className={iconClassName} style={{ fontSize: '16px', width: '16px', height: '16px' }} />
+          )}
         </Button>
         <UncontrolledTooltip target="save-work-btn">
           <small>{tooltipText}</small>

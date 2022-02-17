@@ -221,6 +221,8 @@ const en = {
   nodedetail: 'Node detail',
   saveworkbtntooltip: 'Save work',
   savingworkbtntooltip: 'Saving work',
+  saving: 'Saving',
+  failed: 'Failed',
 };
 
 export default en;
