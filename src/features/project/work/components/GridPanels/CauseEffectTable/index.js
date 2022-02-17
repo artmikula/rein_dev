@@ -292,6 +292,25 @@ class CauseEffectTable extends Component {
     }
   };
 
+  handleUnabridge = (id) => {
+    const { listData, setCauseEffects } = this.props;
+    const index = listData.findIndex((x) => x.id === id);
+
+    if (index !== -1 && listData[index].isMerged) {
+      const newItem = { ...listData[index], isMerged: false };
+      const newListData = [...listData];
+
+      newListData[index] = newItem;
+      setCauseEffects(newListData);
+
+      this._raiseEvent({
+        action: domainEvents.ACTION.ADD,
+        value: [newItem],
+        receivers: [domainEvents.DES.TESTDATA],
+      });
+    }
+  };
+
   /* End handle event */
   render() {
     const { listData } = this.props;
@@ -309,7 +328,13 @@ class CauseEffectTable extends Component {
 
         <tbody>
           {rows.map((item) => (
-            <CauseEffectRow key={item.id} data={item} onDelete={this._handleDeleteAction} onMerge={this._handleMerge} />
+            <CauseEffectRow
+              key={item.id}
+              data={item}
+              onDelete={this._handleDeleteAction}
+              onMerge={this._handleMerge}
+              onUnabridge={this.handleUnabridge}
+            />
           ))}
         </tbody>
       </Table>

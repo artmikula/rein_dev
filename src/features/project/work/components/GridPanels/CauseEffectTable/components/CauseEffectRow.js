@@ -4,7 +4,7 @@ import { CLASSIFY } from '../../../../../../shared/constants';
 import ChildCauseEffect from './ChildCauseEffect';
 import IconButton from './IconButton';
 
-export default function CauseEffectRow({ data, onDelete, onMerge }) {
+export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge }) {
   const [collapsed, setCollapsed] = useState(false);
   const { id, type, node, mergedChildren, mergedNodes, definition } = data;
 
@@ -73,7 +73,7 @@ export default function CauseEffectRow({ data, onDelete, onMerge }) {
         </td>
       </tr>
       {mergedChildren.map((mergedRow) => {
-        return <ChildCauseEffect data={mergedRow} collapsed={collapsed} key={mergedRow.id} />;
+        return <ChildCauseEffect data={mergedRow} collapsed={collapsed} key={mergedRow.id} onUnabridge={onUnabridge} />;
       })}
     </>
   );
@@ -81,6 +81,7 @@ export default function CauseEffectRow({ data, onDelete, onMerge }) {
 
 CauseEffectRow.defaultProps = {
   onMerge: () => {},
+  onUnabridge: () => {},
 };
 
 CauseEffectRow.propTypes = {
@@ -94,4 +95,5 @@ CauseEffectRow.propTypes = {
   }).isRequired,
   onDelete: PropTypes.func.isRequired,
   onMerge: PropTypes.func,
+  onUnabridge: PropTypes.func,
 };
