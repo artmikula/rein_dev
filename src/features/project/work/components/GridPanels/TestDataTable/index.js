@@ -157,9 +157,8 @@ class TestDataTable extends Component {
       const newList = [...testDatas];
 
       newList[index] = newItem;
-      console.log(newList);
 
-      this._setTestDatas(newList);
+      this._setTestDatas(newList, false);
     }
   };
 

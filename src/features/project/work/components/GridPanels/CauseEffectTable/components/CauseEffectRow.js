@@ -68,7 +68,7 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, o
     if (isEditing) {
       document.getElementById(editNodeTextboxId).focus();
     }
-  });
+  }, [isEditing]);
 
   return (
     <>
