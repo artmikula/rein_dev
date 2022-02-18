@@ -229,6 +229,7 @@ const en = {
   projectsearchplaceholder: 'Search project by project name',
   abridgealert: 'mergeNode will be included in parentNode.<br/>(parentNode will be remained)',
   info: 'Info',
+  exitednodealert: 'newNode has been exited!',
 };
 
 export default en;

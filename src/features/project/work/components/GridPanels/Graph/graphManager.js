@@ -88,6 +88,17 @@ class GraphManager {
     this.graph.on('tap', 'node', this._handleDblTap);
   };
 
+  changeNodeId = (oldNodeId, newNodeId) => {
+    const node = this.graph.nodes().find((x) => x.data().nodeId === oldNodeId);
+
+    if (node) {
+      node.data().nodeId = newNodeId;
+      this.remove(node);
+      this.draw(node);
+      this.onGraphChange();
+    }
+  };
+
   _handleDblTap = (e) => {
     const target = e.target[0];
     if (isActiveNode(target) && !isUndirectConstraintNode(target) && this.targetTap && this.targetTap === target) {

@@ -290,7 +290,7 @@ class CauseEffectTable extends Component {
             .replace(/mergeNode/g, mergeItem.node)
             .replace(/parentNode/g, parentItem.node);
 
-          alert(alertContent, { title: Language.get('info'), error: false });
+          alert(alertContent, { info: true });
         }
 
         this.mergeItem = null;
@@ -313,6 +313,35 @@ class CauseEffectTable extends Component {
         action: domainEvents.ACTION.ADD,
         value: [newItem],
         receivers: [domainEvents.DES.TESTDATA],
+      });
+    }
+  };
+
+  handleEditNode = (id, newNode) => {
+    const { listData, setCauseEffects } = this.props;
+
+    if (listData.find((x) => x.node === newNode)) {
+      const alertContent = Language.get('exitednodealert').replace(/newNode/g, newNode);
+
+      alert(alertContent, { error: true });
+
+      return;
+    }
+
+    const index = listData.findIndex((x) => x.id === id);
+
+    if (index !== -1) {
+      const oldNode = listData[index].node;
+      const newItem = { ...listData[index], node: newNode };
+      const newListData = [...listData];
+
+      newListData[index] = newItem;
+      setCauseEffects(newListData);
+
+      this._raiseEvent({
+        action: domainEvents.ACTION.CHANGE_NODE_ID,
+        value: { oldNode, newNode },
+        receivers: [domainEvents.DES.TESTDATA, domainEvents.DES.GRAPH],
       });
     }
   };
@@ -340,6 +369,7 @@ class CauseEffectTable extends Component {
               onDelete={this._handleDeleteAction}
               onMerge={this._handleMerge}
               onUnabridge={this.handleUnabridge}
+              onEditNode={this.handleEditNode}
             />
           ))}
         </tbody>

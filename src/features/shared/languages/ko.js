@@ -207,6 +207,7 @@ const ko = {
   projectsearchplaceholder: '프로젝트 이름으로 프로젝트 검색',
   abridgealert: 'mergeNode가 parentNode에 포함될 것입니다.<br/>(parentNode는 그대로 유지됨)',
   info: '정보',
+  exitednodealert: 'newNode가 종료되었습니다!',
 };
 
 export default ko;
