@@ -4,7 +4,7 @@ import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import Language from '../../languages/Language';
 import './style.scss';
 
-export default function Alert({ id, title, content, iconClassName, actionText, onClose, error, warning }) {
+export default function Alert({ id, title, content, iconClassName, actionText, onClose, error, warning, info }) {
   let _iconClassName = iconClassName;
   if (!_iconClassName) {
     _iconClassName = 'bi bi-exclamation-octagon';
@@ -12,11 +12,22 @@ export default function Alert({ id, title, content, iconClassName, actionText, o
     _iconClassName = error ? 'bi bi-exclamation-circle' : _iconClassName;
   }
 
+  let _title = title;
+  if (!_title) {
+    if (error) {
+      _title = Language.get('error');
+    } else if (warning) {
+      _title = Language.get('warning');
+    } else if (info) {
+      _title = Language.get('info');
+    }
+  }
+
   return (
     <Modal centered backdrop isOpen wrapClassName={id} className="alert-modal">
       <ModalHeader className="px-3 py-2">
         {_iconClassName && <i className={`${_iconClassName} mr-2`} />}
-        {title || Language.get('Alert')}
+        {_title}
       </ModalHeader>
       <ModalBody>
         <div dangerouslySetInnerHTML={{ __html: content }} />
@@ -36,6 +47,7 @@ Alert.defaultProps = {
   actionText: 'OK',
   error: false,
   warning: false,
+  info: true,
 };
 
 Alert.propTypes = {
@@ -47,4 +59,5 @@ Alert.propTypes = {
   onClose: PropTypes.func.isRequired,
   error: PropTypes.bool,
   warning: PropTypes.bool,
+  info: PropTypes.bool,
 };

@@ -66,6 +66,24 @@
       @extend ._cause-effect-node;
       background-color: var(--light-gray);
     }
+
+    .edit-node-box {
+      width: 40px;
+      outline: none;
+      text-align: center;
+      padding: 4px 2px;
+
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      &[type='number'] {
+        -moz-appearance: textfield;
+        /* Firefox */
+      }
+    }
   }
 
   .delete-icon {

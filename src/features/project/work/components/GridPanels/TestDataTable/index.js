@@ -4,10 +4,10 @@ import { setTestDatas } from 'features/project/work/slices/workSlice';
 import {
   CLASSIFY,
   FILE_NAME,
+  OPTION_TYPE,
   TESTDATA_TYPE,
   TEST_DATA_SHORTCUT,
   TEST_DATA_SHORTCUT_CODE,
-  OPTION_TYPE,
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
@@ -142,6 +142,24 @@ class TestDataTable extends Component {
     }
     if (action === domainEvents.ACTION.ACCEPTDELETE) {
       this._removeData(value);
+    }
+    if (action === domainEvents.ACTION.CHANGE_NODE_ID) {
+      this._changeNodeId(value);
+    }
+  };
+
+  _changeNodeId = ({ oldNode, newNode }) => {
+    const { testDatas } = this.props;
+    const index = testDatas.findIndex((x) => x.nodeId === oldNode);
+
+    if (index !== -1) {
+      const newItem = { ...testDatas[index], nodeId: newNode };
+      const newList = [...testDatas];
+
+      newList[index] = newItem;
+      console.log(newList);
+
+      this._setTestDatas(newList);
     }
   };
 

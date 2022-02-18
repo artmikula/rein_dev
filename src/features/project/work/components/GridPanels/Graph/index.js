@@ -201,9 +201,16 @@ class Graph extends Component {
       case domainEvents.ACTION.UPDATE:
         this._updateDefinition(value);
         break;
+      case domainEvents.ACTION.CHANGE_NODE_ID:
+        this._changeNodeId(value);
+        break;
       default:
         break;
     }
+  };
+
+  _changeNodeId = (value) => {
+    this.graphManager.changeNodeId(value.oldNode, value.newNode);
   };
 
   _handleAddNodes = (data) => {
