@@ -227,6 +227,8 @@ const en = {
   projectexplorertitle: 'Project explorer',
   worksearchplaceholder: 'Search work by work name',
   projectsearchplaceholder: 'Search project by project name',
+  abridgealert: 'mergeNode will be included in parentNode.<br/>(parentNode will be remained)',
+  info: 'Info',
 };
 
 export default en;

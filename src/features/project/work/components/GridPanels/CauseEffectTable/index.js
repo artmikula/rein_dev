@@ -285,6 +285,12 @@ class CauseEffectTable extends Component {
             value: mergeItem,
             receivers: [domainEvents.DES.GRAPH, domainEvents.DES.TESTDATA],
           });
+
+          const alertContent = Language.get('abridgealert')
+            .replace(/mergeNode/g, mergeItem.node)
+            .replace(/parentNode/g, parentItem.node);
+
+          alert(alertContent, { title: Language.get('info'), error: false });
         }
 
         this.mergeItem = null;

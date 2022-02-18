@@ -205,6 +205,8 @@ const ko = {
   projectexplorertitle: '프로젝트 탐색기',
   worksearchplaceholder: '작업 이름으로 작업 검색',
   projectsearchplaceholder: '프로젝트 이름으로 프로젝트 검색',
+  abridgealert: 'mergeNode가 parentNode에 포함될 것입니다.<br/>(parentNode는 그대로 유지됨)',
+  info: '정보',
 };
 
 export default ko;
