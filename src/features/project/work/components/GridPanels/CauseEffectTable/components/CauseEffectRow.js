@@ -38,7 +38,7 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge })
 
   return (
     <>
-      <tr>
+      <tr draggable="true" onDragStart={handleDragStart} onDragOver={handleDragOver}>
         <th className="cause-effect-wrapper" scope="row">
           <div className="cause-effect-cell">
             {mergedChildren.length > 0 && (
@@ -50,13 +50,7 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge })
                 )}
               </a>
             )}
-            <span
-              className={nodeClassName}
-              draggable="true"
-              onDragStart={handleDragStart}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-            >
+            <span className={nodeClassName} onDrop={handleDrop}>
               {node}
             </span>
           </div>
