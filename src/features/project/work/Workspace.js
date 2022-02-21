@@ -2,7 +2,14 @@ import ProjectLayout from 'features/project/components/ProjectLayout';
 import { defaultTestCoverageData, setWork } from 'features/project/work/slices/workSlice';
 import { ModalForm } from 'features/shared/components';
 import alert from 'features/shared/components/Alert';
-import { DEFAULT_LAYOUTS, DEFAULT_LAYOUTS_SINGLE, STRING, VIEW_MODE, WORK_FORM_NAME } from 'features/shared/constants';
+import {
+  CLASSIFY,
+  DEFAULT_LAYOUTS,
+  DEFAULT_LAYOUTS_SINGLE,
+  STRING,
+  VIEW_MODE,
+  WORK_FORM_NAME,
+} from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
@@ -88,6 +95,35 @@ class Workspace extends Component {
       })),
     }));
 
+  _orderCauseEffect = (causeEffects) => {
+    let causes = causeEffects.filter((x) => x.type === CLASSIFY.CAUSE);
+    causes = causes.sort((a, b) => {
+      const aIndex = parseInt(a.node.replace(CLASSIFY.CAUSE_PREFIX, ''), 10);
+      const bIndex = parseInt(b.node.replace(CLASSIFY.CAUSE_PREFIX, ''), 10);
+      console.log(aIndex, bIndex);
+      return aIndex - bIndex;
+    });
+
+    causes.forEach((x, i) => {
+      const _x = x;
+      _x.orderIndex = i + 1;
+    });
+
+    let effects = causeEffects.filter((x) => x.type === CLASSIFY.EFFECT);
+    effects = effects.sort((a, b) => {
+      const aIndex = parseInt(a.node.replace(CLASSIFY.EFFECT_PREFIX, ''), 10);
+      const bIndex = parseInt(b.node.replace(CLASSIFY.EFFECT_PREFIX, ''), 10);
+      return aIndex - bIndex;
+    });
+
+    effects.forEach((x, i) => {
+      const _x = x;
+      _x.orderIndex = i + 1;
+    });
+
+    return [...causes, ...effects];
+  };
+
   _getWorkData = (data) => {
     const {
       testBasis,
@@ -103,12 +139,17 @@ class Workspace extends Component {
 
     testScenarios.forEach((x) => x);
 
+    let _causeEffects = causeEffects ?? [];
+    if (_causeEffects.some((x) => !x.orderIndex)) {
+      _causeEffects = this._orderCauseEffect(_causeEffects);
+    }
+
     const _data = {
       ...others,
       testBasis: testBasis ?? {
         content: null,
       },
-      causeEffects: causeEffects ?? [],
+      causeEffects: _causeEffects,
       graph: {
         graphNodes: graphNodes ?? [],
         graphLinks: graphLinks ?? [],

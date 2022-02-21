@@ -1,4 +1,4 @@
-import { CLASSIFY } from 'features/shared/constants';
+import { CLASSIFY, ORDER_POSITION } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import similarityCosine from 'features/shared/lib/similarityCosine';
 import { v4 as uuidv4 } from 'uuid';
@@ -70,10 +70,19 @@ class CauseEffect {
    */
   generateCauseEffectItem = (causeEffectList, value, parent = null) => {
     const { type } = value;
+    let maxOrderIndex = 0;
+
+    causeEffectList.forEach((x) => {
+      if (x.type === value.type && x.orderIndex > maxOrderIndex) {
+        maxOrderIndex = x.orderIndex;
+      }
+    });
+
     const newItem = {
       ...value,
       id: uuidv4(),
       node: this.createNode(causeEffectList, type),
+      orderIndex: Math.floor(maxOrderIndex + 1),
     };
     // if Abbreviate is yes
     if (parent) {
@@ -87,7 +96,7 @@ class CauseEffect {
   /**
    * Merge cause/effect child to its parent
    */
-  _mergeData = (data, type, prefix) => {
+  _mergeData = (data, type) => {
     const listData = new Map();
 
     const _data = data.filter((x) => x.type === type);
@@ -108,11 +117,8 @@ class CauseEffect {
       }
     });
 
-    const result = [...listData.values()].sort((a, b) => {
-      const aIndex = parseInt(a.node.replace(prefix, ''), 10);
-      const bIndex = parseInt(b.node.replace(prefix, ''), 10);
-      return aIndex - bIndex;
-    });
+    const arrayData = [...listData.values()];
+    const result = arrayData.sort((a, b) => a.orderIndex - b.orderIndex);
 
     return result;
   };
@@ -162,6 +168,63 @@ class CauseEffect {
     const content = Language.get('addnodefailed');
     const title = Language.get('networkerror');
     alert(content, { title, error: true });
+  };
+
+  reorder = (data, reorderId, rootId, position) => {
+    const reorderNodeIndex = data.findIndex((x) => x.id === reorderId);
+    const rootNodeIndex = data.findIndex((x) => x.id === rootId);
+
+    if (rootNodeIndex === -1 || reorderNodeIndex === -1) {
+      return data;
+    }
+
+    const reorderNode = data[reorderNodeIndex];
+    const rootNode = data[rootNodeIndex];
+    let orderIndex = 0;
+
+    if (reorderNode.type === CLASSIFY.CAUSE && rootNode.type === CLASSIFY.EFFECT) {
+      let maxCauseOrderIndex = 0;
+      data.forEach((x) => {
+        if (x.type === CLASSIFY.CAUSE && x.orderIndex > maxCauseOrderIndex) {
+          maxCauseOrderIndex = x.orderIndex;
+        }
+      });
+
+      orderIndex = (maxCauseOrderIndex + Math.floor(maxCauseOrderIndex + 1)) / 2;
+    } else if (reorderNode.type === CLASSIFY.EFFECT && rootNode.type === CLASSIFY.CAUSE) {
+      let minEffectOrderIndex = Number.MAX_VALUE;
+      data.forEach((x) => {
+        if (x.type === CLASSIFY.EFFECT && x.orderIndex < minEffectOrderIndex) {
+          minEffectOrderIndex = x.orderIndex;
+        }
+      });
+
+      orderIndex = (0 + minEffectOrderIndex) / 2;
+    } else if (position === ORDER_POSITION.TOP) {
+      let minOrderIndex = 0;
+      data.forEach((x) => {
+        if (x.type === reorderNode.type && x.orderIndex > minOrderIndex && x.orderIndex < rootNode.orderIndex) {
+          minOrderIndex = x.orderIndex;
+        }
+      });
+
+      orderIndex = (minOrderIndex + rootNode.orderIndex) / 2;
+    } else {
+      let maxOrderIndex = Number.MAX_VALUE;
+      data.forEach((x) => {
+        if (x.type === reorderNode.type && x.orderIndex < maxOrderIndex && x.orderIndex > rootNode.orderIndex) {
+          maxOrderIndex = x.orderIndex;
+        }
+      });
+
+      orderIndex = (maxOrderIndex + rootNode.orderIndex) / 2;
+    }
+
+    const newNode = { ...reorderNode, orderIndex };
+    const newData = [...data];
+    newData[reorderNodeIndex] = newNode;
+
+    return newData;
   };
 }
 export default new CauseEffect();

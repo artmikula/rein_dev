@@ -2,11 +2,11 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
-import { CLASSIFY } from '../../../../../../shared/constants';
+import { CLASSIFY, ORDER_POSITION } from '../../../../../../shared/constants';
 import ChildCauseEffect from './ChildCauseEffect';
 import IconButton from './IconButton';
 
-export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, onEditNode }) {
+export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, onReorder, onEditNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [isEditing, setEditing] = useState(false);
   const { id, type, node, mergedChildren, mergedNodes, definition } = data;
@@ -23,19 +23,93 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, o
     onDelete(data);
   };
 
+  const getNestestTrParentElement = (target) => {
+    let parent = target;
+    while (parent && parent.tagName.toLowerCase() !== 'tr') {
+      parent = parent.parentNode;
+    }
+
+    return parent;
+  };
+
+  const clearOrderIndicator = (e) => {
+    const trParent = getNestestTrParentElement(e.target);
+
+    if (trParent) {
+      trParent.classList.remove('order-before');
+      trParent.classList.remove('order-after');
+    }
+  };
+
+  const getOrderPosition = (e) => {
+    const trParent = getNestestTrParentElement(e.target);
+
+    if (trParent && window.draggingId !== id) {
+      const mouseY = e.clientY;
+      const trRect = trParent.getBoundingClientRect();
+
+      if (trRect.bottom - mouseY > mouseY - trRect.top) {
+        return { order: ORDER_POSITION.TOP, ele: trParent };
+      }
+
+      return { order: ORDER_POSITION.BOTTOM, ele: trParent };
+    }
+
+    return { order: null, ele: null };
+  };
+
   const handleDragStart = (e) => {
     e.stopPropagation();
     e.dataTransfer.setData('text', id);
+    window.draggingId = id;
   };
 
-  const handleDrop = (e) => {
+  const handleDropToMerge = (e) => {
     e.stopPropagation();
-    onMerge(e.dataTransfer.getData('text'), id);
+    window.draggingId = null;
+
+    const mergeId = e.dataTransfer.getData('text');
+    if (mergeId !== id) {
+      onMerge(mergeId, id);
+    }
+  };
+
+  const handleDropToReorder = (e) => {
+    e.stopPropagation();
+    window.draggingId = null;
+    clearOrderIndicator(e);
+
+    const orderPosition = getOrderPosition(e);
+    const reorderId = e.dataTransfer.getData('text');
+    if (orderPosition.ele && reorderId !== id) {
+      onReorder(reorderId, id, orderPosition.order);
+    }
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const orderPosition = getOrderPosition(e);
+    if (orderPosition.ele && orderPosition.order === ORDER_POSITION.TOP) {
+      orderPosition.ele.classList.add('order-before');
+      orderPosition.ele.classList.remove('order-after');
+    } else if (orderPosition.ele && orderPosition.order === ORDER_POSITION.BOTTOM) {
+      orderPosition.ele.classList.remove('order-before');
+      orderPosition.ele.classList.add('order-after');
+    }
+  };
+
+  const handleDropLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    clearOrderIndicator(e);
+  };
+
+  const handleDragOverOnNode = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    clearOrderIndicator(e);
   };
 
   const handleClickNode = () => setEditing(true);
@@ -72,7 +146,14 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, o
 
   return (
     <>
-      <tr draggable="true" onDragStart={handleDragStart} onDragOver={handleDragOver}>
+      <tr
+        draggable="true"
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDrop={handleDropToReorder}
+        onDragLeave={handleDropLeave}
+        id={id}
+      >
         <th className="cause-effect-wrapper" scope="row">
           <div className="cause-effect-cell">
             {mergedChildren.length > 0 && (
@@ -94,7 +175,12 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, o
                 defaultValue={node.substr(1, node.length - 1)}
               />
             ) : (
-              <span className={nodeClassName} onDrop={handleDrop} onClick={handleClickNode}>
+              <span
+                className={nodeClassName}
+                onDrop={handleDropToMerge}
+                onClick={handleClickNode}
+                onDragOver={handleDragOverOnNode}
+              >
                 {node}
               </span>
             )}
@@ -122,6 +208,7 @@ CauseEffectRow.defaultProps = {
   onMerge: () => {},
   onUnabridge: () => {},
   onEditNode: () => {},
+  onReorder: () => {},
 };
 
 CauseEffectRow.propTypes = {
@@ -137,4 +224,5 @@ CauseEffectRow.propTypes = {
   onMerge: PropTypes.func,
   onUnabridge: PropTypes.func,
   onEditNode: PropTypes.func,
+  onReorder: PropTypes.func,
 };
