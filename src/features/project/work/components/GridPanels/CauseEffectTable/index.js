@@ -256,45 +256,43 @@ class CauseEffectTable extends Component {
   };
 
   _handleMerge = (mergeId, parentId) => {
-    if (mergeId !== parentId) {
-      const { listData, setCauseEffects } = this.props;
+    const { listData, setCauseEffects } = this.props;
 
-      const mergeItem = listData.find((x) => x.id === mergeId);
-      const parentItem = listData.find((x) => x.id === parentId);
+    const mergeItem = listData.find((x) => x.id === mergeId);
+    const parentItem = listData.find((x) => x.id === parentId);
 
-      this.mergeItem = mergeItem;
+    this.mergeItem = mergeItem;
 
-      if (mergeItem && parentItem && mergeItem.type === parentItem.type && !parentItem.isMerged) {
-        const newListData = [...listData];
-        const mergeIndex = newListData.findIndex((x) => x.id === mergeItem.id);
+    if (mergeItem && parentItem && mergeItem.type === parentItem.type && !parentItem.isMerged) {
+      const newListData = [...listData];
+      const mergeIndex = newListData.findIndex((x) => x.id === mergeItem.id);
 
-        if (mergeIndex > -1) {
-          newListData.forEach((x, index) => {
-            if (x.isMerged && x.parent === mergeItem.id) {
-              newListData[index] = { ...x, id: uuidv4(), isMerged: true, parent: parentItem.id };
-            }
-          });
+      if (mergeIndex > -1) {
+        newListData.forEach((x, index) => {
+          if (x.isMerged && x.parent === mergeItem.id) {
+            newListData[index] = { ...x, id: uuidv4(), isMerged: true, parent: parentItem.id };
+          }
+        });
 
-          const newItem = { ...mergeItem, id: uuidv4(), isMerged: true, parent: parentItem.id };
+        const newItem = { ...mergeItem, id: uuidv4(), isMerged: true, parent: parentItem.id };
 
-          newListData[mergeIndex] = newItem;
-          setCauseEffects(newListData);
+        newListData[mergeIndex] = newItem;
+        setCauseEffects(newListData);
 
-          this._raiseEvent({
-            action: domainEvents.ACTION.ACCEPTDELETE,
-            value: mergeItem,
-            receivers: [domainEvents.DES.GRAPH, domainEvents.DES.TESTDATA],
-          });
+        this._raiseEvent({
+          action: domainEvents.ACTION.ACCEPTDELETE,
+          value: mergeItem,
+          receivers: [domainEvents.DES.GRAPH, domainEvents.DES.TESTDATA],
+        });
 
-          const alertContent = Language.get('abridgealert')
-            .replace(/mergeNode/g, mergeItem.node)
-            .replace(/parentNode/g, parentItem.node);
+        const alertContent = Language.get('abridgealert')
+          .replace(/mergeNode/g, mergeItem.node)
+          .replace(/parentNode/g, parentItem.node);
 
-          alert(alertContent, { info: true });
-        }
-
-        this.mergeItem = null;
+        alert(alertContent, { info: true });
       }
+
+      this.mergeItem = null;
     }
   };
 
@@ -346,6 +344,11 @@ class CauseEffectTable extends Component {
     }
   };
 
+  handleReorder = (...arg) => {
+    const { listData, setCauseEffects } = this.props;
+    setCauseEffects(CauseEffect.reorder(listData, ...arg));
+  };
+
   /* End handle event */
   render() {
     const { listData } = this.props;
@@ -370,6 +373,7 @@ class CauseEffectTable extends Component {
               onMerge={this._handleMerge}
               onUnabridge={this.handleUnabridge}
               onEditNode={this.handleEditNode}
+              onReorder={this.handleReorder}
             />
           ))}
         </tbody>

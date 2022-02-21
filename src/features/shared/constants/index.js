@@ -378,3 +378,8 @@ export const TESTDATA_TYPE = {
   TrueData: 'TrueData',
   FalseData: 'FalseData',
 };
+
+export const ORDER_POSITION = {
+  TOP: 1,
+  BOTTOM: 2,
+};
