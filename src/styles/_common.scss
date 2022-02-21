@@ -99,3 +99,26 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+th.sortable {
+  & .sort-icon {
+    visibility: hidden;
+    margin-left: 4px;
+    font-size: 16px;
+  }
+
+  &:hover { 
+    cursor: pointer;  
+
+    & .sort-icon {
+      visibility: visible;
+    }
+  }
+
+  & .sorted {
+    visibility: visible;
+    &::before {
+      font-weight: 600 !important;
+    }
+  }
+}

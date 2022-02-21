@@ -2,8 +2,8 @@ import restServiceHelper from '../../shared/lib/restServiceHelper';
 import restService from '../../shared/services/restService';
 
 class ProjectService {
-  async listAsync(page = 1, pageSize = 5, filter = '') {
-    const url = `/project?page=${page}&pageSize=${pageSize}&filter=${filter}`;
+  async listAsync(page = 1, pageSize = 5, filter = '', sort = 'lastModifiedDate,desc') {
+    const url = `/project?page=${page}&pageSize=${pageSize}&filter=${filter}&sort=${sort}`;
     const response = await restService.getAsync(url);
     return response.data;
   }
