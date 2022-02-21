@@ -9,21 +9,36 @@ import { Link, withRouter } from 'react-router-dom';
 import { Button, Card, Input, InputGroup, Table } from 'reactstrap';
 import CustomPagination from '../CustomPagination';
 
+const SORT_DIRECTION = {
+  ASC: 'asc',
+  DESC: 'desc',
+};
+
+const defaultSortObj = {
+  column: 'lastmodifieddate',
+  direction: SORT_DIRECTION.DESC,
+};
+
+const defaultSort = `${defaultSortObj.column},${defaultSortObj.direction}`;
+
 class ProjectList extends Component {
   columns = [
     {
       headerName: Language.get('projectname'),
       key: 'name',
+      sortable: true,
     },
     {
       headerName: Language.get('createddate'),
       key: 'createdDate',
       format: (value) => (value ? toLocalTime(value) : null),
+      sortable: true,
     },
     {
       headerName: Language.get('lastmodifieddate'),
       key: 'lastModifiedDate',
       format: (value) => (value ? toLocalTime(value) : null),
+      sortable: true,
     },
     {
       headerName: '',
@@ -39,47 +54,40 @@ class ProjectList extends Component {
       totalPage: 1,
       openEditModal: false,
       selectedId: 0,
-      isRefresh: false,
-      searchText: '',
     };
   }
 
   async componentDidMount() {
-    const data = await this._getData();
-    this.setState({
-      projects: data.items,
-      totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
-    });
+    this._getData();
   }
 
   async componentDidUpdate(prevProps) {
-    const { isRefresh } = this.state;
     const preLocation = prevProps.location;
     const { location } = this.props;
     const prevPage = this._getPage(preLocation);
     const currentPage = this._getPage(location);
+    const prevFilter = this._getFilter(preLocation);
+    const currentFilter = this._getFilter(location);
+    const prevSort = this._getSort(preLocation);
+    const currentSort = this._getSort(location);
 
-    if (prevPage !== currentPage || isRefresh) {
-      const data = await this._getData();
-      this._updateState({
-        projects: data.items,
-        totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
-        isRefresh: false,
-      });
+    if (prevPage !== currentPage || prevFilter !== currentFilter || prevSort !== currentSort) {
+      this._getData();
     }
   }
 
-  _getData = (firstPage = false) => {
+  _getData = async () => {
     const { location } = this.props;
-    const currentPage = this._getPage(location);
-    const { searchText } = this.state;
-    const page = firstPage ? 1 : currentPage;
+    const page = this._getPage(location);
+    const filter = this._getFilter(location);
+    const sort = this._getSort(location);
 
-    return projectService.listAsync(page, 5, searchText);
-  };
+    const data = await projectService.listAsync(page, 5, filter, sort);
 
-  _updateState = (data) => {
-    this.setState(data);
+    this.setState({
+      projects: data.items,
+      totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
+    });
   };
 
   _getPage = (location) => {
@@ -87,15 +95,21 @@ class ProjectList extends Component {
     return query.get('page') && !Number.isNaN(query.get('page')) ? parseInt(query.get('page'), 10) : 1;
   };
 
+  _getFilter = (location) => {
+    const query = new URLSearchParams(location.search);
+    return query.get('filter') ?? '';
+  };
+
+  _getSort = (location) => {
+    const query = new URLSearchParams(location.search);
+    return query.get('sort') ?? defaultSort;
+  };
+
   _confirmDelete = async () => {
     const { selectedId } = this.state;
-    const { history, location } = this.props;
-    const currentPage = this._getPage(location);
     await projectService.deleteAsync(selectedId);
-    history.push(`/projects?page=${currentPage}`);
-    this.setState({
-      isRefresh: true,
-    });
+
+    this._getData();
   };
 
   _deleteProject = (id) => {
@@ -113,9 +127,8 @@ class ProjectList extends Component {
 
   _handleSubmitEditProject = async (values, { setErrors, setSubmitting }) => {
     const { selectedId } = this.state;
-    const { history, location } = this.props;
-    const currentPage = this._getPage(location);
     const result = await projectService.updateAsync(selectedId, values);
+
     setSubmitting(false);
     if (result.error) {
       const { Name } = result.error.response.data;
@@ -124,11 +137,7 @@ class ProjectList extends Component {
         _summary_: errorMessage,
       });
     } else {
-      history.push(`/projects?page=${currentPage}`);
-      this.setState({
-        openEditModal: false,
-        isRefresh: true,
-      });
+      this.setState({ openEditModal: false }, this._getData);
     }
   };
 
@@ -139,8 +148,11 @@ class ProjectList extends Component {
   };
 
   _goToPage = (page) => {
-    const { history } = this.props;
-    history.push(`/projects?page=${page}`);
+    const { history, location } = this.props;
+    const filter = this._getFilter(location);
+    const sort = this._getSort(location);
+
+    history.push(`/projects?page=${page}&filter=${filter}&sort=${sort}`);
   };
 
   _goToWorkPage = async (projectId) => {
@@ -175,15 +187,12 @@ class ProjectList extends Component {
     };
   };
 
-  handleChangeSearchText = (e) => this.setState({ searchText: e.target.value });
-
   handleClickSearch = async () => {
-    const data = await this._getData(true);
-    this._updateState({
-      projects: data.items,
-      totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
-      isRefresh: false,
-    });
+    const { history, location } = this.props;
+    const sort = this._getSort(location);
+    const filter = document.getElementById('search-project-box').value;
+
+    history.push(`/projects?page=${1}&filter=${filter}&sort=${sort}`);
   };
 
   handlePressEnter = (e) => {
@@ -192,18 +201,73 @@ class ProjectList extends Component {
     }
   };
 
+  handleSort = (item) => {
+    if (!item.sortable) {
+      return;
+    }
+
+    const { history, location } = this.props;
+    const page = this._getPage(location);
+    const filter = this._getFilter(location);
+    const sort = this.getSortObject(this._getSort(location));
+    const sortObject = { ...defaultSortObj };
+
+    if (item.key === sort.column) {
+      sortObject.column = item.key;
+      sortObject.direction = sort.direction === SORT_DIRECTION.ASC ? SORT_DIRECTION.DESC : SORT_DIRECTION.ASC;
+    } else {
+      sortObject.column = item.key;
+      sortObject.direction = SORT_DIRECTION.ASC;
+    }
+
+    history.push(`/projects?page=${page}&filter=${filter}&sort=${sortObject.column},${sortObject.direction}`);
+  };
+
+  getSortIcon = (item, sort) => {
+    if (!item.sortable) {
+      return null;
+    }
+
+    if (sort.direction === SORT_DIRECTION.ASC) {
+      return <i className={`bi bi-arrow-up sort-icon ${item.key === sort.column && 'sorted'}`} />;
+    }
+
+    if (sort.direction === SORT_DIRECTION.DESC) {
+      return <i className={`bi bi-arrow-down sort-icon ${item.key === sort.column && 'sorted'}`} />;
+    }
+
+    return <i className="bi bi-arrow-up sort-icon" />;
+  };
+
+  getSortObject = (sort) => {
+    let [column, direction] = sort.split(',');
+
+    if (column !== 'name' && column !== 'createdDate' && column !== 'lastModifiedDate') {
+      column = 'lastModifiedDate';
+    }
+
+    if (direction !== SORT_DIRECTION.ASC && direction !== SORT_DIRECTION.DESC) {
+      direction = SORT_DIRECTION.DESC;
+    }
+
+    return { column, direction };
+  };
+
   render() {
+    const { projects, totalPage, selectedProjectName, openEditModal } = this.state;
     const { location } = this.props;
     const currentPage = this._getPage(location);
-    const { projects, totalPage, selectedProjectName, openEditModal } = this.state;
+    const sort = this.getSortObject(this._getSort(location));
+    const searchText = this._getFilter(location);
 
     return (
       <div>
         <div className="d-flex justify-content-end">
           <InputGroup style={{ width: '100%', maxWidth: '350px', margin: '10px' }}>
             <Input
+              id="search-project-box"
+              defaultValue={searchText}
               placeholder={Language.get('projectsearchplaceholder')}
-              onChange={this.handleChangeSearchText}
               onKeyPress={this.handlePressEnter}
             />
             <Button style={{ height: '36.39px', marginLeft: '8px' }} color="primary" onClick={this.handleClickSearch}>
@@ -216,7 +280,10 @@ class ProjectList extends Component {
             <thead>
               <tr>
                 {this.columns.map((column, i) => (
-                  <th key={i}>{column.headerName}</th>
+                  <th key={i} className={column.sortable && 'sortable'} onClick={() => this.handleSort(column)}>
+                    {column.headerName}
+                    {this.getSortIcon(column, sort)}
+                  </th>
                 ))}
               </tr>
             </thead>
