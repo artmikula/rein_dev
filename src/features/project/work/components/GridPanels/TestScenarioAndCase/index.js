@@ -368,7 +368,7 @@ class TestScenarioAndCase extends Component {
     const result = await reInCloudService.uploadTestCases(formData);
     alertCloseFunction();
     if (result.error) {
-      alert(result.error, { title: 'error', iconClassName: 'bi bi-cloud-arrow-up' });
+      alert(result.error.message, { title: 'error', iconClassName: 'bi bi-cloud-arrow-up' });
     } else {
       alert(Language.get('uploadtestcasesuccess'), {
         title: Language.get('success'),

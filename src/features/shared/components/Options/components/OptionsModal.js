@@ -26,11 +26,8 @@ export default function OptionsModal({ id, close, optionType }) {
   const _save = async (option) => {
     const result = await optionService.update({ key: option.key, value: JSON.stringify(option.value) });
     if (result.error) {
-      if (result.error.detail) {
-        alert(result.error.detail, { title: result.error.title, error: true });
-      } else {
-        alert(result.error, { title: Language.get('error'), error: true });
-      }
+      alert(result.error.message, { title: Language.get('error'), error: true });
+
       return false;
     }
 

@@ -230,6 +230,7 @@ const en = {
   abridgealert: 'mergeNode will be included in parentNode.<br/>(parentNode will be remained)',
   info: 'Info',
   exitednodealert: 'newNode has been exited!',
+  cannotaccessproject: 'You are not granted to access this project.',
 };
 
 export default en;

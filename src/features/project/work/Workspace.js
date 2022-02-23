@@ -163,15 +163,25 @@ class Workspace extends Component {
   };
 
   _getWorkById = async (projectId, workId) => {
-    const { setWork } = this.props;
+    const { setWork, history } = this.props;
     const result = await workService.getAsync(projectId, workId);
     let workData = {};
 
     testScenarioAnsCaseStorage.setId(workId);
 
     if (result.error) {
-      this._showErrorMessage(result.error);
-      testScenarioAnsCaseStorage.set([]);
+      let { message } = result.error;
+
+      if (result.error.code === 403) {
+        message = 'You are not granted to access this project.';
+      }
+
+      alert(message, {
+        error: true,
+        onClose: () => {
+          history.push('/projects');
+        },
+      });
     } else {
       const testScenariosAndCases = this._convertTestScenarios(result.data.testScenarios ?? []);
       testScenarioAnsCaseStorage.set(testScenariosAndCases);
@@ -180,10 +190,6 @@ class Workspace extends Component {
     }
 
     setWork({ ...workData, loaded: true });
-  };
-
-  _showErrorMessage = (error) => {
-    alert(error, { error: true });
   };
 
   _handleChangePanelLayout = (layouts, mode) => {
