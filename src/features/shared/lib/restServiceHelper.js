@@ -4,15 +4,23 @@ class RestServiceHelper {
       return { data: response.data };
     }
 
-    return { error: response.data };
+    return {
+      error: {
+        data: response.data,
+        code: response.status,
+        message: response.toString,
+      },
+    };
   }
 
   handleError(error) {
-    if (error.response && error.response.data) {
-      return { error: error.response.data };
-    }
-
-    return { error: error.toString() };
+    return {
+      error: {
+        data: error.response.data,
+        code: error.response.status,
+        message: error.toString(),
+      },
+    };
   }
 
   async requestAsync(action) {
@@ -20,7 +28,7 @@ class RestServiceHelper {
       const response = await action;
       return this.handleResponse(response);
     } catch (error) {
-      return this.handleError(error.message);
+      return this.handleError(error);
     }
   }
 }

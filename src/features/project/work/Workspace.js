@@ -168,14 +168,12 @@ class Workspace extends Component {
     let workData = {};
 
     testScenarioAnsCaseStorage.setId(workId);
-
+    console.log('_getWorkById', result);
     if (result.error) {
-      let message = result.error;
-      if (result.error.search('403')) {
+      let { message } = result.error.message;
+      if (result.error.code === 403) {
         message = 'You are not granted to access this project.';
       }
-
-      testScenarioAnsCaseStorage.set([]);
 
       alert(message, {
         error: true,
