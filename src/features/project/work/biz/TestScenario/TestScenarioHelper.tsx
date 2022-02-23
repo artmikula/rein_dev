@@ -391,6 +391,7 @@ class TestScenarioHelper {
       testScenarioItem.Name = `TS#${testScenarioIndex + 1}(${testScenario.scenarioType})`;
       testScenarioItem.isSelected = !!testScenario.isSelected;
       testScenarioItem.id = testScenario.id;
+      testScenarioItem.isViolated = testScenario.isViolated;
 
       columns.forEach((column) => {
         if (column.key === 'results') {

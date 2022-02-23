@@ -439,7 +439,7 @@ class TestScenarioAndCase extends Component {
             {rows.map((testScenario, tsIndex) => {
               return (
                 <React.Fragment key={tsIndex}>
-                  <tr key={`${tsIndex}test-scenario-row`}>
+                  <tr key={`${tsIndex}test-scenario-row`} className={testScenario.isViolated ? 'isViolated' : ''}>
                     <td
                       rowSpan={expandId[testScenario.id] ? testScenario.testCases.length + 1 : 1}
                       className="treeview"
