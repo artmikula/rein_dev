@@ -19,8 +19,8 @@ class Constraint {
           return NODE_INSPECTION.RConstraintViolation;
         }
         break;
-      case GRAPH_LINK_TYPE.ONLY_ONE:
-        if (!this._validateOnlyOne(scenario)) {
+      case GRAPH_LINK_TYPE.ONLYONE:
+        if (!this._validateOnlyOne(scenario, constraint)) {
           return NODE_INSPECTION.OConstraintViolation;
         }
         break;
@@ -39,8 +39,8 @@ class Constraint {
   _validateRequire(scenario, constraint) {
     const source = constraint.nodes[0];
     const target = constraint.nodes[1];
-    const assertionTargetResult = scenario.testAssertions.find((x) => x.graphNodeId === target.graphNodeId);
-    const assertionSourceResult = scenario.testAssertions.find((x) => x.graphNodeId === source.graphNodeId);
+    const assertionTargetResult = scenario.testAssertions.find((x) => x.graphNode.id === target.graphNodeId);
+    const assertionSourceResult = scenario.testAssertions.find((x) => x.graphNode.id === source.graphNodeId);
     return (
       assertionTargetResult &&
       (assertionTargetResult.result || (assertionSourceResult && !assertionSourceResult.result))
@@ -53,7 +53,7 @@ class Constraint {
 
   _validateInclusive(scenario, constraint) {
     const trueCount = Enumerable.from(constraint.nodes).count((x) =>
-      scenario.testAssertions.some((y) => y.graphNodeId === x.graphNodeId && y.result === !x.isNotRelation)
+      scenario.testAssertions.some((y) => y.graphNode.id === x.graphNodeId && y.result === !x.isNotRelation)
     );
 
     return trueCount >= 1;
@@ -61,7 +61,7 @@ class Constraint {
 
   _validateExclusive(scenario, constraint) {
     const trueCount = Enumerable.from(constraint.nodes).count((x) =>
-      scenario.testAssertions.some((y) => y.graphNodeId === x.graphNodeId && y.result === !x.isNotRelation)
+      scenario.testAssertions.some((y) => y.graphNode.id === x.graphNodeId && y.result === !x.isNotRelation)
     );
 
     return trueCount <= 1;
@@ -71,7 +71,7 @@ class Constraint {
     let trueCount = 0;
     const { nodes } = constraint;
     for (let i = 0; i < nodes.length; i++) {
-      const assertionResult = scenario.testAssertions.find((x) => x.graphNodeId === nodes[i].graphNodeId);
+      const assertionResult = scenario.testAssertions.find((x) => x.graphNode.id === nodes[i].graphNodeId);
       if (assertionResult) {
         if (assertionResult.result === nodes[i].isNotRelation) {
           trueCount++;
