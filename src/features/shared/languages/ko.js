@@ -208,6 +208,7 @@ const ko = {
   abridgealert: 'mergeNode가 parentNode에 포함될 것입니다.<br/>(parentNode는 그대로 유지됨)',
   info: '정보',
   exitednodealert: 'newNode가 종료되었습니다!',
+  canaccessproject: '이 프로젝트에 액세스할 수 있는 권한이 없습니다.',
 };
 
 export default ko;
