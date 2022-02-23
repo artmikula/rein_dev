@@ -1,16 +1,17 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import CauseEffect from './CauseEffect';
 import IconButton from './IconButton';
 
-export default function ChildCauseEffect({ data, collapsed, onUnabridge }) {
-  const { id, node, definition } = data;
+export default function ChildCauseEffect({ data, onEditNode, collapsed, onUnabridge }) {
+  const { id, node, type, definition } = data;
   const handleUnabridge = () => onUnabridge(id);
 
   return (
     <tr key={id} className={`collapse merged-row ${collapsed ? 'show' : ''}`}>
       <th className="cause-effect-wrapper" scope="row">
         <div className="cause-effect-cell">
-          <span className="merged-id">{node}</span>
+          <CauseEffect isMerged id={id} node={node} type={type} onEditNode={onEditNode} />
         </div>
       </th>
       <td>{definition}</td>
@@ -30,10 +31,12 @@ ChildCauseEffect.propTypes = {
   data: PropTypes.shape({
     id: PropTypes.string.isRequired,
     node: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
     definition: PropTypes.string.isRequired,
   }).isRequired,
   collapsed: PropTypes.bool,
   onUnabridge: PropTypes.func,
+  onEditNode: PropTypes.func.isRequired,
 };
 
 ChildCauseEffect.defaultProps = {

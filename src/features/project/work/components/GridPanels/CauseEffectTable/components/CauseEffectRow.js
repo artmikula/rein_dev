@@ -1,17 +1,15 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
-import { CLASSIFY, ORDER_POSITION } from '../../../../../../shared/constants';
+import React, { useState } from 'react';
+import { ORDER_POSITION } from '../../../../../../shared/constants';
+import CauseEffect from './CauseEffect';
 import ChildCauseEffect from './ChildCauseEffect';
 import IconButton from './IconButton';
 
 export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, onReorder, onEditNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [isEditing, setEditing] = useState(false);
-  const { id, type, node, mergedChildren, mergedNodes, definition } = data;
-
-  const editNodeTextboxId = `edit-${node}-text-box`;
+  const { id, node, type, mergedChildren, mergedNodes, definition } = data;
 
   const handleCollapseRow = (e) => {
     e.preventDefault();
@@ -112,38 +110,6 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, o
     clearOrderIndicator(e);
   };
 
-  const handleClickNode = () => setEditing(true);
-
-  const handleEditNode = (nodeNum) => {
-    setEditing(false);
-    if (nodeNum.trim().length !== 0 && parseInt(nodeNum.trim(), 10)) {
-      const newNode = node[0] + nodeNum;
-
-      if (newNode !== node) {
-        onEditNode(id, newNode);
-      }
-    }
-  };
-
-  const handleKeypress = (e) => {
-    if (e.which === 13) {
-      handleEditNode(e.target.value);
-    }
-  };
-
-  const handleBlur = (e) => handleEditNode(e.target.value);
-
-  let nodeClassName = type === CLASSIFY.CAUSE ? 'cause-id' : 'effect-id';
-  nodeClassName += ' cause-effect-node';
-
-  const editBoxClassName = `edit-node-box ${nodeClassName}`;
-
-  useEffect(() => {
-    if (isEditing) {
-      document.getElementById(editNodeTextboxId).focus();
-    }
-  }, [isEditing]);
-
   return (
     <>
       <tr
@@ -165,25 +131,14 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, o
                 )}
               </a>
             )}
-            {isEditing ? (
-              <input
-                type="number"
-                id={editNodeTextboxId}
-                className={editBoxClassName}
-                onKeyPress={handleKeypress}
-                onBlur={handleBlur}
-                defaultValue={node.substr(1, node.length - 1)}
-              />
-            ) : (
-              <span
-                className={nodeClassName}
-                onDrop={handleDropToMerge}
-                onClick={handleClickNode}
-                onDragOver={handleDragOverOnNode}
-              >
-                {node}
-              </span>
-            )}
+            <CauseEffect
+              id={id}
+              node={node}
+              type={type}
+              onEditNode={onEditNode}
+              onDragOver={handleDragOverOnNode}
+              onDrop={handleDropToMerge}
+            />
           </div>
         </th>
         <td>{definition}</td>
@@ -198,7 +153,15 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, o
         </td>
       </tr>
       {mergedChildren.map((mergedRow) => {
-        return <ChildCauseEffect data={mergedRow} collapsed={collapsed} key={mergedRow.id} onUnabridge={onUnabridge} />;
+        return (
+          <ChildCauseEffect
+            data={mergedRow}
+            collapsed={collapsed}
+            key={mergedRow.id}
+            onUnabridge={onUnabridge}
+            onEditNode={onEditNode}
+          />
+        );
       })}
     </>
   );
