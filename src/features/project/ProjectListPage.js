@@ -35,12 +35,33 @@ class ProjectListPage extends Component {
   }
 
   _getData = async () => {
-    const { location } = this.props;
+    const { location, history } = this.props;
     const page = this._getPage(location);
     const filter = this._getFilter(location);
     const sort = this._getSort(location);
+    let _page = page;
+
+    if (_page < 1) {
+      _page = 1;
+      history.push(`/projects?page=${_page}&filter=${filter}&sort=${sort}`);
+
+      return;
+    }
+
     const data = await projectService.listAsync(page, 5, filter, sort);
     const totalPage = parseInt((data.totalRow - 1) / data.pageSize + 1, 10);
+
+    if (page > totalPage) {
+      let _page = totalPage;
+
+      if (_page < 1) {
+        _page = 1;
+      }
+
+      history.push(`/projects?page=${_page}&filter=${filter}&sort=${sort}`);
+
+      return;
+    }
 
     this.setState({ projects: data.items, totalPage });
   };
@@ -50,16 +71,7 @@ class ProjectListPage extends Component {
     let page = 1;
 
     if (query.get('page') && !Number.isNaN(query.get('page'))) {
-      const { totalPage } = this.state;
       page = parseInt(query.get('page'), 10);
-
-      if (page > totalPage) {
-        page = totalPage;
-      }
-
-      if (page === 0) {
-        page = 1;
-      }
     }
 
     return page;
