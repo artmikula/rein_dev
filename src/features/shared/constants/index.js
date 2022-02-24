@@ -383,3 +383,8 @@ export const ORDER_POSITION = {
   TOP: 1,
   BOTTOM: 2,
 };
+
+export const SORT_DIRECTION = {
+  ASC: 'asc',
+  DESC: 'desc',
+};
