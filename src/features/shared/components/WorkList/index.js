@@ -69,6 +69,10 @@ class WorkList extends Component {
       _page = totalPage;
     }
 
+    if (_page === 0) {
+      _page = 1;
+    }
+
     this.setState({
       works: data.items,
       totalPage,

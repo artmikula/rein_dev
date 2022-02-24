@@ -56,6 +56,10 @@ class ProjectListPage extends Component {
       if (page > totalPage) {
         page = totalPage;
       }
+
+      if (page === 0) {
+        page = 1;
+      }
     }
 
     return page;

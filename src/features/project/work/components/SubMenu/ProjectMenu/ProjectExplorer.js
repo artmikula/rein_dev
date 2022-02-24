@@ -16,6 +16,10 @@ function ProjectExplorer() {
       _page = totalPage;
     }
 
+    if (_page === 0) {
+      _page = 1;
+    }
+
     setState({
       ...state,
       data: data.items,
