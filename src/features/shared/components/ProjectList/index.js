@@ -45,15 +45,14 @@ function ProjectList({ totalPage, page, sort, filter, data, onSort, onSearch, on
   const [state, setState] = useState({ openEditModal: false, selectedId: 0 });
   const { selectedId, selectedProjectName, openEditModal } = state;
 
-  const confirmDelete = async () => {
-    await projectService.deleteAsync(selectedId);
+  const confirmDelete = async (id) => {
+    await projectService.deleteAsync(id);
 
-    onDelete(selectedId);
+    onDelete(id);
   };
 
   const deleteProject = (id) => {
-    confirm(undefined, { yesAction: confirmDelete });
-    setState({ ...state, selectedId: id });
+    confirm(undefined, { yesAction: () => confirmDelete(id) });
   };
 
   const editProject = (id, name) =>
