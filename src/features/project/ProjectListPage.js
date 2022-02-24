@@ -40,11 +40,9 @@ class ProjectListPage extends Component {
     const filter = this._getFilter(location);
     const sort = this._getSort(location);
     const data = await projectService.listAsync(page, 5, filter, sort);
+    const totalPage = parseInt((data.totalRow - 1) / data.pageSize + 1, 10);
 
-    this.setState({
-      projects: data.items,
-      totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
-    });
+    this.setState({ projects: data.items, totalPage });
   };
 
   _getPage = (location) => {
