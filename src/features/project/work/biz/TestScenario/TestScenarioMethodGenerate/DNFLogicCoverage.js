@@ -11,6 +11,7 @@ import Enumerable from 'linq';
 import { v4 as uuid } from 'uuid';
 import TestScenarioHelper from '../TestScenarioHelper';
 import MyersTechnique from './MyersTechnique';
+import constraintHelper from '../../Constraint';
 
 class DNFLogicCoverage {
   constructor() {
@@ -132,6 +133,20 @@ class DNFLogicCoverage {
     }
 
     testScenarios = [...scenarios];
+
+    for (let i = 0; i < testScenarios.length; i++) {
+      for (let j = 0; j < this.constraints.length; j++) {
+        const validation = constraintHelper.validate(this.constraints[j], testScenarios[i]);
+
+        if (validation !== NODE_INSPECTION.None) {
+          testScenarios[i].isViolated = true;
+          testScenarios[i].testAssertions.forEach((testAssertion) => {
+            const graphNode = this.graphNodes.find((x) => x.id === testAssertion.graphNode.id);
+            graphNode.inspection |= validation;
+          });
+        }
+      }
+    }
 
     return { scenarios: testScenarios, graphNodes: this.graphNodes };
   }

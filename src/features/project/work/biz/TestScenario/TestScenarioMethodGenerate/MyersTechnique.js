@@ -252,6 +252,7 @@ class MyerTechnique {
           const newValidation = inspectionDictionary.get(item.graphNodeId) | validation;
           inspectionDictionary.set(item.graphNodeId, newValidation);
         });
+
         scenarioResult.isViolated = true;
       }
     }

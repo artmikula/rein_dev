@@ -439,7 +439,7 @@ class TestScenarioAndCase extends Component {
             {rows.map((testScenario, tsIndex) => {
               return (
                 <React.Fragment key={tsIndex}>
-                  <tr key={`${tsIndex}test-scenario-row`}>
+                  <tr key={`${tsIndex}test-scenario-row`} className={testScenario.isViolated ? 'isViolated' : ''}>
                     <td
                       rowSpan={expandId[testScenario.id] ? testScenario.testCases.length + 1 : 1}
                       className="treeview"
@@ -448,7 +448,10 @@ class TestScenarioAndCase extends Component {
                         <li>
                           <ul className="d-inline-flex">
                             <a
-                              style={{ paddingTop: '2px' }}
+                              style={{
+                                paddingTop: '2px',
+                                visibility: testScenario.testCases.length === 0 ? 'hidden' : 'visible',
+                              }}
                               href="#collapse"
                               className="text-dark"
                               onClick={(e) => this._toggleRow(e, testScenario.id)}
