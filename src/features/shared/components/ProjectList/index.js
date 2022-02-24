@@ -16,30 +16,6 @@ export const defaultSortObj = {
   direction: SORT_DIRECTION.DESC,
 };
 
-const columns = [
-  {
-    headerName: Language.get('projectname'),
-    key: 'name',
-    sortable: true,
-  },
-  {
-    headerName: Language.get('createddate'),
-    key: 'createdDate',
-    format: (value) => (value ? toLocalTime(value) : null),
-    sortable: true,
-  },
-  {
-    headerName: Language.get('lastmodifieddate'),
-    key: 'lastModifiedDate',
-    format: (value) => (value ? toLocalTime(value) : null),
-    sortable: true,
-  },
-  {
-    headerName: '',
-    key: 'action',
-  },
-];
-
 const getProjectSchema = (name) => {
   return {
     formTitle: Language.get('renameproject'),
@@ -154,6 +130,30 @@ function ProjectList({ totalPage, page, sort, filter, data, onSort, onSearch, on
 
     return <i className="bi bi-arrow-up sort-icon" />;
   };
+
+  const columns = [
+    {
+      headerName: Language.get('projectname'),
+      key: 'name',
+      sortable: true,
+    },
+    {
+      headerName: Language.get('createddate'),
+      key: 'createdDate',
+      format: (value) => (value ? toLocalTime(value) : null),
+      sortable: true,
+    },
+    {
+      headerName: Language.get('lastmodifieddate'),
+      key: 'lastModifiedDate',
+      format: (value) => (value ? toLocalTime(value) : null),
+      sortable: true,
+    },
+    {
+      headerName: '',
+      key: 'action',
+    },
+  ];
 
   return (
     <div>
