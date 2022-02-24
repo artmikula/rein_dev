@@ -1,6 +1,5 @@
 import Download from 'downloadjs';
 import { SearchComponent, SubMenu } from 'features/shared/components';
-import ProjectList from 'features/shared/components/ProjectList';
 import Language from 'features/shared/languages/Language';
 import debounce from 'lodash.debounce';
 import React, { useEffect, useState } from 'react';
@@ -8,6 +7,7 @@ import { Router, useHistory, useParams } from 'react-router';
 import CreateForm from '../../../../components/CreateForm';
 import ImportForm from '../../../../components/ImportForm';
 import projectService from '../../../../services/projectService';
+import ProjectExplorer from './ProjectExplorer';
 import ProjectLink from './ProjectLink';
 
 export default function ProjectMenu() {
@@ -69,7 +69,7 @@ export default function ProjectMenu() {
           content: (
             <Router history={history}>
               <div className="px-3 py-2">
-                <ProjectList />
+                <ProjectExplorer />
               </div>
             </Router>
           ),

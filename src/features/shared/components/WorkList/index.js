@@ -62,9 +62,17 @@ class WorkList extends Component {
     const { searchText } = this.state;
 
     const data = await workService.listAsync(projectId, page, 5, searchText);
+    const totalPage = parseInt((data.totalRow - 1) / data.pageSize + 1, 10);
+    let _page = page;
+
+    if (_page > totalPage) {
+      _page = totalPage;
+    }
+
     this.setState({
       works: data.items,
-      totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
+      totalPage,
+      currentPage: page,
     });
   };
 
