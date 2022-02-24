@@ -4,6 +4,10 @@ import { Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 
 class CustomPagination extends Component {
   getDisplayedPageNums = (page, totalPage) => {
+    if (totalPage === 0) {
+      return [1];
+    }
+
     let minDisplayedPageNum = page - 2;
 
     if (minDisplayedPageNum + 4 > totalPage) {
@@ -32,10 +36,10 @@ class CustomPagination extends Component {
 
     return (
       <Pagination>
-        <PaginationItem disabled={page === 1}>
+        <PaginationItem disabled={page <= 1}>
           <PaginationLink first onClick={() => onChangePage(1)} />
         </PaginationItem>
-        <PaginationItem disabled={page === 1}>
+        <PaginationItem disabled={page <= 1}>
           <PaginationLink previous onClick={() => onChangePage(page - 1)} />
         </PaginationItem>
         {displayedPageNums.map((displayedPageNum) => {
@@ -45,10 +49,10 @@ class CustomPagination extends Component {
             </PaginationItem>
           );
         })}
-        <PaginationItem disabled={page === totalPage}>
+        <PaginationItem disabled={page >= totalPage}>
           <PaginationLink next onClick={() => onChangePage(page + 1)} />
         </PaginationItem>
-        <PaginationItem disabled={page === totalPage}>
+        <PaginationItem disabled={page >= totalPage}>
           <PaginationLink last onClick={() => onChangePage(totalPage)} />
         </PaginationItem>
       </Pagination>
