@@ -448,7 +448,10 @@ class TestScenarioAndCase extends Component {
                         <li>
                           <ul className="d-inline-flex">
                             <a
-                              style={{ paddingTop: '2px' }}
+                              style={{
+                                paddingTop: '2px',
+                                visibility: testScenario.testCases.length === 0 ? 'hidden' : 'visible',
+                              }}
                               href="#collapse"
                               className="text-dark"
                               onClick={(e) => this._toggleRow(e, testScenario.id)}

@@ -8,49 +8,54 @@ class TestCase {
     const totalTCs = [];
     for (let i = 0; i < testScenarios.length; i++) {
       let testCasesOfScenario = [];
-      const causeAssertions = testScenarios[i].testAssertions.filter((x) => x.graphNode);
-      for (let j = 0; j < causeAssertions.length; j++) {
-        const causeAssertion = causeAssertions[j];
-        const { testDatas, type } = testDataService.getTestData(allTestDatas, causeAssertion, graphNodes);
 
-        if (testCasesOfScenario.length > 0) {
-          const tmp = [];
-          for (let k = 0; k < testCasesOfScenario.length; k++) {
+      if (!testScenarios[i].isViolated) {
+        const causeAssertions = testScenarios[i].testAssertions.filter((x) => x.graphNode);
+        for (let j = 0; j < causeAssertions.length; j++) {
+          const causeAssertion = causeAssertions[j];
+          const { testDatas, type } = testDataService.getTestData(allTestDatas, causeAssertion, graphNodes);
+
+          if (testCasesOfScenario.length > 0) {
+            const tmp = [];
+            for (let k = 0; k < testCasesOfScenario.length; k++) {
+              const testDataArray = this._getTrueOrFalseList(testDatas, type);
+              testDataArray.forEach((data) => {
+                const clone = this._clone(testCasesOfScenario[k]);
+                clone.id = uuid();
+                const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j].graphNode.id);
+                if (testDataInCase) {
+                  testDataInCase.data = data;
+                } else {
+                  clone.testDatas.push({ graphNodeId: causeAssertions[j].graphNode.id, data });
+                }
+                tmp.push(clone);
+              });
+            }
+
+            testCasesOfScenario = [...tmp];
+          } else {
             const testDataArray = this._getTrueOrFalseList(testDatas, type);
             testDataArray.forEach((data) => {
-              const clone = this._clone(testCasesOfScenario[k]);
-              clone.id = uuid();
-              const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j].graphNode.id);
-              if (testDataInCase) {
-                testDataInCase.data = data;
-              } else {
-                clone.testDatas.push({ graphNodeId: causeAssertions[j].graphNode.id, data });
+              const newCase = {
+                id: uuid(),
+                testScenarioId: testScenarios[i].id,
+                testScenario: { ...testScenarios[i] },
+                testDatas: [{ graphNodeId: causeAssertions[j].graphNode.id, data }],
+                results: [],
+              };
+              const { testResults } = testScenarios[i];
+              for (let k = 0; k < testResults.length; k++) {
+                if (testResults[k].type === RESULT_TYPE.False) {
+                  newCase.results.push(
+                    `NOT(${this._getDesciptionOfGraphNode(graphNodes, testResults[k].graphNodeId)})`
+                  );
+                } else {
+                  newCase.results.push(this._getDesciptionOfGraphNode(graphNodes, testResults[k].graphNodeId));
+                }
               }
-              tmp.push(clone);
+              testCasesOfScenario.push(newCase);
             });
           }
-
-          testCasesOfScenario = [...tmp];
-        } else {
-          const testDataArray = this._getTrueOrFalseList(testDatas, type);
-          testDataArray.forEach((data) => {
-            const newCase = {
-              id: uuid(),
-              testScenarioId: testScenarios[i].id,
-              testScenario: { ...testScenarios[i] },
-              testDatas: [{ graphNodeId: causeAssertions[j].graphNode.id, data }],
-              results: [],
-            };
-            const { testResults } = testScenarios[i];
-            for (let k = 0; k < testResults.length; k++) {
-              if (testResults[k].type === RESULT_TYPE.False) {
-                newCase.results.push(`NOT(${this._getDesciptionOfGraphNode(graphNodes, testResults[k].graphNodeId)})`);
-              } else {
-                newCase.results.push(this._getDesciptionOfGraphNode(graphNodes, testResults[k].graphNodeId));
-              }
-            }
-            testCasesOfScenario.push(newCase);
-          });
         }
       }
 
