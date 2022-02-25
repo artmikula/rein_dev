@@ -127,6 +127,8 @@ class MyerTechnique {
       }
     }
 
+    testScenarios = testScenarios.filter((x) => x.expectedResults);
+
     return {
       scenarios: testScenarios,
       graphNodes: this.graphNodes,

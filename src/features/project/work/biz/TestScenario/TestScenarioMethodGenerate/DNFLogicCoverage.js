@@ -9,9 +9,9 @@ import {
 } from 'features/shared/constants';
 import Enumerable from 'linq';
 import { v4 as uuid } from 'uuid';
+import constraintHelper from '../../Constraint';
 import TestScenarioHelper from '../TestScenarioHelper';
 import MyersTechnique from './MyersTechnique';
-import constraintHelper from '../../Constraint';
 
 class DNFLogicCoverage {
   constructor() {
@@ -147,6 +147,8 @@ class DNFLogicCoverage {
         }
       }
     }
+
+    testScenarios = testScenarios.filter((x) => x.expectedResults);
 
     return { scenarios: testScenarios, graphNodes: this.graphNodes };
   }
