@@ -38,10 +38,12 @@ export default function ListItem({
     }
   };
 
+  const inputId = `palette-item-${value.replace(/\s/g, '')}`;
+
   return (
     <div className={`d-flex px-2 list-item align-items-center ${selected && 'selected'}`} onClick={handleSelect}>
-      {checkable && <input type="checkbox" checked={checked} onChange={handleCheck} />}
-      <label className="flex-grow-1 mb-0 ml-2" htmlFor="">
+      {checkable && <input type="checkbox" checked={checked} onChange={handleCheck} id={inputId} />}
+      <label className="flex-grow-1 mb-0 ml-2" htmlFor={inputId}>
         {label}
       </label>
       {removable && (
