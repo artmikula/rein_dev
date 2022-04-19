@@ -57,29 +57,12 @@ class ReInMenu extends Component {
     _closeModal = window.modal(modaProps);
   };
 
-  _handleLoadMeta = (file) => {
+  _handleLoadMeta = (nodes) => {
     if (this.closeLoadMetaModal) {
       this.closeLoadMetaModal();
-      this.closeLoadMetaModal = null;
     }
 
-    if (file) {
-      const fileName = file.name;
-      const ex = fileName.split('.').pop();
-      const self = this;
-
-      if (ex.toLowerCase() === 'json') {
-        readFileContent(file, (content) => {
-          const data = allPropertiesInJSON(content);
-          self.raiseEvent({ action: domainEvents.ACTION.INSERTCAUSES, value: data });
-        });
-      } else if (ex.toLowerCase() === 'xml') {
-        readFileContent(file, (content) => {
-          const data = allTagsInXML(content);
-          self.raiseEvent({ action: domainEvents.ACTION.INSERTCAUSES, value: data });
-        });
-      }
-    }
+    this.raiseEvent({ action: domainEvents.ACTION.INSERTCAUSES, value: nodes });
   };
 
   _loadMeta = () => {

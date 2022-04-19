@@ -1,20 +1,22 @@
 import { parseString } from 'xml2js';
 
-const getAllLeafProperties = (obj, parentKey, result = new Set()) => {
-  if (Array.isArray(obj)) {
-    if (obj.length === 0 || typeof obj[0] !== 'object') {
-      if (parentKey) {
-        result.add(parentKey);
-      }
-    } else {
-      obj.forEach((item) => getAllLeafProperties(item, null, result));
-    }
-  } else if (typeof obj === 'object') {
+const getAllProperties = (obj, result = []) => {
+  if (Array.isArray(obj) && typeof obj[0] === 'object') {
+    obj.forEach((x) => getAllProperties(x, result));
+  } else if (!Array.isArray(obj)) {
     Object.keys(obj).forEach((key) => {
-      if (typeof obj[key] !== 'object') {
-        result.add(key);
-      } else {
-        getAllLeafProperties(obj[key], key, result);
+      const item = { name: key };
+
+      if ((Array.isArray(obj[key]) && typeof obj[key][0] !== 'object') || typeof obj[key] !== 'object') {
+        item.selected = true;
+      }
+
+      if (!result.some((x) => x.name === key)) {
+        result.push(item);
+      }
+
+      if (!item.selected) {
+        getAllProperties(obj[key], result);
       }
     });
   }
@@ -25,9 +27,7 @@ const getAllLeafProperties = (obj, parentKey, result = new Set()) => {
 export const allPropertiesInJSON = (json) => {
   try {
     const obj = JSON.parse(json);
-    const properties = getAllLeafProperties(obj);
-
-    return [...properties];
+    return getAllProperties(obj);
   } catch (e) {
     return [];
   }
@@ -39,9 +39,8 @@ export const allTagsInXML = (xml) => {
     parseString(xml, (err, result) => {
       json = result;
     });
-    const properties = getAllLeafProperties(json);
 
-    return [...properties];
+    return getAllProperties(json);
   } catch (e) {
     return [];
   }
