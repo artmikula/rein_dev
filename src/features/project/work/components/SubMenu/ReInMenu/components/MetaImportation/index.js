@@ -1,28 +1,47 @@
-import Language from 'features/shared/languages/Language';
+import { allPropertiesInJSON, allTagsInXML, readFileContent } from 'features/project/work/biz/Template';
 import React, { useState } from 'react';
-import { Button, Input } from 'reactstrap';
+import MetaFilePicker from './MetaFilePicker';
+import NodeSelection from './NodeSelection';
+import './style.scss';
 
 export default function MetaImportation({ onSubmit }) {
-  const [file, setFile] = useState(null);
+  const [nodes, setNodes] = useState(null);
 
   const handleSubmit = () => {
-    onSubmit(file);
+    onSubmit(nodes.filter((x) => x.selected).map((x) => x.name));
   };
 
-  const handleChangeFile = (e) => {
-    setFile(e.target.files[0]);
+  const handleChange = (item) => {
+    const newNodes = [...nodes];
+    const index = newNodes.findIndex((x) => x.name === item.name);
+
+    newNodes[index] = { ...newNodes[index], selected: !newNodes[index].selected };
+
+    setNodes(newNodes);
   };
 
-  return (
-    <div>
-      <div className="mx-3 my-3">
-        <Input className="mt-1" type="file" accept=".json,.xml" onChange={handleChangeFile} />
-      </div>
-      <div className="px-3 pt-2 pb-3 border-top d-flex justify-content-end">
-        <Button size="sm" color="primary" onClick={handleSubmit} disabled={!file}>
-          {Language.get('Import')}
-        </Button>
-      </div>
-    </div>
-  );
+  const handlePickFile = (file) => {
+    if (file) {
+      const fileName = file.name;
+      const ex = fileName.split('.').pop();
+
+      if (ex.toLowerCase() === 'json') {
+        readFileContent(file, (content) => {
+          const data = allPropertiesInJSON(content);
+          setNodes(data);
+        });
+      } else if (ex.toLowerCase() === 'xml') {
+        readFileContent(file, (content) => {
+          const data = allTagsInXML(content);
+          setNodes(data);
+        });
+      }
+    }
+  };
+
+  if (nodes) {
+    return <NodeSelection onSubmit={handleSubmit} data={nodes} onChange={handleChange} />;
+  }
+
+  return <MetaFilePicker onSubmit={handlePickFile} />;
 }
