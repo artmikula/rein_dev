@@ -146,29 +146,31 @@ class TestScenarioAndCase extends Component {
       scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
     }
 
-    const newTestScenarios = scenarioAndGraphNodes.scenarios.map((x) => {
-      const scenario = {
-        ...x,
-        testAssertions: x.testAssertions.map((y) => {
-          const graphNode = graph.graphNodes.find((x) => x.id === y.graphNode.id);
-          return {
-            ...y,
-            result: y.result,
-            graphNodeId: y.graphNode.id,
-            graphNode,
-            workId,
-          };
-        }),
-        testResults: x.testResults.map((y) => {
-          return {
-            ...y,
-            workId,
-          };
-        }),
-      };
+    const newTestScenarios = scenarioAndGraphNodes.scenarios
+      .filter((x) => !x.isViolated)
+      .map((x) => {
+        const scenario = {
+          ...x,
+          testAssertions: x.testAssertions.map((y) => {
+            const graphNode = graph.graphNodes.find((x) => x.id === y.graphNode.id);
+            return {
+              ...y,
+              result: y.result,
+              graphNodeId: y.graphNode.id,
+              graphNode,
+              workId,
+            };
+          }),
+          testResults: x.testResults.map((y) => {
+            return {
+              ...y,
+              workId,
+            };
+          }),
+        };
 
-      return scenario;
-    });
+        return scenario;
+      });
 
     const newGraphNodes = scenarioAndGraphNodes.graphNodes;
 
