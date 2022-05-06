@@ -5,4 +5,7 @@
         cursor: grab;
         background-color: aliceblue;
     }
+    &.warning {
+        color: #888;
+    }
 }

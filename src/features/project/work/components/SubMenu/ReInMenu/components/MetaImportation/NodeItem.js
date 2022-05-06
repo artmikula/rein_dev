@@ -8,8 +8,18 @@ export default function NodeItem({ data, onDoubleClick }) {
 
   const handleDoubleClick = () => onDoubleClick(data);
 
+  const getClassName = () => {
+    let className = 'meta-node py-1 px-2';
+
+    if (data.exists) {
+      className += ' warning';
+    }
+
+    return className;
+  };
+
   return (
-    <div className="meta-node py-1 px-2" draggable onDoubleClick={handleDoubleClick} onDragStart={handleDragStart}>
+    <div className={getClassName()} draggable onDoubleClick={handleDoubleClick} onDragStart={handleDragStart}>
       {data.name}
     </div>
   );

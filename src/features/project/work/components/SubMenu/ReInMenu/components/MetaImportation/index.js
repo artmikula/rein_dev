@@ -4,7 +4,7 @@ import MetaFilePicker from './MetaFilePicker';
 import NodeSelection from './NodeSelection';
 import './style.scss';
 
-export default function MetaImportation({ onSubmit }) {
+export default function MetaImportation({ onSubmit, causes }) {
   const [nodes, setNodes] = useState(null);
 
   const handleSubmit = () => {
@@ -20,6 +20,20 @@ export default function MetaImportation({ onSubmit }) {
     setNodes(newNodes);
   };
 
+  const unselectExistsNodes = (data) => {
+    const newData = (data || []).map((x) => {
+      const exists = (causes || []).some((y) => y.definition === x.name);
+
+      return {
+        ...x,
+        exists,
+        selected: x.selected && !exists,
+      };
+    });
+
+    return newData;
+  };
+
   const handlePickFile = (file) => {
     if (file) {
       const fileName = file.name;
@@ -28,12 +42,13 @@ export default function MetaImportation({ onSubmit }) {
       if (ex.toLowerCase() === 'json') {
         readFileContent(file, (content) => {
           const data = allPropertiesInJSON(content);
-          setNodes(data);
+
+          setNodes(unselectExistsNodes(data));
         });
       } else if (ex.toLowerCase() === 'xml') {
         readFileContent(file, (content) => {
           const data = allTagsInXML(content);
-          setNodes(data);
+          setNodes(unselectExistsNodes(data));
         });
       }
     }

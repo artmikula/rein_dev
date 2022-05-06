@@ -1,5 +1,5 @@
-import { allPropertiesInJSON, allTagsInXML, readFileContent } from 'features/project/work/biz/Template';
 import { REIN_SHORTCUT_CODE, TEMPLATE_SHORTCUT } from 'features/shared/constants';
+import { connect } from 'react-redux';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
@@ -66,9 +66,13 @@ class ReInMenu extends Component {
   };
 
   _loadMeta = () => {
+    const { causeEffects } = this.props;
+
+    const causes = (causeEffects || []).filter((x) => x.type === 'Cause');
+
     const modaProps = {
       title: Language.get('loadmeta'),
-      content: <MetaImportation onSubmit={this._handleLoadMeta} />,
+      content: <MetaImportation onSubmit={this._handleLoadMeta} causes={causes} />,
       actions: null,
     };
     this.closeLoadMetaModal = window.modal(modaProps);
@@ -94,4 +98,8 @@ class ReInMenu extends Component {
   }
 }
 
-export default withRouter(ReInMenu);
+const mapStateToProps = (state) => ({
+  causeEffects: state.work.causeEffects,
+});
+
+export default connect(mapStateToProps)(withRouter(ReInMenu));
