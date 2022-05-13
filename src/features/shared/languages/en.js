@@ -19,7 +19,7 @@ const en = {
   description: 'Description',
   version: 'Version',
   yes: 'Yes',
-  no: 'no',
+  no: 'No',
   reset: 'Reset',
   warning: 'Warning',
   option: 'Option',
