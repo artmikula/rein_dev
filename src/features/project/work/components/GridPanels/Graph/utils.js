@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /* eslint-disable no-bitwise */
 import { GRAPH_LINK_TYPE, GRAPH_NODE_TYPE, NODE_INSPECTION, OPERATOR_TYPE } from 'features/shared/constants';
 import { INSPECTION_PALETTES, RULE_TYPE, getHighestRuleType } from 'features/shared/inspection-palettes';

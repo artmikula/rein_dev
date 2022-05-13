@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import Enumerable from 'linq';
 import { CONSTRAINT_TYPE, EXPRESSION_TYPE, GRAPH_NODE_TYPE, OPERATOR_TYPE } from 'features/shared/constants';
 import CauseEffect from './CauseEffect';

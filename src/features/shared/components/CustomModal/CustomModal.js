@@ -12,6 +12,7 @@ export default function CustomModal({ title, content, actions, id, icon, close }
     <Modal isOpen wrapClassName={id} centered backdrop size="lg">
       <ModalHeader close={closeBtn} className="confirm-modal-header">
         {icon && (
+          // eslint-disable-next-line max-len
           <span className="d-inline-flex justify-content-center align-items-center icon-container rounded-circle mr-2 my-2">
             {icon}
           </span>

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /* eslint-disable no-bitwise */
 import { GRAPH_NODE_TYPE, OPERATOR_TYPE, RESULT_TYPE, SCENARIO_PROPERTIES } from 'features/shared/constants';
 import Enumerable from 'linq';
