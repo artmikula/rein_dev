@@ -186,7 +186,7 @@ class WorkMenu extends Component {
         key: 5,
         text: Language.get('delete'),
         action: () => {
-          confirm(undefined, { yesAction: this._confirmDelete });
+          window.confirm(undefined, { yesAction: this._confirmDelete });
         },
       },
       {

@@ -1,5 +1,6 @@
 import Language from 'features/shared/languages/Language';
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { Button, Input } from 'reactstrap';
 
 export default function MetaFilePicker({ onSubmit }) {
@@ -26,3 +27,7 @@ export default function MetaFilePicker({ onSubmit }) {
     </div>
   );
 }
+
+MetaFilePicker.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+};

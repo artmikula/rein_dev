@@ -83,13 +83,16 @@ class TestBasis extends Component {
       {
         strategy: this._findEntities,
         component: (props) => {
+          // eslint-disable-next-line react/prop-types
           const { decoratedText, contentState, entityKey } = props;
+          // eslint-disable-next-line react/prop-types
           const entityData = contentState.getEntity(entityKey).getData();
           const newEntityData = { ...entityData, definition: decoratedText };
           const { type, definition } = entityData;
           // update definition
           if (definition !== decoratedText) {
             this._raiseEvent(domainEvents.ACTION.UPDATE, newEntityData);
+            // eslint-disable-next-line react/prop-types
             contentState.mergeEntityData(entityKey, newEntityData);
           }
           return <DecoratedText {...props} type={type} />;
@@ -127,7 +130,7 @@ class TestBasis extends Component {
 
   /* Events */
   _handleEventBus = (message) => {
-    const { action, type, value, receivers } = message;
+    const { action, value, receivers } = message;
     if (receivers === undefined || receivers.includes(domainEvents.DES.TESTBASIS)) {
       if (action === domainEvents.ACTION.ACCEPTDELETE) {
         this._removeCauseEffect(value.definitionId);

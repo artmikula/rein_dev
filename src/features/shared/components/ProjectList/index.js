@@ -52,7 +52,7 @@ function ProjectList({ totalPage, page, sort, filter, data, onSort, onSearch, on
   };
 
   const deleteProject = (id) => {
-    confirm(undefined, { yesAction: () => confirmDelete(id) });
+    window.confirm(undefined, { yesAction: () => confirmDelete(id) });
   };
 
   const editProject = (id, name) =>

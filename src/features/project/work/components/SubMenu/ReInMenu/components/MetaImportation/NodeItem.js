@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 export default function NodeItem({ data, onDoubleClick }) {
   const handleDragStart = (e) => {
@@ -24,3 +25,8 @@ export default function NodeItem({ data, onDoubleClick }) {
     </div>
   );
 }
+
+NodeItem.propTypes = {
+  data: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+  onDoubleClick: PropTypes.func.isRequired,
+};

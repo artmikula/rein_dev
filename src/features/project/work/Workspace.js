@@ -401,6 +401,7 @@ Workspace.propTypes = {
   setWork: PropTypes.func.isRequired,
   workName: PropTypes.string.isRequired,
   projectName: PropTypes.string.isRequired,
+  loadedWork: PropTypes.bool.isRequired,
 };
 
 const mapDispatchToProps = { setWork };

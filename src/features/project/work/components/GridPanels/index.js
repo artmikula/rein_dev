@@ -15,6 +15,7 @@ import TestDataTable from './TestDataTable';
 import TestScenarioAndCase from './TestScenarioAndCase';
 
 export default class GridPanels extends Component {
+  // eslint-disable-next-line react/sort-comp
   setGraphActionHandler = (graphActionHandler) => {
     this.setState({ graphActionHandler });
   };

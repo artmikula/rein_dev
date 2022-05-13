@@ -77,6 +77,7 @@ GridPanelItem.defaultProps = {
   title: '',
   isLockedPanel: false,
   tabs: [],
+  renderTitle: undefined,
   onTogglePanel: () => {},
 };
 
@@ -84,6 +85,7 @@ GridPanelItem.propTypes = {
   isCollapse: PropTypes.bool.isRequired,
   isLockedPanel: PropTypes.bool,
   title: PropTypes.string,
+  renderTitle: PropTypes.func,
   tabs: PropTypes.arrayOf(PropTypes.string),
   index: PropTypes.number.isRequired,
   onTogglePanel: PropTypes.func,

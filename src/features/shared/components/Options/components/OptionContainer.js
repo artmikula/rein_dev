@@ -22,6 +22,7 @@ const options = [
 ];
 
 function OptionsManager(props, ref) {
+  // eslint-disable-next-line react/prop-types
   const { type } = props;
   const [selectedType, setSelectedType] = useState(type);
   const Component = options.find((x) => x.type === selectedType).component;

@@ -1,10 +1,11 @@
 import { INSPECTION_PALETTES, INSPECTION_RULES } from 'features/shared/inspection-palettes';
 import Language from 'features/shared/languages/Language';
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { Button } from 'reactstrap';
 import List from '../../../../../../../shared/components/List';
 
-export default function InspectionPalette({ projectId, workId, onClose }) {
+export default function InspectionPalette({ onClose }) {
   const [selectedPaltteCode, setSelectedPaletteCode] = useState(Object.values(INSPECTION_PALETTES)[0].code);
 
   const handleSelectTemplate = (code) => setSelectedPaletteCode(code);
@@ -60,3 +61,11 @@ export default function InspectionPalette({ projectId, workId, onClose }) {
     </div>
   );
 }
+
+InspectionPalette.propTypes = {
+  onClose: PropTypes.func,
+};
+
+InspectionPalette.defaultProps = {
+  onClose: undefined,
+};

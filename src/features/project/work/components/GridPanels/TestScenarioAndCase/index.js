@@ -294,6 +294,19 @@ class TestScenarioAndCase extends Component {
     this._setRows(newRows);
   };
 
+  _createTestCasesFile = () => {
+    const { graph } = this.props;
+    const { columns, rows } = this.state;
+    const dataToConvert = [];
+
+    rows.forEach((testScenario) => {
+      testScenario.testCases.forEach((testCase) => {
+        dataToConvert.push(this._createExportRowData(testCase, columns));
+      });
+    });
+    return arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
+  };
+
   _createExportRowData(item, columns) {
     const row = { Name: item.Name, Checked: item.isSelected };
     columns.forEach((col) => {
@@ -332,19 +345,6 @@ class TestScenarioAndCase extends Component {
     const csvFile = arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
     Download(csvFile, FILE_NAME.EXPORT_TEST_SCENARIO.replace('workname', workName), 'text/csv;charset=utf-8');
   }
-
-  _createTestCasesFile = () => {
-    const { graph } = this.props;
-    const { columns, rows } = this.state;
-    const dataToConvert = [];
-
-    rows.forEach((testScenario) => {
-      testScenario.testCases.forEach((testCase) => {
-        dataToConvert.push(this._createExportRowData(testCase, columns));
-      });
-    });
-    return arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
-  };
 
   _exportTestCase() {
     const { workName } = this.props;
@@ -547,6 +547,7 @@ TestScenarioAndCase.propTypes = {
   }).isRequired,
   testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   workLoaded: PropTypes.bool.isRequired,
+  setGraph: PropTypes.func.isRequired,
 };
 
 TestScenarioAndCase.defaultProps = {

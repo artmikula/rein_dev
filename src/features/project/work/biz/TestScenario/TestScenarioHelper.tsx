@@ -230,7 +230,8 @@ class TestScenarioHelper {
     return combinations;
   }
 
-  // TODO - implement
+  // TODO: - implement
+  // eslint-disable-next-line no-unused-vars
   validate(testScenario: any, otherScenario: any, trueAssertion: any) {
     return true;
   }

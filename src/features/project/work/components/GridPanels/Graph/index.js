@@ -347,6 +347,7 @@ Graph.propTypes = {
     constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
   workLoaded: PropTypes.bool.isRequired,
+  setGraph: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({

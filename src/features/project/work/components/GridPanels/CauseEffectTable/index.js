@@ -44,7 +44,7 @@ class CauseEffectTable extends Component {
     const { listData } = this.props;
     const newNode = CauseEffect.createNode(listData, type);
 
-    return confirm(
+    const confirmModal = window.confirm(
       <AbbreviateConfirmContent
         addDefination={definition}
         addNode={newNode}
@@ -62,6 +62,8 @@ class CauseEffectTable extends Component {
         },
       }
     );
+
+    return confirmModal;
   };
 
   /* Handle event */
