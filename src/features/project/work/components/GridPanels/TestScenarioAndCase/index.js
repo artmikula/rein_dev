@@ -538,8 +538,8 @@ class TestScenarioAndCase extends Component {
 }
 
 TestScenarioAndCase.propTypes = {
-  workId: PropTypes.string.isRequired,
-  workName: PropTypes.string.isRequired,
+  workId: PropTypes.string,
+  workName: PropTypes.string,
   graph: PropTypes.shape({
     graphNodes: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
     graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
@@ -547,6 +547,11 @@ TestScenarioAndCase.propTypes = {
   }).isRequired,
   testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   workLoaded: PropTypes.bool.isRequired,
+};
+
+TestScenarioAndCase.defaultProps = {
+  workId: undefined,
+  workName: undefined,
 };
 
 const mapStateToProps = (state) => ({
