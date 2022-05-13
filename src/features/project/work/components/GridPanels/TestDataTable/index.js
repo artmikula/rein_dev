@@ -328,7 +328,7 @@ class TestDataTable extends Component {
 
 TestDataTable.propTypes = {
   workName: PropTypes.string.isRequired,
-  testDatas: PropTypes.arrayOf(PropTypes.object).isRequired,
+  testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   setTestDatas: PropTypes.func.isRequired,
 };
 

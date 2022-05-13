@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import CauseEffect from 'features/project/work/biz/CauseEffect';
 import { setCauseEffects } from 'features/project/work/slices/workSlice';
 import domainEvents from 'features/shared/domainEvents';
@@ -384,7 +385,7 @@ class CauseEffectTable extends Component {
 
 CauseEffectTable.propTypes = {
   setCauseEffects: PropTypes.func.isRequired,
-  listData: PropTypes.arrayOf(PropTypes.object).isRequired,
+  listData: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
 };
 
 const mapStateToProps = (state) => ({ listData: state.work.causeEffects });

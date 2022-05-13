@@ -198,9 +198,10 @@ export default class GridPanels extends Component {
     );
   }
 }
+
 GridPanels.propTypes = {
   viewMode: PropTypes.string.isRequired,
   isLockedPanel: PropTypes.bool.isRequired,
   onLayoutChange: PropTypes.func.isRequired,
-  layouts: PropTypes.arrayOf(PropTypes.object).isRequired,
+  layouts: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
 };

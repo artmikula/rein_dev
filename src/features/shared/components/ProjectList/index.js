@@ -252,7 +252,7 @@ ProjectList.propTypes = {
     direction: PropTypes.oneOf(Object.values(SORT_DIRECTION)).isRequired,
   }).isRequired,
   filter: PropTypes.string.isRequired,
-  data: PropTypes.arrayOf(PropTypes.object).isRequired,
+  data: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   onSort: PropTypes.func,
   onSearch: PropTypes.func,
   onChangePage: PropTypes.func,
