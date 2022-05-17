@@ -32,7 +32,7 @@ const getProjectSchema = (name) => {
   };
 };
 
-function ProjectList(props) {
+function CustomList(props) {
   const { columns, data, pagingOptions, sort, onSort, reloadData } = props;
 
   const [state, setState] = useState({ openEditModal: false, selectedId: 0 });
@@ -182,7 +182,7 @@ function ProjectList(props) {
   );
 }
 
-ProjectList.propTypes = {
+CustomList.propTypes = {
   columns: PropTypes.oneOfType([PropTypes.array]).isRequired,
   data: PropTypes.oneOfType([PropTypes.array]).isRequired,
   sort: PropTypes.shape({
@@ -198,11 +198,11 @@ ProjectList.propTypes = {
   reloadData: PropTypes.func,
 };
 
-ProjectList.defaultProps = {
+CustomList.defaultProps = {
   sort: {},
   pagingOptions: undefined,
   onSort: undefined,
   reloadData: undefined,
 };
 
-export default ProjectList;
+export default CustomList;

@@ -3,7 +3,7 @@ import { Container, InputGroup, Input, Button } from 'reactstrap';
 import { withRouter, Link } from 'react-router-dom';
 import projectService from 'features/project/services/projectService';
 import workService from 'features/project/work/services/workService';
-import ProjectList from 'features/shared/components/ProjectList';
+import CustomList from 'features/shared/components/CustomList';
 import toLocalTime from 'features/shared/lib/utils';
 import { SORT_DIRECTION, SORT_DEFAULT } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
@@ -203,7 +203,7 @@ class ProjectListPage extends Component {
                 </Button>
               </InputGroup>
             </div>
-            <ProjectList
+            <CustomList
               columns={columnSchema}
               pagingOptions={{ page: currentPage, totalPage, onChangePage: this._onChangePage }}
               sort={sort}

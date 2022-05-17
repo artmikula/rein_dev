@@ -4,7 +4,7 @@ import { Button, InputGroup, Input } from 'reactstrap';
 import { Link, useHistory } from 'react-router-dom';
 import projectService from 'features/project/services/projectService';
 import workService from 'features/project/work/services/workService';
-import ProjectList from 'features/shared/components/ProjectList';
+import CustomList from 'features/shared/components/CustomList';
 import { SORT_DEFAULT } from 'features/shared/constants';
 import toLocalTime from 'features/shared/lib/utils';
 import Language from 'features/shared/languages/Language';
@@ -142,7 +142,7 @@ function ProjectExplorer() {
           </Button>
         </InputGroup>
       </div>
-      <ProjectList
+      <CustomList
         columns={columns}
         pagingOptions={{ page, totalPage, onChangePage: _onChangePage }}
         sort={sort}

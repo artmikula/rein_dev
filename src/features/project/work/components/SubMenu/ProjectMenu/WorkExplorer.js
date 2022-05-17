@@ -2,7 +2,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Link, useHistory } from 'react-router-dom';
-import ProjectList from 'features/shared/components/ProjectList';
+import CustomList from 'features/shared/components/CustomList';
 import Language from 'features/shared/languages/Language';
 import toLocalTime from 'features/shared/lib/utils';
 
@@ -48,7 +48,7 @@ function WorkExplorer(props) {
   ];
 
   if (item?.length > 0) {
-    return <ProjectList columns={columnSchema} data={item} />;
+    return <CustomList columns={columnSchema} data={item} />;
   }
   return null;
 }
