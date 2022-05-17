@@ -26,3 +26,15 @@
     overflow: hidden;
   }
 }
+
+.expand-btn {
+  cursor: default !important;
+}
+.expand-icon {
+  color: gray !important;
+  cursor: pointer;
+}
+.expand-icon:hover {
+  color: black !important;
+  font-weight: 600 !important;
+}
