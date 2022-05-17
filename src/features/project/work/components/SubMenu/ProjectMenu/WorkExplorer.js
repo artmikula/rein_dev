@@ -2,7 +2,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Link, useHistory } from 'react-router-dom';
-import CustomList from 'features/shared/components/CustomList';
+import { CustomList } from 'features/shared/components';
 import Language from 'features/shared/languages/Language';
 import toLocalTime from 'features/shared/lib/utils';
 

@@ -3,7 +3,7 @@ import { Container, InputGroup, Input, Button } from 'reactstrap';
 import { withRouter, Link } from 'react-router-dom';
 import projectService from 'features/project/services/projectService';
 import workService from 'features/project/work/services/workService';
-import CustomList from 'features/shared/components/CustomList';
+import { CustomList } from 'features/shared/components';
 import toLocalTime from 'features/shared/lib/utils';
 import { SORT_DIRECTION, SORT_DEFAULT } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
@@ -118,6 +118,27 @@ class ProjectListPage extends Component {
     }
   };
 
+  _onEdit = async (selectedId, formValues, { setErrors, setSubmitting }) => {
+    const result = await projectService.updateAsync(selectedId, formValues);
+
+    setSubmitting(false);
+    if (result.error) {
+      const { Name } = result.error.response.data;
+      const errorMessage = Name.join(' ');
+      setErrors({
+        _summary_: errorMessage,
+      });
+      return false;
+    }
+    this._getData();
+    return true;
+  };
+
+  _onDelete = async (projectId) => {
+    await projectService.deleteAsync(projectId);
+    this._getData();
+  };
+
   _handleSort = (sortObject) => {
     const { history, location } = this.props;
     const page = this._getPage(location);
@@ -156,7 +177,7 @@ class ProjectListPage extends Component {
     const sort = this._getSortObject(this._getSort(location));
     const filter = this._getFilter(location);
 
-    const columnSchema = [
+    const columns = [
       {
         headerName: Language.get('projectname'),
         key: 'name',
@@ -204,12 +225,13 @@ class ProjectListPage extends Component {
               </InputGroup>
             </div>
             <CustomList
-              columns={columnSchema}
+              columns={columns}
               pagingOptions={{ page: currentPage, totalPage, onChangePage: this._onChangePage }}
               sort={sort}
               data={projects}
               onSort={this._handleSort}
-              reloadData={this._getData}
+              onEdit={this._onEdit}
+              onDelete={this._onDelete}
             />
           </div>
         </Container>

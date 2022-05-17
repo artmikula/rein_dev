@@ -4,7 +4,7 @@ import { Button, InputGroup, Input } from 'reactstrap';
 import { Link, useHistory } from 'react-router-dom';
 import projectService from 'features/project/services/projectService';
 import workService from 'features/project/work/services/workService';
-import CustomList from 'features/shared/components/CustomList';
+import { CustomList } from 'features/shared/components';
 import { SORT_DEFAULT } from 'features/shared/constants';
 import toLocalTime from 'features/shared/lib/utils';
 import Language from 'features/shared/languages/Language';
@@ -59,6 +59,27 @@ function ProjectExplorer() {
   };
 
   const _onSort = (sort) => setState({ ...state, sort });
+
+  const _onEdit = async (selectedId, formValues, { setErrors, setSubmitting }) => {
+    const result = await projectService.updateAsync(selectedId, formValues);
+
+    setSubmitting(false);
+    if (result.error) {
+      const { Name } = result.error.response.data;
+      const errorMessage = Name.join(' ');
+      setErrors({
+        _summary_: errorMessage,
+      });
+      return false;
+    }
+    _getData();
+    return true;
+  };
+
+  const _onDelete = async (projectId) => {
+    await projectService.deleteAsync(projectId);
+    _getData();
+  };
 
   const _goToWorkPage = async (projectId) => {
     const history = useHistory();
@@ -148,7 +169,8 @@ function ProjectExplorer() {
         sort={sort}
         data={data}
         onSort={_onSort}
-        reloadData={_getData}
+        onEdit={_onEdit}
+        onDelete={_onDelete}
       />
     </>
   );

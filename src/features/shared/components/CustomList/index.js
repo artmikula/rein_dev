@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Card, Table } from 'reactstrap';
-import projectService from 'features/project/services/projectService';
 import { ModalForm } from 'features/shared/components';
 import Actions from 'features/shared/components/Actions/Actions';
 import { SORT_DIRECTION, SORT_DEFAULT } from 'features/shared/constants';
@@ -33,43 +32,31 @@ const getProjectSchema = (name) => {
 };
 
 function CustomList(props) {
-  const { columns, data, pagingOptions, sort, onSort, reloadData } = props;
+  const { columns, data, pagingOptions, sort, onSort, onEdit, onDelete, formSchema } = props;
 
   const [state, setState] = useState({ openEditModal: false, selectedId: 0 });
   const { selectedId, selectedProjectName, openEditModal } = state;
 
-  const confirmDelete = async (id) => {
-    await projectService.deleteAsync(id);
+  const _getFormSchema =
+    typeof formSchema === 'function' ? formSchema(selectedProjectName) : getProjectSchema(selectedProjectName);
 
-    reloadData();
+  const _onDelete = (id) => {
+    window.confirm(undefined, { yesAction: () => typeof onDelete === 'function' && onDelete(id) });
   };
 
-  const deleteProject = (id) => {
-    window.confirm(undefined, { yesAction: () => confirmDelete(id) });
-  };
-
-  const editProject = (id, name) =>
+  const _onOpenModal = (id, name) =>
     setState({ ...state, openEditModal: true, selectedId: id, selectedProjectName: name });
 
-  const handleSubmitEditProject = async (values, { setErrors, setSubmitting }) => {
-    const result = await projectService.updateAsync(selectedId, values);
-
-    setSubmitting(false);
-    if (result.error) {
-      const { Name } = result.error.response.data;
-      const errorMessage = Name.join(' ');
-      setErrors({
-        _summary_: errorMessage,
-      });
-    } else {
+  const _onSubmitEdit = (values, { setErrors, setSubmitting }) => {
+    const result = onEdit(selectedId, values, { setErrors, setSubmitting });
+    if (result) {
       setState({ ...state, openEditModal: false });
-      reloadData();
     }
   };
 
-  const closeEditModal = () => setState({ ...state, openEditModal: false });
+  const _onCloseModal = () => setState({ ...state, openEditModal: false });
 
-  const handleSort = (item) => {
+  const _onSort = (item) => {
     if (!item.sortable) {
       return;
     }
@@ -112,12 +99,12 @@ function CustomList(props) {
           {
             icon: <i className="bi bi-trash-fill text-danger" />,
             title: Language.get('delete'),
-            action: () => deleteProject(id),
+            action: () => _onDelete(id),
           },
           {
             icon: <i className="bi bi-pencil text-success" />,
             title: Language.get('rename'),
-            action: () => editProject(id, name),
+            action: () => _onOpenModal(id, name),
           },
         ]}
         index={index}
@@ -126,14 +113,15 @@ function CustomList(props) {
   };
 
   const _onRenderRow = (column, item, index) => {
-    const { key } = column;
+    const { key, format } = column;
+    const dateFormat = typeof format === 'function' ? format(item[key]) : '';
     if (!item) {
       return null;
     }
     if (key === 'action') {
       return _onRenderActionButton(item, index);
     }
-    return item[key] || '';
+    return dateFormat || item[key];
   };
 
   return (
@@ -143,7 +131,7 @@ function CustomList(props) {
           <thead>
             <tr>
               {columns.map((column, i) => (
-                <th key={i} className={column.sortable ? 'sortable' : undefined} onClick={() => handleSort(column)}>
+                <th key={i} className={column.sortable ? 'sortable' : undefined} onClick={() => _onSort(column)}>
                   {column.headerName}
                   {getSortIcon(column, sort)}
                 </th>
@@ -174,9 +162,9 @@ function CustomList(props) {
 
       <ModalForm
         isOpen={openEditModal}
-        formData={getProjectSchema(selectedProjectName)}
-        onToggle={closeEditModal}
-        onSubmit={handleSubmitEditProject}
+        formData={_getFormSchema}
+        onToggle={_onCloseModal}
+        onSubmit={(values, { setErrors, setSubmitting }) => _onSubmitEdit(values, { setErrors, setSubmitting })}
       />
     </div>
   );
@@ -195,14 +183,18 @@ CustomList.propTypes = {
     onChangePage: PropTypes.func,
   }),
   onSort: PropTypes.func,
-  reloadData: PropTypes.func,
+  onEdit: PropTypes.func,
+  onDelete: PropTypes.func,
+  formSchema: PropTypes.func,
 };
 
 CustomList.defaultProps = {
   sort: {},
   pagingOptions: undefined,
   onSort: undefined,
-  reloadData: undefined,
+  onEdit: undefined,
+  onDelete: undefined,
+  formSchema: undefined,
 };
 
 export default CustomList;

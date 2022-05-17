@@ -6,6 +6,7 @@ import ReportDocument from './ReportDocument';
 import SearchComponent from './SearchComponent';
 import SubMenu from './SubMenu';
 import ReInLinkButton from './ReInLinkButton';
+import CustomList from './CustomList';
 
 export {
   Layout,
@@ -16,4 +17,5 @@ export {
   ReportDocument,
   SubMenu,
   ReInLinkButton,
+  CustomList,
 };
