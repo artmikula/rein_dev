@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Button, Card, Input, InputGroup, Table } from 'reactstrap';
+import { Card, Table } from 'reactstrap';
 import projectService from 'features/project/services/projectService';
 import { ModalForm } from 'features/shared/components';
 import Actions from 'features/shared/components/Actions/Actions';
-import { SORT_DIRECTION } from 'features/shared/constants';
+import { SORT_DIRECTION, SORT_DEFAULT } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import CustomPagination from '../CustomPagination';
-
-export const defaultSortObj = {
-  column: 'lastmodifieddate',
-  direction: SORT_DIRECTION.DESC,
-};
 
 const getProjectSchema = (name) => {
   return {
@@ -38,14 +33,15 @@ const getProjectSchema = (name) => {
 };
 
 function ProjectList(props) {
-  const { columns, data, pagingOptions, sort, filter, onSort, onSearch, onEditName, onDelete } = props;
+  const { columns, data, pagingOptions, sort, onSort, reloadData } = props;
+
   const [state, setState] = useState({ openEditModal: false, selectedId: 0 });
   const { selectedId, selectedProjectName, openEditModal } = state;
 
   const confirmDelete = async (id) => {
     await projectService.deleteAsync(id);
 
-    onDelete(id);
+    reloadData();
   };
 
   const deleteProject = (id) => {
@@ -67,30 +63,18 @@ function ProjectList(props) {
       });
     } else {
       setState({ ...state, openEditModal: false });
-      onEditName(selectedId);
+      reloadData();
     }
   };
 
   const closeEditModal = () => setState({ ...state, openEditModal: false });
-
-  const handleClickSearch = async () => {
-    const filter = document.getElementById('search-project-box').value;
-
-    onSearch(filter);
-  };
-
-  const handlePressEnter = (e) => {
-    if (e.which === 13) {
-      handleClickSearch();
-    }
-  };
 
   const handleSort = (item) => {
     if (!item.sortable) {
       return;
     }
 
-    const sortObject = { ...defaultSortObj };
+    const sortObject = { ...SORT_DEFAULT };
 
     if (item.key === sort.column) {
       sortObject.column = item.key;
@@ -146,29 +130,14 @@ function ProjectList(props) {
     if (!item) {
       return null;
     }
-    if (key !== 'action') {
-      return item[key] || '';
+    if (key === 'action') {
+      return _onRenderActionButton(item, index);
     }
-    return _onRenderActionButton(item, index);
+    return item[key] || '';
   };
 
   return (
     <div>
-      {typeof onSearch === 'function' && (
-        <div className="d-flex justify-content-end">
-          <InputGroup style={{ width: '100%', maxWidth: '350px', margin: '10px' }}>
-            <Input
-              id="search-project-box"
-              defaultValue={filter}
-              placeholder={Language.get('projectsearchplaceholder')}
-              onKeyPress={handlePressEnter}
-            />
-            <Button style={{ height: '36.39px', marginLeft: '8px' }} color="primary" onClick={handleClickSearch}>
-              <i className="bi bi-search" />
-            </Button>
-          </InputGroup>
-        </div>
-      )}
       <Card className="mt-1 box-shadow">
         <Table>
           <thead>
@@ -214,32 +183,26 @@ function ProjectList(props) {
 }
 
 ProjectList.propTypes = {
-  columns: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
-  data: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+  columns: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  data: PropTypes.oneOfType([PropTypes.array]).isRequired,
   sort: PropTypes.shape({
     column: PropTypes.string,
     direction: PropTypes.oneOf(Object.values(SORT_DIRECTION)),
   }),
-  filter: PropTypes.string,
   pagingOptions: PropTypes.shape({
     page: PropTypes.number,
     totalPage: PropTypes.number,
     onChangePage: PropTypes.func,
   }),
   onSort: PropTypes.func,
-  onSearch: PropTypes.func,
-  onEditName: PropTypes.func,
-  onDelete: PropTypes.func,
+  reloadData: PropTypes.func,
 };
 
 ProjectList.defaultProps = {
   sort: {},
-  filter: '',
   pagingOptions: undefined,
   onSort: undefined,
-  onSearch: undefined,
-  onEditName: undefined,
-  onDelete: undefined,
+  reloadData: undefined,
 };
 
 export default ProjectList;

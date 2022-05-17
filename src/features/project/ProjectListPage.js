@@ -1,15 +1,15 @@
 import React, { Component } from 'react';
-import { Container } from 'reactstrap';
+import { Container, InputGroup, Input, Button } from 'reactstrap';
 import { withRouter, Link } from 'react-router-dom';
 import projectService from 'features/project/services/projectService';
 import workService from 'features/project/work/services/workService';
-import ProjectList, { defaultSortObj } from 'features/shared/components/ProjectList';
+import ProjectList from 'features/shared/components/ProjectList';
 import toLocalTime from 'features/shared/lib/utils';
-import { SORT_DIRECTION } from 'features/shared/constants';
+import { SORT_DIRECTION, SORT_DEFAULT } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import ProjectLayout from './components/ProjectLayout';
 
-const defaultSort = `${defaultSortObj.column},${defaultSortObj.direction}`;
+const defaultSort = `${SORT_DEFAULT.column},${SORT_DEFAULT.direction}`;
 
 class ProjectListPage extends Component {
   constructor(props) {
@@ -35,6 +35,10 @@ class ProjectListPage extends Component {
     if (prevPage !== currentPage || prevFilter !== currentFilter || prevSort !== currentSort) {
       this._getData();
     }
+  }
+
+  componentWillUnmount() {
+    this.setState({ projects: [] });
   }
 
   _getData = async () => {
@@ -63,6 +67,8 @@ class ProjectListPage extends Component {
 
       history.push(`/projects?page=${_page}&filter=${filter}&sort=${sort}`);
 
+      this.setState({ projects: [] });
+
       return;
     }
 
@@ -90,7 +96,7 @@ class ProjectListPage extends Component {
     return query.get('sort') ?? defaultSort;
   };
 
-  _handleChangePage = (page) => {
+  _onChangePage = (page) => {
     const { history, location } = this.props;
     const filter = this._getFilter(location);
     const sort = this._getSort(location);
@@ -98,11 +104,18 @@ class ProjectListPage extends Component {
     history.push(`/projects?page=${page}&filter=${filter}&sort=${sort}`);
   };
 
-  _handleSearch = async (filter) => {
+  _onSearch = async () => {
     const { history, location } = this.props;
     const sort = this._getSort(location);
+    const filter = document.getElementById('search-project-box').value;
 
     history.push(`/projects?page=${1}&filter=${filter}&sort=${sort}`);
+  };
+
+  _onPressEnter = (e) => {
+    if (e.which === 13) {
+      this._onSearch();
+    }
   };
 
   _handleSort = (sortObject) => {
@@ -177,16 +190,26 @@ class ProjectListPage extends Component {
       <ProjectLayout>
         <Container>
           <div className="mt-5">
+            <div className="d-flex justify-content-end">
+              <InputGroup style={{ width: '100%', maxWidth: '350px', margin: '10px' }}>
+                <Input
+                  id="search-project-box"
+                  defaultValue={filter}
+                  placeholder={Language.get('projectsearchplaceholder')}
+                  onKeyPress={this._onPressEnter}
+                />
+                <Button style={{ height: '36.39px', marginLeft: '8px' }} color="primary" onClick={this._onSearch}>
+                  <i className="bi bi-search" />
+                </Button>
+              </InputGroup>
+            </div>
             <ProjectList
               columns={columnSchema}
-              pagingOptions={{ page: currentPage, totalPage, onChangePage: this._handleChangePage }}
+              pagingOptions={{ page: currentPage, totalPage, onChangePage: this._onChangePage }}
               sort={sort}
-              filter={filter}
               data={projects}
               onSort={this._handleSort}
-              onSearch={this._handleSearch}
-              onEditName={this._getData}
-              onDelete={this._getData}
+              reloadData={this._getData}
             />
           </div>
         </Container>
