@@ -52,7 +52,7 @@ function ProjectList({ totalPage, page, sort, filter, data, onSort, onSearch, on
   };
 
   const deleteProject = (id) => {
-    confirm(undefined, { yesAction: () => confirmDelete(id) });
+    window.confirm(undefined, { yesAction: () => confirmDelete(id) });
   };
 
   const editProject = (id, name) =>
@@ -252,7 +252,7 @@ ProjectList.propTypes = {
     direction: PropTypes.oneOf(Object.values(SORT_DIRECTION)).isRequired,
   }).isRequired,
   filter: PropTypes.string.isRequired,
-  data: PropTypes.arrayOf(PropTypes.object).isRequired,
+  data: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   onSort: PropTypes.func,
   onSearch: PropTypes.func,
   onChangePage: PropTypes.func,

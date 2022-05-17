@@ -2,6 +2,7 @@ import List from 'features/shared/components/List';
 import { INSPECTION_PALETTES } from 'features/shared/inspection-palettes';
 import Language from 'features/shared/languages/Language';
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Button } from 'reactstrap';
 import './style.scss';
 
@@ -80,3 +81,15 @@ export default function NodePaletteView({ nodes, onClose, onSave }) {
     </div>
   );
 }
+
+NodePaletteView.propTypes = {
+  nodes: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]),
+  onClose: PropTypes.func,
+  onSave: PropTypes.func,
+};
+
+NodePaletteView.defaultProps = {
+  nodes: [],
+  onClose: undefined,
+  onSave: undefined,
+};

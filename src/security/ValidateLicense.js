@@ -23,6 +23,7 @@ class ValidateLicense extends Component {
           this.setState({ validating: false, isValid: response.data.isValid });
         })
         .catch((error) => {
+          console.log('validate error', error);
           alert('There is an error on license validation! Please contact administrator.');
         });
     }
@@ -51,6 +52,7 @@ class ValidateLicense extends Component {
           }
         })
         .catch((error) => {
+          console.log('validate error', error);
           alert('There is an error on license validation! Please contact administrator.');
         })
         .finally(() => this.setState({ submitting: false }));

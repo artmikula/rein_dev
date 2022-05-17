@@ -1,5 +1,6 @@
 import { Image } from '@react-pdf/renderer';
 import React from 'react';
+import PropTypes from 'prop-types';
 import CauseEffectTable from './CauseEffectTable';
 import TestCase from './TestCase';
 import TestCoverage from './TestCoverage';
@@ -155,3 +156,30 @@ export default function PagesTemplate(props) {
     })),
   ];
 }
+
+PagesTemplate.propTypes = {
+  theme: PropTypes.oneOfType([PropTypes.objectOf(PropTypes.string)]).isRequired,
+  testCoverage: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string,
+      numerator: PropTypes.number,
+      denominator: PropTypes.number,
+      percent: PropTypes.number,
+    })
+  ).isRequired,
+  causes: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  effects: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  graphSrc: PropTypes.oneOfType([PropTypes.object, PropTypes.string]).isRequired,
+  inspections: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  testScenarios: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string,
+      cause: PropTypes.number,
+      group: PropTypes.number,
+      bools: PropTypes.arrayOf(PropTypes.objectOf(PropTypes.string)),
+      expectedResults: PropTypes.string,
+    })
+  ).isRequired,
+  testData: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  testCases: PropTypes.oneOfType([PropTypes.array]).isRequired,
+};

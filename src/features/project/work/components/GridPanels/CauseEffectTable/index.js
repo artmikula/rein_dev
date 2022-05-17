@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import CauseEffect from 'features/project/work/biz/CauseEffect';
 import { setCauseEffects } from 'features/project/work/slices/workSlice';
 import domainEvents from 'features/shared/domainEvents';
@@ -43,7 +44,7 @@ class CauseEffectTable extends Component {
     const { listData } = this.props;
     const newNode = CauseEffect.createNode(listData, type);
 
-    return confirm(
+    const confirmModal = window.confirm(
       <AbbreviateConfirmContent
         addDefination={definition}
         addNode={newNode}
@@ -61,6 +62,8 @@ class CauseEffectTable extends Component {
         },
       }
     );
+
+    return confirmModal;
   };
 
   /* Handle event */
@@ -384,7 +387,7 @@ class CauseEffectTable extends Component {
 
 CauseEffectTable.propTypes = {
   setCauseEffects: PropTypes.func.isRequired,
-  listData: PropTypes.arrayOf(PropTypes.object).isRequired,
+  listData: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
 };
 
 const mapStateToProps = (state) => ({ listData: state.work.causeEffects });

@@ -69,6 +69,7 @@
     "no-unused-vars": "warn",
     "no-restricted-syntax": "warn",
     "no-restricted-globals": "warn",
+    "no-alert": "off",
     "object-curly-spacing": "warn",
     "object-curly-newline": "off",
     "padded-blocks": "off",

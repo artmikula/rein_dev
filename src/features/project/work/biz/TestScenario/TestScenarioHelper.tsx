@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /* eslint-disable no-bitwise */
 import { GRAPH_NODE_TYPE, OPERATOR_TYPE, RESULT_TYPE, SCENARIO_PROPERTIES } from 'features/shared/constants';
 import Enumerable from 'linq';
@@ -229,7 +230,8 @@ class TestScenarioHelper {
     return combinations;
   }
 
-  // TODO - implement
+  // TODO: - implement
+  // eslint-disable-next-line no-unused-vars
   validate(testScenario: any, otherScenario: any, trueAssertion: any) {
     return true;
   }

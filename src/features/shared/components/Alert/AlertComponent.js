@@ -30,6 +30,7 @@ export default function Alert({ id, title, content, iconClassName, actionText, o
         {_title}
       </ModalHeader>
       <ModalBody>
+        {/* eslint-disable-next-line react/no-danger */}
         <div dangerouslySetInnerHTML={{ __html: content }} />
       </ModalBody>
       <ModalFooter className="border-0">

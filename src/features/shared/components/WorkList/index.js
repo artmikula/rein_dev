@@ -81,7 +81,7 @@ class WorkList extends Component {
   };
 
   _deleteWork = (id) => {
-    confirm(undefined, { yesAction: this._confirmDelete });
+    window.confirm(undefined, { yesAction: this._confirmDelete });
     this.setState({ selectedId: id });
   };
 

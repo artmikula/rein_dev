@@ -154,6 +154,7 @@ class DNFLogicCoverage {
   }
 
   // this is TestScenario.Simplify
+  // eslint-disable-next-line no-unused-vars
   simplifyTestScenario(testScenario, assertionDictionary = new Map(), applyAbsorptionLaw = true) {
     const result = TestScenarioHelper.clone(testScenario);
     return result;

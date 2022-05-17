@@ -200,12 +200,12 @@ class TestCoverage extends Component {
 
 TestCoverage.propTypes = {
   data: PropTypes.shape({}).isRequired,
-  testDatas: PropTypes.arrayOf(PropTypes.object).isRequired,
+  testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   setTestCoverages: PropTypes.func.isRequired,
   graph: PropTypes.shape({
-    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
-    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
-    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphNodes: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
 };
 

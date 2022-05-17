@@ -27,7 +27,7 @@ List.defaultProps = {
 };
 
 List.propTypes = {
-  data: PropTypes.arrayOf(PropTypes.object).isRequired,
+  data: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   getValue: PropTypes.func.isRequired,
   getLabel: PropTypes.func.isRequired,
   getKey: PropTypes.func.isRequired,

@@ -115,14 +115,14 @@ class WorkSyncData extends Component {
 
 WorkSyncData.propTypes = {
   testBasis: PropTypes.shape({ content: PropTypes.string }).isRequired,
-  causeEffects: PropTypes.arrayOf(PropTypes.object).isRequired,
+  causeEffects: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   graph: PropTypes.shape({
-    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
-    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
-    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphNodes: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
   testCoverage: PropTypes.shape({}).isRequired,
-  testDatas: PropTypes.arrayOf(PropTypes.object).isRequired,
+  testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
 };
 
 const mapStateToProps = (state) => ({
