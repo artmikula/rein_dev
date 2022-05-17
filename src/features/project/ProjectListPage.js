@@ -1,9 +1,12 @@
-import projectService from 'features/project/services/projectService';
-import ProjectList, { defaultSortObj } from 'features/shared/components/ProjectList';
-import { SORT_DIRECTION } from 'features/shared/constants';
 import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
 import { Container } from 'reactstrap';
+import { withRouter, Link } from 'react-router-dom';
+import projectService from 'features/project/services/projectService';
+import workService from 'features/project/work/services/workService';
+import ProjectList, { defaultSortObj } from 'features/shared/components/ProjectList';
+import toLocalTime from 'features/shared/lib/utils';
+import { SORT_DIRECTION } from 'features/shared/constants';
+import Language from 'features/shared/languages/Language';
 import ProjectLayout from './components/ProjectLayout';
 
 const defaultSort = `${defaultSortObj.column},${defaultSortObj.direction}`;
@@ -124,6 +127,15 @@ class ProjectListPage extends Component {
     return { column, direction };
   };
 
+  _goToWorkPage = async (projectId) => {
+    const { history } = this.props;
+    const data = await workService.listAsync(projectId, 1, 1);
+
+    if (data?.items?.length > 0) {
+      history.push(`/project/${projectId}/work/${data.items[0].id}`);
+    }
+  };
+
   render() {
     const { projects, totalPage } = this.state;
     const { location } = this.props;
@@ -131,19 +143,48 @@ class ProjectListPage extends Component {
     const sort = this._getSortObject(this._getSort(location));
     const filter = this._getFilter(location);
 
+    const columnSchema = [
+      {
+        headerName: Language.get('projectname'),
+        key: 'name',
+        sortable: true,
+        // eslint-disable-next-line react/prop-types
+        onRender: ({ id, name }) => (
+          <Link className="align-middle text-primary" onClick={() => this._goToWorkPage(id)} to="#">
+            {name}
+          </Link>
+        ),
+      },
+      {
+        headerName: Language.get('createddate'),
+        key: 'createdDate',
+        format: (value) => toLocalTime(value) || null,
+        sortable: true,
+      },
+      {
+        headerName: Language.get('lastmodifieddate'),
+        key: 'lastModifiedDate',
+        format: (value) => toLocalTime(value) || null,
+        sortable: true,
+      },
+      {
+        headerName: '',
+        key: 'action',
+      },
+    ];
+
     return (
       <ProjectLayout>
         <Container>
           <div className="mt-5">
             <ProjectList
-              totalPage={totalPage}
-              page={currentPage}
+              columns={columnSchema}
+              pagingOptions={{ page: currentPage, totalPage, onChangePage: this._handleChangePage }}
               sort={sort}
               filter={filter}
               data={projects}
               onSort={this._handleSort}
               onSearch={this._handleSearch}
-              onChangePage={this._handleChangePage}
               onEditName={this._getData}
               onDelete={this._getData}
             />
