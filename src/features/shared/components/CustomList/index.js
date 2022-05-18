@@ -32,7 +32,7 @@ const getProjectSchema = (name) => {
 };
 
 function CustomList(props) {
-  const { columns, data, pagingOptions, sort, onSort, onEdit, onDelete, formSchema } = props;
+  const { columns, data, pagingOptions, sort, onSort, onEdit, onDelete, formSchema, children } = props;
 
   const [state, setState] = useState({ openEditModal: false, selectedId: 0 });
   const { selectedId, selectedProjectName, openEditModal } = state;
@@ -139,17 +139,18 @@ function CustomList(props) {
             </tr>
           </thead>
           <tbody>
-            {data.map((project, index) => {
-              return (
-                <tr key={project.id}>
+            {data.map((project, index) => (
+              <React.Fragment key={project.id}>
+                <tr>
                   {columns.map((column) => (
                     <td key={column.key} className="align-middle">
                       {column?.onRender ? column.onRender(project, index) : _onRenderRow(column, project, index)}
                     </td>
                   ))}
                 </tr>
-              );
-            })}
+                {children}
+              </React.Fragment>
+            ))}
           </tbody>
         </Table>
       </Card>
@@ -186,6 +187,7 @@ CustomList.propTypes = {
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
   formSchema: PropTypes.func,
+  children: PropTypes.node,
 };
 
 CustomList.defaultProps = {
@@ -195,6 +197,7 @@ CustomList.defaultProps = {
   onEdit: undefined,
   onDelete: undefined,
   formSchema: undefined,
+  children: undefined,
 };
 
 export default CustomList;
