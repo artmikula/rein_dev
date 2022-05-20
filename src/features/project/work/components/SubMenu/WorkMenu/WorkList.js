@@ -7,7 +7,6 @@ import { CustomList } from 'features/shared/components';
 import Language from 'features/shared/languages/Language';
 import toLocalTime from 'features/shared/lib/utils';
 import workService from 'features/project/work/services/workService';
-import { SORT_DEFAULT } from 'features/shared/constants';
 
 const workFormSchema = (name) => ({
   formTitle: Language.get('renamework'),
