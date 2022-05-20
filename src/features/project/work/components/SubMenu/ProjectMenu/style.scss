@@ -38,3 +38,19 @@
   color: black !important;
   font-weight: 600 !important;
 }
+
+.work-cell {
+  font-size: 0.79rem !important;
+  // border-top: 0 !important;
+}
+.project-cell {
+  border-bottom: 1px solid #dee2e6;
+}
+.work-row {
+  background-color: #f7f7f7 !important;
+}
+
+.card-container {
+  max-height: 30vh;
+  overflow-y: auto;
+}

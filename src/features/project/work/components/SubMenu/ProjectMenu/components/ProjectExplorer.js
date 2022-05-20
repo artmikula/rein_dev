@@ -14,6 +14,7 @@ function ProjectExplorer() {
     pagingOptions: {
       page: 1,
       totalPage: 1,
+      onChangePage: undefined,
     },
   });
   const { filter, sort, data, pagingOptions } = state;
@@ -35,6 +36,7 @@ function ProjectExplorer() {
       ...state,
       data: data.items,
       pagingOptions: {
+        ...pagingOptions,
         page: _page,
         totalPage: parseInt((data.totalRow - 1) / data.pageSize + 1, 10),
       },
@@ -61,27 +63,6 @@ function ProjectExplorer() {
 
   const _onSort = (sort) => setState({ ...state, sort });
 
-  const _onEdit = async (selectedId, formValues, { setErrors, setSubmitting }) => {
-    const result = await projectService.updateAsync(selectedId, formValues);
-
-    setSubmitting(false);
-    if (result.error) {
-      const { Name } = result.error.response.data;
-      const errorMessage = Name.join(' ');
-      setErrors({
-        _summary_: errorMessage,
-      });
-      return false;
-    }
-    _getData();
-    return true;
-  };
-
-  const _onDelete = async (projectId) => {
-    await projectService.deleteAsync(projectId);
-    _getData();
-  };
-
   return (
     <>
       <div className="d-flex justify-content-end">
@@ -100,11 +81,9 @@ function ProjectExplorer() {
       <ProjectList
         data={data}
         sort={sort}
-        pagingOptions={pagingOptions}
-        onChangePage={_onChangePage}
+        pagingOptions={{ ...pagingOptions, onChangePage: _onChangePage }}
         onSort={_onSort}
-        onEdit={_onEdit}
-        onDelete={_onDelete}
+        reload={_getData}
       />
     </>
   );
