@@ -7,6 +7,7 @@ import SearchComponent from './SearchComponent';
 import SubMenu from './SubMenu';
 import ReInLinkButton from './ReInLinkButton';
 import CustomList from './CustomList';
+import CustomPagination from './CustomPagination';
 
 export {
   Layout,
@@ -18,4 +19,5 @@ export {
   SubMenu,
   ReInLinkButton,
   CustomList,
+  CustomPagination,
 };
