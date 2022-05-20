@@ -7,32 +7,30 @@ import { SORT_DIRECTION, SORT_DEFAULT } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import CustomPagination from '../CustomPagination';
 
-const getProjectSchema = (name) => {
-  return {
-    formTitle: Language.get('renameproject'),
-    submitBtnName: Language.get('save'),
-    cancelBtnName: Language.get('cancel'),
-    formSchema: [
-      {
-        inputProps: {
-          label: Language.get('name'),
-          id: 'name',
-          name: 'name',
-          placeholder: '',
-          type: 'text',
-          required: true,
-          maxLength: 256,
-        },
-        initialValue: name,
-        fieldError: false,
-        helperText: '',
+const getProjectSchema = (name) => ({
+  formTitle: Language.get('renameproject'),
+  submitBtnName: Language.get('save'),
+  cancelBtnName: Language.get('cancel'),
+  formSchema: [
+    {
+      inputProps: {
+        label: Language.get('name'),
+        id: 'name',
+        name: 'name',
+        placeholder: '',
+        type: 'text',
+        required: true,
+        maxLength: 256,
       },
-    ],
-  };
-};
+      initialValue: name,
+      fieldError: false,
+      helperText: '',
+    },
+  ],
+});
 
 function CustomList(props) {
-  const { columns, data, pagingOptions, sort, onSort, onEdit, onDelete, formSchema, children } = props;
+  const { columns, data, pagingOptions, sort, onSort, onEdit, onDelete, formSchema } = props;
 
   const [state, setState] = useState({ openEditModal: false, selectedId: 0 });
   const { selectedId, selectedProjectName, openEditModal } = state;
@@ -140,16 +138,13 @@ function CustomList(props) {
           </thead>
           <tbody>
             {data.map((project, index) => (
-              <React.Fragment key={project.id}>
-                <tr>
-                  {columns.map((column) => (
-                    <td key={column.key} className="align-middle">
-                      {column?.onRender ? column.onRender(project, index) : _onRenderRow(column, project, index)}
-                    </td>
-                  ))}
-                </tr>
-                {children}
-              </React.Fragment>
+              <tr key={project.id}>
+                {columns.map((column) => (
+                  <td key={column.key} className="align-middle">
+                    {column?.onRender ? column.onRender(project, index) : _onRenderRow(column, project, index)}
+                  </td>
+                ))}
+              </tr>
             ))}
           </tbody>
         </Table>
@@ -187,7 +182,6 @@ CustomList.propTypes = {
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
   formSchema: PropTypes.func,
-  children: PropTypes.node,
 };
 
 CustomList.defaultProps = {
@@ -197,7 +191,6 @@ CustomList.defaultProps = {
   onEdit: undefined,
   onDelete: undefined,
   formSchema: undefined,
-  children: undefined,
 };
 
 export default CustomList;
