@@ -12,6 +12,8 @@ import toLocalTime from 'features/shared/lib/utils';
 import { ModalForm, CustomPagination } from 'features/shared/components';
 import Actions from 'features/shared/components/Actions/Actions';
 import { SORT_DIRECTION, SORT_DEFAULT } from 'features/shared/constants';
+import restService from 'features/shared/services/restService';
+import restServiceHelper from 'features/shared/lib/restServiceHelper';
 import WorkList from './WorkList';
 
 const getProjectSchema = (selectedItem, formTitle) => {
@@ -65,6 +67,8 @@ function ProjectList(props) {
         const isExists = prevProjects.current.find((project) => project.id === item.id);
         if (isExists) {
           item.ixExpand = isExists.isExpand;
+        } else {
+          item.isExpand = false;
         }
       } else {
         item.isExpand = false;
@@ -158,13 +162,27 @@ function ProjectList(props) {
   };
 
   const _onDeleteProject = async (projectId) => {
-    await projectService.deleteAsync(projectId);
-    reload();
+    try {
+      const response = await restService.deleteAsync(`/project/${projectId}`);
+      if (response) {
+        const { status } = response;
+        if (status >= 200 && status < 300) {
+          const selectedIndex = projects.findIndex((project) => project.id === projectId);
+          const projectsTemp = projects.slice();
+          if (selectedIndex > -1) {
+            projectsTemp.splice(selectedIndex, 1);
+            setProjects(projectsTemp);
+          }
+        }
+      }
+    } catch (error) {
+      restServiceHelper.handleError(error);
+    }
   };
 
   const _confirmDeleteProject = (project) => {
     _getSelectedItem(project.id, project.name);
-    window.confirm(undefined, { yesAction: () => typeof onDelete === 'function' && _onDeleteProject(project.id) });
+    window.confirm(undefined, { yesAction: () => _onDeleteProject(project.id) });
   };
 
   const _onOpenModal = (project, work = undefined) => {
@@ -279,18 +297,16 @@ function ProjectList(props) {
               <React.Fragment key={project.id}>
                 <tr>
                   {columns.map((column) => (
-                    <td key={column.key} className="align-middle project-cell">
+                    <td
+                      key={column.key}
+                      className={`align-middle project-cell ${project.isExpand ? 'is-expand' : undefined}`}
+                    >
                       {column.onRender(project, index)}
                     </td>
                   ))}
                 </tr>
                 {project?.isExpand && (
-                  <WorkList
-                    project={project}
-                    reload={reload}
-                    openModal={_onOpenModal}
-                    getSelectedItem={_getSelectedItem}
-                  />
+                  <WorkList project={project} openModal={_onOpenModal} getSelectedItem={_getSelectedItem} />
                 )}
               </React.Fragment>
             ))}

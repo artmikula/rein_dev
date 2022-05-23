@@ -7,14 +7,37 @@ import { Container } from 'reactstrap';
 import Language from 'features/shared/languages/Language';
 import toLocalTime from 'features/shared/lib/utils';
 import Actions from 'features/shared/components/Actions/Actions';
-import workService from 'features/project/work/services/workService';
+import restService from 'features/shared/services/restService';
+import restServiceHelper from 'features/shared/lib/restServiceHelper';
 
 function WorkList(props) {
-  const { project, reload, openModal, getSelectedItem } = props;
+  const { project, openModal, getSelectedItem } = props;
+
+  const [works, setWorks] = React.useState([]);
+
+  React.useEffect(() => {
+    if (project?.works?.length > 0) {
+      setWorks(project.works);
+    }
+  }, [project]);
 
   const _onDelete = async (projectId, workId) => {
-    await workService.deleteAsync(projectId, workId);
-    reload();
+    try {
+      const response = await restService.deleteAsync(`/project/${projectId}/work/${workId}`);
+      if (response) {
+        const { status } = response;
+        if (status >= 200 && status < 300) {
+          const selectedIndex = works.findIndex((work) => work.id === workId);
+          const worksTemp = works.slice();
+          if (selectedIndex > -1) {
+            worksTemp.splice(selectedIndex, 1);
+            setWorks(worksTemp);
+          }
+        }
+      }
+    } catch (error) {
+      restServiceHelper.handleError(error);
+    }
   };
 
   const _confirmDeleteProject = (project, work) => {
@@ -76,37 +99,21 @@ function WorkList(props) {
     },
   ];
 
-  return (
-    <>
-      <tr>
-        {workColumns(project.id).map((workColumn, index) => (
-          <td className="work-cell work-row project-cell" key={`${workColumn.key} - ${index}`}>
-            <Container className="ml-2 py-2">{workColumn.headerName}</Container>
-          </td>
-        ))}
-      </tr>
-      {project.works.map((work, workIndex) => (
-        <tr key={work.id}>
-          {workColumns(project.id).map((workColumn) => (
-            <td key={workColumn.key} className="align-middle work-cell">
-              {workColumn.onRender(work, workIndex)}
-            </td>
-          ))}
-        </tr>
+  return works.map((work, index) => (
+    <tr key={work.id} className={`${index === works.length - 1 ? 'last-cell' : undefined}`}>
+      {workColumns(project.id).map((workColumn, columnIndex) => (
+        <td key={workColumn.key} className={`align-middle work-cell ${columnIndex !== 0 ? 'work-row' : undefined}`}>
+          {workColumn.onRender(work, index)}
+        </td>
       ))}
-    </>
-  );
+    </tr>
+  ));
 }
 
 WorkList.propTypes = {
   project: PropTypes.oneOfType([PropTypes.object]).isRequired,
   openModal: PropTypes.func.isRequired,
   getSelectedItem: PropTypes.func.isRequired,
-  reload: PropTypes.func,
-};
-
-WorkList.defaultProps = {
-  reload: undefined,
 };
 
 export default WorkList;

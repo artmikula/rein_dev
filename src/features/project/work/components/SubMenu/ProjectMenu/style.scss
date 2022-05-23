@@ -41,13 +41,19 @@
 
 .work-cell {
   font-size: 0.79rem !important;
-  // border-top: 0 !important;
 }
 .project-cell {
   border-bottom: 1px solid #dee2e6;
+  border-top: 0;
+}
+.is-expand {
+  background-color: #f7f7f7 !important;
 }
 .work-row {
-  background-color: #f7f7f7 !important;
+  border-left: 1px solid #dee2e6;
+}
+.last-cell {
+  border-bottom: 2px solid #ccc;
 }
 
 .card-container {
