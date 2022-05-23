@@ -3,17 +3,17 @@
 /* eslint-disable max-lines */
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Link, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { Card, Table, Button } from 'reactstrap';
 import projectService from 'features/project/services/projectService';
 import workService from 'features/project/work/services/workService';
+import restService from 'features/shared/services/restService';
+import restServiceHelper from 'features/shared/lib/restServiceHelper';
 import Language from 'features/shared/languages/Language';
 import toLocalTime from 'features/shared/lib/utils';
 import { ModalForm, CustomPagination } from 'features/shared/components';
 import Actions from 'features/shared/components/Actions/Actions';
 import { SORT_DIRECTION, SORT_DEFAULT } from 'features/shared/constants';
-import restService from 'features/shared/services/restService';
-import restServiceHelper from 'features/shared/lib/restServiceHelper';
 import WorkList from './WorkList';
 
 const getProjectSchema = (selectedItem, formTitle) => {
@@ -45,6 +45,7 @@ function ProjectList(props) {
   const { data, sort, pagingOptions, onSort, reload } = props;
 
   const prevProjects = React.useRef();
+  const history = useHistory();
 
   const [projects, setProjects] = useState([]);
   const [formTitle, setFormTitle] = useState('');
@@ -82,8 +83,7 @@ function ProjectList(props) {
   }, [projects]);
 
   const _goToWorkPage = async (projectId) => {
-    const history = useHistory();
-    const response = await projectService.listAsync(projectId, 1, 1);
+    const response = await workService.listAsync(projectId, 1, 1);
 
     if (response?.items?.length > 0) {
       history.push(`/project/${projectId}/work/${response.items[0].id}`);
@@ -238,9 +238,9 @@ function ProjectList(props) {
       sortable: true,
       // eslint-disable-next-line react/prop-types
       onRender: ({ id, name }) => (
-        <Link onClick={() => _goToWorkPage(id)} to="#">
+        <Button color="link" style={{ border: 'none' }} onClick={() => _goToWorkPage(id)}>
           {name}
-        </Link>
+        </Button>
       ),
     },
     {
