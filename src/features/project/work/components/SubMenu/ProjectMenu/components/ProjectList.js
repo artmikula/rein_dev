@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable react/no-multi-comp */
 /* eslint-disable max-lines */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Link, useHistory } from 'react-router-dom';
 import { Card, Table, Button } from 'reactstrap';
@@ -58,25 +58,22 @@ function ProjectList(props) {
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const cloneData = data.slice();
     cloneData.forEach((item) => {
-      if (prevProjects.current.length > 0) {
+      if (prevProjects?.current?.length > 0) {
         const isExists = prevProjects.current.find((project) => project.id === item.id);
         if (isExists) {
           item.ixExpand = isExists.isExpand;
-        } else {
-          item.isExpand = false;
         }
       } else {
         item.isExpand = false;
       }
     });
     setProjects(cloneData);
-    prevProjects.current = cloneData;
   }, [data]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     prevProjects.current = projects;
   }, [projects]);
 
