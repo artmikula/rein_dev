@@ -389,3 +389,8 @@ export const SORT_DIRECTION = {
   ASC: 'asc',
   DESC: 'desc',
 };
+
+export const SORT_DEFAULT = {
+  column: 'lastModifiedDate',
+  direction: SORT_DIRECTION.DESC,
+};

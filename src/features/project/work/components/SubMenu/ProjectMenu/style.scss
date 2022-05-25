@@ -26,3 +26,37 @@
     overflow: hidden;
   }
 }
+
+.expand-btn {
+  cursor: default !important;
+}
+.expand-icon {
+  color: gray !important;
+  cursor: pointer;
+}
+.expand-icon:hover {
+  color: black !important;
+  font-weight: 600 !important;
+}
+
+.work-cell {
+  font-size: 0.79rem !important;
+}
+.project-cell {
+  border-bottom: 1px solid #dee2e6;
+  border-top: 0;
+}
+.is-expand {
+  background-color: #f7f7f7 !important;
+}
+.work-row {
+  border-left: 1px solid #dee2e6;
+}
+.last-cell {
+  border-bottom: 2px solid #ccc;
+}
+
+.card-container {
+  max-height: 30vh;
+  overflow-y: auto;
+}

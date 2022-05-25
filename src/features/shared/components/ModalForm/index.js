@@ -121,7 +121,7 @@ export default function ModalForm(props) {
                   </Button>
                   {isCancel && (
                     <Button color="secondary" size="sm" className="ml-2 px4" onClick={onToggle} outline>
-                      {formData?.cancleBtnName}
+                      {formData?.cancelBtnName}
                     </Button>
                   )}
                 </div>
@@ -148,7 +148,7 @@ ModalForm.propTypes = {
     formSchema: PropTypes.arrayOf(PropTypes.shape({})),
     formTitle: PropTypes.string,
     submitBtnName: PropTypes.string,
-    cancleBtnName: PropTypes.string,
+    cancelBtnName: PropTypes.string,
     footerContent: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
   }).isRequired,
   onSubmit: PropTypes.func.isRequired,

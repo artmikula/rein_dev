@@ -7,8 +7,8 @@ import { Router, useHistory, useParams } from 'react-router';
 import CreateForm from '../../../../components/CreateForm';
 import ImportForm from '../../../../components/ImportForm';
 import projectService from '../../../../services/projectService';
-import ProjectExplorer from './ProjectExplorer';
-import ProjectLink from './ProjectLink';
+import { ProjectExplorer, ProjectLink } from './components';
+import './style.scss';
 
 export default function ProjectMenu() {
   const [recentProjects, setRecentProjects] = useState([]);

@@ -48,27 +48,31 @@ export default function SearchComponent({
           className="search-input flex-grow-1 my-1 w-100"
         />
       </div>
-      <p className="font-weight-bold text-secondary h6 px-3 pb-1 m-0 small">{listTitle}</p>
-      <div className="flex-grow-1 overflow-hidden">
-        <div className="overflow-auto recents h-100 pb-1">{_listContent()}</div>
-      </div>
+      {recentTitle && typeof renderItem === 'function' && (
+        <>
+          <p className="font-weight-bold text-secondary h6 px-3 pb-1 m-0 small">{listTitle}</p>
+          <div className="flex-grow-1 overflow-hidden">
+            <div className="overflow-auto recents h-100 pb-1">{_listContent()}</div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
-SearchComponent.defaultProps = {
-  recentTitle: Language.get('recents'),
-  placeholder: Language.get('search'),
-  recentData: [],
-  searchData: [],
-};
-
 SearchComponent.propTypes = {
-  placeholder: PropTypes.string,
   onSearch: PropTypes.func.isRequired,
-  recentData: PropTypes.arrayOf(PropTypes.shape({})),
-  searchData: PropTypes.arrayOf(PropTypes.shape({})),
-  recentTitle: PropTypes.string,
   renderItem: PropTypes.func.isRequired,
   getItemKey: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  recentTitle: PropTypes.string,
+  recentData: PropTypes.arrayOf(PropTypes.shape({})),
+  searchData: PropTypes.arrayOf(PropTypes.shape({})),
+};
+
+SearchComponent.defaultProps = {
+  placeholder: Language.get('search'),
+  recentTitle: Language.get('recents'),
+  recentData: [],
+  searchData: [],
 };
