@@ -1,4 +1,4 @@
-import { GRID_PANEL_SIZE, VIEW_MODE } from 'features/shared/constants';
+import { GRID_PANEL_SIZE, LAYOUT, VIEW_MODE } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -15,6 +15,12 @@ import TestDataTable from './TestDataTable';
 import TestScenarioAndCase from './TestScenarioAndCase';
 
 export default class GridPanels extends Component {
+  state = {
+    wrapperHeight: 0,
+    panelWidth: 0,
+    panelHeight: 0,
+  };
+
   // eslint-disable-next-line react/sort-comp
   setGraphActionHandler = (graphActionHandler) => {
     this.setState({ graphActionHandler });
@@ -88,6 +94,43 @@ export default class GridPanels extends Component {
     },
   ];
 
+  componentDidMount() {
+    this._initLayoutSize();
+    window.addEventListener('resize', this._onChangeLayoutSize);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', () => this.setState({ wrapperHeight: 0, panelWidth: 0, panelHeight: 0 }));
+  }
+
+  _initLayoutSize = () => {
+    const { screenHeight, panelMargin, splitViewPanelWidth, panelHeight } = GRID_PANEL_SIZE;
+    const wrapperHeight = screenHeight + panelMargin.x + panelMargin.y;
+    this.setState({ wrapperHeight, panelWidth: splitViewPanelWidth, panelHeight });
+  };
+
+  _onChangeLayoutSize = () => {
+    const { viewMode } = this.props;
+    const { panelMargin, defaultScreenWidth, numColPanel, gridRows } = GRID_PANEL_SIZE;
+    const minHeight = 917;
+
+    const screenWidth = window.innerWidth < defaultScreenWidth ? defaultScreenWidth * 4 : window.innerWidth * 4;
+    const screenHeight = window.innerHeight - 98;
+    const panelWidth = screenWidth - panelMargin.x * 2;
+    const panelHeight =
+      screenHeight > minHeight
+        ? Math.floor(screenHeight / gridRows) - panelMargin.y
+        : Math.floor(minHeight / gridRows) - panelMargin.y;
+    const wrapperHeight = screenHeight + panelMargin.x + panelMargin.y;
+    const singleViewPanelWidth = window.innerWidth * numColPanel - panelMargin.x * 2;
+
+    this.setState({ wrapperHeight, panelWidth, panelHeight });
+
+    if (viewMode === VIEW_MODE.SINGLE) {
+      this.setState({ panelWidth: singleViewPanelWidth });
+    }
+  };
+
   _handleTogglePanel = (key) => {
     /**
      * |panelA| |panelB|
@@ -144,24 +187,15 @@ export default class GridPanels extends Component {
   };
 
   render() {
-    const { viewMode, isLockedPanel, layouts, onLayoutChange } = this.props;
-    const {
-      screenHeight,
-      gridCols,
-      panelHeight,
-      panelMargin,
-      togglePanelWidth,
-      splitViewPanelWidth,
-      singleViewPanelWidth,
-    } = GRID_PANEL_SIZE;
-    const wrapperHeight = screenHeight + panelMargin.x + panelMargin.y;
-    let panelWidth = splitViewPanelWidth;
-    if (viewMode === VIEW_MODE.SINGLE) {
-      panelWidth = singleViewPanelWidth;
-    }
+    const { isLockedPanel, layouts, onLayoutChange } = this.props;
+    const { wrapperHeight, panelWidth, panelHeight } = this.state;
+    const { gridCols, panelMargin, togglePanelWidth } = GRID_PANEL_SIZE;
 
     return (
-      <div style={{ height: wrapperHeight }} className="overflow-auto">
+      <div
+        style={window.innerWidth > LAYOUT.MIN_WIDTH ? { height: wrapperHeight } : { minHeight: wrapperHeight }}
+        className="overflow-auto"
+      >
         <GridLayout
           className="layout position-relative"
           layout={layouts}

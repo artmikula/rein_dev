@@ -140,6 +140,7 @@ export const GRID_PANEL_SIZE = {
   screenWidth: _screenWidth,
   screenHeight: _screenHeight,
   gridCols: _gridCols,
+  gridRows: _gridRows,
   numColPanel: _numColPanel,
   panelMargin: _panelMargin,
   panelWidth: _panelWidth,
@@ -388,6 +389,10 @@ export const ORDER_POSITION = {
 export const SORT_DIRECTION = {
   ASC: 'asc',
   DESC: 'desc',
+};
+
+export const LAYOUT = {
+  MIN_WIDTH: 909,
 };
 
 export const SORT_DEFAULT = {
