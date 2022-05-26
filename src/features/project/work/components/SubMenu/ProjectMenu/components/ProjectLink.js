@@ -1,8 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import workService from '../../../services/workService';
-import './style.scss';
+import workService from '../../../../services/workService';
 
 export default function ProjectLink({ id, name }) {
   const history = useHistory();

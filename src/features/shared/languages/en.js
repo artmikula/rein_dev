@@ -4,6 +4,7 @@ const en = {
   /* End Landing page */
   /* Project List */
   projectname: 'Project name',
+  workname: 'Work name',
   createddate: 'Created date',
   lastmodifieddate: 'Last modified date',
   rename: 'Rename',

@@ -394,3 +394,8 @@ export const SORT_DIRECTION = {
 export const LAYOUT = {
   MIN_WIDTH: 909,
 };
+
+export const SORT_DEFAULT = {
+  column: 'lastModifiedDate',
+  direction: SORT_DIRECTION.DESC,
+};
