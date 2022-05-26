@@ -178,6 +178,9 @@ class TestBasis extends Component {
     const { isOpenClassifyPopover, editorState } = this.state;
     const { setTestBasis } = this.props;
 
+    const currentContent = newEditorState.getCurrentContent();
+    const drawContent = convertToRaw(currentContent);
+
     if (!this.ready) {
       return;
     }
@@ -192,8 +195,6 @@ class TestBasis extends Component {
     ) {
       this.setState({ isOpenClassifyPopover: true, selectionState });
     } else {
-      const currentContent = newEditorState.getCurrentContent();
-      const drawContent = convertToRaw(currentContent);
       const currentPlainText = currentContent.getPlainText();
       const prevContent = editorState.getCurrentContent();
       const prevPlainText = prevContent.getPlainText();
@@ -208,10 +209,11 @@ class TestBasis extends Component {
         }
       }
 
-      TestBasisManager.set(drawContent);
-      setTestBasis(JSON.stringify(drawContent));
-      this.setState({ editorState: newEditorState, isOpenClassifyPopover: false });
+      this.setState({ isOpenClassifyPopover: false });
     }
+    TestBasisManager.set(drawContent);
+    setTestBasis(JSON.stringify(drawContent));
+    this.setState({ editorState: newEditorState });
   };
 
   _handleKeyCommand = (command, editorState) => {
@@ -227,6 +229,7 @@ class TestBasis extends Component {
 
   _toggleInlineStyle = (inlineStyle) => {
     const { editorState } = this.state;
+
     if (this.ready) {
       this._handleChange(RichUtils.toggleInlineStyle(editorState, inlineStyle));
     }
