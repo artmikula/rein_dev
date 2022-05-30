@@ -92,9 +92,10 @@ class DNFLogicCoverage {
                 testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.False });
               }
               if (source.effectGroup === target.effectGroup) {
-                target.inspection |= NODE_INSPECTION.HasRelationInSameGroup;
+                let targetInspection = target.inspection;
+                targetInspection |= NODE_INSPECTION.HasRelationInSameGroup;
                 const node = this.graphNodes.find((x) => target.id === x.id);
-                node.inspection = target.inspection;
+                node.inspection = targetInspection;
               }
             } else if (!testResults.some((x) => x.graphNodeId === target.id && x.type === RESULT_TYPE.True)) {
               testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.True });
@@ -104,9 +105,10 @@ class DNFLogicCoverage {
               testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.True });
             }
             if (source.effectGroup === target.effectGroup) {
-              target.inspection |= NODE_INSPECTION.HasRelationInSameGroup;
+              let targetInspection = target.inspection;
+              targetInspection |= NODE_INSPECTION.HasRelationInSameGroup;
               const node = this.graphNodes.find((x) => target.id === x.id);
-              node.inspection = target.inspection;
+              node.inspection = targetInspection;
             }
           } else if (!testResults.some((x) => x.graphNodeId === target.id && x.type === RESULT_TYPE.False)) {
             testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.False });
