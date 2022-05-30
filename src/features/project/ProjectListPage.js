@@ -20,8 +20,8 @@ class ProjectListPage extends Component {
 
   async componentDidMount() {
     const { isMounted } = this.state;
-    if (isMounted) {
-      this.setState({ isMounted: true });
+    if (!isMounted) {
+      await this.setState({ isMounted: true });
     }
     this._getData();
   }
@@ -72,7 +72,9 @@ class ProjectListPage extends Component {
 
       history.push(`/projects?page=${_page}&filter=${filter}&sort=${sort}`);
 
-      this.setState({ projects: [] });
+      if (isMounted) {
+        this.setState({ projects: [] });
+      }
 
       return;
     }
