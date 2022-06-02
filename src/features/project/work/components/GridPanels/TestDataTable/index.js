@@ -115,10 +115,12 @@ class TestDataTable extends Component {
     this._setTestDatas(newTestDatas);
   };
 
-  _onTrueFalseDataChange = async (nodeId, valueType, value) => {
+  _onTrueFalseDataChange = (nodeId, valueType, value) => {
     const { testDatas } = this.props;
     const index = testDatas.findIndex((x) => x.nodeId === nodeId);
     const item = { ...testDatas[index] };
+
+    item.isChanged = true;
 
     switch (valueType) {
       case TESTDATA_TYPE.TrueData:
@@ -213,13 +215,17 @@ class TestDataTable extends Component {
     }
   };
 
-  _onBlurInputData = () => {
+  _onBlurInputData = (nodeId) => {
     const { testDatas } = this.props;
-    this._raiseEvent({
-      action: domainEvents.ACTION.UPDATE,
-      value: { ...testDatas },
-      receivers: [domainEvents.DES.TESTSCENARIOS],
-    });
+    const testDataIndex = testDatas.findIndex((testData) => testData.nodeId === nodeId);
+    if (testDataIndex > -1) {
+      const testData = { ...testDatas[testDataIndex] };
+      if (testData.isChanged) {
+        testData.isChanged = false;
+        const newTestDatas = TestData.update(testDatas, testData, testDataIndex);
+        this._setTestDatas(newTestDatas);
+      }
+    }
   };
 
   render() {
@@ -292,7 +298,7 @@ class TestDataTable extends Component {
                       bsSize="sm"
                       value={data.trueDatas ?? ''}
                       onChange={(e) => this._onTrueFalseDataChange(data.nodeId, TESTDATA_TYPE.TrueData, e.target.value)}
-                      onBlur={this._onBlurInputData}
+                      onBlur={() => this._onBlurInputData(data.nodeId)}
                     />
                   </FormGroup>
                 </td>
@@ -306,7 +312,7 @@ class TestDataTable extends Component {
                       onChange={(e) =>
                         this._onTrueFalseDataChange(data.nodeId, TESTDATA_TYPE.FalseData, e.target.value)
                       }
-                      onBlur={this._onBlurInputData}
+                      onBlur={() => this._onBlurInputData(data.nodeId)}
                     />
                   </FormGroup>
                 </td>
