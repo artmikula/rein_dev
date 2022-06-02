@@ -2,7 +2,7 @@ import testDataService from 'features/project/work/services/testDataService';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import { ModalForm } from '../../../../../shared/components';
+import { ModalForm } from '../../../../../../shared/components';
 
 const formSchema = {
   formTitle: 'Import Test Data',
