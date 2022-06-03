@@ -20,6 +20,7 @@ class TestScenarioHelper {
           effectToEffectRelationList.push(graphLinks[i]);
         } else if (scenario) {
           const assertion = {
+            graphNodeId: source.id,
             graphNode: source,
             result: !graphLinks[i].isNotRelation,
           };
@@ -30,12 +31,12 @@ class TestScenarioHelper {
             graphNodeId: target.id,
           };
 
-          const scenario = {
+          const scenario: ITestScenario = {
             id: uuid(),
             targetType: target.targetType,
             isFeasible: true,
             testResults: [testResult],
-            testAssertions: [{ graphNode: source, result: !graphLinks[i].isNotRelation }],
+            testAssertions: [{ graphNodeId: source.id, graphNode: source, result: !graphLinks[i].isNotRelation }],
           };
           assertionDictionary.set(target.id, scenario);
         }
@@ -151,7 +152,7 @@ class TestScenarioHelper {
     };
     for (let i = 0; i < testAssertions.length; i++) {
       const value = parentValue === testAssertions[i].result;
-      const assertion = currentScenario.testAssertions.find(
+      const assertion: ITestAssertion | undefined = currentScenario.testAssertions.find(
         (x) =>
           (!!x.graphNode && x.graphNode.id === testAssertions[i].graphNode?.id) ||
           (!!x.testScenario && x.testScenario.id === testAssertions[i].testScenario?.id)
@@ -163,7 +164,8 @@ class TestScenarioHelper {
         };
       }
       if (!assertion) {
-        const testAssertion = {
+        const testAssertion: ITestAssertion = {
+          graphNodeId: testAssertions[i].graphNode?.id || testAssertions[i].graphNodeId,
           graphNode: testAssertions[i].graphNode,
           testScenario: testAssertions[i].testScenario,
           result: value,
@@ -308,7 +310,7 @@ class TestScenarioHelper {
     }
 
     // TODO: check this
-    if (!this._compareTestAssertions(scenario1.testResult, scenario2.testResult)) {
+    if (!this._compareTestAssertions(scenario1.testAssertions, scenario2.testAssertions)) {
       return false;
     }
 
