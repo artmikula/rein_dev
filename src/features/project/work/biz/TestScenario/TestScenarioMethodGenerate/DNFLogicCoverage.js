@@ -34,7 +34,7 @@ class DNFLogicCoverage {
 
   buildTestScenario(graphLinks = [], constraints = [], graphNodes = []) {
     this._initValue(graphLinks, constraints, graphNodes);
-    const assertionDictionary = TestScenarioHelper.buildAssertionDictionary(this.graphLinks);
+    const assertionDictionary = TestScenarioHelper.calculateAssertionDictionary(this.graphLinks, this.effectNodes);
     return this._updateMumcutTestScenario(assertionDictionary);
   }
 

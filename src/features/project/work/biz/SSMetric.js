@@ -197,7 +197,7 @@ class SSMetric {
   }
 
   calculateLogicGraph() {
-    const assertionDictionary = TestScenarioHelper.buildAssertionDictionary(this.graphLinks);
+    const assertionDictionary = TestScenarioHelper.calculateAssertionDictionary(this.graphLinks, this.effectNodes);
     const expressions = [];
     const groups = new Map(assertionDictionary);
     groups.forEach((value, key) => {

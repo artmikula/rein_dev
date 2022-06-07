@@ -42,11 +42,11 @@ class MyerTechnique {
       console.log('graphNodes', this.graphNodes);
     }
 
-    const assertionDictionary = TestScenarioHelper.buildAssertionDictionary(this.graphLinks);
+    const assertionDictionary = TestScenarioHelper.calculateAssertionDictionary(this.graphLinks, this.effectNodes);
 
-    if (window.isDebugMode) {
-      console.log('assertionDictionary', assertionDictionary);
-    }
+    // if (window.isDebugMode) {
+    //   console.log('assertionDictionary', assertionDictionary);
+    // }
 
     return this.updateTestScenario(assertionDictionary);
   }
@@ -76,9 +76,11 @@ class MyerTechnique {
     const tmpScenarioList = [];
 
     effectAssertionDictionary.forEach((value) => {
-      const merged = this._mergeScenarioFragments(assertionDictionary, value);
+      const merged = TestScenarioHelper.mergeScenarioFragments(assertionDictionary, value);
       tmpScenarioList.push(...merged);
     });
+
+    console.log('tmpScenarioList', tmpScenarioList);
 
     for (let i = 0; i < tmpScenarioList.length; i++) {
       const scenario = tmpScenarioList[i];
@@ -129,6 +131,8 @@ class MyerTechnique {
 
     testScenarios = testScenarios.filter((x) => x.expectedResults);
 
+    console.log('testScenarios', testScenarios);
+
     return {
       scenarios: testScenarios,
       graphNodes: this.graphNodes,
@@ -139,12 +143,12 @@ class MyerTechnique {
     assertionDictionary = new Map(),
     scenario = {},
     showReducedScenariosAndCases = false,
-    realtionIsTrue = true
+    relationIsTrue = true
   ) {
     const results = [];
-    const clone = realtionIsTrue ? scenario : TestScenarioHelper.invertedCloneWithExceptId(scenario);
+    const clone = relationIsTrue ? scenario : TestScenarioHelper.invertedCloneWithExceptId(scenario);
     const operatorAndOr = clone.targetType === OPERATOR_TYPE.AND ? OPERATOR_TYPE.OR : OPERATOR_TYPE.AND;
-    clone.targetType = realtionIsTrue ? clone.targetType : operatorAndOr;
+    clone.targetType = relationIsTrue ? clone.targetType : operatorAndOr;
 
     if (clone.targetType === OPERATOR_TYPE.AND) {
       results.push(clone);
@@ -155,7 +159,7 @@ class MyerTechnique {
           const subsets = this._mergeScenarioFragments(
             assertionDictionary,
             testScenario,
-            realtionIsTrue === testAssertions[i].result
+            relationIsTrue === testAssertions[i].result
           );
           const limitedLength = results.length;
           for (let j = 0; j < limitedLength; j++) {
