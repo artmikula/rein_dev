@@ -223,7 +223,7 @@ class TestDataTable extends Component {
       if (testData.isChanged) {
         testData.isChanged = false;
         const newTestDatas = TestData.update(testDatas, testData, testDataIndex);
-        this._setTestDatas(newTestDatas);
+        this._setTestDatas(newTestDatas, false);
       }
     }
   };
