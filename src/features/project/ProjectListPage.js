@@ -15,14 +15,10 @@ class ProjectListPage extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { projects: [], totalPage: 1, isMounted: false };
+    this.state = { projects: [], totalPage: 1 };
   }
 
   async componentDidMount() {
-    const { isMounted } = this.state;
-    if (!isMounted) {
-      await this.setState({ isMounted: true });
-    }
     this._getData();
   }
 
@@ -42,11 +38,10 @@ class ProjectListPage extends Component {
   }
 
   componentWillUnmount() {
-    this.setState({ projects: [], isMounted: false });
+    this.setState({ projects: [] });
   }
 
   _getData = async () => {
-    const { isMounted } = this.state;
     const { location, history } = this.props;
     const page = this._getPage(location);
     const filter = this._getFilter(location);
@@ -72,15 +67,12 @@ class ProjectListPage extends Component {
 
       history.push(`/projects?page=${_page}&filter=${filter}&sort=${sort}`);
 
-      if (isMounted) {
-        this.setState({ projects: [] });
-      }
+      this.setState({ projects: [] });
 
       return;
     }
-    if (isMounted) {
-      this.setState({ projects: data.items, totalPage });
-    }
+
+    this.setState({ projects: data.items, totalPage });
   };
 
   _getPage = (location) => {
