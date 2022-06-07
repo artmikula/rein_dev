@@ -73,7 +73,6 @@ class GridPanels extends Component {
       title: 'Test Scenario/Case/Data',
       tabs: [Language.get('testscenarioortestcase'), Language.get('testdata')],
       children: [<TestScenarioAndCase />, <TestDataTable />],
-      raiseEvent: this._generateTestCase,
     },
   ];
 
@@ -112,7 +111,7 @@ class GridPanels extends Component {
 
   _generateTestCase = () => {
     const { testDatas } = this.props;
-    eventBus.publish(domainEvents.GRID_PANEL_DOMAINEVENT, {
+    eventBus.publish(domainEvents.TEST_DATA_DOMAINEVENT, {
       action: domainEvents.ACTION.UPDATE,
       value: { ...testDatas },
       receivers: [domainEvents.DES.TESTSCENARIOS],
@@ -239,6 +238,7 @@ class GridPanels extends Component {
                 index={index}
                 onTogglePanel={() => this._handleTogglePanel(layout.i)}
                 renderTitle={this.panels[index]?.renderTitle}
+                raiseEvent={this._generateTestCase}
               >
                 {this.panels[index]?.children}
               </GridPanelItem>
