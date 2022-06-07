@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
+import Language from 'features/shared/languages/Language';
 import { Button, TabContent, TabPane, UncontrolledTooltip } from 'reactstrap';
 import './style.scss';
 
@@ -53,7 +54,7 @@ export default function GridPanelItem(props) {
                   _handleGenerateTestCase();
                 }}
               >
-                Generate Test Case
+                {Language.get('generatetestcase')}
               </Button>
             )}
           </div>
