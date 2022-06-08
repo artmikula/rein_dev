@@ -13,6 +13,7 @@ import Enumerable from 'linq';
 import { v4 as uuid } from 'uuid';
 import constraintHelper from '../../Constraint';
 import TestScenarioHelper from '../TestScenarioHelper';
+import TestScenarioGenerator from '../TestScenarioGenerator';
 
 class MyerTechnique {
   constructor() {
@@ -43,13 +44,19 @@ class MyerTechnique {
       console.log('graphNodes', this.graphNodes);
     }
 
-    const assertionDictionary = TestScenarioHelper.calculateAssertionDictionary(this.graphLinks, this.effectNodes);
+    const assertionDictionary = TestScenarioGenerator.calculateAssertionDictionary(this.graphLinks, this.effectNodes);
 
-    // if (window.isDebugMode) {
-    //   console.log('assertionDictionary', assertionDictionary);
-    // }
+    if (window.isDebugMode) {
+      console.log('assertionDictionary', assertionDictionary);
+    }
 
-    return this.updateTestScenario(assertionDictionary);
+    TestScenarioGenerator.reduceToBaseEffectTestScenarios(assertionDictionary);
+
+    return {
+      scenarios: Array.from(assertionDictionary.values()),
+      graphNodes: this.graphNodes,
+    };
+    // return this.updateTestScenario(assertionDictionary);
   }
 
   updateTestScenario(assertionDictionary = new Map()) {
@@ -77,7 +84,7 @@ class MyerTechnique {
     const tmpScenarioList = [];
 
     effectAssertionDictionary.forEach((value) => {
-      const merged = TestScenarioHelper.mergeScenarioFragmentsRoot(assertionDictionary, value, this.graphNodes);
+      const merged = this._mergeScenarioFragments(assertionDictionary, value);
       tmpScenarioList.push(...merged);
     });
 
