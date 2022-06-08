@@ -11,7 +11,6 @@ import {
   SimpleTestScenario,
 } from 'types/models';
 import { v4 as uuid } from 'uuid';
-import TestScenarioStringHelper from './TestScenarioStringHelper';
 
 class TestScenarioHelper {
   graphNodes: any[] = [];
