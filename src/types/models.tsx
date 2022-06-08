@@ -35,8 +35,8 @@ interface ITestResult {
 
 interface ITestAssertion {
   graphNode?: IGraphNode;
-  graphNodeId: string;
-  nodeId: string;
+  graphNodeId?: string;
+  nodeId?: string;
   // in raw assertion, result true means positive link, false means negative link,
   // ex: E1 OR !E2 will become scenario with 2 assertions OR(E1: true, E2: false)
   result: boolean;
@@ -64,8 +64,10 @@ interface ISimpleTestScenario {
   key: string;
   targetNodeId: string;
   testAssertions: ITestAssertion[];
+
   result: boolean; // expected value of Target, should be true if is EffectAssertion
   resultType: string;
+
   isFeasible?: boolean;
   targetType?: string;
   isEffectAssertion?: boolean;

@@ -11,60 +11,10 @@ import {
   SimpleTestScenario,
 } from 'types/models';
 import { v4 as uuid } from 'uuid';
+import TestScenarioStringHelper from './TestScenarioStringHelper';
 
 class TestScenarioHelper {
-  // calculateAssertionDictionaryOld(graphLinks: IGraphLink[]) {
-  //   const assertionDictionary = new Map<string, ITestScenario>();
-  //   const effectToEffectRelationList = [];
-
-  //   for (let i = 0; i < graphLinks.length; i++) {
-  //     const { source, target } = graphLinks[i];
-
-  //     if (source && source !== null && target && target !== null) {
-  //       const scenario = assertionDictionary.get(target.id);
-  //       if (source.type === GRAPH_NODE_TYPE.EFFECT) {
-  //         effectToEffectRelationList.push(graphLinks[i]);
-  //       } else if (scenario) {
-  //         const assertion = {
-  //           graphNode: source,
-  //           result: !graphLinks[i].isNotRelation,
-  //         };
-  //         scenario.testAssertions.push(assertion);
-  //       } else {
-  //         const testResult = {
-  //           type: RESULT_TYPE.True,
-  //           graphNodeId: target.id,
-  //         };
-
-  //         const scenario = {
-  //           id: uuid(),
-  //           targetType: target.targetType,
-  //           isFeasible: true,
-  //           testResults: [testResult],
-  //           testAssertions: [{ graphNode: source, result: !graphLinks[i].isNotRelation }],
-  //         };
-  //         assertionDictionary.set(target.id, scenario);
-  //       }
-  //     }
-  //   }
-
-  //   for (let i = 0; i < effectToEffectRelationList.length; i++) {
-  //     const link = effectToEffectRelationList[i];
-  //     const { source, target } = link;
-
-  //     assertionDictionary.forEach((value) => {
-  //       if (value.testResults.some((x) => x.graphNodeId === source.id)) {
-  //         const testResult = {
-  //           type: RESULT_TYPE.True,
-  //           graphNodeId: target.id,
-  //         };
-  //         value.testResults.push(testResult);
-  //       }
-  //     });
-  //   }
-
-  //   return assertionDictionary;
-  // }
+  graphNodes: any[] = [];
 
   calculateAssertionDictionary(graphLinks: IGraphLink[], effectNodes: any[]) {
     // Return: list of assertions
@@ -119,97 +69,107 @@ class TestScenarioHelper {
   }
 
   // Flat OR expression to multiple assertions
-  mergeScenarioFragments(
+  mergeScenarioFragmentsRoot(
     assertionDictionary: Map<string, ISimpleTestScenario> = new Map(),
     scenario: ISimpleTestScenario,
+    graphNodes: any[]
+  ) {
+    this.graphNodes = graphNodes;
+    return this.mergeScenarioFragments(assertionDictionary, scenario);
+  }
+
+  mergeScenarioFragments(
+    assertionDictionary: Map<string, ISimpleTestScenario> = new Map(),
+    testScenario: ISimpleTestScenario,
     showReducedScenariosAndCases = false,
     relationIsTrue = true
   ) {
-    const results = [];
-    const clone = relationIsTrue ? scenario : scenario.invertedClone();
-    const operatorAndOr = clone.targetType === OPERATOR_TYPE.AND ? OPERATOR_TYPE.OR : OPERATOR_TYPE.AND;
-    clone.targetType = relationIsTrue ? clone.targetType : operatorAndOr;
+    const results: any[] = [];
 
-    if (clone.targetType === OPERATOR_TYPE.AND) {
-      results.push(clone);
-      const { testAssertions } = clone;
-      for (let i = 0; i < testAssertions.length; i++) {
-        const testScenario = assertionDictionary.get(testAssertions[i].graphNodeId);
-        if (testScenario) {
-          const subsets = this.mergeScenarioFragments(
-            assertionDictionary,
-            testScenario,
-            relationIsTrue === testAssertions[i].result
-          );
-          const limitedLength = results.length;
-          for (let j = 0; j < limitedLength; j++) {
-            for (let k = 0; k < subsets.length; k++) {
-              let merged = this.cloneSimple(results[0]);
-              const mergedResult = this.mergeAssertionSimple(merged, subsets[k]);
-              if (mergedResult.isMergeSuccessfully) {
-                merged = mergedResult.testScenario;
-                if (
-                  !results.some(
-                    (x) =>
-                      this.toString(x, this.graphNodes) ===
-                      this.toString(merged, this.graphNodes)
-                  )
-                ) {
-                  results.push(merged);
-                }
-              }
-            }
+    // const clone = relationIsTrue ? testScenario : testScenario.invertedClone();
+    // const operatorAndOr = clone.targetType === OPERATOR_TYPE.AND ? OPERATOR_TYPE.OR : OPERATOR_TYPE.AND;
+    // clone.targetType = relationIsTrue ? clone.targetType : operatorAndOr;
 
-            results.splice(0, 1);
-          }
-        } else {
-          for (let j = 0; j < results.length; j++) {
-            const item = results[j].testAssertions.find((x) => x.graphNode.id === testAssertions[i].graphNode.id);
-            if (item) {
-              item.result = testAssertions[i].result;
-            } else {
-              const testAssertion = {
-                graphNode: testAssertions[i].graphNode,
-                result: testAssertions[i].result,
-              };
-              if (
-                !results[j].testAssertions.some((x) => x.graphNode && x.graphNode.id === testAssertion.graphNode.id)
-              ) {
-                results[j].testAssertions.push(testAssertion);
-              }
-            }
-          }
-        }
-      }
-    } else {
-      const combinationArray = this.combination(clone.testAssertions.map((x) => x.graphNode.id));
-      const combinations = Enumerable.from(combinationArray).groupBy((x) => x.length);
-      if (scenario.targetType === OPERATOR_TYPE.AND) {
-        combinations.forEach((combination) => {
-          combination.forEach((excepts) => {
-            const inverted = this.invertedCloneWithExceptIds(clone, excepts);
-            inverted.targetType = OPERATOR_TYPE.AND;
-            results.push(...this.mergeScenarioFragments(assertionDictionary, inverted, showReducedScenariosAndCases));
-          });
-        });
-      } else {
-        const first = combinations.first();
-        first.forEach((exceptIds) => {
-          const inverted = this.invertedCloneWithExceptIds(clone, exceptIds);
-          inverted.targetType = OPERATOR_TYPE.AND;
-          results.push(...this.mergeScenarioFragments(assertionDictionary, inverted, showReducedScenariosAndCases));
-        });
+    // if (clone.targetType === OPERATOR_TYPE.AND) {
+    //   results.push(clone);
+    //   const { testAssertions } = clone;
+    //   for (let i = 0; i < testAssertions.length; i++) {
+    //     const testScenario = assertionDictionary.get(testAssertions[i].graphNodeId);
+    //     if (testScenario) {
+    //       const subsets = this.mergeScenarioFragments(
+    //         assertionDictionary,
+    //         testScenario,
+    //         relationIsTrue === testAssertions[i].result
+    //       );
+    //       const limitedLength = results.length;
+    //       for (let j = 0; j < limitedLength; j++) {
+    //         for (let k = 0; k < subsets.length; k++) {
+    //           let merged = this.cloneSimple(results[0]);
+    //           const mergedResult = this.mergeAssertionSimple(merged, subsets[k]);
+    //           if (mergedResult.isMergeSuccessfully) {
+    //             merged = mergedResult.testScenario;
+    //             if (
+    //               !results.some(
+    //                 (x) =>
+    //                   TestScenarioStringHelper.toString(x, this.graphNodes) ===
+    //                   TestScenarioStringHelper.toString(merged, this.graphNodes)
+    //               )
+    //             ) {
+    //               results.push(merged);
+    //             }
+    //           }
+    //         }
 
-        if (showReducedScenariosAndCases && combinations.count() > 1) {
-          const last = combinations.last();
-          last.forEach((exceptIds) => {
-            const inverted = this.invertedCloneWithExceptIds(clone, exceptIds);
-            inverted.targetType = OPERATOR_TYPE.AND;
-            results.push(...this.mergeScenarioFragments(assertionDictionary, inverted, showReducedScenariosAndCases));
-          });
-        }
-      }
-    }
+    //         results.splice(0, 1);
+    //       }
+    //     } else {
+    //       for (let j = 0; j < results.length; j++) {
+    //         const item = results[j].testAssertions.find((x) => x.graphNode.id === testAssertions[i].graphNode.id);
+    //         if (item) {
+    //           item.result = testAssertions[i].result;
+    //         } else {
+    //           const testAssertion = {
+    //             graphNode: testAssertions[i].graphNode,
+    //             result: testAssertions[i].result,
+    //           };
+    //           if (
+    //             !results[j].testAssertions.some((x) => x.graphNode && x.graphNode.id === testAssertion.graphNode.id)
+    //           ) {
+    //             results[j].testAssertions.push(testAssertion);
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // } else {
+    //   const combinationArray = this.combination(clone.testAssertions.map((x) => x.graphNode.id));
+    //   const combinations = Enumerable.from(combinationArray).groupBy((x) => x.length);
+    //   if (testScenario.targetType === OPERATOR_TYPE.AND) {
+    //     combinations.forEach((combination) => {
+    //       combination.forEach((excepts) => {
+    //         const inverted = this.invertedCloneWithExceptIds(clone, excepts);
+    //         inverted.targetType = OPERATOR_TYPE.AND;
+    //         results.push(...this.mergeScenarioFragments(assertionDictionary, inverted, showReducedScenariosAndCases));
+    //       });
+    //     });
+    //   } else {
+    //     const first = combinations.first();
+    //     first.forEach((exceptIds) => {
+    //       const inverted = this.invertedCloneWithExceptIds(clone, exceptIds);
+    //       inverted.targetType = OPERATOR_TYPE.AND;
+    //       results.push(...this.mergeScenarioFragments(assertionDictionary, inverted, showReducedScenariosAndCases));
+    //     });
+
+    //     if (showReducedScenariosAndCases && combinations.count() > 1) {
+    //       const last = combinations.last();
+    //       last.forEach((exceptIds) => {
+    //         const inverted = this.invertedCloneWithExceptIds(clone, exceptIds);
+    //         inverted.targetType = OPERATOR_TYPE.AND;
+    //         results.push(...this.mergeScenarioFragments(assertionDictionary, inverted, showReducedScenariosAndCases));
+    //       });
+    //     }
+    //   }
+    // }
 
     return results;
   }
@@ -291,7 +251,7 @@ class TestScenarioHelper {
         ...scenario.testAssertions.map((x) => {
           return { ...x };
         }),
-      ]
+      ],
     };
   }
 

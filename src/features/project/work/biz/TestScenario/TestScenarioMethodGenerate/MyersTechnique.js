@@ -76,7 +76,7 @@ class MyerTechnique {
     const tmpScenarioList = [];
 
     effectAssertionDictionary.forEach((value) => {
-      const merged = TestScenarioHelper.mergeScenarioFragments(assertionDictionary, value);
+      const merged = TestScenarioHelper.mergeScenarioFragmentsRoot(assertionDictionary, value, this.graphNodes);
       tmpScenarioList.push(...merged);
     });
 
