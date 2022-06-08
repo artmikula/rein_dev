@@ -50,7 +50,7 @@ class TestScenarioAndCase extends Component {
   componentDidMount() {
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
-        this._caculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
+        this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
         event.message.action !== domainEvents.ACTION.GRAPH_ALIGN
@@ -66,7 +66,7 @@ class TestScenarioAndCase extends Component {
 
     eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.UPDATE) {
-        this._caculateTestScenarioAndCase(domainEvents.ACTION.UPDATE);
+        this._calculateTestScenarioAndCase(domainEvents.ACTION.UPDATE);
       }
     });
 
@@ -135,7 +135,7 @@ class TestScenarioAndCase extends Component {
     }
   };
 
-  _caculateTestScenarioAndCase = (domainAction) => {
+  _calculateTestScenarioAndCase = (domainAction) => {
     const { graph, testDatas, setGraph, match } = this.props;
     const { workId } = match.params;
     let scenarioAndGraphNodes = null;
@@ -159,6 +159,7 @@ class TestScenarioAndCase extends Component {
               graphNodeId: y.graphNode.id,
               graphNode,
               workId,
+              testScenarioId: x.id,
             };
           }),
           testResults: x.testResults.map((y) => {
@@ -294,6 +295,19 @@ class TestScenarioAndCase extends Component {
     this._setRows(newRows);
   };
 
+  _createTestCasesFile = () => {
+    const { graph } = this.props;
+    const { columns, rows } = this.state;
+    const dataToConvert = [];
+
+    rows.forEach((testScenario) => {
+      testScenario.testCases.forEach((testCase) => {
+        dataToConvert.push(this._createExportRowData(testCase, columns));
+      });
+    });
+    return arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
+  };
+
   _createExportRowData(item, columns) {
     const row = { Name: item.Name, Checked: item.isSelected };
     columns.forEach((col) => {
@@ -332,19 +346,6 @@ class TestScenarioAndCase extends Component {
     const csvFile = arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
     Download(csvFile, FILE_NAME.EXPORT_TEST_SCENARIO.replace('workname', workName), 'text/csv;charset=utf-8');
   }
-
-  _createTestCasesFile = () => {
-    const { graph } = this.props;
-    const { columns, rows } = this.state;
-    const dataToConvert = [];
-
-    rows.forEach((testScenario) => {
-      testScenario.testCases.forEach((testCase) => {
-        dataToConvert.push(this._createExportRowData(testCase, columns));
-      });
-    });
-    return arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
-  };
 
   _exportTestCase() {
     const { workName } = this.props;
@@ -538,15 +539,21 @@ class TestScenarioAndCase extends Component {
 }
 
 TestScenarioAndCase.propTypes = {
-  workId: PropTypes.string.isRequired,
-  workName: PropTypes.string.isRequired,
+  workId: PropTypes.string,
+  workName: PropTypes.string,
   graph: PropTypes.shape({
-    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
-    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
-    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphNodes: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
-  testDatas: PropTypes.arrayOf(PropTypes.object).isRequired,
+  testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   workLoaded: PropTypes.bool.isRequired,
+  setGraph: PropTypes.func.isRequired,
+};
+
+TestScenarioAndCase.defaultProps = {
+  workId: undefined,
+  workName: undefined,
 };
 
 const mapStateToProps = (state) => ({

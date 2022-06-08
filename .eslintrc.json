@@ -69,6 +69,7 @@
     "no-unused-vars": "warn",
     "no-restricted-syntax": "warn",
     "no-restricted-globals": "warn",
+    "no-alert": "off",
     "object-curly-spacing": "warn",
     "object-curly-newline": "off",
     "padded-blocks": "off",
@@ -132,6 +133,7 @@
         "assignment": false
       }
     ],
+    "react/destructuring-assignment": "off",
     "jest/no-disabled-tests": "warn",
     "jest/no-focused-tests": "error",
     "jest/no-identical-title": "error",

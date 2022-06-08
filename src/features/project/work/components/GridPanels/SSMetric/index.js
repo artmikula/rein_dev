@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import SSMetricHelper from 'features/project/work/biz/SSMetric';
 import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import domainEvents from 'features/shared/domainEvents';
@@ -325,11 +326,11 @@ class SSMertic extends Component {
 
 SSMertic.propTypes = {
   testBasis: PropTypes.shape({ content: PropTypes.string }).isRequired,
-  causeEffects: PropTypes.arrayOf(PropTypes.object).isRequired,
+  causeEffects: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   graph: PropTypes.shape({
-    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
-    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
-    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphNodes: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
 };
 

@@ -1,12 +1,15 @@
-import projectService from 'features/project/services/projectService';
-import ProjectList, { defaultSortObj } from 'features/shared/components/ProjectList';
-import { SORT_DIRECTION } from 'features/shared/constants';
 import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
-import { Container } from 'reactstrap';
+import { Container, InputGroup, Input, Button } from 'reactstrap';
+import { withRouter, Link } from 'react-router-dom';
+import projectService from 'features/project/services/projectService';
+import workService from 'features/project/work/services/workService';
+import { CustomList } from 'features/shared/components';
+import toLocalTime from 'features/shared/lib/utils';
+import { SORT_DIRECTION, SORT_DEFAULT } from 'features/shared/constants';
+import Language from 'features/shared/languages/Language';
 import ProjectLayout from './components/ProjectLayout';
 
-const defaultSort = `${defaultSortObj.column},${defaultSortObj.direction}`;
+const defaultSort = `${SORT_DEFAULT.column},${SORT_DEFAULT.direction}`;
 
 class ProjectListPage extends Component {
   constructor(props) {
@@ -32,6 +35,10 @@ class ProjectListPage extends Component {
     if (prevPage !== currentPage || prevFilter !== currentFilter || prevSort !== currentSort) {
       this._getData();
     }
+  }
+
+  componentWillUnmount() {
+    this.setState({ projects: [] });
   }
 
   _getData = async () => {
@@ -60,6 +67,8 @@ class ProjectListPage extends Component {
 
       history.push(`/projects?page=${_page}&filter=${filter}&sort=${sort}`);
 
+      this.setState({ projects: [] });
+
       return;
     }
 
@@ -87,7 +96,7 @@ class ProjectListPage extends Component {
     return query.get('sort') ?? defaultSort;
   };
 
-  _handleChangePage = (page) => {
+  _onChangePage = (page) => {
     const { history, location } = this.props;
     const filter = this._getFilter(location);
     const sort = this._getSort(location);
@@ -95,11 +104,39 @@ class ProjectListPage extends Component {
     history.push(`/projects?page=${page}&filter=${filter}&sort=${sort}`);
   };
 
-  _handleSearch = async (filter) => {
+  _onSearch = async () => {
     const { history, location } = this.props;
     const sort = this._getSort(location);
+    const filter = document.getElementById('search-project-box').value;
 
     history.push(`/projects?page=${1}&filter=${filter}&sort=${sort}`);
+  };
+
+  _onPressEnter = (e) => {
+    if (e.which === 13) {
+      this._onSearch();
+    }
+  };
+
+  _onEdit = async (selectedId, formValues, { setErrors, setSubmitting }) => {
+    const result = await projectService.updateAsync(selectedId, formValues);
+
+    setSubmitting(false);
+    if (result.error) {
+      const { Name } = result.error.response.data;
+      const errorMessage = Name.join(' ');
+      setErrors({
+        _summary_: errorMessage,
+      });
+      return false;
+    }
+    this._getData();
+    return true;
+  };
+
+  _onDelete = async (projectId) => {
+    await projectService.deleteAsync(projectId);
+    this._getData();
   };
 
   _handleSort = (sortObject) => {
@@ -124,6 +161,15 @@ class ProjectListPage extends Component {
     return { column, direction };
   };
 
+  _goToWorkPage = async (projectId) => {
+    const { history } = this.props;
+    const data = await workService.listAsync(projectId, 1, 1);
+
+    if (data?.items?.length > 0) {
+      history.push(`/project/${projectId}/work/${data.items[0].id}`);
+    }
+  };
+
   render() {
     const { projects, totalPage } = this.state;
     const { location } = this.props;
@@ -131,21 +177,61 @@ class ProjectListPage extends Component {
     const sort = this._getSortObject(this._getSort(location));
     const filter = this._getFilter(location);
 
+    const columns = [
+      {
+        headerName: Language.get('projectname'),
+        key: 'name',
+        sortable: true,
+        // eslint-disable-next-line react/prop-types
+        onRender: ({ id, name }) => (
+          <Link className="align-middle text-primary" onClick={() => this._goToWorkPage(id)} to="#">
+            {name}
+          </Link>
+        ),
+      },
+      {
+        headerName: Language.get('createddate'),
+        key: 'createdDate',
+        format: (value) => toLocalTime(value) || null,
+        sortable: true,
+      },
+      {
+        headerName: Language.get('lastmodifieddate'),
+        key: 'lastModifiedDate',
+        format: (value) => toLocalTime(value) || null,
+        sortable: true,
+      },
+      {
+        headerName: '',
+        key: 'action',
+      },
+    ];
+
     return (
       <ProjectLayout>
         <Container>
           <div className="mt-5">
-            <ProjectList
-              totalPage={totalPage}
-              page={currentPage}
+            <div className="d-flex justify-content-end">
+              <InputGroup style={{ width: '100%', maxWidth: '350px', margin: '10px' }}>
+                <Input
+                  id="search-project-box"
+                  defaultValue={filter}
+                  placeholder={Language.get('projectsearchplaceholder')}
+                  onKeyPress={this._onPressEnter}
+                />
+                <Button style={{ height: '36.39px', marginLeft: '8px' }} color="primary" onClick={this._onSearch}>
+                  <i className="bi bi-search" />
+                </Button>
+              </InputGroup>
+            </div>
+            <CustomList
+              columns={columns}
+              pagingOptions={{ page: currentPage, totalPage, onChangePage: this._onChangePage }}
               sort={sort}
-              filter={filter}
               data={projects}
               onSort={this._handleSort}
-              onSearch={this._handleSearch}
-              onChangePage={this._handleChangePage}
-              onEditName={this._getData}
-              onDelete={this._getData}
+              onEdit={this._onEdit}
+              onDelete={this._onDelete}
             />
           </div>
         </Container>

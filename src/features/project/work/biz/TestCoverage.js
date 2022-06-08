@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { COMPLEX_LOGICAL, COVERAGE_ASPECT, GRAPH_NODE_TYPE } from 'features/shared/constants';
 import appConfig from 'features/shared/lib/appConfig';
 import Enumerable from 'linq';

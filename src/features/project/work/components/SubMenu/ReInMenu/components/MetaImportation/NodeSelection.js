@@ -1,9 +1,10 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Language from 'features/shared/languages/Language';
 import { Button } from 'reactstrap';
 import NodeItem from './NodeItem';
 
-export default function NodeSelection({ data = [], onSubmit, onChange }) {
+export default function NodeSelection({ data, onSubmit, onChange }) {
   const selectedNodes = data.filter((x) => x.selected);
   const unselectedNodes = data.filter((x) => !x.selected);
 
@@ -107,3 +108,13 @@ export default function NodeSelection({ data = [], onSubmit, onChange }) {
     </div>
   );
 }
+
+NodeSelection.propTypes = {
+  data: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]),
+  onSubmit: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired,
+};
+
+NodeSelection.defaultProps = {
+  data: [],
+};

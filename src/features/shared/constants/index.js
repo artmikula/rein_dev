@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 export const MAX_PROJECT_FILE_SIZE = 2097152; // Byte = 2MB
 export const ACCEPTED_PROJECT_FILE = ['.cetaprj'];
 
@@ -139,6 +140,7 @@ export const GRID_PANEL_SIZE = {
   screenWidth: _screenWidth,
   screenHeight: _screenHeight,
   gridCols: _gridCols,
+  gridRows: _gridRows,
   numColPanel: _numColPanel,
   panelMargin: _panelMargin,
   panelWidth: _panelWidth,
@@ -346,7 +348,7 @@ export const EXPRESSION_TYPE = {
 };
 
 export const SCENARIO_PROPERTIES = {
-  SecnarioType: 'secnarioType',
+  ScenarioType: 'scenarioType',
   IsViolated: 'isViolated',
   IsFeasible: 'isFeasible',
 };
@@ -387,4 +389,13 @@ export const ORDER_POSITION = {
 export const SORT_DIRECTION = {
   ASC: 'asc',
   DESC: 'desc',
+};
+
+export const LAYOUT = {
+  MIN_WIDTH: 909,
+};
+
+export const SORT_DEFAULT = {
+  column: 'lastModifiedDate',
+  direction: SORT_DIRECTION.DESC,
 };

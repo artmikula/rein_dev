@@ -4,6 +4,7 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import React, { Component, createRef } from 'react';
+import PropTypes from 'prop-types';
 import { Router, withRouter } from 'react-router';
 import BaseSubMenu from '../BaseSubMenu';
 import InspectionTemplate from './components/InspectionPalette';
@@ -40,21 +41,21 @@ class ReInMenu extends Component {
   };
 
   _chooseTemplate = () => {
-    const { history, match } = this.props;
+    const { history } = this.props;
     let _closeModal = () => {};
     const handleClose = () => _closeModal();
 
-    const modaProps = {
+    const modalProps = {
       title: Language.get('viewinspectionpalette'),
       content: (
         <Router history={history}>
-          <InspectionTemplate projectId={match.params.projectId} workId={match.params.workId} onClose={handleClose} />
+          <InspectionTemplate onClose={handleClose} />
         </Router>
       ),
       actions: null,
     };
 
-    _closeModal = window.modal(modaProps);
+    _closeModal = window.modal(modalProps);
   };
 
   _handleLoadMeta = (nodes) => {
@@ -70,12 +71,12 @@ class ReInMenu extends Component {
 
     const causes = (causeEffects || []).filter((x) => x.type === 'Cause');
 
-    const modaProps = {
+    const modalProps = {
       title: Language.get('loadmeta'),
       content: <MetaImportation onSubmit={this._handleLoadMeta} causes={causes} />,
       actions: null,
     };
-    this.closeLoadMetaModal = window.modal(modaProps);
+    this.closeLoadMetaModal = window.modal(modalProps);
   };
 
   checkQuery = () => {
@@ -97,6 +98,14 @@ class ReInMenu extends Component {
     );
   }
 }
+
+ReInMenu.propTypes = {
+  causeEffects: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]),
+};
+
+ReInMenu.defaultProps = {
+  causeEffects: [],
+};
 
 const mapStateToProps = (state) => ({
   causeEffects: state.work.causeEffects,

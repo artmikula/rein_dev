@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import ProjectLayout from 'features/project/components/ProjectLayout';
 import { defaultTestCoverageData, setWork } from 'features/project/work/slices/workSlice';
 import { ModalForm } from 'features/shared/components';
@@ -310,6 +311,7 @@ class Workspace extends Component {
 
     return (
       <ProjectLayout menus={menus}>
+        {/* eslint-disable-next-line max-len */}
         <div className="d-flex flex-wrap align-items-center justify-content-between border-bottom bg-white px-3 small position-relative py-1">
           <span>
             <span className="text-muted">{Language.get('project')}: </span>
@@ -399,6 +401,7 @@ Workspace.propTypes = {
   setWork: PropTypes.func.isRequired,
   workName: PropTypes.string.isRequired,
   projectName: PropTypes.string.isRequired,
+  loadedWork: PropTypes.bool.isRequired,
 };
 
 const mapDispatchToProps = { setWork };

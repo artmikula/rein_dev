@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { setGraph } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
@@ -341,11 +342,12 @@ Graph.propTypes = {
   setActionHandler: PropTypes.func.isRequired,
   workName: PropTypes.string.isRequired,
   graph: PropTypes.shape({
-    graphNodes: PropTypes.arrayOf(PropTypes.object).isRequired,
-    graphLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
-    constraints: PropTypes.arrayOf(PropTypes.object).isRequired,
+    graphNodes: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
   workLoaded: PropTypes.bool.isRequired,
+  setGraph: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({

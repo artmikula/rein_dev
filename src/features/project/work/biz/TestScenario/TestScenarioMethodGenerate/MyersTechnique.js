@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /* eslint-disable no-bitwise */
 import {
   CONSTRAINT_TYPE,

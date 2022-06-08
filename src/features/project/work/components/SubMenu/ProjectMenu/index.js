@@ -7,8 +7,8 @@ import { Router, useHistory, useParams } from 'react-router';
 import CreateForm from '../../../../components/CreateForm';
 import ImportForm from '../../../../components/ImportForm';
 import projectService from '../../../../services/projectService';
-import ProjectExplorer from './ProjectExplorer';
-import ProjectLink from './ProjectLink';
+import { ProjectExplorer, ProjectLink } from './components';
+import './style.scss';
 
 export default function ProjectMenu() {
   const [recentProjects, setRecentProjects] = useState([]);
@@ -57,7 +57,7 @@ export default function ProjectMenu() {
       key: 4,
       text: Language.get('delete'),
       action: () => {
-        confirm(undefined, { yesAction: _confirmDelete });
+        window.confirm(undefined, { yesAction: _confirmDelete });
       },
     },
     {

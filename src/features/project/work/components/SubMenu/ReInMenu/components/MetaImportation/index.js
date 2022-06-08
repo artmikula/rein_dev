@@ -1,5 +1,6 @@
 import { allPropertiesInJSON, allTagsInXML, readFileContent } from 'features/project/work/biz/Template';
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import MetaFilePicker from './MetaFilePicker';
 import NodeSelection from './NodeSelection';
 import './style.scss';
@@ -60,3 +61,12 @@ export default function MetaImportation({ onSubmit, causes }) {
 
   return <MetaFilePicker onSubmit={handlePickFile} />;
 }
+
+MetaImportation.propTypes = {
+  causes: PropTypes.oneOfType([PropTypes.array]),
+  onSubmit: PropTypes.func.isRequired,
+};
+
+MetaImportation.defaultProps = {
+  causes: [],
+};

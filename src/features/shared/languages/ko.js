@@ -95,6 +95,7 @@ const ko = {
   graphoption: '그래프 옵션',
   align: '정렬',
   generate: '일으키다',
+  generatetestcase: '테스트 케이스 생성',
   causegroup: '원인 그룹',
   effectgroup: '효과 그룹',
   exclusive: '독특한',

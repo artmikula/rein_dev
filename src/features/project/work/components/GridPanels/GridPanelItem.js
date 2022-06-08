@@ -1,17 +1,25 @@
 import PropTypes from 'prop-types';
-import React, { Fragment, useState } from 'react';
+import React, { useState } from 'react';
+import Language from 'features/shared/languages/Language';
 import { Button, TabContent, TabPane, UncontrolledTooltip } from 'reactstrap';
 import './style.scss';
 
 export default function GridPanelItem(props) {
   const [activeTab, setActiveTab] = useState(0);
-  const { isCollapse, isLockedPanel, title, tabs, index, children, onTogglePanel, renderTitle } = props;
+  const { isCollapse, isLockedPanel, title, tabs, index, children, onTogglePanel, renderTitle, raiseEvent } = props;
 
   const innerRenderTitle = () => {
     if (renderTitle) {
       return renderTitle(title);
     }
     return title;
+  };
+
+  const _handleGenerateTestCase = () => {
+    setActiveTab(0);
+    if (typeof raiseEvent === 'function') {
+      raiseEvent();
+    }
   };
 
   return (
@@ -21,22 +29,38 @@ export default function GridPanelItem(props) {
           isCollapse ? 'collapse-title-vertical h-100 pt-5' : ''
         } ${!isLockedPanel ? 'cursor-move' : ''}`}
       >
-        {tabs && tabs.length > 0
-          ? tabs.map((tab, index) => (
-              <Fragment key={index}>
-                {index > 0 && <span className="mx-2 text-muted">|</span>}
+        {tabs && tabs.length > 0 ? (
+          <div style={{ width: '95%', display: 'flex', justifyContent: 'space-between' }}>
+            <div>
+              {tabs.map((tab, index) => (
                 <span
-                  className={`collapse-title-tab ${activeTab === index ? 'active' : ''}`}
+                  key={index}
                   role="button"
                   tabIndex={index}
                   onKeyPress={() => {}}
                   onClick={() => setActiveTab(index)}
                 >
-                  {tab}
+                  {index > 0 && <span style={{ borderRight: '2px solid #ccc', margin: '0 8px' }} />}
+                  <span className={`collapse-title-tab ${activeTab === index ? 'active' : ''}`}>{tab}</span>
                 </span>
-              </Fragment>
-            ))
-          : innerRenderTitle()}
+              ))}
+            </div>
+            {activeTab === 1 && (
+              <Button
+                color="link"
+                size="sm"
+                style={{ padding: 0, fontSize: '0.8rem', border: 0 }}
+                onClick={() => {
+                  _handleGenerateTestCase();
+                }}
+              >
+                {Language.get('generatetestcase')}
+              </Button>
+            )}
+          </div>
+        ) : (
+          innerRenderTitle()
+        )}
       </div>
       {!isLockedPanel && (
         <>
@@ -77,6 +101,8 @@ GridPanelItem.defaultProps = {
   title: '',
   isLockedPanel: false,
   tabs: [],
+  renderTitle: undefined,
+  raiseEvent: undefined,
   onTogglePanel: () => {},
 };
 
@@ -84,8 +110,9 @@ GridPanelItem.propTypes = {
   isCollapse: PropTypes.bool.isRequired,
   isLockedPanel: PropTypes.bool,
   title: PropTypes.string,
+  renderTitle: PropTypes.func,
   tabs: PropTypes.arrayOf(PropTypes.string),
   index: PropTypes.number.isRequired,
   onTogglePanel: PropTypes.func,
-  children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]).isRequired,
+  raiseEvent: PropTypes.func,
 };

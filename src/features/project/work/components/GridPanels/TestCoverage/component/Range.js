@@ -132,11 +132,13 @@ export default function Range({ value, kiloValue, className, onChange, editable,
               if (e.clientY < textboxTop) {
                 // hover UP
                 if (rangeUpRef.current) {
+                  // eslint-disable-next-line max-len
                   rangeInputRef.current.style.background = `linear-gradient(to right, #0078d4 ${value}%, transparent ${value}%`;
                   rangeUpRef.current.style.display = 'block';
                 }
               } else if (rangeDownRef.current) {
                 // hover DOWN
+                // eslint-disable-next-line max-len
                 rangeInputRef.current.style.background = `linear-gradient(to right, transparent ${value}%, #eaeaea ${value}%`;
                 rangeDownRef.current.style.display = 'block';
               }

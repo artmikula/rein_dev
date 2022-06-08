@@ -66,19 +66,23 @@ export default function CauseEffectTable(props) {
   );
 }
 CauseEffectTable.propTypes = {
-  theme: PropTypes.objectOf(PropTypes.string).isRequired,
-  header: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string,
-      key: PropTypes.string,
-      styles: PropTypes.objectOf(PropTypes.string),
-    })
-  ).isRequired,
-  bodySections: PropTypes.arrayOf(
-    PropTypes.shape({
-      rows: PropTypes.arrayOf(PropTypes.shape()),
-      borderLeftColor: PropTypes.string,
-      firstColStyles: PropTypes.objectOf(PropTypes.string),
-    })
-  ).isRequired,
+  theme: PropTypes.oneOfType([PropTypes.objectOf(PropTypes.string)]).isRequired,
+  header: PropTypes.oneOfType([
+    PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string,
+        key: PropTypes.string,
+        styles: PropTypes.oneOfType([PropTypes.objectOf(PropTypes.string)]),
+      })
+    ),
+  ]).isRequired,
+  bodySections: PropTypes.oneOfType([
+    PropTypes.arrayOf(
+      PropTypes.shape({
+        rows: PropTypes.arrayOf(PropTypes.shape()),
+        borderLeftColor: PropTypes.string,
+        firstColStyles: PropTypes.objectOf(PropTypes.string),
+      })
+    ),
+  ]).isRequired,
 };

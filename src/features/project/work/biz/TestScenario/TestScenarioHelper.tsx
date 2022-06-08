@@ -1,176 +1,64 @@
+/* eslint-disable max-lines */
 /* eslint-disable no-bitwise */
 import { GRAPH_NODE_TYPE, OPERATOR_TYPE, RESULT_TYPE, SCENARIO_PROPERTIES } from 'features/shared/constants';
 import Enumerable from 'linq';
-import {
-  IGraphLink,
-  IGraphNode,
-  ITestScenario,
-  ITestAssertion,
-  ITestResult,
-  ISimpleTestScenario,
-  SimpleTestScenario,
-} from 'types/models';
+import { IGraphLink, IGraphNode, ITestScenario, ITestAssertion, ITestResult } from 'types/models';
 import { v4 as uuid } from 'uuid';
 
 class TestScenarioHelper {
-  graphNodes: any[] = [];
-
-  calculateAssertionDictionary(graphLinks: IGraphLink[], effectNodes: any[]) {
-    // Return: list of assertions
-    // Assertions: key, targetNodeId, targetType, isEffectAssertion, resultType, scenarioId, testAssertions
-    // TestAssertions: nodeId, value
-
-    const assertionDictionary = new Map<string, ISimpleTestScenario>();
-
-    // currently we do not suppport relation "Effect to Effect", so remove this handle
-    // const effectToEffectRelationList = [];
+  buildAssertionDictionary(graphLinks: IGraphLink[]) {
+    // CalculateAssertionDictionary
+    const assertionDictionary = new Map<string, ITestScenario>();
+    const effectToEffectRelationList = [];
 
     for (let i = 0; i < graphLinks.length; i++) {
       const { source, target } = graphLinks[i];
 
-      const validLink = !!source && !!target && source.type !== GRAPH_NODE_TYPE.EFFECT;
-
-      if (validLink) {
+      if (source && source !== null && target && target !== null) {
         const scenario = assertionDictionary.get(target.id);
-
-        // add to exist scenario when has multiple link to 1 targets
-        if (scenario) {
+        if (source.type === GRAPH_NODE_TYPE.EFFECT) {
+          effectToEffectRelationList.push(graphLinks[i]);
+        } else if (scenario) {
           const assertion = {
-            // graphNode: source,
             graphNodeId: source.id,
-            nodeId: source.nodeId,
+            graphNode: source,
             result: !graphLinks[i].isNotRelation,
           };
           scenario.testAssertions.push(assertion);
         } else {
-          const key = target.id;
-          const scenario = new SimpleTestScenario(
-            target,
-            effectNodes.some((y) => y.id === key),
-            [{ graphNodeId: source.id, nodeId: source.nodeId, result: !graphLinks[i].isNotRelation }]
-          );
-          assertionDictionary.set(key, scenario);
+          const testResult = {
+            type: RESULT_TYPE.True,
+            graphNodeId: target.id,
+          };
+
+          const scenario: ITestScenario = {
+            id: uuid(),
+            targetType: target.targetType,
+            isFeasible: true,
+            testResults: [testResult],
+            testAssertions: [{ graphNodeId: source.id, graphNode: source, result: !graphLinks[i].isNotRelation }],
+          };
+          assertionDictionary.set(target.id, scenario);
         }
       }
     }
 
-    // Log for debug mode
-    const w: any = window;
-    if (w.isDebugMode) {
-      console.log('ASSERTIONS');
-      assertionDictionary.forEach((value: any) => {
-        const str = value.toString ? value.toString() : '';
-        console.log(str);
+    for (let i = 0; i < effectToEffectRelationList.length; i++) {
+      const link = effectToEffectRelationList[i];
+      const { source, target } = link;
+
+      assertionDictionary.forEach((value) => {
+        if (value.testResults.some((x) => x.graphNodeId === source.id)) {
+          const testResult = {
+            type: RESULT_TYPE.True,
+            graphNodeId: target.id,
+          };
+          value.testResults.push(testResult);
+        }
       });
     }
 
     return assertionDictionary;
-  }
-
-  // Flat OR expression to multiple assertions
-  mergeScenarioFragmentsRoot(
-    assertionDictionary: Map<string, ISimpleTestScenario> = new Map(),
-    scenario: ISimpleTestScenario,
-    graphNodes: any[]
-  ) {
-    this.graphNodes = graphNodes;
-    return this.mergeScenarioFragments(assertionDictionary, scenario);
-  }
-
-  mergeScenarioFragments(
-    assertionDictionary: Map<string, ISimpleTestScenario> = new Map(),
-    testScenario: ISimpleTestScenario,
-    showReducedScenariosAndCases = false,
-    relationIsTrue = true
-  ) {
-    const results: any[] = [];
-
-    // const clone = relationIsTrue ? testScenario : testScenario.invertedClone();
-    // const operatorAndOr = clone.targetType === OPERATOR_TYPE.AND ? OPERATOR_TYPE.OR : OPERATOR_TYPE.AND;
-    // clone.targetType = relationIsTrue ? clone.targetType : operatorAndOr;
-
-    // if (clone.targetType === OPERATOR_TYPE.AND) {
-    //   results.push(clone);
-    //   const { testAssertions } = clone;
-    //   for (let i = 0; i < testAssertions.length; i++) {
-    //     const testScenario = assertionDictionary.get(testAssertions[i].graphNodeId);
-    //     if (testScenario) {
-    //       const subsets = this.mergeScenarioFragments(
-    //         assertionDictionary,
-    //         testScenario,
-    //         relationIsTrue === testAssertions[i].result
-    //       );
-    //       const limitedLength = results.length;
-    //       for (let j = 0; j < limitedLength; j++) {
-    //         for (let k = 0; k < subsets.length; k++) {
-    //           let merged = this.cloneSimple(results[0]);
-    //           const mergedResult = this.mergeAssertionSimple(merged, subsets[k]);
-    //           if (mergedResult.isMergeSuccessfully) {
-    //             merged = mergedResult.testScenario;
-    //             if (
-    //               !results.some(
-    //                 (x) =>
-    //                   TestScenarioStringHelper.toString(x, this.graphNodes) ===
-    //                   TestScenarioStringHelper.toString(merged, this.graphNodes)
-    //               )
-    //             ) {
-    //               results.push(merged);
-    //             }
-    //           }
-    //         }
-
-    //         results.splice(0, 1);
-    //       }
-    //     } else {
-    //       for (let j = 0; j < results.length; j++) {
-    //         const item = results[j].testAssertions.find((x) => x.graphNode.id === testAssertions[i].graphNode.id);
-    //         if (item) {
-    //           item.result = testAssertions[i].result;
-    //         } else {
-    //           const testAssertion = {
-    //             graphNode: testAssertions[i].graphNode,
-    //             result: testAssertions[i].result,
-    //           };
-    //           if (
-    //             !results[j].testAssertions.some((x) => x.graphNode && x.graphNode.id === testAssertion.graphNode.id)
-    //           ) {
-    //             results[j].testAssertions.push(testAssertion);
-    //           }
-    //         }
-    //       }
-    //     }
-    //   }
-    // } else {
-    //   const combinationArray = this.combination(clone.testAssertions.map((x) => x.graphNode.id));
-    //   const combinations = Enumerable.from(combinationArray).groupBy((x) => x.length);
-    //   if (testScenario.targetType === OPERATOR_TYPE.AND) {
-    //     combinations.forEach((combination) => {
-    //       combination.forEach((excepts) => {
-    //         const inverted = this.invertedCloneWithExceptIds(clone, excepts);
-    //         inverted.targetType = OPERATOR_TYPE.AND;
-    //         results.push(...this.mergeScenarioFragments(assertionDictionary, inverted, showReducedScenariosAndCases));
-    //       });
-    //     });
-    //   } else {
-    //     const first = combinations.first();
-    //     first.forEach((exceptIds) => {
-    //       const inverted = this.invertedCloneWithExceptIds(clone, exceptIds);
-    //       inverted.targetType = OPERATOR_TYPE.AND;
-    //       results.push(...this.mergeScenarioFragments(assertionDictionary, inverted, showReducedScenariosAndCases));
-    //     });
-
-    //     if (showReducedScenariosAndCases && combinations.count() > 1) {
-    //       const last = combinations.last();
-    //       last.forEach((exceptIds) => {
-    //         const inverted = this.invertedCloneWithExceptIds(clone, exceptIds);
-    //         inverted.targetType = OPERATOR_TYPE.AND;
-    //         results.push(...this.mergeScenarioFragments(assertionDictionary, inverted, showReducedScenariosAndCases));
-    //       });
-    //     }
-    //   }
-    // }
-
-    return results;
   }
 
   findBaseScenario(scenarios: ITestScenario[] = [], causeNodes: IGraphNode[] = []) {
@@ -194,7 +82,7 @@ class TestScenarioHelper {
     return scenarios;
   }
 
-  invertedCloneWithExceptId(testScenario: ISimpleTestScenario, exceptId = null) {
+  invertedCloneWithExceptId(testScenario: ITestScenario, exceptId = null) {
     const cloneAssertions = [];
     const { testAssertions } = testScenario;
     for (let i = 0; i < testAssertions.length; i++) {
@@ -243,17 +131,6 @@ class TestScenarioHelper {
     };
   }
 
-  cloneSimple(scenario: ISimpleTestScenario) {
-    return {
-      ...scenario,
-      testAssertions: [
-        ...scenario.testAssertions.map((x) => {
-          return { ...x };
-        }),
-      ],
-    };
-  }
-
   clone(scenario: ITestScenario) {
     return {
       ...scenario,
@@ -266,57 +143,16 @@ class TestScenarioHelper {
     };
   }
 
-  mergeAssertionSimple(currentScenario: ISimpleTestScenario, otherScennario: ISimpleTestScenario, parentValue = true) {
-    const { testAssertions } = otherScennario;
+  mergeAssertion(currentScenario: ITestScenario, otherScenario: ITestScenario, parentValue = true) {
+    const { testAssertions } = otherScenario;
     const scenarioResult = {
       ...currentScenario,
-      isViolated: otherScennario.isViolated,
-      isFeasible: otherScennario.isFeasible,
+      isViolated: otherScenario.isViolated,
+      isFeasible: otherScenario.isFeasible,
     };
     for (let i = 0; i < testAssertions.length; i++) {
       const value = parentValue === testAssertions[i].result;
-      const assertion = currentScenario.testAssertions.find(
-        (x) =>
-          (!!x.graphNodeId && x.graphNodeId === testAssertions[i].graphNodeId) ||
-          (!!x.testScenarioId && x.testScenarioId === testAssertions[i].testScenarioId)
-      );
-      if (assertion && assertion.result !== value) {
-        return {
-          testScenario: scenarioResult,
-          isMergeSuccessfully: false,
-        };
-      }
-      if (!assertion) {
-        const testAssertion = {
-          nodeId: testAssertions[i].nodeId,
-          graphNodeId: testAssertions[i].graphNodeId,
-          // testScenario: testAssertions[i].testScenario,
-          testScenarioId: testAssertions[i].testScenarioId,
-          result: value,
-        };
-
-        currentScenario.testAssertions.push(testAssertion);
-      } else {
-        assertion.result = value;
-      }
-    }
-
-    return {
-      testScenario: scenarioResult,
-      isMergeSuccessfully: true,
-    };
-  }
-
-  mergeAssertion(currentScenario: ITestScenario, otherScennario: ITestScenario, parentValue = true) {
-    const { testAssertions } = otherScennario;
-    const scenarioResult = {
-      ...currentScenario,
-      isViolated: otherScennario.isViolated,
-      isFeasible: otherScennario.isFeasible,
-    };
-    for (let i = 0; i < testAssertions.length; i++) {
-      const value = parentValue === testAssertions[i].result;
-      const assertion = currentScenario.testAssertions.find(
+      const assertion: ITestAssertion | undefined = currentScenario.testAssertions.find(
         (x) =>
           (!!x.graphNode && x.graphNode.id === testAssertions[i].graphNode?.id) ||
           (!!x.testScenario && x.testScenario.id === testAssertions[i].testScenario?.id)
@@ -328,7 +164,8 @@ class TestScenarioHelper {
         };
       }
       if (!assertion) {
-        const testAssertion = {
+        const testAssertion: ITestAssertion = {
+          graphNodeId: testAssertions[i].graphNode?.id || testAssertions[i].graphNodeId,
           graphNode: testAssertions[i].graphNode,
           testScenario: testAssertions[i].testScenario,
           result: value,
@@ -395,7 +232,8 @@ class TestScenarioHelper {
     return combinations;
   }
 
-  // TODO - implement
+  // TODO: - implement
+  // eslint-disable-next-line no-unused-vars
   validate(testScenario: any, otherScenario: any, trueAssertion: any) {
     return true;
   }
@@ -455,7 +293,7 @@ class TestScenarioHelper {
       return false;
     }
 
-    if (!this._compareScenarioProperty(scenario1, scenario2, SCENARIO_PROPERTIES.SecnarioType)) {
+    if (!this._compareScenarioProperty(scenario1, scenario2, SCENARIO_PROPERTIES.ScenarioType)) {
       return false;
     }
 
@@ -472,7 +310,7 @@ class TestScenarioHelper {
     }
 
     // TODO: check this
-    if (!this._compareTestAssertions(scenario1.testResult, scenario2.testResult)) {
+    if (!this._compareTestAssertions(scenario1.testAssertions, scenario2.testAssertions)) {
       return false;
     }
 
@@ -612,18 +450,18 @@ class TestScenarioHelper {
       },
     ];
 
-    const orderdCauseNodes = Enumerable.from(graphNodes)
+    const orderedCauseNodes = Enumerable.from(graphNodes)
       .where((x) => x.type === GRAPH_NODE_TYPE.CAUSE)
       .orderBy((x) => parseInt(x.nodeId.substr(1, x.nodeId.length), 10))
       .toArray();
 
-    const orderdGroupNodes = Enumerable.from(graphNodes)
+    const orderedGroupNodes = Enumerable.from(graphNodes)
       .where((x) => x.type === GRAPH_NODE_TYPE.GROUP)
       .orderBy((x) => parseInt(x.nodeId.substr(1, x.nodeId.length), 10))
       .toArray();
 
-    const orderdGraphNodes = orderdCauseNodes.concat(orderdGroupNodes);
-    const graphNodeHeaders = orderdGraphNodes.map((x) => {
+    const orderedGraphNodes = orderedCauseNodes.concat(orderedGroupNodes);
+    const graphNodeHeaders = orderedGraphNodes.map((x) => {
       return {
         headerName: x.nodeId,
         key: x.id,

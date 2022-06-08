@@ -4,6 +4,7 @@ const en = {
   /* End Landing page */
   /* Project List */
   projectname: 'Project name',
+  workname: 'Work name',
   createddate: 'Created date',
   lastmodifieddate: 'Last modified date',
   rename: 'Rename',
@@ -19,7 +20,7 @@ const en = {
   description: 'Description',
   version: 'Version',
   yes: 'Yes',
-  no: 'no',
+  no: 'No',
   reset: 'Reset',
   warning: 'Warning',
   option: 'Option',
@@ -95,6 +96,7 @@ const en = {
   graphoption: 'Graph option',
   align: 'Align',
   generate: 'Generate',
+  generatetestcase: 'Generate Test Case',
   causegroup: 'Cause group',
   effectgroup: 'Effect group',
   exclusive: 'Exclusive',
