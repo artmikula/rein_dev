@@ -2,7 +2,7 @@
 /* eslint-disable no-bitwise */
 import { GRAPH_NODE_TYPE, OPERATOR_TYPE, RESULT_TYPE, SCENARIO_PROPERTIES } from 'features/shared/constants';
 import Enumerable from 'linq';
-import { IGraphLink, IGraphNode, ITestScenario, ITestAssertion, ITestResult } from 'types/models';
+import { IGraphLink, IGraphNode, ITestScenario, ITestAssertion, ITestResult, ISimpleTestScenario } from 'types/models';
 import { v4 as uuid } from 'uuid';
 
 class TestScenarioHelper {
@@ -131,6 +131,27 @@ class TestScenarioHelper {
     };
   }
 
+  invertedCloneSimple(testScenario: ISimpleTestScenario, exceptIds: any = []) {
+    const cloneAssertions: ITestAssertion[] = [];
+    const { testAssertions } = testScenario;
+    const { length } = testAssertions;
+    for (let i = 0; i < length; i++) {
+      const isExept = exceptIds.includes(testAssertions[i].nodeId);
+
+      const testAssertion: ITestAssertion = {
+        ...testAssertions[i],
+        result: isExept ? testAssertions[i].result : !testAssertions[i].result,
+      };
+
+      cloneAssertions.push(testAssertion);
+    }
+
+    return {
+      ...testScenario,
+      testAssertions: cloneAssertions,
+    };
+  }
+
   clone(scenario: ITestScenario) {
     return {
       ...scenario,
@@ -183,6 +204,70 @@ class TestScenarioHelper {
     };
   }
 
+  mergeTestAssertions(currentScenario: ISimpleTestScenario, otherScennario: ISimpleTestScenario, parentValue = true) {
+    const { testAssertions } = otherScennario;
+    const scenarioResult = {
+      ...currentScenario,
+      isViolated: otherScennario.isViolated,
+      isFeasible: otherScennario.isFeasible,
+    };
+    for (let i = 0; i < testAssertions.length; i++) {
+      const value = parentValue === testAssertions[i].result;
+      const assertion = currentScenario.testAssertions.find(
+        (x) =>
+          (!!x.graphNodeId && x.graphNodeId === testAssertions[i].graphNodeId) ||
+          (!!x.testScenarioId && x.testScenarioId === testAssertions[i].testScenarioId)
+      );
+      if (assertion && assertion.result !== value) {
+        return {
+          testScenario: scenarioResult,
+          isMergeSuccessfully: false,
+        };
+      }
+
+      if (!assertion) {
+        const testAssertion = {
+          nodeId: testAssertions[i].nodeId,
+          graphNodeId: testAssertions[i].graphNodeId,
+          // testScenario: testAssertions[i].testScenario,
+          testScenarioId: testAssertions[i].testScenarioId,
+          result: value,
+        };
+
+        currentScenario.testAssertions.push(testAssertion);
+      } else {
+        assertion.result = value;
+      }
+    }
+
+    return {
+      testScenario: scenarioResult,
+      isMergeSuccessfully: true,
+    };
+  }
+
+  getCombinations(inputs = []) {
+    const combinations = []; //
+    const { length } = inputs;
+    const k = 1 << length;
+    for (let i = 0; i < k; i++) {
+      const combination: any[] = [];
+      let count = 0;
+      for (count; count < length; count++) {
+        const conditionValue = i & (1 << count);
+        if (conditionValue > 0) {
+          combination.push(inputs[count]);
+        }
+      }
+
+      if (count > 0 && combination.length > 0) {
+        combinations.push(combination);
+      }
+    }
+
+    return combinations;
+  }
+
   buildExpectedResultsOfTestScenario(testResults: ITestResult[] = [], graphNodes: IGraphNode[] = []) {
     let result = '';
     const falseResults = testResults.filter((x) => x.type === RESULT_TYPE.False);
@@ -210,7 +295,7 @@ class TestScenarioHelper {
     return result;
   }
 
-  combination(inputs = []) {
+  combination(inputs: any[] = []) {
     const combinations = []; //
     const { length } = inputs;
     const k = 1 << length;

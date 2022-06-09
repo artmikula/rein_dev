@@ -92,6 +92,9 @@ interface ISimpleTestScenario {
   isBaseScenario?: boolean;
   isViolated?: boolean;
 
+  // Fields for generate process
+  isFlattened?: boolean;
+
   // methods
   invertedClone: (exceptId?: any) => ISimpleTestScenario;
 }

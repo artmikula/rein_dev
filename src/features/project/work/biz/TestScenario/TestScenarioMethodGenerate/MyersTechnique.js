@@ -44,16 +44,21 @@ class MyerTechnique {
       console.log('graphNodes', this.graphNodes);
     }
 
-    const assertionDictionary = TestScenarioGenerator.calculateAssertionDictionary(this.graphLinks, this.effectNodes);
+    const scenarioDictionary = TestScenarioGenerator.calculateScenarioDictionary(this.graphLinks, this.effectNodes);
 
     if (window.isDebugMode) {
-      console.log('assertionDictionary', assertionDictionary);
+      console.log('scenarioDictionary', scenarioDictionary);
     }
 
-    TestScenarioGenerator.reduceToBaseEffectTestScenarios(assertionDictionary);
+    // TODO get this var from option
+    const viewOmmittedScenariosAndCases = false;
+    const testScenarios = TestScenarioGenerator.generateScenariosForEffectNodes(
+      scenarioDictionary,
+      viewOmmittedScenariosAndCases
+    );
 
     return {
-      scenarios: Array.from(assertionDictionary.values()),
+      scenarios: Array.from(testScenarios.values()),
       graphNodes: this.graphNodes,
     };
     // return this.updateTestScenario(assertionDictionary);
@@ -142,7 +147,7 @@ class MyerTechnique {
     console.log('testScenarios', testScenarios);
 
     return {
-      scenarios: testScenarios,
+      scenarios: [], // testScenarios,
       graphNodes: this.graphNodes,
     };
   }

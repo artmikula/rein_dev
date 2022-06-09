@@ -11,16 +11,18 @@ import {
   SimpleTestScenario,
 } from 'types/models';
 import { v4 as uuid } from 'uuid';
+import FlattenScenarioProcess from './FlattenScenarioProcess';
 
 class TestScenarioGenerator {
   graphNodes: any[] = [];
 
-  calculateAssertionDictionary(graphLinks: IGraphLink[], effectNodes: any[]) {
-    // Return: list of assertions
+  calculateScenarioDictionary(graphLinks: IGraphLink[], effectNodes: any[]) {
+    // original: calculateAssertionDictionary
+    // Return: list of scenarios
     // Assertions: key, targetNodeId, targetType, isEffectAssertion, resultType, scenarioId, testAssertions
     // TestAssertions: nodeId, value
 
-    const assertionDictionary = new Map<string, ISimpleTestScenario>();
+    const scenarioDictionary = new Map<string, ISimpleTestScenario>();
 
     // currently we do not suppport relation "Effect to Effect", so remove this handle
     // const effectToEffectRelationList = [];
@@ -31,7 +33,7 @@ class TestScenarioGenerator {
       const validLink = !!source && !!target && source.type !== GRAPH_NODE_TYPE.EFFECT;
 
       if (validLink) {
-        const scenario = assertionDictionary.get(target.id);
+        const scenario = scenarioDictionary.get(target.id);
 
         // add to exist scenario when has multiple link to 1 targets
         if (scenario) {
@@ -49,7 +51,7 @@ class TestScenarioGenerator {
             effectNodes.some((y) => y.id === key),
             [{ graphNodeId: source.id, nodeId: source.nodeId, result: !graphLinks[i].isNotRelation }]
           );
-          assertionDictionary.set(key, scenario);
+          scenarioDictionary.set(key, scenario);
         }
       }
     }
@@ -58,10 +60,10 @@ class TestScenarioGenerator {
     const w: any = window;
     if (w.isDebugMode) {
       console.log('ASSERTIONS');
-      assertionDictionary.forEach((value) => console.log(this.getExpressionString(value)));
+      scenarioDictionary.forEach((value) => console.log(this.getExpressionString(value)));
     }
 
-    return assertionDictionary;
+    return scenarioDictionary;
   }
 
   getExpressionString(scenario: ISimpleTestScenario) {
@@ -70,7 +72,7 @@ class TestScenarioGenerator {
     )}) = ${scenario.result ? '' : '!'}${scenario.targetNodeId}`;
   }
 
-  reduceToBaseEffectTestScenarios(assertionDictionary: Map<string, ISimpleTestScenario>) {
+  generateScenariosForEffectNodes(scenarioDictionary: Map<string, ISimpleTestScenario>, showOmmittedTestCases = false) {
     // assertionDictionary: all assertions for Effect, Group
     // Ex: Or(C2:F,C1:T) = E1
     //     Or(G1:F) = E2
@@ -79,48 +81,26 @@ class TestScenarioGenerator {
     //     Or(C2:F,C1:T) = E1
     //     Or((And(C4:T,C3:T)):F) = E2
 
-    const assertions = Array.from(assertionDictionary.values());
-    const effectScenarios = assertions.filter((x) => x.targetNodeId.startsWith('E'));
-    const groupScenarios = assertions.filter((x) => x.targetNodeId.startsWith('G'));
+    const resultList: ISimpleTestScenario[] = [];
+    const scenarios = Array.from(scenarioDictionary.values());
+    const effectScenarios = scenarios.filter((x) => x.targetNodeId.startsWith('E'));
+    // const groupScenarios = scenarios.filter((x) => x.targetNodeId.startsWith('G'));
 
     for (let i = 0; i < effectScenarios.length; i++) {
       const scenario = effectScenarios[i];
-      scenario.testAssertions = this.reduceGroupAssertions(scenario, groupScenarios);
+      const process = new FlattenScenarioProcess(scenario, scenarioDictionary, showOmmittedTestCases);
+      process.run();
+
+      process.resultList.forEach((tc) => {
+        resultList.push(tc);
+      });
     }
 
-    console.log('EFFECT SCENARIOS');
-    effectScenarios.forEach((x) => console.log(this.getExpressionString(x)));
-  }
+    console.log('RESULT SCENARIOS', resultList);
 
-  reduceGroupAssertions(scenario: ISimpleTestScenario, groupScenarios: ISimpleTestScenario[]): ITestAssertion[] {
-    // defitions:
-    // assertions: C1:True, G1:False
-    // scenario: OR(C1:True, G1:False) = E1
+    resultList.forEach((value) => console.log(this.getExpressionString(value)));
 
-    const groupAssertions = scenario.testAssertions.filter((x) => x.nodeId?.startsWith('G'));
-
-    if (!groupAssertions.length) {
-      return scenario.testAssertions;
-    }
-
-    const newAssertions: ITestAssertion[] = [];
-
-    for (let i = 0; i < scenario.testAssertions.length; i++) {
-      const testAssertion = scenario.testAssertions[i];
-
-      const groupScenario = groupScenarios.find((x) => x.targetNodeId === testAssertion.nodeId);
-
-      if (groupScenario) {
-        // is assertion Group, flat group to child Fragment based on the groupScenario
-        const groupAssertions = this.getAssertions(groupScenario, testAssertion.result);
-        groupAssertions.forEach((x) => newAssertions.push(x));
-      } else {
-        // assertion is not group
-        newAssertions.push(testAssertion);
-      }
-    }
-
-    return newAssertions;
+    return resultList;
   }
 
   getAssertions(scenario: ISimpleTestScenario, expectedResult: boolean): ITestAssertion[] {
@@ -330,47 +310,6 @@ class TestScenarioGenerator {
         }),
       ],
       testResults: scenario.testResults ? [...scenario.testResults] : [],
-    };
-  }
-
-  mergeAssertionSimple(currentScenario: ISimpleTestScenario, otherScennario: ISimpleTestScenario, parentValue = true) {
-    const { testAssertions } = otherScennario;
-    const scenarioResult = {
-      ...currentScenario,
-      isViolated: otherScennario.isViolated,
-      isFeasible: otherScennario.isFeasible,
-    };
-    for (let i = 0; i < testAssertions.length; i++) {
-      const value = parentValue === testAssertions[i].result;
-      const assertion = currentScenario.testAssertions.find(
-        (x) =>
-          (!!x.graphNodeId && x.graphNodeId === testAssertions[i].graphNodeId) ||
-          (!!x.testScenarioId && x.testScenarioId === testAssertions[i].testScenarioId)
-      );
-      if (assertion && assertion.result !== value) {
-        return {
-          testScenario: scenarioResult,
-          isMergeSuccessfully: false,
-        };
-      }
-      if (!assertion) {
-        const testAssertion = {
-          nodeId: testAssertions[i].nodeId,
-          graphNodeId: testAssertions[i].graphNodeId,
-          // testScenario: testAssertions[i].testScenario,
-          testScenarioId: testAssertions[i].testScenarioId,
-          result: value,
-        };
-
-        currentScenario.testAssertions.push(testAssertion);
-      } else {
-        assertion.result = value;
-      }
-    }
-
-    return {
-      testScenario: scenarioResult,
-      isMergeSuccessfully: true,
     };
   }
 
