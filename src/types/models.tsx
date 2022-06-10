@@ -69,14 +69,6 @@ interface ITestData {
   data: string;
 }
 
-interface ITestCase {
-  id: string;
-  testScenarioId: string;
-  results: string[];
-  testDatas: ITestData[];
-  testScenario?: ITestScenario;
-}
-
 interface ISimpleTestScenario {
   // basic fields
   id: string;
@@ -104,6 +96,14 @@ interface ISimpleTestScenario {
 
   // methods
   invertedClone: (exceptId?: any) => ISimpleTestScenario;
+}
+
+interface ITestCase {
+  id: string;
+  testScenarioId: string;
+  results: string[];
+  testDatas: ITestData[];
+  testScenario?: ISimpleTestScenario;
 }
 
 export class SimpleTestScenario implements ISimpleTestScenario {

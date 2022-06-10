@@ -118,6 +118,7 @@ class MyerTechnique {
       }
     }
 
+    // TODO T4BL-47: Rework inspection, move to TestScenarioInspector
     // const scenarioInspection = TestScenarioInspector._inspectEffectRelation(
     //   testScenarios,
     //   this.graphLinks,
@@ -152,9 +153,24 @@ class MyerTechnique {
     console.log('testScenarios', testScenarios);
 
     return {
-      scenarios: testScenarios,
+      scenarios: this._mapToOldScenarios(testScenarios),
       graphNodes: this.graphNodes,
     };
+  }
+
+  _mapToOldScenarios(testScenarios = []) {
+    const result = testScenarios.map((scenario) => {
+      const sce = scenario;
+      sce.testResults = [
+        {
+          graphNodeId: scenario.targetGraphNodeId,
+          type: scenario.resultType,
+        },
+      ];
+      return sce;
+    });
+
+    return result;
   }
 
   _mergeScenarioFragments(
