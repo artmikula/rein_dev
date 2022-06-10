@@ -93,7 +93,7 @@ class MyerTechnique {
       scenario.expectedResults = TestScenarioGenerator.buildExpectedResultsOfTestScenario(scenario, this.graphNodes);
     }
 
-    console.log('tmpScenarioList', tmpScenarioList);
+    // console.log('tmpScenarioList', tmpScenarioList);
 
     const testScenarios = [];
     // let index = 0;
