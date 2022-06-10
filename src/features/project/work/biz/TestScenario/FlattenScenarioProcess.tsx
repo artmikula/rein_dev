@@ -82,6 +82,7 @@ export default class FlattenScenarioProcess {
       if (groupScenario) {
         // flat group and add to result.
         const runScenario = !assertion.result ? this.applyDeMorganLaw(groupScenario) : { ...groupScenario };
+        runScenario.id = uuid();
         const p = new FlattenScenarioProcess(runScenario, this.scenarioDictionary, this.showReducedScenariosAndCases);
         const flattenScenariosOfGroup = p.run();
 

@@ -148,6 +148,7 @@ class TestScenarioHelper {
 
     return {
       ...testScenario,
+      id: uuid(),
       testAssertions: cloneAssertions,
     };
   }
@@ -208,6 +209,7 @@ class TestScenarioHelper {
     const { testAssertions } = otherScennario;
     const scenarioResult = {
       ...currentScenario,
+      id: uuid(),
       isViolated: otherScennario.isViolated,
       isFeasible: otherScennario.isFeasible,
     };

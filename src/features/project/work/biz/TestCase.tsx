@@ -50,6 +50,7 @@ class TestCase {
                   clone.testDatas.push({
                     graphNodeId: causeAssertions[j]?.graphNodeId,
                     data,
+                    nodeId: causeAssertions[j]?.nodeId,
                   });
                 }
                 tmp.push(clone);

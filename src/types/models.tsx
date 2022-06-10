@@ -67,6 +67,7 @@ interface ITestScenario {
 interface ITestData {
   graphNodeId: string;
   data: string;
+  nodeId?: string;
 }
 
 interface ISimpleTestScenario {
