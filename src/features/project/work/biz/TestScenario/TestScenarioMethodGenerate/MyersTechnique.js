@@ -50,21 +50,10 @@ class MyerTechnique {
       console.log('scenarioDictionary', scenarioDictionary);
     }
 
-    // TODO get this var from option
-    const viewOmmittedScenariosAndCases = false;
-    const testScenarios = TestScenarioGenerator.generateScenariosForEffectNodes(
-      scenarioDictionary,
-      viewOmmittedScenariosAndCases
-    );
-
-    return {
-      scenarios: Array.from(testScenarios.values()),
-      graphNodes: this.graphNodes,
-    };
-    // return this.updateTestScenario(assertionDictionary);
+    return this.updateTestScenario(scenarioDictionary);
   }
 
-  updateTestScenario(assertionDictionary = new Map()) {
+  updateTestScenario(scenarioDictionary = new Map()) {
     let inspectionDictionary = new Map();
     const causeGroupInspection =
       NODE_INSPECTION.DisconnectedNode | NODE_INSPECTION.MissingIsRelation | NODE_INSPECTION.MissingNotRelation;
@@ -82,25 +71,29 @@ class MyerTechnique {
       inspectionDictionary.set(this.effectNodes[i].id, effectInspection);
     }
 
-    const effectAssertionDictionary = new Map(
-      [...assertionDictionary].filter(([key]) => this.effectNodes.some((y) => y.id === key))
+    // const effectAssertionDictionary = new Map(
+    //   [...assertionDictionary].filter(([key]) => this.effectNodes.some((y) => y.id === key))
+    // );
+
+    // const tmpScenarioList = [];
+
+    // effectAssertionDictionary.forEach((value) => {
+    //   const merged = this._mergeScenarioFragments(assertionDictionary, value);
+    //   tmpScenarioList.push(...merged);
+    // });
+
+    // TODO get this var from option
+    const viewOmmittedScenariosAndCases = false;
+    const tmpScenarioList = TestScenarioGenerator.generateScenariosForEffectNodes(
+      scenarioDictionary,
+      viewOmmittedScenariosAndCases
     );
-
-    const tmpScenarioList = [];
-
-    effectAssertionDictionary.forEach((value) => {
-      const merged = this._mergeScenarioFragments(assertionDictionary, value);
-      tmpScenarioList.push(...merged);
-    });
 
     console.log('tmpScenarioList', tmpScenarioList);
 
     for (let i = 0; i < tmpScenarioList.length; i++) {
       const scenario = tmpScenarioList[i];
-      scenario.expectedResults = TestScenarioHelper.buildExpectedResultsOfTestScenario(
-        scenario.testResults,
-        this.graphNodes
-      );
+      scenario.expectedResults = TestScenarioGenerator.buildExpectedResultsOfTestScenario(scenario, this.graphNodes);
     }
 
     let testScenarios = [];
@@ -147,7 +140,7 @@ class MyerTechnique {
     console.log('testScenarios', testScenarios);
 
     return {
-      scenarios: [], // testScenarios,
+      scenarios: testScenarios,
       graphNodes: this.graphNodes,
     };
   }

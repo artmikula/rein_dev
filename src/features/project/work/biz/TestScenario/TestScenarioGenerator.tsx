@@ -72,7 +72,10 @@ class TestScenarioGenerator {
     )}) = ${scenario.result ? '' : '!'}${scenario.targetNodeId}`;
   }
 
-  generateScenariosForEffectNodes(scenarioDictionary: Map<string, ISimpleTestScenario>, showOmmittedTestCases = false) {
+  generateScenariosForEffectNodes(
+    scenarioDictionary: Map<string, ISimpleTestScenario>,
+    showOmmittedTestCases = false
+  ): ISimpleTestScenario[] {
     // assertionDictionary: all assertions for Effect, Group
     // Ex: Or(C2:F,C1:T) = E1
     //     Or(G1:F) = E2
@@ -313,47 +316,9 @@ class TestScenarioGenerator {
     };
   }
 
-  // mergeAssertion(currentScenario: ITestScenario, otherScennario: ITestScenario, parentValue = true) {
-  //   const { testAssertions } = otherScennario;
-  //   const scenarioResult = {
-  //     ...currentScenario,
-  //     isViolated: otherScennario.isViolated,
-  //     isFeasible: otherScennario.isFeasible,
-  //   };
-  //   for (let i = 0; i < testAssertions.length; i++) {
-  //     const value = parentValue === testAssertions[i].result;
-  //     const assertion = currentScenario.testAssertions.find(
-  //       (x) =>
-  //         (!!x.graphNode && x.graphNode.id === testAssertions[i].graphNode?.id) ||
-  //         (!!x.testScenario && x.testScenario.id === testAssertions[i].testScenario?.id)
-  //     );
-  //     if (assertion && assertion.result !== value) {
-  //       return {
-  //         testScenario: scenarioResult,
-  //         isMergeSuccessfully: false,
-  //       };
-  //     }
-  //     if (!assertion) {
-  //       const testAssertion = {
-  //         graphNode: testAssertions[i].graphNode,
-  //         testScenario: testAssertions[i].testScenario,
-  //         result: value,
-  //       };
-
-  //       currentScenario.testAssertions.push(testAssertion);
-  //     } else {
-  //       assertion.result = value;
-  //     }
-  //   }
-
-  //   return {
-  //     testScenario: scenarioResult,
-  //     isMergeSuccessfully: true,
-  //   };
-  // }
-
-  buildExpectedResultsOfTestScenario(testResults: ITestResult[] = [], graphNodes: IGraphNode[] = []) {
+  buildExpectedResultsOfTestScenario(scenario: ISimpleTestScenario, graphNodes: IGraphNode[] = []) {
     let result = '';
+    const testResults: any[] = [];
     const falseResults = testResults.filter((x) => x.type === RESULT_TYPE.False);
     const basicResults = testResults.filter((x) => x.type === RESULT_TYPE.None || x.type === RESULT_TYPE.True);
     if (basicResults.length === 0) {
@@ -419,71 +384,6 @@ class TestScenarioGenerator {
 
     return result;
   }
-
-  // unionScenarios(scenarios1 = [], scenarios2 = []) {
-  //   const results = [...scenarios1];
-  //   for (let i = 0; i < scenarios2.length; i++) {
-  //     let isExisted = false;
-  //     for (let j = 0; j < scenarios1.length; j++) {
-  //       if (this._compareScenario(scenarios2[i], scenarios1[j])) {
-  //         isExisted = true;
-  //       }
-  //     }
-
-  //     if (!isExisted) {
-  //       results.push(scenarios2[i]);
-  //     }
-  //   }
-
-  //   return results;
-  // }
-
-  toString(testScenario: ITestScenario, graphNodes: IGraphNode[] = []) {
-    const testAssertions = Enumerable.from(testScenario.testAssertions)
-      .orderBy((x) => x.graphNode?.nodeId)
-      .where((x) => !!x.graphNode)
-      .toArray();
-    let assertionString = '';
-    for (let i = 0; i < testAssertions.length; i++) {
-      const trueFalseString = testAssertions[i].result ? 'T' : 'F';
-      assertionString += `${testAssertions[i].graphNode?.nodeId}:${trueFalseString}${
-        i === testAssertions.length - 1 ? ', ' : ''
-      }`;
-    }
-
-    return `${testScenario.id} => ${
-      testScenario.targetType
-    }{${assertionString}} = ${this.buildExpectedResultsOfTestScenario(testScenario.testResults, graphNodes)}`;
-  }
-
-  // _compareScenario(scenario1: ITestScenario, scenario2: ITestScenario) {
-  //   if (!scenario1 || !scenario2) {
-  //     return false;
-  //   }
-
-  //   if (!this._compareScenarioProperty(scenario1, scenario2, SCENARIO_PROPERTIES.SecnarioType)) {
-  //     return false;
-  //   }
-
-  //   if (!this._compareScenarioProperty(scenario1, scenario2, SCENARIO_PROPERTIES.IsViolated)) {
-  //     return false;
-  //   }
-
-  //   if (!this._compareScenarioProperty(scenario1, scenario2, SCENARIO_PROPERTIES.IsFeasible)) {
-  //     return false;
-  //   }
-
-  //   if (!this._compareTestAssertions(scenario1.testAssertions, scenario2.testAssertions)) {
-  //     return false;
-  //   }
-
-  //   // TODO: check this
-  //   if (!this._compareTestAssertions(scenario1.testResult, scenario2.testResult)) {
-  //     return false;
-  //   }
-
-  //   return true;
-  // }
 
   _compareScenarioProperty(scenario1: any, scenario2: any, propertyName: string) {
     if (scenario1[propertyName] && scenario2[propertyName] && scenario1[propertyName] !== scenario2[propertyName]) {
