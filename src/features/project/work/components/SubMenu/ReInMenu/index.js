@@ -45,7 +45,7 @@ class ReInMenu extends Component {
     let _closeModal = () => {};
     const handleClose = () => _closeModal();
 
-    const modaProps = {
+    const modalProps = {
       title: Language.get('viewinspectionpalette'),
       content: (
         <Router history={history}>
@@ -55,7 +55,7 @@ class ReInMenu extends Component {
       actions: null,
     };
 
-    _closeModal = window.modal(modaProps);
+    _closeModal = window.modal(modalProps);
   };
 
   _handleLoadMeta = (nodes) => {
@@ -71,12 +71,12 @@ class ReInMenu extends Component {
 
     const causes = (causeEffects || []).filter((x) => x.type === 'Cause');
 
-    const modaProps = {
+    const modalProps = {
       title: Language.get('loadmeta'),
       content: <MetaImportation onSubmit={this._handleLoadMeta} causes={causes} />,
       actions: null,
     };
-    this.closeLoadMetaModal = window.modal(modaProps);
+    this.closeLoadMetaModal = window.modal(modalProps);
   };
 
   checkQuery = () => {

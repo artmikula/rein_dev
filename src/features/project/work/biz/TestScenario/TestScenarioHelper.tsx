@@ -20,6 +20,7 @@ class TestScenarioHelper {
           effectToEffectRelationList.push(graphLinks[i]);
         } else if (scenario) {
           const assertion = {
+            graphNodeId: source.id,
             graphNode: source,
             result: !graphLinks[i].isNotRelation,
           };
@@ -30,12 +31,12 @@ class TestScenarioHelper {
             graphNodeId: target.id,
           };
 
-          const scenario = {
+          const scenario: ITestScenario = {
             id: uuid(),
             targetType: target.targetType,
             isFeasible: true,
             testResults: [testResult],
-            testAssertions: [{ graphNode: source, result: !graphLinks[i].isNotRelation }],
+            testAssertions: [{ graphNodeId: source.id, graphNode: source, result: !graphLinks[i].isNotRelation }],
           };
           assertionDictionary.set(target.id, scenario);
         }
@@ -142,16 +143,16 @@ class TestScenarioHelper {
     };
   }
 
-  mergeAssertion(currentScenario: ITestScenario, otherScennario: ITestScenario, parentValue = true) {
-    const { testAssertions } = otherScennario;
+  mergeAssertion(currentScenario: ITestScenario, otherScenario: ITestScenario, parentValue = true) {
+    const { testAssertions } = otherScenario;
     const scenarioResult = {
       ...currentScenario,
-      isViolated: otherScennario.isViolated,
-      isFeasible: otherScennario.isFeasible,
+      isViolated: otherScenario.isViolated,
+      isFeasible: otherScenario.isFeasible,
     };
     for (let i = 0; i < testAssertions.length; i++) {
       const value = parentValue === testAssertions[i].result;
-      const assertion = currentScenario.testAssertions.find(
+      const assertion: ITestAssertion | undefined = currentScenario.testAssertions.find(
         (x) =>
           (!!x.graphNode && x.graphNode.id === testAssertions[i].graphNode?.id) ||
           (!!x.testScenario && x.testScenario.id === testAssertions[i].testScenario?.id)
@@ -163,7 +164,8 @@ class TestScenarioHelper {
         };
       }
       if (!assertion) {
-        const testAssertion = {
+        const testAssertion: ITestAssertion = {
+          graphNodeId: testAssertions[i].graphNode?.id || testAssertions[i].graphNodeId,
           graphNode: testAssertions[i].graphNode,
           testScenario: testAssertions[i].testScenario,
           result: value,
@@ -291,7 +293,7 @@ class TestScenarioHelper {
       return false;
     }
 
-    if (!this._compareScenarioProperty(scenario1, scenario2, SCENARIO_PROPERTIES.SecnarioType)) {
+    if (!this._compareScenarioProperty(scenario1, scenario2, SCENARIO_PROPERTIES.ScenarioType)) {
       return false;
     }
 
@@ -448,18 +450,18 @@ class TestScenarioHelper {
       },
     ];
 
-    const orderdCauseNodes = Enumerable.from(graphNodes)
+    const orderedCauseNodes = Enumerable.from(graphNodes)
       .where((x) => x.type === GRAPH_NODE_TYPE.CAUSE)
       .orderBy((x) => parseInt(x.nodeId.substr(1, x.nodeId.length), 10))
       .toArray();
 
-    const orderdGroupNodes = Enumerable.from(graphNodes)
+    const orderedGroupNodes = Enumerable.from(graphNodes)
       .where((x) => x.type === GRAPH_NODE_TYPE.GROUP)
       .orderBy((x) => parseInt(x.nodeId.substr(1, x.nodeId.length), 10))
       .toArray();
 
-    const orderdGraphNodes = orderdCauseNodes.concat(orderdGroupNodes);
-    const graphNodeHeaders = orderdGraphNodes.map((x) => {
+    const orderedGraphNodes = orderedCauseNodes.concat(orderedGroupNodes);
+    const graphNodeHeaders = orderedGraphNodes.map((x) => {
       return {
         headerName: x.nodeId,
         key: x.id,

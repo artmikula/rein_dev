@@ -348,7 +348,7 @@ export const EXPRESSION_TYPE = {
 };
 
 export const SCENARIO_PROPERTIES = {
-  SecnarioType: 'secnarioType',
+  ScenarioType: 'scenarioType',
   IsViolated: 'isViolated',
   IsFeasible: 'isFeasible',
 };

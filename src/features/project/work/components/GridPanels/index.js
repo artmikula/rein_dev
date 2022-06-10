@@ -1,3 +1,4 @@
+import { connect } from 'react-redux';
 import { GRID_PANEL_SIZE, LAYOUT, VIEW_MODE } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
@@ -5,6 +6,8 @@ import React, { Component } from 'react';
 import GridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import { Button } from 'reactstrap';
+import eventBus from 'features/shared/lib/eventBus';
+import domainEvents from 'features/shared/domainEvents';
 import CauseEffectTable from './CauseEffectTable';
 import Graph from './Graph';
 import GridPanelItem from './GridPanelItem';
@@ -14,28 +17,7 @@ import TestCoverage from './TestCoverage';
 import TestDataTable from './TestDataTable';
 import TestScenarioAndCase from './TestScenarioAndCase';
 
-export default class GridPanels extends Component {
-  state = {
-    wrapperHeight: 0,
-    panelWidth: 0,
-    panelHeight: 0,
-  };
-
-  // eslint-disable-next-line react/sort-comp
-  setGraphActionHandler = (graphActionHandler) => {
-    this.setState({ graphActionHandler });
-  };
-
-  handleGraphAction = (action) => {
-    if (!this.state) {
-      return;
-    }
-    const { graphActionHandler } = this.state;
-    if (graphActionHandler && graphActionHandler[action]) {
-      graphActionHandler[action]();
-    }
-  };
-
+class GridPanels extends Component {
   panels = [
     {
       title: Language.get('testbasis'),
@@ -90,9 +72,37 @@ export default class GridPanels extends Component {
     {
       title: 'Test Scenario/Case/Data',
       tabs: [Language.get('testscenarioortestcase'), Language.get('testdata')],
-      children: [<TestScenarioAndCase />, <TestDataTable />],
+      children: [
+        <TestScenarioAndCase />,
+        <TestDataTable onChangeData={(value) => this.setState({ isTestDataChanged: value })} />,
+      ],
     },
   ];
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      wrapperHeight: 0,
+      panelWidth: 0,
+      panelHeight: 0,
+      isTestDataChanged: false,
+    };
+  }
+
+  // eslint-disable-next-line react/sort-comp
+  setGraphActionHandler = (graphActionHandler) => {
+    this.setState({ graphActionHandler });
+  };
+
+  handleGraphAction = (action) => {
+    if (!this.state) {
+      return;
+    }
+    const { graphActionHandler } = this.state;
+    if (graphActionHandler && graphActionHandler[action]) {
+      graphActionHandler[action]();
+    }
+  };
 
   componentDidMount() {
     this._initLayoutSize();
@@ -102,6 +112,19 @@ export default class GridPanels extends Component {
   componentWillUnmount() {
     window.removeEventListener('resize', () => this.setState({ wrapperHeight: 0, panelWidth: 0, panelHeight: 0 }));
   }
+
+  _generateTestCase = () => {
+    const { testDatas } = this.props;
+    const { isTestDataChanged } = this.state;
+    if (isTestDataChanged) {
+      eventBus.publish(domainEvents.TEST_DATA_DOMAINEVENT, {
+        action: domainEvents.ACTION.UPDATE,
+        value: { ...testDatas },
+        receivers: [domainEvents.DES.TESTSCENARIOS],
+      });
+    }
+    this.setState({ isTestDataChanged: false });
+  };
 
   _initLayoutSize = () => {
     const { screenHeight, panelMargin, splitViewPanelWidth, panelHeight } = GRID_PANEL_SIZE;
@@ -188,7 +211,7 @@ export default class GridPanels extends Component {
 
   render() {
     const { isLockedPanel, layouts, onLayoutChange } = this.props;
-    const { wrapperHeight, panelWidth, panelHeight } = this.state;
+    const { wrapperHeight, panelWidth, panelHeight, isTestDataChanged } = this.state;
     const { gridCols, panelMargin, togglePanelWidth } = GRID_PANEL_SIZE;
 
     return (
@@ -223,6 +246,8 @@ export default class GridPanels extends Component {
                 index={index}
                 onTogglePanel={() => this._handleTogglePanel(layout.i)}
                 renderTitle={this.panels[index]?.renderTitle}
+                generateTestCase={this._generateTestCase}
+                isShowGenerateButton={isTestDataChanged}
               >
                 {this.panels[index]?.children}
               </GridPanelItem>
@@ -235,8 +260,13 @@ export default class GridPanels extends Component {
 }
 
 GridPanels.propTypes = {
+  testDatas: PropTypes.oneOfType([PropTypes.array]).isRequired,
   viewMode: PropTypes.string.isRequired,
   isLockedPanel: PropTypes.bool.isRequired,
   onLayoutChange: PropTypes.func.isRequired,
   layouts: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
 };
+
+const mapStateToProps = (state) => ({ testDatas: state.work.testDatas });
+
+export default connect(mapStateToProps)(GridPanels);

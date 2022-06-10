@@ -96,6 +96,7 @@ const en = {
   graphoption: 'Graph option',
   align: 'Align',
   generate: 'Generate',
+  generatetestcase: 'Generate Test Case',
   causegroup: 'Cause group',
   effectgroup: 'Effect group',
   exclusive: 'Exclusive',
