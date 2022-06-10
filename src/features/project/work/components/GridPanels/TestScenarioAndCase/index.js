@@ -135,7 +135,7 @@ class TestScenarioAndCase extends Component {
     }
   };
 
-  _calculateTestScenarioAndCase = (domainAction) => {
+  _calculateTestScenarioAndCase = async (domainAction) => {
     const { graph, testDatas, setGraph, match } = this.props;
     const { workId } = match.params;
     let scenarioAndGraphNodes = null;

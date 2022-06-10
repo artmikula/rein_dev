@@ -49,7 +49,9 @@ class GridPanels extends Component {
     },
     {
       title: Language.get('causeandeffectgraph'),
-      children: <Graph setActionHandler={this.setGraphActionHandler} />,
+      children: (
+        <Graph setActionHandler={this.setGraphActionHandler} onGenerate={() => this.setState({ loading: true })} />
+      ),
       renderTitle: (title) => {
         return (
           <div className="flex-title">
@@ -86,6 +88,7 @@ class GridPanels extends Component {
       panelWidth: 0,
       panelHeight: 0,
       isTestDataChanged: false,
+      loading: false,
     };
   }
 
@@ -107,10 +110,17 @@ class GridPanels extends Component {
   componentDidMount() {
     this._initLayoutSize();
     window.addEventListener('resize', this._onChangeLayoutSize);
+
+    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
+      if (event.message.action === domainEvents.ACTION.ACCEPTGENERATE) {
+        this.setState({ loading: false });
+      }
+    });
   }
 
   componentWillUnmount() {
     window.removeEventListener('resize', () => this.setState({ wrapperHeight: 0, panelWidth: 0, panelHeight: 0 }));
+    eventBus.unsubscribe(this);
   }
 
   _generateTestCase = () => {
@@ -211,7 +221,7 @@ class GridPanels extends Component {
 
   render() {
     const { isLockedPanel, layouts, onLayoutChange } = this.props;
-    const { wrapperHeight, panelWidth, panelHeight, isTestDataChanged } = this.state;
+    const { wrapperHeight, panelWidth, panelHeight, isTestDataChanged, loading } = this.state;
     const { gridCols, panelMargin, togglePanelWidth } = GRID_PANEL_SIZE;
 
     return (
@@ -254,6 +264,13 @@ class GridPanels extends Component {
             </div>
           ))}
         </GridLayout>
+        {loading && (
+          <div className="overlay" id="overlayDiv">
+            <div className="overlay__inner">
+              <div className="overlay__content">Processing...</div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

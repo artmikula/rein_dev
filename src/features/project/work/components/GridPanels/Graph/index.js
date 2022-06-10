@@ -57,10 +57,26 @@ class Graph extends Component {
   }
 
   componentDidMount() {
+    const { onGenerate } = this.props;
+
     const container = document.getElementById('graph_container_id');
     this.graphManager = new GraphManager(container, {
       onGraphChange: this._handleGraphChange,
-      generate: () => this._raiseEvent({ action: domainEvents.ACTION.GENERATE }),
+      generate: async () => {
+        if (onGenerate) {
+          onGenerate();
+        }
+
+        // add delay to show waiting message before run to Generate process
+        function delay(milliseconds) {
+          return new Promise((resolve) => {
+            setTimeout(resolve, milliseconds);
+          });
+        }
+        await delay(50);
+
+        this._raiseEvent({ action: domainEvents.ACTION.GENERATE });
+      },
     });
 
     this._drawGraph(this.graphManager);
@@ -348,6 +364,7 @@ Graph.propTypes = {
   }).isRequired,
   workLoaded: PropTypes.bool.isRequired,
   setGraph: PropTypes.func.isRequired,
+  onGenerate: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
