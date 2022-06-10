@@ -82,6 +82,7 @@ interface ISimpleTestScenario {
   id: string;
   key: string;
   targetNodeId: string;
+  targetGraphNodeId: string;
   testAssertions: ITestAssertion[];
 
   result: boolean; // expected value of Target, should be true if is EffectAssertion
@@ -96,7 +97,10 @@ interface ISimpleTestScenario {
   isViolated?: boolean;
 
   // Fields for generate process
-  isFlattened?: boolean;
+  expectedResults?: string; // Ex: E1, or !E1
+
+  // Fields for display in table
+  scenarioType?: string;
 
   // methods
   invertedClone: (exceptId?: any) => ISimpleTestScenario;
@@ -106,6 +110,8 @@ export class SimpleTestScenario implements ISimpleTestScenario {
   id: string;
 
   key: string;
+
+  targetGraphNodeId: string;
 
   targetNodeId: string;
 
@@ -129,6 +135,7 @@ export class SimpleTestScenario implements ISimpleTestScenario {
     this.id = uuid();
     this.key = target.id;
     this.targetNodeId = target.nodeId;
+    this.targetGraphNodeId = target.graphNode?.id;
     this.targetType = target.targetType;
 
     this.isEffectAssertion = isEffectAssertion;

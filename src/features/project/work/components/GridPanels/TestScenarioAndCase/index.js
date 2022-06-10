@@ -152,22 +152,23 @@ class TestScenarioAndCase extends Component {
         const scenario = {
           ...x,
           testAssertions: x.testAssertions.map((y) => {
-            const graphNode = graph.graphNodes.find((x) => x.id === y.graphNode.id);
+            const graphNode = graph.graphNodes.find((x) => x.nodeId === y.graphNodeId);
             return {
               ...y,
               result: y.result,
-              graphNodeId: y.graphNode.id,
+              graphNodeId: y.graphNodeId,
               graphNode,
               workId,
               testScenarioId: x.id,
             };
           }),
-          testResults: x.testResults.map((y) => {
-            return {
-              ...y,
-              workId,
-            };
-          }),
+          workId,
+          // testResults: x.testResults.map((y) => {
+          //   return {
+          //     ...y,
+          //     workId,
+          //   };
+          // }),
         };
 
         return scenario;

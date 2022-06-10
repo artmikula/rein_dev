@@ -14,6 +14,7 @@ import { v4 as uuid } from 'uuid';
 import constraintHelper from '../../Constraint';
 import TestScenarioHelper from '../TestScenarioHelper';
 import TestScenarioGenerator from '../TestScenarioGenerator';
+import TestScenarioInspector from '../TestScenarioInspector';
 
 class MyerTechnique {
   constructor() {
@@ -82,60 +83,71 @@ class MyerTechnique {
     //   tmpScenarioList.push(...merged);
     // });
 
-    // TODO get this var from option
-    const viewOmmittedScenariosAndCases = false;
     const tmpScenarioList = TestScenarioGenerator.generateScenariosForEffectNodes(
       scenarioDictionary,
-      viewOmmittedScenariosAndCases
+      appConfig.showReducedScenariosAndCases
     );
-
-    console.log('tmpScenarioList', tmpScenarioList);
 
     for (let i = 0; i < tmpScenarioList.length; i++) {
       const scenario = tmpScenarioList[i];
       scenario.expectedResults = TestScenarioGenerator.buildExpectedResultsOfTestScenario(scenario, this.graphNodes);
     }
 
-    let testScenarios = [];
+    console.log('tmpScenarioList', tmpScenarioList);
+
+    const testScenarios = [];
     // let index = 0;
     const oderedTestScenarios = Enumerable.from(tmpScenarioList)
       .orderBy((x) => x.expectedResults)
       .toArray();
+
     for (let i = 0; i < oderedTestScenarios.length; i++) {
       // add condition in option ShowReducedScenariosAndCases
-      if (appConfig.showReducedScenariosAndCases || !oderedTestScenarios[i].isViolated) {
+      const scenario = oderedTestScenarios[i];
+      scenario.scenarioType = TEST_SCENARIO_TYPE.Myers;
+
+      if (appConfig.showReducedScenariosAndCases || !scenario.isViolated) {
         // oderedTestScenarios[i].id = ++index;
-        const scenarioInspection = this._inspectionScenario(oderedTestScenarios[i], inspectionDictionary);
-        testScenarios.push(scenarioInspection.scenario);
+        const scenarioInspection = TestScenarioInspector._inspectScenario(scenario, inspectionDictionary);
+        scenario.isViolated = scenarioInspection.violated;
         inspectionDictionary = scenarioInspection.inspectionDictionary;
+
+        if (!scenario.isViolated) {
+          testScenarios.push(scenario);
+        }
       }
     }
 
-    const scenarioInspection = this._inspectEffectRelation(testScenarios, inspectionDictionary);
-    testScenarios = scenarioInspection.scenarios;
-    inspectionDictionary = scenarioInspection.inspectionDictionary;
-    testScenarios = TestScenarioHelper.findBaseScenario(testScenarios, this.causeNodes);
+    // const scenarioInspection = TestScenarioInspector._inspectEffectRelation(
+    //   testScenarios,
+    //   this.graphLinks,
+    //   this.constraints,
+    //   inspectionDictionary
+    // );
+    // testScenarios = scenarioInspection.scenarios;
+    // inspectionDictionary = scenarioInspection.inspectionDictionary;
+    // testScenarios = TestScenarioHelper.findBaseScenario(testScenarios, this.causeNodes);
 
-    inspectionDictionary.forEach((value, key) => {
-      const nodeIndex = this.graphNodes.findIndex((x) => key === x.id);
-      const node = this.graphNodes[nodeIndex];
+    // inspectionDictionary.forEach((value, key) => {
+    //   const nodeIndex = this.graphNodes.findIndex((x) => key === x.id);
+    //   const node = this.graphNodes[nodeIndex];
 
-      this.graphNodes[nodeIndex] = { ...node, inspection: value };
-    });
+    //   this.graphNodes[nodeIndex] = { ...node, inspection: value };
+    // });
 
-    for (let i = 0; i < testScenarios.length; i++) {
-      testScenarios[i].id = uuid();
-      testScenarios[i].scenarioType = TEST_SCENARIO_TYPE.Myers;
-      if (testScenarios[i].isValid === undefined) {
-        testScenarios[i].isValid = true;
-      }
+    // for (let i = 0; i < testScenarios.length; i++) {
+    //   testScenarios[i].id = uuid();
+    //   testScenarios[i].scenarioType = TEST_SCENARIO_TYPE.Myers;
+    //   if (testScenarios[i].isValid === undefined) {
+    //     testScenarios[i].isValid = true;
+    //   }
 
-      if (testScenarios[i].isFeasible === undefined) {
-        testScenarios[i].isFeasible = true;
-      }
-    }
+    //   if (testScenarios[i].isFeasible === undefined) {
+    //     testScenarios[i].isFeasible = true;
+    //   }
+    // }
 
-    testScenarios = testScenarios.filter((x) => x.expectedResults);
+    // testScenarios = testScenarios.filter((x) => x.expectedResults);
 
     console.log('testScenarios', testScenarios);
 
@@ -277,87 +289,6 @@ class MyerTechnique {
 
     return {
       scenario: { ...scenario, ...scenarioResult },
-      inspectionDictionary,
-    };
-  }
-
-  _inspectEffectRelation(scenarios = [], inspectionDictionary = new Map()) {
-    const effectToEffectLinks = this.graphLinks.filter(
-      (x) => x.source.type === GRAPH_NODE_TYPE.EFFECT && x.target.type === GRAPH_NODE_TYPE.EFFECT
-    );
-
-    for (let i = 0; i < effectToEffectLinks.length; i++) {
-      const { source, target } = effectToEffectLinks[i];
-      const scenarioList = scenarios.filter((x) =>
-        x.testResults.some(
-          (y) => (y.graphNodeId === source.id && y.type === RESULT_TYPE.True) || y.type === RESULT_TYPE.None
-        )
-      );
-      for (let j = 0; j < scenarioList.length; j++) {
-        const isExistedTrueResult = scenarioList[j].testResults.some(
-          (x) => x.graphNodeId === target.id && x.type === RESULT_TYPE.True
-        );
-        const isExistedFalseResult = scenarioList[j].testResults.some(
-          (x) => x.graphNodeId === target.id && x.type === RESULT_TYPE.False
-        );
-
-        if (scenarioList[j].testResults.some((x) => x.type === RESULT_TYPE.False && x.graphNodeId === source.id)) {
-          if (!effectToEffectLinks[i].isNotRelation) {
-            if (!isExistedFalseResult) {
-              scenarioList[j].testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.False });
-            }
-
-            if (source.effectGroup === target.effectGroup) {
-              const inspection = inspectionDictionary.get(target.id) | NODE_INSPECTION.HasRelationInSameGroup;
-              inspectionDictionary.set(target.id, inspection);
-            }
-          } else if (!isExistedTrueResult) {
-            scenarioList[j].testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.True });
-          }
-        } else if (!effectToEffectLinks[i].isNotRelation) {
-          if (!isExistedTrueResult) {
-            scenarioList[j].testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.True });
-          }
-          if (source.effectGroup === target.effectGroup) {
-            const inspection = inspectionDictionary.get(target.id) | NODE_INSPECTION.HasRelationInSameGroup;
-            inspectionDictionary.set(target.id, inspection);
-          }
-        } else if (!isExistedFalseResult) {
-          scenarioList[j].testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.False });
-        }
-      }
-    }
-    const constraints = this.constraints.filter((x) => x.type === CONSTRAINT_TYPE.MASK);
-    for (let i = 0; i < constraints.length; i++) {
-      const source = constraints[i].nodes[0];
-      const target = constraints[i].nodes[1];
-      const scenarioList = scenarios.filter((x) => x.testResults.some((y) => y.graphNodeId === source.graphNodeId));
-      for (let j = 0; j < scenarioList.length; j++) {
-        const isExistedFalseResult = scenarioList[j].testResults.some(
-          (x) => x.graphNodeId === target.graphNodeId && x.type === RESULT_TYPE.True
-        );
-        if (!isExistedFalseResult) {
-          scenarioList[j].testResults.push({ graphNodeId: target.graphNodeId, type: RESULT_TYPE.False });
-        }
-
-        const inspection = inspectionDictionary.get(target.graphNodeId) & NODE_INSPECTION.HasRelationInSameGroup;
-        inspectionDictionary.set(target.graphNodeId, inspection);
-      }
-
-      if (
-        scenarioList.some(
-          (x) =>
-            x.testResults.some((y) => y.graphNodeId === target.graphNodeId) &&
-            !x.testResults.some((y) => y.graphNodeId === target.graphNodeId && y.type === RESULT_TYPE.False)
-        )
-      ) {
-        const inspection = inspectionDictionary.get(target.graphNodeId) & NODE_INSPECTION.MConstraintViolation;
-        inspectionDictionary.set(target.graphNodeId, inspection);
-      }
-    }
-
-    return {
-      scenarios,
       inspectionDictionary,
     };
   }

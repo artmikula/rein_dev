@@ -2,7 +2,7 @@
 import Enumerable from 'linq';
 import { CONSTRAINT_TYPE, EXPRESSION_TYPE, GRAPH_NODE_TYPE, OPERATOR_TYPE } from 'features/shared/constants';
 import CauseEffect from './CauseEffect';
-import TestScenarioHelper from './TestScenario/TestScenarioHelper';
+import TestScenarioGenerator from './TestScenario/TestScenarioGenerator';
 import DNFLogicCoverage from './TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 
 class SSMetric {
@@ -198,7 +198,7 @@ class SSMetric {
   }
 
   calculateLogicGraph() {
-    const assertionDictionary = TestScenarioHelper.calculateAssertionDictionary(this.graphLinks, this.effectNodes);
+    const assertionDictionary = TestScenarioGenerator.calculateScenarioDictionary(this.graphLinks, this.effectNodes);
     const expressions = [];
     const groups = new Map(assertionDictionary);
     groups.forEach((value, key) => {

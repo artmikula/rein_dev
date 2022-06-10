@@ -316,32 +316,12 @@ class TestScenarioGenerator {
     };
   }
 
-  buildExpectedResultsOfTestScenario(scenario: ISimpleTestScenario, graphNodes: IGraphNode[] = []) {
-    let result = '';
-    const testResults: any[] = [];
-    const falseResults = testResults.filter((x) => x.type === RESULT_TYPE.False);
-    const basicResults = testResults.filter((x) => x.type === RESULT_TYPE.None || x.type === RESULT_TYPE.True);
-    if (basicResults.length === 0) {
-      return null;
+  buildExpectedResultsOfTestScenario(scenario: ISimpleTestScenario) {
+    if (!scenario.result) {
+      return `!${scenario.targetNodeId}`;
     }
 
-    const firstBasicResultNode = graphNodes.find((x) => x.id === basicResults[0].graphNodeId);
-
-    if (firstBasicResultNode?.nodeId) {
-      result = result.concat(firstBasicResultNode.nodeId);
-    }
-
-    for (let i = 1; i < basicResults.length; i++) {
-      if (falseResults.some((x) => x.graphNodeId === basicResults[i].graphNodeId)) {
-        result = result.concat('!');
-      }
-
-      const basicResultNode = graphNodes.find((x) => x.id === basicResults[i].graphNodeId);
-
-      result = `${result}, ${basicResultNode?.nodeId}`;
-    }
-
-    return result;
+    return scenario.targetNodeId;
   }
 
   combination(inputs = []) {

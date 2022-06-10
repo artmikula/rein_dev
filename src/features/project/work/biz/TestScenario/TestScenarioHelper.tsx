@@ -488,7 +488,7 @@ class TestScenarioHelper {
         } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
           testScenarioItem[column.key] = !!testScenario[column.key];
         } else {
-          const testAssertion = testScenario.testAssertions.find((x: any) => x.graphNode.id === column.key);
+          const testAssertion = testScenario.testAssertions.find((x: any) => x.graphNodeId === column.key);
           if (testAssertion) {
             testScenarioItem[column.key] = testAssertion.result ? 'T' : 'F';
           } else {
