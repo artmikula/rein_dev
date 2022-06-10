@@ -1,12 +1,23 @@
-import PropTypes from 'prop-types';
 import React, { useState } from 'react';
-import Language from 'features/shared/languages/Language';
+import PropTypes from 'prop-types';
 import { Button, TabContent, TabPane, UncontrolledTooltip } from 'reactstrap';
+import Language from 'features/shared/languages/Language';
 import './style.scss';
 
 export default function GridPanelItem(props) {
+  const {
+    isCollapse,
+    isLockedPanel,
+    title,
+    tabs,
+    index,
+    children,
+    onTogglePanel,
+    renderTitle,
+    generateTestCase,
+    isShowGenerateButton,
+  } = props;
   const [activeTab, setActiveTab] = useState(0);
-  const { isCollapse, isLockedPanel, title, tabs, index, children, onTogglePanel, renderTitle, raiseEvent } = props;
 
   const innerRenderTitle = () => {
     if (renderTitle) {
@@ -16,9 +27,22 @@ export default function GridPanelItem(props) {
   };
 
   const _handleGenerateTestCase = () => {
-    setActiveTab(0);
-    if (typeof raiseEvent === 'function') {
-      raiseEvent();
+    if (activeTab !== 0) {
+      setActiveTab(0);
+    }
+    if (typeof generateTestCase === 'function') {
+      generateTestCase();
+    }
+  };
+
+  const _onChangeTab = (tabIndex) => {
+    if (tabIndex !== activeTab) {
+      setActiveTab(tabIndex);
+      if (tabIndex === 0) {
+        if (typeof generateTestCase === 'function') {
+          generateTestCase();
+        }
+      }
     }
   };
 
@@ -38,18 +62,18 @@ export default function GridPanelItem(props) {
                   role="button"
                   tabIndex={index}
                   onKeyPress={() => {}}
-                  onClick={() => setActiveTab(index)}
+                  onClick={() => _onChangeTab(index)}
                 >
                   {index > 0 && <span style={{ borderRight: '2px solid #ccc', margin: '0 8px' }} />}
                   <span className={`collapse-title-tab ${activeTab === index ? 'active' : ''}`}>{tab}</span>
                 </span>
               ))}
             </div>
-            {activeTab === 1 && (
+            {isShowGenerateButton && (
               <Button
-                color="link"
+                color="transparent"
                 size="sm"
-                style={{ padding: 0, fontSize: '0.8rem', border: 0 }}
+                style={{ padding: '0 5px', fontSize: '0.8rem', border: '1px solid #ccc' }}
                 onClick={() => {
                   _handleGenerateTestCase();
                 }}
@@ -102,7 +126,8 @@ GridPanelItem.defaultProps = {
   isLockedPanel: false,
   tabs: [],
   renderTitle: undefined,
-  raiseEvent: undefined,
+  generateTestCase: undefined,
+  isShowGenerateButton: false,
   onTogglePanel: () => {},
 };
 
@@ -114,5 +139,6 @@ GridPanelItem.propTypes = {
   tabs: PropTypes.arrayOf(PropTypes.string),
   index: PropTypes.number.isRequired,
   onTogglePanel: PropTypes.func,
-  raiseEvent: PropTypes.func,
+  generateTestCase: PropTypes.func,
+  isShowGenerateButton: PropTypes.bool,
 };

@@ -72,7 +72,10 @@ class GridPanels extends Component {
     {
       title: 'Test Scenario/Case/Data',
       tabs: [Language.get('testscenarioortestcase'), Language.get('testdata')],
-      children: [<TestScenarioAndCase />, <TestDataTable />],
+      children: [
+        <TestScenarioAndCase />,
+        <TestDataTable onChangeData={(value) => this.setState({ isTestDataChanged: value })} />,
+      ],
     },
   ];
 
@@ -82,6 +85,7 @@ class GridPanels extends Component {
       wrapperHeight: 0,
       panelWidth: 0,
       panelHeight: 0,
+      isTestDataChanged: false,
     };
   }
 
@@ -111,11 +115,15 @@ class GridPanels extends Component {
 
   _generateTestCase = () => {
     const { testDatas } = this.props;
-    eventBus.publish(domainEvents.TEST_DATA_DOMAINEVENT, {
-      action: domainEvents.ACTION.UPDATE,
-      value: { ...testDatas },
-      receivers: [domainEvents.DES.TESTSCENARIOS],
-    });
+    const { isTestDataChanged } = this.state;
+    if (isTestDataChanged) {
+      eventBus.publish(domainEvents.TEST_DATA_DOMAINEVENT, {
+        action: domainEvents.ACTION.UPDATE,
+        value: { ...testDatas },
+        receivers: [domainEvents.DES.TESTSCENARIOS],
+      });
+    }
+    this.setState({ isTestDataChanged: false });
   };
 
   _initLayoutSize = () => {
@@ -203,7 +211,7 @@ class GridPanels extends Component {
 
   render() {
     const { isLockedPanel, layouts, onLayoutChange } = this.props;
-    const { wrapperHeight, panelWidth, panelHeight } = this.state;
+    const { wrapperHeight, panelWidth, panelHeight, isTestDataChanged } = this.state;
     const { gridCols, panelMargin, togglePanelWidth } = GRID_PANEL_SIZE;
 
     return (
@@ -238,7 +246,8 @@ class GridPanels extends Component {
                 index={index}
                 onTogglePanel={() => this._handleTogglePanel(layout.i)}
                 renderTitle={this.panels[index]?.renderTitle}
-                raiseEvent={this._generateTestCase}
+                generateTestCase={this._generateTestCase}
+                isShowGenerateButton={isTestDataChanged}
               >
                 {this.panels[index]?.children}
               </GridPanelItem>

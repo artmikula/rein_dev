@@ -59,6 +59,9 @@ interface ITestScenario {
   isViolated?: boolean;
   targetType?: string;
   isBaseScenario?: boolean;
+
+  // Not sure, to check this prop
+  testResult?: any;
 }
 
 interface ITestData {

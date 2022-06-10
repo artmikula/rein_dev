@@ -100,7 +100,7 @@ class TestDataTable extends Component {
   };
 
   _updateData = (nodeId, type, strength = 1) => {
-    const { testDatas } = this.props;
+    const { testDatas, onChangeData } = this.props;
     const index = testDatas.findIndex((x) => x.nodeId === nodeId);
     const item = { ...testDatas[index] };
     const strengthCase = appConfig.testData[type].find((x) => x.intensity === strength);
@@ -109,6 +109,8 @@ class TestDataTable extends Component {
     item.strength = strength;
     item.trueDatas = strengthCase?.trueData;
     item.falseDatas = strengthCase?.falseData;
+    item.isChanged = true;
+    onChangeData(item.isChanged);
 
     const newTestDatas = TestData.update(testDatas, item, index);
 
@@ -116,11 +118,12 @@ class TestDataTable extends Component {
   };
 
   _onTrueFalseDataChange = (nodeId, valueType, value) => {
-    const { testDatas } = this.props;
+    const { testDatas, onChangeData } = this.props;
     const index = testDatas.findIndex((x) => x.nodeId === nodeId);
     const item = { ...testDatas[index] };
 
     item.isChanged = true;
+    onChangeData(item.isChanged);
 
     switch (valueType) {
       case TESTDATA_TYPE.TrueData:
@@ -268,6 +271,7 @@ TestDataTable.propTypes = {
   workName: PropTypes.string.isRequired,
   testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   setTestDatas: PropTypes.func.isRequired,
+  onChangeData: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
