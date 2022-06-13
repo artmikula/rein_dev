@@ -95,6 +95,10 @@ interface ISimpleTestScenario {
   // Fields for display in table
   scenarioType?: string;
 
+  // Obsolete: fields to since with api
+  // Current: only use for _inspectEffectRelation
+  testResults: ITestResult[];
+
   // methods
   invertedClone: (exceptId?: any) => ISimpleTestScenario;
 }
@@ -122,6 +126,8 @@ export class SimpleTestScenario implements ISimpleTestScenario {
 
   resultType: string;
 
+  testResults: ITestResult[];
+
   isFeasible: boolean | undefined;
 
   targetType: string | undefined;
@@ -145,6 +151,7 @@ export class SimpleTestScenario implements ISimpleTestScenario {
     this.isFeasible = true;
     this.result = true;
     this.resultType = RESULT_TYPE.True;
+    this.testResults = [];
   }
 
   invertedClone = (exceptId?: any) => {

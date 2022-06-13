@@ -1,16 +1,6 @@
 /* eslint-disable no-bitwise */
-import { GRAPH_NODE_TYPE, OPERATOR_TYPE, RESULT_TYPE, SCENARIO_PROPERTIES } from 'features/shared/constants';
-import Enumerable from 'linq';
-import {
-  IGraphLink,
-  IGraphNode,
-  ITestScenario,
-  ITestAssertion,
-  ITestResult,
-  ISimpleTestScenario,
-  SimpleTestScenario,
-} from 'types/models';
-import { v4 as uuid } from 'uuid';
+import { GRAPH_NODE_TYPE } from 'features/shared/constants';
+import { IGraphLink, ITestScenario, ITestAssertion, ISimpleTestScenario, SimpleTestScenario } from 'types/models';
 import FlattenScenarioProcess from './FlattenScenarioProcess';
 
 class TestScenarioGenerator {

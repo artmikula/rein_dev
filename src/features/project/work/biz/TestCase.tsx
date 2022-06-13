@@ -1,7 +1,7 @@
 /* eslint-disable no-loop-func */
 import { CLASSIFY, RESULT_TYPE } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
-import { IGraphNode, ITestScenario, ITestAssertion, ITestCase, ISimpleTestScenario } from 'types/models';
+import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario } from 'types/models';
 import testDataService from './TestData';
 
 interface ITestDataList {

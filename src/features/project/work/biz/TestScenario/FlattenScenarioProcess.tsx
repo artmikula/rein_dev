@@ -1,16 +1,7 @@
-/* eslint-disable no-bitwise */
-import { GRAPH_NODE_TYPE, OPERATOR_TYPE, RESULT_TYPE, SCENARIO_PROPERTIES } from 'features/shared/constants';
-import Enumerable from 'linq';
-import {
-  IGraphLink,
-  IGraphNode,
-  ITestScenario,
-  ITestAssertion,
-  ITestResult,
-  ISimpleTestScenario,
-  SimpleTestScenario,
-} from 'types/models';
 import { v4 as uuid } from 'uuid';
+import Enumerable from 'linq';
+import { OPERATOR_TYPE } from 'features/shared/constants';
+import { ITestAssertion, ISimpleTestScenario } from 'types/models';
 import TestScenarioHelper from './TestScenarioHelper';
 
 export default class FlattenScenarioProcess {
@@ -144,9 +135,5 @@ export default class FlattenScenarioProcess {
 
   findGroupScenario(fragment: ITestAssertion) {
     return this.baseScenarios.find((x) => x.targetNodeId === fragment.nodeId);
-  }
-
-  isGroupFragment(fragment: ITestAssertion) {
-    return !!this.scenarioDictionary.values;
   }
 }

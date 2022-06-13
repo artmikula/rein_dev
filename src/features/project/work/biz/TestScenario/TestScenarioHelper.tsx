@@ -298,7 +298,7 @@ class TestScenarioHelper {
   }
 
   combination(inputs: any[] = []) {
-    const combinations = []; //
+    const combinations = [];
     const { length } = inputs;
     const k = 1 << length;
     for (let i = 0; i < k; i++) {
