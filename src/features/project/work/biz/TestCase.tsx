@@ -64,7 +64,7 @@ class TestCase {
               const newCase: ITestCase = {
                 id: uuid(),
                 testScenarioId: testScenarios[i].id,
-                testScenario: { ...testScenarios[i] },
+                // testScenario: { ...testScenarios[i] },
                 testDatas: [{ graphNodeId: causeAssertions[j]?.graphNodeId, data }],
                 results: [],
               };
