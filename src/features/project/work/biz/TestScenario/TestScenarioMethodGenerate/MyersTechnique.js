@@ -1,7 +1,6 @@
 /* eslint-disable no-bitwise */
-import { GRAPH_NODE_TYPE, NODE_INSPECTION, TEST_SCENARIO_TYPE } from 'features/shared/constants';
+import { GRAPH_NODE_TYPE, TEST_SCENARIO_TYPE } from 'features/shared/constants';
 import appConfig from 'features/shared/lib/appConfig';
-import Enumerable from 'linq';
 import { v4 as uuid } from 'uuid';
 import TestScenarioGenerator from '../TestScenarioGenerator';
 import TestScenarioInspector from '../TestScenarioInspector';

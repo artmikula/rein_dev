@@ -1,6 +1,5 @@
 /* eslint-disable no-bitwise */
 import { CONSTRAINT_TYPE, NODE_INSPECTION, RESULT_TYPE, TEST_SCENARIO_TYPE } from 'features/shared/constants';
-import appConfig from 'features/shared/lib/appConfig';
 import Enumerable from 'linq';
 import { ISimpleTestScenario } from 'types/models';
 import constraintHelper from '../Constraint';
