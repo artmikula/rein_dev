@@ -45,34 +45,6 @@ class MyerTechnique {
   }
 
   updateTestScenario(scenarioDictionary = new Map()) {
-    let inspectionDictionary = new Map();
-    const causeGroupInspection =
-      NODE_INSPECTION.DisconnectedNode | NODE_INSPECTION.MissingIsRelation | NODE_INSPECTION.MissingNotRelation;
-    const effectInspection = NODE_INSPECTION.DisconnectedNode;
-
-    for (let i = 0; i < this.causeNodes.length; i++) {
-      inspectionDictionary.set(this.causeNodes[i].id, causeGroupInspection);
-    }
-
-    for (let i = 0; i < this.groupNodes.length; i++) {
-      inspectionDictionary.set(this.groupNodes[i].id, causeGroupInspection);
-    }
-
-    for (let i = 0; i < this.effectNodes.length; i++) {
-      inspectionDictionary.set(this.effectNodes[i].id, effectInspection);
-    }
-
-    // const effectAssertionDictionary = new Map(
-    //   [...assertionDictionary].filter(([key]) => this.effectNodes.some((y) => y.id === key))
-    // );
-
-    // const tmpScenarioList = [];
-
-    // effectAssertionDictionary.forEach((value) => {
-    //   const merged = this._mergeScenarioFragments(assertionDictionary, value);
-    //   tmpScenarioList.push(...merged);
-    // });
-
     const tmpScenarioList = TestScenarioGenerator.generateScenariosForEffectNodes(
       scenarioDictionary,
       appConfig.showReducedScenariosAndCases
@@ -83,38 +55,17 @@ class MyerTechnique {
       scenario.expectedResults = TestScenarioGenerator.buildExpectedResultsOfTestScenario(scenario, this.graphNodes);
     }
 
-    let testScenarios = [];
     // let index = 0;
-    const orderedTestScenarios = Enumerable.from(tmpScenarioList)
-      .orderBy((x) => x.expectedResults)
-      .toArray();
-
-    for (let i = 0; i < orderedTestScenarios.length; i++) {
-      // add condition in option ShowReducedScenariosAndCases
-      const scenario = orderedTestScenarios[i];
-      scenario.scenarioType = TEST_SCENARIO_TYPE.Myers;
-
-      if (appConfig.showReducedScenariosAndCases || !scenario.isViolated) {
-        // oderedTestScenarios[i].id = ++index;
-        const scenarioInspection = TestScenarioInspector._inspectScenario(scenario, inspectionDictionary);
-        scenario.isViolated = scenarioInspection.violated;
-        inspectionDictionary = scenarioInspection.inspectionDictionary;
-
-        if (!scenario.isViolated) {
-          testScenarios.push(scenario);
-        }
-      }
-    }
-
-    // TODO T4BL-47: Rework inspection, move to TestScenarioInspector
-    const scenarioInspection = TestScenarioInspector._inspectEffectRelation(
-      testScenarios,
+    const scenarioInspection = TestScenarioInspector.runInspections(
+      this.causeNodes,
+      this.groupNodes,
+      this.effectNodes,
       this.constraints,
-      inspectionDictionary
+      tmpScenarioList,
+      appConfig.showReducedScenariosAndCases
     );
 
-    testScenarios = scenarioInspection.scenarios;
-    inspectionDictionary = scenarioInspection.inspectionDictionary;
+    const { testScenarios, inspectionDictionary } = scenarioInspection;
     // testScenarios = TestScenarioHelper.findBaseScenario(testScenarios, this.causeNodes);
 
     inspectionDictionary.forEach((value, key) => {

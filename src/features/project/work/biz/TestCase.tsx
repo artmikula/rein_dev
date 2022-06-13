@@ -57,7 +57,7 @@ class TestCase {
               });
             }
 
-            testCasesOfScenario = [...tmp];
+            testCasesOfScenario = tmp;
           } else {
             const testDataArray: string[] = this._getTrueOrFalseList(testDatas, type);
             testDataArray.forEach((data) => {
@@ -81,7 +81,10 @@ class TestCase {
         }
       }
 
-      totalTCs.push(...testCasesOfScenario);
+      testCasesOfScenario.forEach((tc) => {
+        totalTCs.push(tc);
+      });
+      // totalTCs.push(testCasesOfScenario);
     }
 
     return totalTCs;

@@ -1,10 +1,71 @@
 /* eslint-disable no-bitwise */
-import { CONSTRAINT_TYPE, NODE_INSPECTION, RESULT_TYPE } from 'features/shared/constants';
+import { CONSTRAINT_TYPE, NODE_INSPECTION, RESULT_TYPE, TEST_SCENARIO_TYPE } from 'features/shared/constants';
+import appConfig from 'features/shared/lib/appConfig';
+import Enumerable from 'linq';
 import { ISimpleTestScenario } from 'types/models';
 import constraintHelper from '../Constraint';
 
 class TestScenarioInspector {
-  _inspectScenario(scenario: ISimpleTestScenario, constraints: any[], inspectionDictionary = new Map()) {
+  runInspections(
+    causeNodes: any[],
+    groupNodes: any[],
+    effectNodes: any[],
+    constraints: any[],
+    tmpScenarioList: any[],
+    showReducedScenariosAndCases: boolean
+  ) {
+    let inspectionDictionary: any = new Map();
+    const causeGroupInspection =
+      NODE_INSPECTION.DisconnectedNode | NODE_INSPECTION.MissingIsRelation | NODE_INSPECTION.MissingNotRelation;
+    const effectInspection = NODE_INSPECTION.DisconnectedNode;
+
+    for (let i = 0; i < causeNodes.length; i++) {
+      inspectionDictionary.set(causeNodes[i].id, causeGroupInspection);
+    }
+
+    for (let i = 0; i < groupNodes.length; i++) {
+      inspectionDictionary.set(groupNodes[i].id, causeGroupInspection);
+    }
+
+    for (let i = 0; i < effectNodes.length; i++) {
+      inspectionDictionary.set(effectNodes[i].id, effectInspection);
+    }
+
+    const orderedTestScenarios = Enumerable.from(tmpScenarioList)
+      .orderBy((x) => x.expectedResults)
+      .toArray();
+
+    let testScenarios = [];
+
+    for (let i = 0; i < orderedTestScenarios.length; i++) {
+      // add condition in option ShowReducedScenariosAndCases
+      const scenario = orderedTestScenarios[i];
+      scenario.scenarioType = TEST_SCENARIO_TYPE.Myers;
+
+      if (showReducedScenariosAndCases || !scenario.isViolated) {
+        // oderedTestScenarios[i].id = ++index;
+        const scenarioInspection = this._inspectScenario(scenario, inspectionDictionary);
+        scenario.isViolated = scenarioInspection.violated;
+        inspectionDictionary = scenarioInspection.inspectionDictionary;
+
+        if (!scenario.isViolated) {
+          testScenarios.push(scenario);
+        }
+      }
+    }
+
+    const scenarioInspection = this._inspectEffectRelation(testScenarios, constraints, inspectionDictionary);
+
+    testScenarios = scenarioInspection.scenarios;
+    inspectionDictionary = scenarioInspection.inspectionDictionary;
+
+    return {
+      testScenarios,
+      inspectionDictionary,
+    };
+  }
+
+  _inspectScenario(scenario: ISimpleTestScenario, constraints: any[], inspectionDictionary: any = new Map()) {
     const { testAssertions, isViolated, targetGraphNodeId: resultGraphNodeId } = scenario;
 
     let violated = isViolated;

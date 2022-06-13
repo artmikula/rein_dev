@@ -142,7 +142,7 @@ export class SimpleTestScenario implements ISimpleTestScenario {
     this.id = uuid();
     this.key = target.id;
     this.targetNodeId = target.nodeId;
-    this.targetGraphNodeId = target.graphNode?.id;
+    this.targetGraphNodeId = target.id;
     this.targetType = target.targetType;
 
     this.isEffectAssertion = isEffectAssertion;
