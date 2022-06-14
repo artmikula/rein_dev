@@ -39,8 +39,8 @@ class Constraint {
   _validateRequire(scenario, constraint) {
     const source = constraint.nodes[0];
     const target = constraint.nodes[1];
-    const assertionSource = scenario.testAssertions.find((x) => x.graphNode.id === source.graphNodeId);
-    const assertionTarget = scenario.testAssertions.find((x) => x.graphNode.id === target.graphNodeId);
+    const assertionSource = scenario.testAssertions.find((x) => x.graphNodeId === source.graphNodeId);
+    const assertionTarget = scenario.testAssertions.find((x) => x.graphNodeId === target.graphNodeId);
 
     if (
       assertionSource &&
@@ -60,7 +60,7 @@ class Constraint {
 
   _validateInclusive(scenario, constraint) {
     const trueCount = Enumerable.from(constraint.nodes).count((x) =>
-      scenario.testAssertions.some((y) => y.graphNode.id === x.graphNodeId && y.result)
+      scenario.testAssertions.some((y) => y.graphNodeId === x.graphNodeId && y.result)
     );
 
     return trueCount >= 1 || scenario.testAssertions.length < 2;
@@ -68,7 +68,7 @@ class Constraint {
 
   _validateExclusive(scenario, constraint) {
     const trueCount = Enumerable.from(constraint.nodes).count((x) =>
-      scenario.testAssertions.some((y) => y.graphNode.id === x.graphNodeId && y.result)
+      scenario.testAssertions.some((y) => y.graphNodeId === x.graphNodeId && y.result)
     );
 
     return trueCount <= 1;
@@ -80,7 +80,7 @@ class Constraint {
     const { nodes } = constraint;
 
     for (let i = 0; i < nodes.length; i++) {
-      const assertionResult = scenario.testAssertions.find((x) => x.graphNode.id === nodes[i].graphNodeId);
+      const assertionResult = scenario.testAssertions.find((x) => x.graphNodeId === nodes[i].graphNodeId);
 
       if (assertionResult && assertionResult.result) {
         trueCount++;

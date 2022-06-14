@@ -43,6 +43,7 @@ class TestScenarioInspector {
 
       if (showReducedScenariosAndCases || !scenario.isViolated) {
         // oderedTestScenarios[i].id = ++index;
+        // may need to add props (constraints) to _inspectScenario func
         const scenarioInspection = this._inspectScenario(scenario, inspectionDictionary);
         scenario.isViolated = scenarioInspection.violated;
         inspectionDictionary = scenarioInspection.inspectionDictionary;
