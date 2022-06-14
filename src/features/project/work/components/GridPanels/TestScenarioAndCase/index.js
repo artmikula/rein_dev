@@ -2,21 +2,13 @@
 import Download from 'downloadjs';
 import testCaseHelper from 'features/project/work/biz/TestCase';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
-import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
 import reInCloudService from 'features/project/work/services/reInCloudService';
 import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import { setGraph } from 'features/project/work/slices/workSlice';
-import {
-  FILE_NAME,
-  REIN_SHORTCUT_CODE,
-  TEST_CASE_METHOD,
-  TEST_CASE_SHORTCUT,
-  TEST_CASE_SHORTCUT_CODE,
-} from 'features/shared/constants';
+import { FILE_NAME, REIN_SHORTCUT_CODE, TEST_CASE_SHORTCUT, TEST_CASE_SHORTCUT_CODE } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
-import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
 import Mousetrap from 'mousetrap';
@@ -135,16 +127,16 @@ class TestScenarioAndCase extends Component {
     }
   };
 
-  _calculateTestScenarioAndCase = (domainAction) => {
+  _calculateTestScenarioAndCase = async (domainAction) => {
     const { graph, testDatas, setGraph, match } = this.props;
     const { workId } = match.params;
     let scenarioAndGraphNodes = null;
 
-    if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
-      scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
-    } else {
-      scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
-    }
+    // if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
+    // scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes)
+    // } else {
+    scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
+    // }
 
     const newTestScenarios = scenarioAndGraphNodes.scenarios
       .filter((x) => !x.isViolated)
@@ -152,22 +144,23 @@ class TestScenarioAndCase extends Component {
         const scenario = {
           ...x,
           testAssertions: x.testAssertions.map((y) => {
-            const graphNode = graph.graphNodes.find((x) => x.id === y.graphNode.id);
+            const graphNode = graph.graphNodes.find((x) => x.nodeId === y.graphNodeId);
             return {
               ...y,
               result: y.result,
-              graphNodeId: y.graphNode.id,
+              graphNodeId: y.graphNodeId,
               graphNode,
               workId,
               testScenarioId: x.id,
             };
           }),
-          testResults: x.testResults.map((y) => {
-            return {
-              ...y,
-              workId,
-            };
-          }),
+          workId,
+          // testResults: x.testResults.map((y) => {
+          //   return {
+          //     ...y,
+          //     workId,
+          //   };
+          // }),
         };
 
         return scenario;

@@ -10,6 +10,7 @@ import {
 import Enumerable from 'linq';
 import { v4 as uuid } from 'uuid';
 import constraintHelper from '../../Constraint';
+import TestScenarioGenerator from '../TestScenarioGenerator';
 import TestScenarioHelper from '../TestScenarioHelper';
 import MyersTechnique from './MyersTechnique';
 
@@ -34,7 +35,7 @@ class DNFLogicCoverage {
 
   buildTestScenario(graphLinks = [], constraints = [], graphNodes = []) {
     this._initValue(graphLinks, constraints, graphNodes);
-    const assertionDictionary = TestScenarioHelper.buildAssertionDictionary(this.graphLinks);
+    const assertionDictionary = TestScenarioGenerator.calculateScenarioDictionary(this.graphLinks, this.effectNodes);
     return this._updateMumcutTestScenario(assertionDictionary);
   }
 

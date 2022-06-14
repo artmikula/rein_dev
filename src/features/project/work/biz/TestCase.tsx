@@ -1,7 +1,7 @@
 /* eslint-disable no-loop-func */
 import { CLASSIFY, RESULT_TYPE } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
-import { IGraphNode, ITestScenario, ITestAssertion, ITestCase } from 'types/models';
+import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario } from 'types/models';
 import testDataService from './TestData';
 
 interface ITestDataList {
@@ -18,7 +18,7 @@ interface ITestDataList {
 
 class TestCase {
   updateTestCase(
-    testScenarios: ITestScenario[] = [],
+    testScenarios: ISimpleTestScenario[] = [],
     testDataList: ITestDataList[] = [],
     graphNodes: IGraphNode[] = []
   ) {
@@ -27,7 +27,8 @@ class TestCase {
       let testCasesOfScenario: ITestCase[] = [];
 
       if (!testScenarios[i].isViolated) {
-        const causeAssertions: ITestAssertion[] = testScenarios[i].testAssertions.filter((x) => x.graphNode);
+        const causeAssertions: ITestAssertion[] = testScenarios[i].testAssertions.filter((x) => x.graphNodeId);
+
         for (let j = 0; j < causeAssertions.length; j++) {
           const causeAssertion: ITestAssertion = causeAssertions[j];
           const { testDatas, type }: { testDatas: string; type: string } = testDataService.getTestData(
@@ -42,41 +43,37 @@ class TestCase {
               testDataArray.forEach((data) => {
                 const clone: ITestCase = this._clone(testCasesOfScenario[k]);
                 clone.id = uuid();
-                const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j]?.graphNode?.id);
+                const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j]?.graphNodeId);
                 if (testDataInCase) {
                   testDataInCase.data = data;
                 } else {
                   clone.testDatas.push({
-                    graphNodeId: causeAssertions[j]?.graphNode?.id || causeAssertions[j]?.graphNodeId,
+                    graphNodeId: causeAssertions[j]?.graphNodeId,
                     data,
+                    nodeId: causeAssertions[j]?.nodeId,
                   });
                 }
                 tmp.push(clone);
               });
             }
 
-            testCasesOfScenario = [...tmp];
+            testCasesOfScenario = tmp;
           } else {
             const testDataArray: string[] = this._getTrueOrFalseList(testDatas, type);
             testDataArray.forEach((data) => {
               const newCase: ITestCase = {
                 id: uuid(),
                 testScenarioId: testScenarios[i].id,
-                testScenario: { ...testScenarios[i] },
-                testDatas: [
-                  { graphNodeId: causeAssertions[j]?.graphNode?.id || causeAssertions[j]?.graphNodeId, data },
-                ],
+                // testScenario: { ...testScenarios[i] },
+                testDatas: [{ graphNodeId: causeAssertions[j]?.graphNodeId, data }],
                 results: [],
               };
-              const { testResults } = testScenarios[i];
-              for (let k = 0; k < testResults.length; k++) {
-                if (testResults[k].type === RESULT_TYPE.False) {
-                  newCase.results.push(
-                    `NOT(${this._getDescriptionOfGraphNode(graphNodes, testResults[k].graphNodeId)})`
-                  );
-                } else {
-                  newCase.results.push(this._getDescriptionOfGraphNode(graphNodes, testResults[k].graphNodeId));
-                }
+              if (testScenarios[i].resultType === RESULT_TYPE.False) {
+                newCase.results.push(
+                  `NOT(${this._getDescriptionOfGraphNode(graphNodes, testScenarios[i].targetGraphNodeId)})`
+                );
+              } else {
+                newCase.results.push(this._getDescriptionOfGraphNode(graphNodes, testScenarios[i].targetGraphNodeId));
               }
               testCasesOfScenario.push(newCase);
             });
@@ -84,14 +81,17 @@ class TestCase {
         }
       }
 
-      totalTCs.push(...testCasesOfScenario);
+      testCasesOfScenario.forEach((tc) => {
+        totalTCs.push(tc);
+      });
+      // totalTCs.push(testCasesOfScenario);
     }
 
     return totalTCs;
   }
 
   createTestCase = (
-    testScenarios: ITestScenario[] = [],
+    testScenarios: ISimpleTestScenario[] = [],
     testDataList: ITestDataList[] = [],
     graphNodes: IGraphNode[] = []
   ) => {
@@ -121,14 +121,14 @@ class TestCase {
               ],
               results: [],
             };
-            const { testResults } = testScenario;
-            testResults.forEach((testResult) => {
-              if (testResult.type === RESULT_TYPE.False) {
-                testCase.results.push(`NOT(${this._getDescriptionOfGraphNode(graphNodes, testResult.graphNodeId)})`);
-              } else {
-                testCase.results.push(this._getDescriptionOfGraphNode(graphNodes, testResult.graphNodeId));
-              }
-            });
+            if (testScenario.resultType === RESULT_TYPE.False) {
+              testCase.results.push(
+                `NOT(${this._getDescriptionOfGraphNode(graphNodes, testScenario.targetGraphNodeId)})`
+              );
+            } else {
+              testCase.results.push(this._getDescriptionOfGraphNode(graphNodes, testScenario.targetGraphNodeId));
+            }
+
             testCases.push(testCase);
           } else {
             testCases.forEach((testCase) => {
@@ -147,7 +147,7 @@ class TestCase {
                 testCases.push(newTestCase);
               } else {
                 testCase.testDatas.push({
-                  graphNodeId: causeAssertion.graphNode?.id || causeAssertion.graphNodeId,
+                  graphNodeId: causeAssertion.graphNodeId,
                   data: testValue,
                 });
               }

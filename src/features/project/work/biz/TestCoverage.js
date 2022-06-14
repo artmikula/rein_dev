@@ -153,12 +153,15 @@ class TestCoverage {
     const unCheckedCases = this.testCases.filter((x) => !x.isSelected);
 
     const allResults = Enumerable.from(this.testScenarios)
+      .select((x) => {
+        return { graphNodeId: x.targetGraphNodeId, type: x.resultType };
+      })
       .selectMany((x) => x.testResults)
       .toArray();
     const exceptedEffects = [...this.effectNodes.filter((x) => !allResults.some((y) => y.graphNodeId === x.id))];
 
     unCheckedCases.forEach((unCheckedCase) => {
-      const resultIds = unCheckedCase.testScenario.testResults.map((x) => x.graphNodeId);
+      const resultIds = [unCheckedCase.testScenario.targetGraphNodeId];
       const results = this.effectNodes.filter((x) => resultIds.some((y) => x.id === y));
 
       results.forEach((result) => {

@@ -1,3 +1,6 @@
+import { uuid } from 'features/project/work/components/GridPanels/Graph/lib/cytoscapejs/util';
+import { RESULT_TYPE } from 'features/shared/constants';
+
 interface IGraphNode {
   id: string;
   definition: string;
@@ -33,8 +36,11 @@ interface ITestResult {
 }
 
 interface ITestAssertion {
-  graphNodeId: string;
+  graphNodeId: string; // guid
+  nodeId?: string; // Node definition name: C1, C2...
   result: boolean;
+  // in raw assertion, result true means positive link, false means negative link,
+  // ex: E1 OR !E2 will become scenario with 2 assertions OR(E1: true, E2: false)
   workId?: string;
   testScenarioId?: string;
   graphNode?: IGraphNode;
@@ -61,6 +67,40 @@ interface ITestScenario {
 interface ITestData {
   graphNodeId: string;
   data: string;
+  nodeId?: string;
+}
+
+interface ISimpleTestScenario {
+  // basic fields
+  id: string;
+  key: string;
+  targetNodeId: string;
+  targetGraphNodeId: string;
+  testAssertions: ITestAssertion[];
+
+  result: boolean; // expected value of Target, should be true if is EffectAssertion
+  resultType: string;
+
+  isFeasible?: boolean;
+  targetType?: string;
+  isEffectAssertion?: boolean;
+
+  // Other fields for graph and inspetion
+  isBaseScenario?: boolean;
+  isViolated?: boolean;
+
+  // Fields for generate process
+  expectedResults?: string; // Ex: E1, or !E1
+
+  // Fields for display in table
+  scenarioType?: string;
+
+  // Obsolete: fields to since with api
+  // Current: only use for _inspectEffectRelation
+  testResults: ITestResult[];
+
+  // methods
+  invertedClone: (exceptId?: any) => ISimpleTestScenario;
 }
 
 interface ITestCase {
@@ -68,7 +108,72 @@ interface ITestCase {
   testScenarioId: string;
   results: string[];
   testDatas: ITestData[];
-  testScenario?: ITestScenario;
+  testScenario?: ISimpleTestScenario;
 }
 
-export type { IGraphLink, ITestScenario, IGraphNode, ITestAssertion, ITestResult, ITestData, ITestCase };
+export class SimpleTestScenario implements ISimpleTestScenario {
+  id: string;
+
+  key: string;
+
+  targetGraphNodeId: string;
+
+  targetNodeId: string;
+
+  testAssertions: ITestAssertion[];
+
+  result: boolean;
+
+  resultType: string;
+
+  testResults: ITestResult[];
+
+  isFeasible: boolean | undefined;
+
+  targetType: string | undefined;
+
+  isEffectAssertion: boolean | undefined;
+
+  isBaseScenario: boolean | undefined;
+
+  isViolated: boolean | undefined;
+
+  constructor(target: any, isEffectAssertion: boolean, testAssertions: ITestAssertion[]) {
+    this.id = uuid();
+    this.key = target.id;
+    this.targetNodeId = target.nodeId;
+    this.targetGraphNodeId = target.id;
+    this.targetType = target.targetType;
+
+    this.isEffectAssertion = isEffectAssertion;
+    this.testAssertions = testAssertions;
+
+    this.isFeasible = true;
+    this.result = true;
+    this.resultType = RESULT_TYPE.True;
+    this.testResults = [];
+  }
+
+  invertedClone = (exceptId?: any) => {
+    const testAssertions = this.testAssertions.map((x) => {
+      const result = x.nodeId === exceptId ? x.result : !x.result;
+      return { ...x, result, testScenarioId: this.id };
+    });
+
+    return {
+      ...this,
+      testAssertions,
+    };
+  };
+}
+
+export type {
+  IGraphLink,
+  ITestScenario,
+  IGraphNode,
+  ITestAssertion,
+  ITestResult,
+  ITestData,
+  ITestCase,
+  ISimpleTestScenario,
+};
