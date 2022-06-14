@@ -1,13 +1,13 @@
 import { COMPLEX_LOGICAL, TEST_CASE_METHOD } from '../constants';
 
 /**
- * @type {{version: string, deviceId: string}
+ * @type {version: string, deviceId: string}
  */
 
 export const defaultOption = {
   general: {
     testCaseMethod: TEST_CASE_METHOD.MyersTechnique,
-    viewOmmited: true,
+    viewOmitted: true,
   },
   graph: {
     nodeSize: 50,

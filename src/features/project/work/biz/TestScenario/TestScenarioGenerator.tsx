@@ -64,7 +64,7 @@ class TestScenarioGenerator {
 
   generateScenariosForEffectNodes(
     scenarioDictionary: Map<string, ISimpleTestScenario>,
-    showOmmittedTestCases = false
+    showOmittedTestCases = false
   ): ISimpleTestScenario[] {
     // assertionDictionary: all assertions for Effect, Group
     // Ex: Or(C2:F,C1:T) = E1
@@ -81,7 +81,7 @@ class TestScenarioGenerator {
 
     for (let i = 0; i < effectScenarios.length; i++) {
       const scenario = effectScenarios[i];
-      const process = new FlattenScenarioProcess(scenario, scenarioDictionary, showOmmittedTestCases);
+      const process = new FlattenScenarioProcess(scenario, scenarioDictionary, showOmittedTestCases);
       process.run();
 
       process.resultList.forEach((tc) => {
