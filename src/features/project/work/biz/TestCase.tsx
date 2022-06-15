@@ -1,5 +1,5 @@
 /* eslint-disable no-loop-func */
-import { CLASSIFY, RESULT_TYPE } from 'features/shared/constants';
+import { CLASSIFY, RESULT_TYPE, TEST_CASE_LIMITATION } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
 import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario } from 'types/models';
 import testDataService from './TestData';
@@ -39,22 +39,24 @@ class TestCase {
           if (testCasesOfScenario.length > 0) {
             const tmp: ITestCase[] = [];
             for (let k = 0; k < testCasesOfScenario.length; k++) {
-              const testDataArray: string[] = this._getTrueOrFalseList(testDatas, type);
-              testDataArray.forEach((data) => {
-                const clone: ITestCase = this._clone(testCasesOfScenario[k]);
-                clone.id = uuid();
-                const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j]?.graphNodeId);
-                if (testDataInCase) {
-                  testDataInCase.data = data;
-                } else {
-                  clone.testDatas.push({
-                    graphNodeId: causeAssertions[j]?.graphNodeId,
-                    data,
-                    nodeId: causeAssertions[j]?.nodeId,
-                  });
-                }
-                tmp.push(clone);
-              });
+              if (k < TEST_CASE_LIMITATION) {
+                const testDataArray: string[] = this._getTrueOrFalseList(testDatas, type);
+                testDataArray.forEach((data) => {
+                  const clone: ITestCase = this._clone(testCasesOfScenario[k]);
+                  clone.id = uuid();
+                  const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j]?.graphNodeId);
+                  if (testDataInCase) {
+                    testDataInCase.data = data;
+                  } else {
+                    clone.testDatas.push({
+                      graphNodeId: causeAssertions[j]?.graphNodeId,
+                      data,
+                      nodeId: causeAssertions[j]?.nodeId,
+                    });
+                  }
+                  tmp.push(clone);
+                });
+              }
             }
 
             testCasesOfScenario = tmp;
