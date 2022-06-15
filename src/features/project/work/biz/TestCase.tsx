@@ -38,25 +38,25 @@ class TestCase {
 
           if (testCasesOfScenario.length > 0) {
             const tmp: ITestCase[] = [];
-            for (let k = 0; k < testCasesOfScenario.length; k++) {
-              if (k < TEST_CASE_LIMITATION) {
-                const testDataArray: string[] = this._getTrueOrFalseList(testDatas, type);
-                testDataArray.forEach((data) => {
-                  const clone: ITestCase = this._clone(testCasesOfScenario[k]);
-                  clone.id = uuid();
-                  const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j]?.graphNodeId);
-                  if (testDataInCase) {
-                    testDataInCase.data = data;
-                  } else {
-                    clone.testDatas.push({
-                      graphNodeId: causeAssertions[j]?.graphNodeId,
-                      data,
-                      nodeId: causeAssertions[j]?.nodeId,
-                    });
-                  }
-                  tmp.push(clone);
-                });
-              }
+            const maxNumberOfTestCases =
+              testCasesOfScenario.length < TEST_CASE_LIMITATION ? testCasesOfScenario.length : TEST_CASE_LIMITATION;
+            for (let k = 0; k < maxNumberOfTestCases; k++) {
+              const testDataArray: string[] = this._getTrueOrFalseList(testDatas, type);
+              testDataArray.forEach((data) => {
+                const clone: ITestCase = this._clone(testCasesOfScenario[k]);
+                clone.id = uuid();
+                const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j]?.graphNodeId);
+                if (testDataInCase) {
+                  testDataInCase.data = data;
+                } else {
+                  clone.testDatas.push({
+                    graphNodeId: causeAssertions[j]?.graphNodeId,
+                    data,
+                    nodeId: causeAssertions[j]?.nodeId,
+                  });
+                }
+                tmp.push(clone);
+              });
             }
 
             testCasesOfScenario = tmp;
