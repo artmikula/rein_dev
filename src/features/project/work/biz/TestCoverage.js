@@ -2,6 +2,7 @@
 import { COMPLEX_LOGICAL, COVERAGE_ASPECT, GRAPH_NODE_TYPE } from 'features/shared/constants';
 import appConfig from 'features/shared/lib/appConfig';
 import Enumerable from 'linq';
+import TestCase from './TestCase';
 
 class TestCoverage {
   constructor() {
@@ -66,20 +67,26 @@ class TestCoverage {
 
     const checkedCases = this.testCases.filter((x) => x.isSelected);
     checkedCases.forEach((checkedCase) => {
-      const testAssertions = checkedCase.testScenario.testAssertions.filter(
-        (x) => x.graphNode && x.graphNode.type === GRAPH_NODE_TYPE.CAUSE
+      const testAssertions = checkedCase.testScenario.testAssertions.filter((x) =>
+        this.causeNodes.some((causeNode) => causeNode.id === x.graphNodeId)
       );
 
       testAssertions.forEach((testAssertion) => {
         if (testAssertion.result) {
-          trueCauses.push(testAssertion);
+          const isExists = trueCauses.some((trueCause) => trueCause.graphNodeId === testAssertion.graphNodeId);
+          if (!isExists) {
+            trueCauses.push(testAssertion);
+          }
         } else {
-          falseCauses.push(testAssertion);
+          const isExists = falseCauses.some((falseCause) => falseCause.graphNodeId === testAssertion.graphNodeId);
+          if (!isExists) {
+            falseCauses.push(testAssertion);
+          }
         }
       });
     });
 
-    const intersectsCause = trueCauses.filter((x) => falseCauses.some((y) => x.graphNode.id === y.graphNode.id));
+    const intersectsCause = trueCauses.filter((x) => falseCauses.some((y) => x.graphNodeId === y.graphNodeId));
 
     return {
       numerator: intersectsCause.length,
@@ -97,50 +104,67 @@ class TestCoverage {
 
     const checkedCases = this.testCases.filter((x) => x.isSelected);
     checkedCases.forEach((checkedCase) => {
-      const testAssertions = checkedCase.testScenario.testAssertions.filter(
-        (x) => x.graphNode && x.graphNode.type === GRAPH_NODE_TYPE.CAUSE
+      const testAssertions = checkedCase.testScenario.testAssertions.filter((x) =>
+        this.causeNodes.some((causeNode) => causeNode.id === x.graphNodeId)
       );
 
       testAssertions.forEach((testAssertion) => {
+        const testData = checkedCase.testDatas.find((x) => x.graphNodeId === testAssertion.graphNodeId);
         if (testAssertion.result) {
-          if (!trueDatas.has(testAssertion.graphNode.id)) {
-            trueDatas.set(testAssertion.graphNode.id, []);
+          if (!trueDatas.has(testAssertion.graphNodeId)) {
+            trueDatas.set(testAssertion.graphNodeId, []);
           }
 
-          const value = trueDatas.get(testAssertion.graphNode.id);
-          value.push(checkedCase.testDatas.find((x) => x.graphNodeId === testAssertion.graphNode.id));
-          trueDatas.set(testAssertion.graphNode.id, value);
+          const value = trueDatas.get(testAssertion.graphNodeId);
+          const isExists = value.includes(testData.data);
+          if (!isExists) {
+            value.push(testData.data);
+            trueDatas.set(testAssertion.graphNodeId, value);
+          }
         } else {
-          if (!falseDatas.has(testAssertion.graphNode.id)) {
-            falseDatas.set(testAssertion.graphNode.id, []);
+          if (!falseDatas.has(testAssertion.graphNodeId)) {
+            falseDatas.set(testAssertion.graphNodeId, []);
           }
 
-          const value = falseDatas.get(testAssertion.graphNode.id);
-          value.push(checkedCase.testDatas.find((x) => x.graphNodeId === testAssertion.graphNode.id));
-          falseDatas.set(testAssertion.graphNode.id, value);
+          const value = falseDatas.get(testAssertion.graphNodeId);
+          const isExists = value.includes(testData.data);
+          if (!isExists) {
+            value.push(testData.data);
+            falseDatas.set(testAssertion.graphNodeId, value);
+          }
         }
       });
 
       trueDatas.forEach((value, key) => {
-        const cause = this.causeNodes.find((x) => x.id === key);
-        const testData = this.testDatas.find((x) => x.nodeId === cause.nodeId);
-        const trueDataArray = testData.trueDatas ? testData.trueDatas.split(',') : [''];
-        if (Enumerable.from(trueDataArray).sequenceEqual(value)) {
-          trueCauses.push(key);
+        const causeNode = this.causeNodes.find((causeNode) => causeNode.id === key);
+        const testData = this.testDatas.find((x) => x.nodeId === causeNode?.nodeId);
+        const trueDataArray = testData?.trueDatas
+          ? TestCase.convertTestDataToList(testData.trueDatas, testData?.type)
+          : [''];
+        if (Enumerable.from(trueDataArray.sort()).sequenceEqual(value.sort())) {
+          const isExists = trueCauses.includes(key);
+          if (!isExists) {
+            trueCauses.push(key);
+          }
         }
       });
 
       falseDatas.forEach((value, key) => {
-        const cause = this.causeNodes.find((x) => x.id === key);
-        const testData = this.testDatas.find((x) => x.nodeId === cause.nodeId);
-        const trueDataArray = testData.falseDatas ? testData.falseDatas.split(',') : [''];
-        if (Enumerable.from(trueDataArray).sequenceEqual(value)) {
-          falseDatas.push(key);
+        const causeNode = this.causeNodes.find((causeNode) => causeNode.id === key);
+        const testData = this.testDatas.find((x) => x.nodeId === causeNode?.nodeId);
+        const falseDataArray = testData?.falseDatas
+          ? TestCase.convertTestDataToList(testData.falseDatas, testData?.type)
+          : [''];
+        if (Enumerable.from(falseDataArray.sort()).sequenceEqual(value.sort())) {
+          const isExists = falseCauses.includes(key);
+          if (!isExists) {
+            falseCauses.push(key);
+          }
         }
       });
     });
 
-    const intersectsCause = trueCauses.filter((x) => falseCauses.some((y) => x.graphNode.id === y.graphNode.id));
+    const intersectsCause = trueCauses.filter((x) => falseCauses.includes(x));
 
     return {
       numerator: intersectsCause.length,
@@ -151,28 +175,29 @@ class TestCoverage {
   calculateCoverageByEffect() {
     const effects = this.effectNodes.length;
     const unCheckedCases = this.testCases.filter((x) => !x.isSelected);
-
-    const allResults = Enumerable.from(this.testScenarios)
-      .select((x) => {
-        return { graphNodeId: x.targetGraphNodeId, type: x.resultType };
-      })
-      .selectMany((x) => x.testResults)
-      .toArray();
-    const exceptedEffects = [...this.effectNodes.filter((x) => !allResults.some((y) => y.graphNodeId === x.id))];
+    const notConnectedEffects = this.effectNodes.filter(
+      (effectNode) => !this.testScenarios.some((testScenario) => testScenario.targetGraphNodeId === effectNode.id)
+    );
+    const exceptedEffects = new Map();
 
     unCheckedCases.forEach((unCheckedCase) => {
-      const resultIds = [unCheckedCase.testScenario.targetGraphNodeId];
-      const results = this.effectNodes.filter((x) => resultIds.some((y) => x.id === y));
+      const results = this.effectNodes.find((x) => x.id === unCheckedCase.testScenario.targetGraphNodeId);
 
-      results.forEach((result) => {
-        if (!exceptedEffects.some((x) => x.id === result.id)) {
-          exceptedEffects.push(result);
+      if (results) {
+        if (!exceptedEffects.has(results.id)) {
+          exceptedEffects.set(results.id, results.nodeId);
         }
-      });
+      }
+    });
+
+    notConnectedEffects.forEach((effect) => {
+      if (!exceptedEffects.has(effect.id)) {
+        exceptedEffects.set(effect.id, effect.nodeId);
+      }
     });
 
     return {
-      numerator: effects - exceptedEffects.length,
+      numerator: effects - exceptedEffects.size,
       denominator: effects,
     };
   }
