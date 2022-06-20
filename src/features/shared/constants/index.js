@@ -399,3 +399,5 @@ export const SORT_DEFAULT = {
   column: 'lastModifiedDate',
   direction: SORT_DIRECTION.DESC,
 };
+
+export const TEST_CASE_LIMITATION = 100;

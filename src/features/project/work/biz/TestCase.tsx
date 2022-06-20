@@ -1,5 +1,5 @@
 /* eslint-disable no-loop-func */
-import { CLASSIFY, RESULT_TYPE } from 'features/shared/constants';
+import { CLASSIFY, RESULT_TYPE, TEST_CASE_LIMITATION } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
 import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario } from 'types/models';
 import testDataService from './TestData';
@@ -38,8 +38,10 @@ class TestCase {
 
           if (testCasesOfScenario.length > 0) {
             const tmp: ITestCase[] = [];
-            for (let k = 0; k < testCasesOfScenario.length; k++) {
-              const testDataArray: string[] = this._getTrueOrFalseList(testDatas, type);
+            const maxNumberOfTestCases =
+              testCasesOfScenario.length < TEST_CASE_LIMITATION ? testCasesOfScenario.length : TEST_CASE_LIMITATION;
+            for (let k = 0; k < maxNumberOfTestCases; k++) {
+              const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
               testDataArray.forEach((data) => {
                 const clone: ITestCase = this._clone(testCasesOfScenario[k]);
                 clone.id = uuid();
@@ -59,7 +61,7 @@ class TestCase {
 
             testCasesOfScenario = tmp;
           } else {
-            const testDataArray: string[] = this._getTrueOrFalseList(testDatas, type);
+            const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
             testDataArray.forEach((data) => {
               const newCase: ITestCase = {
                 id: uuid(),
@@ -106,7 +108,7 @@ class TestCase {
           testDataList,
           causeAssertion
         );
-        const convertTestValueToArray = this._getTrueOrFalseList(testDatas, type);
+        const convertTestValueToArray = this.convertTestDataToList(testDatas, type);
         convertTestValueToArray.forEach((testValue) => {
           if (index === 0) {
             const testCase: ITestCase = {
@@ -177,7 +179,7 @@ class TestCase {
     return arr.map((x) => `[${x}]`);
   };
 
-  _getTrueOrFalseList(datas: string = '', type: string) {
+  convertTestDataToList(datas: string = '', type: string = ''): string[] {
     if (datas) {
       if (type === 'Tupple') {
         return this._splitTupple(datas);
