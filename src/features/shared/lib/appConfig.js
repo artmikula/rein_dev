@@ -1,7 +1,9 @@
 import { COMPLEX_LOGICAL, TEST_CASE_METHOD } from '../constants';
 
 /**
- * @type {{version: string, deviceId: string}
+ * @type {{
+ *  version: string, deviceId: string, general: any, graph: any, similarity: any, testCoverage: any, testData: any
+ * }}
  */
 
 export const defaultOption = {
