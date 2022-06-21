@@ -198,15 +198,12 @@ class TestBasis extends Component {
       const currentPlainText = currentContent.getPlainText();
       const prevContent = editorState.getCurrentContent();
       const prevPlainText = prevContent.getPlainText();
-
+      // check if delete definition
       if (currentPlainText.length !== prevPlainText.length) {
-        // check if delete definition
-        if (currentPlainText.length !== prevPlainText.length) {
-          const removedEntities = TestBasisManager.findRemovedEntities(drawContent);
-          removedEntities.forEach((item) => {
-            this._raiseEvent(domainEvents.ACTION.REMOVE, { ...item });
-          });
-        }
+        const removedEntities = TestBasisManager.findRemovedEntities(drawContent);
+        removedEntities.forEach((item) => {
+          this._raiseEvent(domainEvents.ACTION.REMOVE, { ...item });
+        });
       }
 
       this.setState({ isOpenClassifyPopover: false });
