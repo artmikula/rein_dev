@@ -29,6 +29,7 @@ class TestDataTable extends Component {
     super(props);
     this.state = {
       importFormOpen: false,
+      removedTestDatas: [],
     };
   }
 
@@ -94,9 +95,31 @@ class TestDataTable extends Component {
     this._setTestDatas(testDatas, false);
   };
 
+  _reCreateData = (data) => {
+    const { testDatas } = this.props;
+    const { removedTestDatas } = this.state;
+    console.log('test data table', removedTestDatas);
+    const result = testDatas.slice();
+    const newTestDatas = removedTestDatas.filter((removedTestData) =>
+      testDatas.some((testData) => testData.nodeId !== removedTestData.nodeId)
+    );
+    if (newTestDatas.length > 0) {
+      newTestDatas.forEach((testData) => {
+        if (testData.type !== CLASSIFY.CAUSE || testData.isMerged) {
+          return;
+        }
+
+        result.push(testData);
+      });
+      this._setTestDatas(result, false);
+    }
+  };
+
   _removeData = (item) => {
     const { testDatas } = this.props;
-    this._setTestDatas(TestData.remove(testDatas, item), false);
+    const { removedTestDatas, currentTestDatas } = TestData.remove(testDatas, item);
+    this.setState({ removedTestDatas });
+    this._setTestDatas(currentTestDatas, false);
   };
 
   _updateData = (nodeId, type, strength = 1) => {
@@ -145,6 +168,9 @@ class TestDataTable extends Component {
     if (action === domainEvents.ACTION.ADD) {
       this._addData(value);
     }
+    if (action === domainEvents.ACTION.RECREATE) {
+      this._reCreateData(value);
+    }
     if (action === domainEvents.ACTION.ACCEPTDELETE) {
       this._removeData(value);
     }
@@ -168,8 +194,7 @@ class TestDataTable extends Component {
   };
 
   _exportData = () => {
-    const { testDatas } = this.props;
-    const { workName } = this.props;
+    const { testDatas, workName } = this.props;
     const dataToConvert = testDatas.map((data) => ({
       Cause: data.nodeId,
       Type: data.type,

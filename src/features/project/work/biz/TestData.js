@@ -24,7 +24,9 @@ class TestData {
   }
 
   remove(testDatas, item) {
-    return testDatas.filter((x) => x.nodeId !== item.node);
+    const removedTestDatas = testDatas.filter((testData) => testData.nodeId === item.node);
+    const currentTestDatas = testDatas.filter((testData) => testData.nodeId !== item.node);
+    return { removedTestDatas, currentTestDatas };
   }
 
   update(testDatas, item, index) {

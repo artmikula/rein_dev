@@ -22,6 +22,7 @@ import './style.scss';
 import {
   caculateInsplectionPalette,
   compareNodeArray,
+  compareEdgeArray,
   convertDirectConstraintToEdge,
   convertGraphLinkToEdge,
   convertGraphNodeToNode,
@@ -31,6 +32,7 @@ import {
   getGraphSize,
   isDirectConstraint,
   separateNodes,
+  separateEdges,
 } from './utils';
 
 class Graph extends Component {
@@ -54,6 +56,11 @@ class Graph extends Component {
     ];
     this.dataIniting = false;
     this.initiatedGraph = false;
+    this.removedGraph = {
+      constraints: [],
+      graphNodes: [],
+      graphLinks: [],
+    };
   }
 
   componentDidMount() {
@@ -135,9 +142,16 @@ class Graph extends Component {
         this._updateInspectionPalettes(data);
         // check remove graphNode
         const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
-        const { graphNodes } = separateNodes(removeNodes);
+        const { removeEdges } = compareEdgeArray(graph.graphLinks, data.graphLinks);
+        this.removedGraph = {
+          // checking constraints again
+          constraints: [],
+          graphNodes: separateNodes(removeNodes).graphNodes,
+          graphLinks: separateEdges(removeEdges).graphLinks,
+        };
 
-        if (graphNodes.length > 0) {
+        if (this.removedGraph.graphNodes.length > 0) {
+          const { graphNodes } = this.removedGraph;
           this._raiseEvent({
             action: domainEvents.ACTION.ACCEPTDELETE,
             value: graphNodes,

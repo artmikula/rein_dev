@@ -16,6 +16,10 @@ import CauseEffectRow from './components/CauseEffectRow';
 import './style.scss';
 
 class CauseEffectTable extends Component {
+  state = {
+    removedCauseEffects: [],
+  };
+
   mergeItem = null;
 
   componentDidMount() {
@@ -37,7 +41,11 @@ class CauseEffectTable extends Component {
     eventBus.unsubscribe(this);
   }
 
-  _raiseEvent = (message) => eventBus.publish(domainEvents.CAUSEEFFECT_DOMAINEVENT, message);
+  _raiseEvent = (message) => {
+    console.log('message', message);
+
+    eventBus.publish(domainEvents.CAUSEEFFECT_DOMAINEVENT, message);
+  };
 
   _confirmAbbreviate = (value, similarItem) => {
     const { definition, type } = value;
@@ -102,6 +110,49 @@ class CauseEffectTable extends Component {
 
     this._raiseEvent({ action: domainEvents.ACTION.ADD, value: result });
     setCauseEffects(listData);
+  };
+
+  _handleReCreateEvent = (data) => {
+    const { removedCauseEffects } = this.state;
+    const { setCauseEffects, listData } = this.props;
+    const result = [];
+    const causeEffects = listData.slice();
+    const existedRemovedCauseEffects = removedCauseEffects.filter((removedCauseEffect) =>
+      data.some((item) => item.definitionId === removedCauseEffect.definitionId)
+    );
+    console.log('removedCauseEffects', removedCauseEffects);
+    console.log('existedRemovedCauseEffects', existedRemovedCauseEffects);
+    this.needConfirm = false;
+
+    const newCauseEffects = removedCauseEffects.filter((removedCauseEffect) =>
+      listData.some((causeEffect) => causeEffect.node !== removedCauseEffect.node)
+    );
+
+    for (let i = 0; i < newCauseEffects.length; i++) {
+      const value = newCauseEffects[i];
+      if (newCauseEffects.length === 1) {
+        const checkResult = CauseEffect.checkExistOrSimilarity(value, listData, appConfig);
+        // if existed
+        if (checkResult.similarItem && checkResult.rate > 100) {
+          CauseEffect.alertExistItem();
+          this._raiseEvent({ action: domainEvents.ACTION.NOTACCEPT, value });
+          return;
+        }
+        // if found similar
+        if (checkResult.similarItem) {
+          // if (confirmedAbbreviate === undefined) {
+          //   this._confirmAbbreviate(value, checkResult.similarItem);
+          //   return;
+          // }
+        }
+      }
+      // create cause/effect item and set id
+      result.push(value);
+      causeEffects.push(value);
+    }
+
+    this._raiseEvent({ action: domainEvents.ACTION.RECREATE, value: result });
+    setCauseEffects(causeEffects);
   };
 
   _handleDeleteAction = (item) => {
@@ -195,6 +246,9 @@ class CauseEffectTable extends Component {
         case domainEvents.ACTION.ADD:
           this._handleAddEvent(value);
           break;
+        case domainEvents.ACTION.RECREATE:
+          this._handleReCreateEvent(value);
+          break;
         case domainEvents.ACTION.UPDATE:
           this._handleUpdateEvent(value);
           break;
@@ -227,31 +281,37 @@ class CauseEffectTable extends Component {
     this._raiseEvent({ action: domainEvents.ACTION.ADD, value: causes });
   };
 
+  // /**
+  //  * @type items
+  //  * @param {*} items: IGraphNode[]
+  //  */
   _handleAcceptDeleteEvent = (items) => {
     const { listData, setCauseEffects } = this.props;
     // get causeEffect need remove
-    let removedcauseEffects = listData.filter((x) =>
+    let removedCauseEffects = listData.filter((x) =>
       items.some(
         (item) => item.nodeId === x.node && (!this.mergeItem || (this.mergeItem && item.nodeId !== this.mergeItem.node))
       )
     );
+
     // get causeEffect need remove include merged causeEffect;
-    removedcauseEffects = listData.filter((x) =>
-      removedcauseEffects.some(
-        (removedcauseEffect) => removedcauseEffect.id === x.parent || removedcauseEffect.id === x.id
+    removedCauseEffects = listData.filter((x) =>
+      removedCauseEffects.some(
+        (removedCauseEffect) => removedCauseEffect.id === x.parent || removedCauseEffect.id === x.id
       )
     );
     const newListData = listData.filter(
-      (x) => !removedcauseEffects.some((removedcauseEffect) => removedcauseEffect === x)
+      (x) => !removedCauseEffects.some((removedCauseEffect) => removedCauseEffect === x)
     );
 
     if (newListData.length !== listData.length) {
       setCauseEffects(newListData);
+      this.setState({ removedCauseEffects });
 
-      removedcauseEffects.forEach((removedcauseEffect) => {
+      removedCauseEffects.forEach((removedCauseEffect) => {
         this._raiseEvent({
           action: domainEvents.ACTION.ACCEPTDELETE,
-          value: removedcauseEffect,
+          value: removedCauseEffect,
           receivers: [domainEvents.DES.TESTBASIS, domainEvents.DES.TESTDATA],
         });
       });
