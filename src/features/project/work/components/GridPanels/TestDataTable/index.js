@@ -95,20 +95,15 @@ class TestDataTable extends Component {
     this._setTestDatas(testDatas, false);
   };
 
-  _reCreateData = (data) => {
+  _reCreateData = () => {
     const { testDatas } = this.props;
     const { removedTestDatas } = this.state;
-    console.log('test data table', removedTestDatas);
     const result = testDatas.slice();
     const newTestDatas = removedTestDatas.filter((removedTestData) =>
       testDatas.some((testData) => testData.nodeId !== removedTestData.nodeId)
     );
     if (newTestDatas.length > 0) {
       newTestDatas.forEach((testData) => {
-        if (testData.type !== CLASSIFY.CAUSE || testData.isMerged) {
-          return;
-        }
-
         result.push(testData);
       });
       this._setTestDatas(result, false);
@@ -118,7 +113,9 @@ class TestDataTable extends Component {
   _removeData = (item) => {
     const { testDatas } = this.props;
     const { removedTestDatas, currentTestDatas } = TestData.remove(testDatas, item);
-    this.setState({ removedTestDatas });
+    if (removedTestDatas.length > 0) {
+      this.setState({ removedTestDatas });
+    }
     this._setTestDatas(currentTestDatas, false);
   };
 
@@ -169,7 +166,7 @@ class TestDataTable extends Component {
       this._addData(value);
     }
     if (action === domainEvents.ACTION.RECREATE) {
-      this._reCreateData(value);
+      this._reCreateData();
     }
     if (action === domainEvents.ACTION.ACCEPTDELETE) {
       this._removeData(value);

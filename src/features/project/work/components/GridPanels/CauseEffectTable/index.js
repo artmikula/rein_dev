@@ -41,11 +41,7 @@ class CauseEffectTable extends Component {
     eventBus.unsubscribe(this);
   }
 
-  _raiseEvent = (message) => {
-    console.log('message', message);
-
-    eventBus.publish(domainEvents.CAUSEEFFECT_DOMAINEVENT, message);
-  };
+  _raiseEvent = (message) => eventBus.publish(domainEvents.CAUSEEFFECT_DOMAINEVENT, message);
 
   _confirmAbbreviate = (value, similarItem) => {
     const { definition, type } = value;
@@ -112,16 +108,11 @@ class CauseEffectTable extends Component {
     setCauseEffects(listData);
   };
 
-  _handleReCreateEvent = (data) => {
+  _handleReCreateEvent = (confirmedAbbreviate = undefined) => {
     const { removedCauseEffects } = this.state;
     const { setCauseEffects, listData } = this.props;
     const result = [];
     const causeEffects = listData.slice();
-    const existedRemovedCauseEffects = removedCauseEffects.filter((removedCauseEffect) =>
-      data.some((item) => item.definitionId === removedCauseEffect.definitionId)
-    );
-    console.log('removedCauseEffects', removedCauseEffects);
-    console.log('existedRemovedCauseEffects', existedRemovedCauseEffects);
     this.needConfirm = false;
 
     const newCauseEffects = removedCauseEffects.filter((removedCauseEffect) =>
@@ -140,10 +131,10 @@ class CauseEffectTable extends Component {
         }
         // if found similar
         if (checkResult.similarItem) {
-          // if (confirmedAbbreviate === undefined) {
-          //   this._confirmAbbreviate(value, checkResult.similarItem);
-          //   return;
-          // }
+          if (confirmedAbbreviate === undefined) {
+            this._confirmAbbreviate(value, checkResult.similarItem);
+            return;
+          }
         }
       }
       // create cause/effect item and set id
@@ -195,6 +186,7 @@ class CauseEffectTable extends Component {
     });
 
     setCauseEffects(newList);
+    this.setState({ removedCauseEffects: removeList });
 
     return removeList;
   };
@@ -247,7 +239,7 @@ class CauseEffectTable extends Component {
           this._handleAddEvent(value);
           break;
         case domainEvents.ACTION.RECREATE:
-          this._handleReCreateEvent(value);
+          this._handleReCreateEvent();
           break;
         case domainEvents.ACTION.UPDATE:
           this._handleUpdateEvent(value);
@@ -287,6 +279,10 @@ class CauseEffectTable extends Component {
   //  */
   _handleAcceptDeleteEvent = (items) => {
     const { listData, setCauseEffects } = this.props;
+    const { removedCauseEffects: removedState } = this.state;
+    const findRemovedData = removedState.filter((removedState) =>
+      items.some((item) => item.nodeId === removedState.node)
+    );
     // get causeEffect need remove
     let removedCauseEffects = listData.filter((x) =>
       items.some(
@@ -300,13 +296,24 @@ class CauseEffectTable extends Component {
         (removedCauseEffect) => removedCauseEffect.id === x.parent || removedCauseEffect.id === x.id
       )
     );
+
+    if (findRemovedData.length === 0) {
+      this.setState({ removedCauseEffects: [] });
+    } else {
+      findRemovedData.forEach((removedData) => {
+        const isExists = removedCauseEffects.find((removedCauseEffect) => removedCauseEffect.node === removedData.node);
+        if (!isExists) {
+          removedCauseEffects.push(removedData);
+        }
+      });
+    }
+
     const newListData = listData.filter(
       (x) => !removedCauseEffects.some((removedCauseEffect) => removedCauseEffect === x)
     );
 
-    if (newListData.length !== listData.length) {
+    if (removedCauseEffects.length > 0) {
       setCauseEffects(newListData);
-      this.setState({ removedCauseEffects });
 
       removedCauseEffects.forEach((removedCauseEffect) => {
         this._raiseEvent({

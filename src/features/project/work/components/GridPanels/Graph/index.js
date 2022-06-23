@@ -46,6 +46,13 @@ class Graph extends Component {
 
   constructor(props) {
     super(props);
+    this.state = {
+      removedGraph: {
+        constraints: [],
+        graphNodes: [],
+        graphLinks: [],
+      },
+    };
     this.graphManager = null;
     this.graphState = null;
     this.consumers = [
@@ -56,11 +63,6 @@ class Graph extends Component {
     ];
     this.dataIniting = false;
     this.initiatedGraph = false;
-    this.removedGraph = {
-      constraints: [],
-      graphNodes: [],
-      graphLinks: [],
-    };
   }
 
   componentDidMount() {
@@ -135,6 +137,7 @@ class Graph extends Component {
       this._raiseEvenGraphAligning({ action: domainEvents.ACTION.GRAPH_ALIGN });
     } else {
       const { setGraph, graph } = this.props;
+      const { removedGraph } = this.state;
 
       if (this.graphState && this.graphManager && !this.dataIniting) {
         const currentState = this.graphManager.getState();
@@ -143,15 +146,16 @@ class Graph extends Component {
         // check remove graphNode
         const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
         const { removeEdges } = compareEdgeArray(graph.graphLinks, data.graphLinks);
-        this.removedGraph = {
-          // checking constraints again
-          constraints: [],
-          graphNodes: separateNodes(removeNodes).graphNodes,
-          graphLinks: separateEdges(removeEdges).graphLinks,
-        };
+        this.setState({
+          removedGraph: {
+            constraints: [],
+            graphNodes: separateNodes(removeNodes).graphNodes,
+            graphLinks: separateEdges(removeEdges).graphLinks,
+          },
+        });
 
-        if (this.removedGraph.graphNodes.length > 0) {
-          const { graphNodes } = this.removedGraph;
+        if (removedGraph.graphNodes.length > 0) {
+          const { graphNodes } = removedGraph;
           this._raiseEvent({
             action: domainEvents.ACTION.ACCEPTDELETE,
             value: graphNodes,
@@ -234,6 +238,9 @@ class Graph extends Component {
         break;
       case domainEvents.ACTION.CHANGE_NODE_ID:
         this._changeNodeId(value);
+        break;
+      case domainEvents.ACTION.RECREATE:
+        this._reCreateGraph(value);
         break;
       default:
         break;
@@ -322,6 +329,46 @@ class Graph extends Component {
         value: { graphSrc, inspections },
         receivers: domainEvents.DES.WORKMENU,
       });
+    }
+  };
+
+  _reCreateGraph = (data) => {
+    if (this.graphState && this.graphManager && !this.dataIniting) {
+      const { setGraph } = this.props;
+      const { removedGraph } = this.state;
+      const currentState = this.graphManager.getState();
+      const graphState = covertGraphStateToSavedData(currentState);
+      this._updateInspectionPalettes(graphState);
+      const currentRemovedGraph = {
+        constraints: [],
+        graphLinks: removedGraph.graphLinks.filter((graphLink) => data.some((item) => item.node === graphLink.nodeId)),
+        graphNodes: removedGraph.graphNodes.filter((graphNode) => data.some((item) => item.node === graphNode.nodeId)),
+      };
+      const newGraph = {
+        constraints: graphState.constraints.slice(),
+        graphLinks: graphState.graphLinks.slice(),
+        graphNodes: graphState.graphNodes.slice(),
+      };
+      if (currentRemovedGraph.graphNodes.length > 0) {
+        currentRemovedGraph.graphNodes.forEach((removedGraphNode) => {
+          const isExists = newGraph.graphNodes.find((graphNode) => graphNode.nodeId === removedGraphNode.nodeId);
+          if (!isExists) {
+            newGraph.graphNodes.push(removedGraphNode);
+          }
+        });
+        if (currentRemovedGraph.graphLinks.length > 0) {
+          currentRemovedGraph.graphLinks.forEach((removedGraphLink) => {
+            const isExists = newGraph.graphLinks.find((graphLink) => graphLink.nodeId === removedGraphLink.nodeId);
+            if (!isExists) {
+              newGraph.graphLinks.push(removedGraphLink);
+            }
+          });
+        }
+      }
+
+      this._raiseEventUpdate();
+      setGraph(newGraph);
+      this._handleGraphChange();
     }
   };
   /* End events */
