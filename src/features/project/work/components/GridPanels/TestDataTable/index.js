@@ -29,7 +29,7 @@ class TestDataTable extends Component {
     super(props);
     this.state = {
       importFormOpen: false,
-      cuttingList: [],
+      cutData: [],
     };
   }
 
@@ -62,7 +62,7 @@ class TestDataTable extends Component {
     Mousetrap.reset();
   }
 
-  _setTestDatas = (testDatas, raiseEvent = true) => {
+  _setTestDatas = (testDatas, raiseEvent = false) => {
     const { setTestDatas } = this.props;
 
     setTestDatas(testDatas);
@@ -92,12 +92,12 @@ class TestDataTable extends Component {
       testDatas = TestData.add(testDatas, item);
     });
 
-    this._setTestDatas(testDatas, false);
+    this._setTestDatas(testDatas);
   };
 
   _removeData = (item) => {
     const { testDatas } = this.props;
-    this._setTestDatas(TestData.remove(testDatas, item), false);
+    this._setTestDatas(TestData.remove(testDatas, item));
   };
 
   _updateData = (nodeId, type, strength = 1) => {
@@ -115,7 +115,7 @@ class TestDataTable extends Component {
 
     const newTestDatas = TestData.update(testDatas, item, index);
 
-    this._setTestDatas(newTestDatas);
+    this._setTestDatas(newTestDatas, true);
   };
 
   _onTrueFalseDataChange = (nodeId, valueType, value) => {
@@ -138,27 +138,27 @@ class TestDataTable extends Component {
     }
 
     const newTestDatas = TestData.update(testDatas, item, index);
-    this._setTestDatas(newTestDatas, false);
+    this._setTestDatas(newTestDatas);
   };
 
-  _handleCutEvent = (data) => {
+  _handleCutEvent = (eventData) => {
     const { testDatas } = this.props;
-    const newData = testDatas.filter((testData) => data.some((item) => item === testData.nodeId));
-    this.setState({ cuttingList: newData });
+    const cutData = testDatas.filter((testData) => eventData.some((data) => data === testData.nodeId));
+    this.setState({ cutData });
   };
 
   _handlePasteEvent = () => {
     const { testDatas } = this.props;
-    const { cuttingList } = this.state;
-    const newData = testDatas.slice();
-    cuttingList.forEach((data) => {
-      const isExists = newData.find((item) => item.nodeId === data.nodeId);
+    const { cutData } = this.state;
+    const newTestDatas = testDatas.slice();
+    cutData.forEach((data) => {
+      const isExists = newTestDatas.find((testData) => testData.nodeId === data.nodeId);
       if (!isExists) {
-        newData.push(data);
+        newTestDatas.push(data);
       }
     });
-    this._setTestDatas(newData, false);
-    this.setState({ cuttingList: [] });
+    this._setTestDatas(newTestDatas);
+    this.setState({ cutData: [] });
   };
 
   _handleCauseEffectEvents = (message) => {
@@ -190,7 +190,7 @@ class TestDataTable extends Component {
 
       newList[index] = newItem;
 
-      this._setTestDatas(newList, false);
+      this._setTestDatas(newList);
     }
   };
 
@@ -252,7 +252,7 @@ class TestDataTable extends Component {
       if (testData.isChanged) {
         testData.isChanged = false;
         const newTestDatas = TestData.update(testDatas, testData, testDataIndex);
-        this._setTestDatas(newTestDatas, false);
+        this._setTestDatas(newTestDatas);
       }
     }
   };

@@ -47,7 +47,7 @@ class Graph extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      cuttingList: {
+      cutData: {
         constraints: [],
         graphNodes: [],
         graphLinks: [],
@@ -144,15 +144,7 @@ class Graph extends Component {
         this._updateInspectionPalettes(data);
         // check remove graphNode
         const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
-        const { removeEdges } = compareEdgeArray(graph.graphLinks, data.graphLinks);
         const { graphNodes } = separateNodes(removeNodes);
-        this.setState({
-          cuttingList: {
-            constraints: [],
-            graphNodes: separateNodes(removeNodes).graphNodes,
-            graphLinks: separateEdges(removeEdges).graphLinks,
-          },
-        });
 
         if (graphNodes.length > 0) {
           this._raiseEvent({
@@ -220,37 +212,33 @@ class Graph extends Component {
     }
   };
 
-  _handleCutEvent = (data) => {
+  _handleCutEvent = (eventData) => {
     const { graph } = this.props;
-    // const { cuttingList } = this.state;
     const newData = {
       constraints: graph.constraints.slice(),
-      graphNodes: graph.graphNodes.filter((graphNode) => data.some((item) => graphNode.nodeId === item)),
+      graphNodes: graph.graphNodes.filter((graphNode) => eventData.some((item) => graphNode.nodeId === item)),
       graphLinks: graph.graphLinks.slice(),
     };
-    this.setState({ cuttingList: newData });
-    // const { cuttingList } = this.state;
-    // const nodes = this.graphManager.graph.nodes().filter((x) => data.some((item) => item === x.data().nodeId));
-    // this.setState({ cuttingList: { ...cuttingList, graphNodes: nodes } });
+    this.setState({ cutData: newData });
   };
 
   _handlePasteEvent = () => {
     const { setGraph, graph } = this.props;
-    const { cuttingList } = this.state;
-    const newData = {
+    const { cutData } = this.state;
+    const newGraph = {
       constraints: graph.constraints.slice(),
       graphNodes: graph.graphNodes.slice(),
       graphLinks: graph.graphLinks.slice(),
     };
-    cuttingList.graphNodes.forEach((data) => {
-      const isExists = newData.graphNodes.find((graphNode) => graphNode.nodeId === data.nodeId);
+    cutData.graphNodes.forEach((data) => {
+      const isExists = newGraph.graphNodes.find((graphNode) => graphNode.nodeId === data.nodeId);
       if (!isExists) {
-        newData.graphNodes.push(data);
+        newGraph.graphNodes.push(data);
         this.graphManager.reDrawCauseEffect(convertGraphNodeToNode(data));
       }
     });
-    setGraph(newData);
-    this.setState({ cuttingList: { constraints: [], graphNodes: [], graphLinks: [] } });
+    setGraph(newGraph);
+    this.setState({ cutData: { constraints: [], graphNodes: [], graphLinks: [] } });
   };
 
   _handleCauseEffectEvents = (message) => {

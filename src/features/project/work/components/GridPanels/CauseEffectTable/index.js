@@ -17,7 +17,7 @@ import './style.scss';
 
 class CauseEffectTable extends Component {
   state = {
-    cuttingList: [],
+    cutData: [],
   };
 
   mergeItem = null;
@@ -192,28 +192,28 @@ class CauseEffectTable extends Component {
     });
   };
 
-  _handleCutEvent = (data) => {
+  _handleCutEvent = (eventData) => {
     const { listData: causeEffects } = this.props;
-    const newData = causeEffects.filter((causeEffect) => data.some((item) => item === causeEffect.definitionId));
-    if (newData.length > 0) {
-      const eventData = newData.map((data) => data.node);
-      this._raiseEvent({ action: domainEvents.ACTION.CUT, value: eventData });
+    const cutData = causeEffects.filter((causeEffect) => eventData.some((item) => item === causeEffect.definitionId));
+    if (cutData.length > 0) {
+      const value = cutData.map((data) => data.node);
+      this._raiseEvent({ action: domainEvents.ACTION.CUT, value });
     }
-    this.setState({ cuttingList: newData });
+    this.setState({ cutData });
   };
 
   _handlePasteEvent = () => {
-    const { listData, setCauseEffects } = this.props;
-    const { cuttingList } = this.state;
-    const newData = listData.slice();
-    cuttingList.forEach((data) => {
-      const isExists = newData.find((item) => item.node === data.node);
+    const { listData: causeEffects, setCauseEffects } = this.props;
+    const { cutData } = this.state;
+    const newCauseEffects = causeEffects.slice();
+    cutData.forEach((data) => {
+      const isExists = newCauseEffects.find((causeEffect) => causeEffect.node === data.node);
       if (!isExists) {
-        newData.push(data);
+        newCauseEffects.push(data);
       }
     });
-    setCauseEffects(newData);
-    this.setState({ cuttingList: [] });
+    setCauseEffects(newCauseEffects);
+    this.setState({ cutData: [] });
     this._raiseEvent({ action: domainEvents.ACTION.PASTE });
   };
 
@@ -230,9 +230,6 @@ class CauseEffectTable extends Component {
         case domainEvents.ACTION.PASTE:
           this._handlePasteEvent();
           break;
-        // case domainEvents.ACTION.RECREATE:
-        //   this._handleReCreateEvent();
-        //   break;
         case domainEvents.ACTION.UPDATE:
           this._handleUpdateEvent(value);
           break;

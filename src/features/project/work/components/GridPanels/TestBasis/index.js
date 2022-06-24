@@ -294,12 +294,10 @@ class TestBasis extends Component {
     }
     if (type === TEST_BASIS_EVENT_TYPE.DEFAULT) {
       this.setState({ cutState: { entities: [], selection: null } });
-      this._raiseEvent(domainEvents.ACTION.CUT, []);
-    }
-    if (entities.length > 0) {
+    } else {
       this.setState({ cutState: { entities, selection } });
-      const eventData = entities.map((entity) => entity.definitionId);
-      this._raiseEvent(domainEvents.ACTION.CUT, eventData);
+      const value = entities.map((entity) => entity.definitionId);
+      this._raiseEvent(domainEvents.ACTION.CUT, value);
     }
   };
 
@@ -318,7 +316,6 @@ class TestBasis extends Component {
   };
 
   _handlePasteEvent = () => {
-    this._raiseEvent(domainEvents.ACTION.PASTE);
     const { cutState, editorState } = this.state;
     const currentContent = editorState.getCurrentContent();
     const drawContent = convertToRaw(currentContent);
