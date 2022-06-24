@@ -221,24 +221,32 @@ class Graph extends Component {
   };
 
   _handleCutEvent = (data) => {
-    const { cuttingList } = this.state;
-    const nodes = this.graphManager.graph.nodes().filter((x) => data.some((item) => item === x.data().nodeId));
-    this.setState({ cuttingList: { ...cuttingList, graphNodes: nodes } });
+    const { graph } = this.props;
+    // const { cuttingList } = this.state;
+    const newData = {
+      constraints: graph.constraints.slice(),
+      graphNodes: graph.graphNodes.filter((graphNode) => data.some((item) => graphNode.nodeId === item)),
+      graphLinks: graph.graphLinks.slice(),
+    };
+    this.setState({ cuttingList: newData });
+    // const { cuttingList } = this.state;
+    // const nodes = this.graphManager.graph.nodes().filter((x) => data.some((item) => item === x.data().nodeId));
+    // this.setState({ cuttingList: { ...cuttingList, graphNodes: nodes } });
   };
 
   _handlePasteEvent = () => {
-    const { setGraph } = this.props;
+    const { setGraph, graph } = this.props;
     const { cuttingList } = this.state;
     const newData = {
-      constraints: [],
-      graphNodes: this.graphManager.graph.nodes().slice(),
-      graphLinks: [],
+      constraints: graph.constraints.slice(),
+      graphNodes: graph.graphNodes.slice(),
+      graphLinks: graph.graphLinks.slice(),
     };
-    // check this loop
-    cuttingList.forEach((cuttingItem) => {
-      const isExists = newData.graphNodes.find((item) => item.nodeId === cuttingItem.nodeId);
+    cuttingList.graphNodes.forEach((data) => {
+      const isExists = newData.graphNodes.find((graphNode) => graphNode.nodeId === data.nodeId);
       if (!isExists) {
-        newData.graphNodes.push(cuttingItem);
+        newData.graphNodes.push(data);
+        this.graphManager.reDrawCauseEffect(convertGraphNodeToNode(data));
       }
     });
     setGraph(newData);
@@ -398,8 +406,6 @@ class Graph extends Component {
   }
 
   render() {
-    const { graph } = this.props;
-    console.log('graph', graph);
     return <div className="w-100" id="graph_container_id" />;
   }
 }

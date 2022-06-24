@@ -442,6 +442,15 @@ class GraphManager {
     this.onGraphChange(actionType);
   };
 
+  reDrawCauseEffect = (ele) => {
+    const existsNode = this.graph.nodes().find((node) => node.data().id === ele.data.id);
+    if (existsNode) {
+      this.remove(existsNode);
+    }
+    this.draw(ele);
+    this.onGraphChange();
+  };
+
   removeSelectedElement = () => {
     const nodes = this.graph.nodes(':selected');
     const edges = this.graph.edges(':selected');
