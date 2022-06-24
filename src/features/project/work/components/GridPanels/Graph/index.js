@@ -22,7 +22,6 @@ import './style.scss';
 import {
   caculateInsplectionPalette,
   compareNodeArray,
-  compareEdgeArray,
   convertDirectConstraintToEdge,
   convertGraphLinkToEdge,
   convertGraphNodeToNode,
@@ -32,7 +31,6 @@ import {
   getGraphSize,
   isDirectConstraint,
   separateNodes,
-  separateEdges,
 } from './utils';
 
 class Graph extends Component {
