@@ -17,7 +17,7 @@ import './style.scss';
 
 class CauseEffectTable extends Component {
   state = {
-    removedCauseEffects: [],
+    cuttingList: [],
   };
 
   mergeItem = null;
@@ -108,44 +108,6 @@ class CauseEffectTable extends Component {
     setCauseEffects(listData);
   };
 
-  _handleReCreateEvent = (confirmedAbbreviate = undefined) => {
-    const { removedCauseEffects } = this.state;
-    const { setCauseEffects, listData } = this.props;
-    const result = [];
-    const causeEffects = listData.slice();
-    this.needConfirm = false;
-
-    const newCauseEffects = removedCauseEffects.filter((removedCauseEffect) =>
-      listData.some((causeEffect) => causeEffect.node !== removedCauseEffect.node)
-    );
-
-    for (let i = 0; i < newCauseEffects.length; i++) {
-      const value = newCauseEffects[i];
-      if (newCauseEffects.length === 1) {
-        const checkResult = CauseEffect.checkExistOrSimilarity(value, listData, appConfig);
-        // if existed
-        if (checkResult.similarItem && checkResult.rate > 100) {
-          CauseEffect.alertExistItem();
-          this._raiseEvent({ action: domainEvents.ACTION.NOTACCEPT, value });
-          return;
-        }
-        // if found similar
-        if (checkResult.similarItem) {
-          if (confirmedAbbreviate === undefined) {
-            this._confirmAbbreviate(value, checkResult.similarItem);
-            return;
-          }
-        }
-      }
-      // create cause/effect item and set id
-      result.push(value);
-      causeEffects.push(value);
-    }
-
-    this._raiseEvent({ action: domainEvents.ACTION.RECREATE, value: result });
-    setCauseEffects(causeEffects);
-  };
-
   _handleDeleteAction = (item) => {
     const removeList = this._delete(item);
 
@@ -186,7 +148,6 @@ class CauseEffectTable extends Component {
     });
 
     setCauseEffects(newList);
-    this.setState({ removedCauseEffects: removeList });
 
     return removeList;
   };
@@ -231,6 +192,31 @@ class CauseEffectTable extends Component {
     });
   };
 
+  _handleCutEvent = (data) => {
+    const { listData: causeEffects } = this.props;
+    const newData = causeEffects.filter((causeEffect) => data.some((item) => item === causeEffect.definitionId));
+    if (newData.length > 0) {
+      const eventData = newData.map((data) => data.node);
+      this._raiseEvent({ action: domainEvents.ACTION.CUT, value: eventData });
+    }
+    this.setState({ cuttingList: newData });
+  };
+
+  _handlePasteEvent = () => {
+    const { listData, setCauseEffects } = this.props;
+    const { cuttingList } = this.state;
+    const newData = listData.slice();
+    cuttingList.forEach((data) => {
+      const isExists = newData.find((item) => item.node === data.node);
+      if (!isExists) {
+        newData.push(data);
+      }
+    });
+    setCauseEffects(newData);
+    this.setState({ cuttingList: [] });
+    this._raiseEvent({ action: domainEvents.ACTION.PASTE });
+  };
+
   _handleEvent = (message) => {
     const { action, value, receivers } = message;
     if (receivers === undefined || receivers.includes(domainEvents.DES.CAUSEEFFECT)) {
@@ -238,9 +224,15 @@ class CauseEffectTable extends Component {
         case domainEvents.ACTION.ADD:
           this._handleAddEvent(value);
           break;
-        case domainEvents.ACTION.RECREATE:
-          this._handleReCreateEvent();
+        case domainEvents.ACTION.CUT:
+          this._handleCutEvent(value);
           break;
+        case domainEvents.ACTION.PASTE:
+          this._handlePasteEvent();
+          break;
+        // case domainEvents.ACTION.RECREATE:
+        //   this._handleReCreateEvent();
+        //   break;
         case domainEvents.ACTION.UPDATE:
           this._handleUpdateEvent(value);
           break;
@@ -273,52 +265,32 @@ class CauseEffectTable extends Component {
     this._raiseEvent({ action: domainEvents.ACTION.ADD, value: causes });
   };
 
-  // /**
-  //  * @type items
-  //  * @param {*} items: IGraphNode[]
-  //  */
   _handleAcceptDeleteEvent = (items) => {
     const { listData, setCauseEffects } = this.props;
-    const { removedCauseEffects: removedState } = this.state;
-    const findRemovedData = removedState.filter((removedState) =>
-      items.some((item) => item.nodeId === removedState.node)
-    );
     // get causeEffect need remove
-    let removedCauseEffects = listData.filter((x) =>
+    let removedcauseEffects = listData.filter((x) =>
       items.some(
         (item) => item.nodeId === x.node && (!this.mergeItem || (this.mergeItem && item.nodeId !== this.mergeItem.node))
       )
     );
 
     // get causeEffect need remove include merged causeEffect;
-    removedCauseEffects = listData.filter((x) =>
-      removedCauseEffects.some(
-        (removedCauseEffect) => removedCauseEffect.id === x.parent || removedCauseEffect.id === x.id
+    removedcauseEffects = listData.filter((x) =>
+      removedcauseEffects.some(
+        (removedcauseEffect) => removedcauseEffect.id === x.parent || removedcauseEffect.id === x.id
       )
     );
-
-    if (findRemovedData.length === 0) {
-      this.setState({ removedCauseEffects: [] });
-    } else {
-      findRemovedData.forEach((removedData) => {
-        const isExists = removedCauseEffects.find((removedCauseEffect) => removedCauseEffect.node === removedData.node);
-        if (!isExists) {
-          removedCauseEffects.push(removedData);
-        }
-      });
-    }
-
     const newListData = listData.filter(
-      (x) => !removedCauseEffects.some((removedCauseEffect) => removedCauseEffect === x)
+      (x) => !removedcauseEffects.some((removedcauseEffect) => removedcauseEffect === x)
     );
 
-    if (removedCauseEffects.length > 0) {
+    if (newListData.length !== listData.length) {
       setCauseEffects(newListData);
 
-      removedCauseEffects.forEach((removedCauseEffect) => {
+      removedcauseEffects.forEach((removedcauseEffect) => {
         this._raiseEvent({
           action: domainEvents.ACTION.ACCEPTDELETE,
-          value: removedCauseEffect,
+          value: removedcauseEffect,
           receivers: [domainEvents.DES.TESTBASIS, domainEvents.DES.TESTDATA],
         });
       });

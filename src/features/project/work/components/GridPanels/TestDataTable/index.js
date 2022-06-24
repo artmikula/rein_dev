@@ -29,7 +29,7 @@ class TestDataTable extends Component {
     super(props);
     this.state = {
       importFormOpen: false,
-      removedTestDatas: [],
+      cuttingList: [],
     };
   }
 
@@ -95,28 +95,9 @@ class TestDataTable extends Component {
     this._setTestDatas(testDatas, false);
   };
 
-  _reCreateData = () => {
-    const { testDatas } = this.props;
-    const { removedTestDatas } = this.state;
-    const result = testDatas.slice();
-    const newTestDatas = removedTestDatas.filter((removedTestData) =>
-      testDatas.some((testData) => testData.nodeId !== removedTestData.nodeId)
-    );
-    if (newTestDatas.length > 0) {
-      newTestDatas.forEach((testData) => {
-        result.push(testData);
-      });
-      this._setTestDatas(result, false);
-    }
-  };
-
   _removeData = (item) => {
     const { testDatas } = this.props;
-    const { removedTestDatas, currentTestDatas } = TestData.remove(testDatas, item);
-    if (removedTestDatas.length > 0) {
-      this.setState({ removedTestDatas });
-    }
-    this._setTestDatas(currentTestDatas, false);
+    this._setTestDatas(TestData.remove(testDatas, item), false);
   };
 
   _updateData = (nodeId, type, strength = 1) => {
@@ -160,13 +141,36 @@ class TestDataTable extends Component {
     this._setTestDatas(newTestDatas, false);
   };
 
+  _handleCutEvent = (data) => {
+    const { testDatas } = this.props;
+    const newData = testDatas.filter((testData) => data.some((item) => item === testData.nodeId));
+    this.setState({ cuttingList: newData });
+  };
+
+  _handlePasteEvent = () => {
+    const { testDatas } = this.props;
+    const { cuttingList } = this.state;
+    const newData = testDatas.slice();
+    cuttingList.forEach((data) => {
+      const isExists = newData.find((item) => item.nodeId === data.nodeId);
+      if (!isExists) {
+        newData.push(data);
+      }
+    });
+    this._setTestDatas(newData, false);
+    this.setState({ cuttingList: [] });
+  };
+
   _handleCauseEffectEvents = (message) => {
     const { action, value } = message;
     if (action === domainEvents.ACTION.ADD) {
       this._addData(value);
     }
-    if (action === domainEvents.ACTION.RECREATE) {
-      this._reCreateData();
+    if (action === domainEvents.ACTION.CUT) {
+      this._handleCutEvent(value);
+    }
+    if (action === domainEvents.ACTION.PASTE) {
+      this._handlePasteEvent();
     }
     if (action === domainEvents.ACTION.ACCEPTDELETE) {
       this._removeData(value);

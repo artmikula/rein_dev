@@ -47,7 +47,7 @@ class Graph extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      removedGraph: {
+      cuttingList: {
         constraints: [],
         graphNodes: [],
         graphLinks: [],
@@ -137,7 +137,6 @@ class Graph extends Component {
       this._raiseEvenGraphAligning({ action: domainEvents.ACTION.GRAPH_ALIGN });
     } else {
       const { setGraph, graph } = this.props;
-      const { removedGraph } = this.state;
 
       if (this.graphState && this.graphManager && !this.dataIniting) {
         const currentState = this.graphManager.getState();
@@ -146,16 +145,16 @@ class Graph extends Component {
         // check remove graphNode
         const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
         const { removeEdges } = compareEdgeArray(graph.graphLinks, data.graphLinks);
+        const { graphNodes } = separateNodes(removeNodes);
         this.setState({
-          removedGraph: {
+          cuttingList: {
             constraints: [],
             graphNodes: separateNodes(removeNodes).graphNodes,
             graphLinks: separateEdges(removeEdges).graphLinks,
           },
         });
 
-        if (removedGraph.graphNodes.length > 0) {
-          const { graphNodes } = removedGraph;
+        if (graphNodes.length > 0) {
           this._raiseEvent({
             action: domainEvents.ACTION.ACCEPTDELETE,
             value: graphNodes,
@@ -221,6 +220,31 @@ class Graph extends Component {
     }
   };
 
+  _handleCutEvent = (data) => {
+    const { cuttingList } = this.state;
+    const nodes = this.graphManager.graph.nodes().filter((x) => data.some((item) => item === x.data().nodeId));
+    this.setState({ cuttingList: { ...cuttingList, graphNodes: nodes } });
+  };
+
+  _handlePasteEvent = () => {
+    const { setGraph } = this.props;
+    const { cuttingList } = this.state;
+    const newData = {
+      constraints: [],
+      graphNodes: this.graphManager.graph.nodes().slice(),
+      graphLinks: [],
+    };
+    // check this loop
+    cuttingList.forEach((cuttingItem) => {
+      const isExists = newData.graphNodes.find((item) => item.nodeId === cuttingItem.nodeId);
+      if (!isExists) {
+        newData.graphNodes.push(cuttingItem);
+      }
+    });
+    setGraph(newData);
+    this.setState({ cuttingList: { constraints: [], graphNodes: [], graphLinks: [] } });
+  };
+
   _handleCauseEffectEvents = (message) => {
     const { action, receives, value } = message;
     switch (action) {
@@ -239,8 +263,11 @@ class Graph extends Component {
       case domainEvents.ACTION.CHANGE_NODE_ID:
         this._changeNodeId(value);
         break;
-      case domainEvents.ACTION.RECREATE:
-        this._reCreateGraph(value);
+      case domainEvents.ACTION.CUT:
+        this._handleCutEvent(value);
+        break;
+      case domainEvents.ACTION.PASTE:
+        this._handlePasteEvent();
         break;
       default:
         break;
@@ -331,46 +358,6 @@ class Graph extends Component {
       });
     }
   };
-
-  _reCreateGraph = (data) => {
-    if (this.graphState && this.graphManager && !this.dataIniting) {
-      const { setGraph } = this.props;
-      const { removedGraph } = this.state;
-      const currentState = this.graphManager.getState();
-      const graphState = covertGraphStateToSavedData(currentState);
-      this._updateInspectionPalettes(graphState);
-      const currentRemovedGraph = {
-        constraints: [],
-        graphLinks: removedGraph.graphLinks.filter((graphLink) => data.some((item) => item.node === graphLink.nodeId)),
-        graphNodes: removedGraph.graphNodes.filter((graphNode) => data.some((item) => item.node === graphNode.nodeId)),
-      };
-      const newGraph = {
-        constraints: graphState.constraints.slice(),
-        graphLinks: graphState.graphLinks.slice(),
-        graphNodes: graphState.graphNodes.slice(),
-      };
-      if (currentRemovedGraph.graphNodes.length > 0) {
-        currentRemovedGraph.graphNodes.forEach((removedGraphNode) => {
-          const isExists = newGraph.graphNodes.find((graphNode) => graphNode.nodeId === removedGraphNode.nodeId);
-          if (!isExists) {
-            newGraph.graphNodes.push(removedGraphNode);
-          }
-        });
-        if (currentRemovedGraph.graphLinks.length > 0) {
-          currentRemovedGraph.graphLinks.forEach((removedGraphLink) => {
-            const isExists = newGraph.graphLinks.find((graphLink) => graphLink.nodeId === removedGraphLink.nodeId);
-            if (!isExists) {
-              newGraph.graphLinks.push(removedGraphLink);
-            }
-          });
-        }
-      }
-
-      this._raiseEventUpdate();
-      setGraph(newGraph);
-      this._handleGraphChange();
-    }
-  };
   /* End events */
 
   _drawGraph = (graphManager, graphNodes = null, forceUpdate = false) => {
@@ -411,6 +398,8 @@ class Graph extends Component {
   }
 
   render() {
+    const { graph } = this.props;
+    console.log('graph', graph);
     return <div className="w-100" id="graph_container_id" />;
   }
 }

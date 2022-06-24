@@ -14,6 +14,8 @@ const domainEvents = {
     INSERTCAUSES: 'INSERTCAUSES',
     CHANGE_NODE_ID: 'CHANGE_NODE_ID',
     RECREATE: 'RE_CREATE',
+    CUT: 'CUT',
+    PASTE: 'PASTE',
   },
   DES: {
     TESTBASIS: 'TESTBASIS',
