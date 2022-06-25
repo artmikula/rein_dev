@@ -3,6 +3,7 @@ import { setGraph } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
   GRAPH_LINK_TYPE,
+  GRAPH_NODE_TYPE,
   GRAPH_SHORTCUT,
   GRAPH_SHORTCUT_CODE,
   G_TYPE,
@@ -212,12 +213,43 @@ class Graph extends Component {
 
   _handleCutEvent = (eventData) => {
     const { graph } = this.props;
-    const newData = {
-      constraints: graph.constraints.slice(),
-      graphNodes: graph.graphNodes.filter((graphNode) => eventData.some((item) => graphNode.nodeId === item)),
-      graphLinks: graph.graphLinks.slice(),
-    };
-    this.setState({ cutData: newData });
+    const graphNodes = graph.graphNodes.filter((graphNode) => eventData.some((item) => graphNode.nodeId === item));
+    if (graphNodes.length > 0) {
+      const constraints = [];
+      const graphLinks = [];
+      graphNodes.forEach((graphNode) => {
+        // find graph link for cut cause nodes
+        if (graphNode.type === GRAPH_NODE_TYPE.CAUSE) {
+          const newGraphLinks = graph.graphLinks.filter((graphLink) => graphLink.source.nodeId === graphNode.nodeId);
+          if (newGraphLinks.length > 0) {
+            newGraphLinks.forEach((graphLink) => graphLinks.push(graphLink));
+          }
+        }
+        // find graph link for cut effect nodes
+        if (graphNode.type === GRAPH_NODE_TYPE.EFFECT) {
+          const newGraphLinks = graph.graphLinks.filter((graphLink) => graphLink.target.nodeId === graphNode.nodeId);
+          if (newGraphLinks.length > 0) {
+            newGraphLinks.forEach((graphLink) => graphLinks.push(graphLink));
+          }
+        }
+        // find constraint related to graph node
+        const currentConstraints = graph.constraints.slice();
+        if (currentConstraints.length > 0) {
+          const findCutConstraints = currentConstraints.filter((currentConstraint) =>
+            currentConstraint.nodes.some((node) => node.graphNodeId === graphNode.id)
+          );
+          if (findCutConstraints.length > 0) {
+            findCutConstraints.forEach((cutConstraint) => constraints.push(cutConstraint));
+          }
+        }
+      });
+      const cutData = {
+        constraints,
+        graphNodes,
+        graphLinks,
+      };
+      this.setState({ cutData });
+    }
   };
 
   _handlePasteEvent = () => {
@@ -233,6 +265,40 @@ class Graph extends Component {
       if (!isExists) {
         newGraph.graphNodes.push(data);
         this.graphManager.reDrawCauseEffect(convertGraphNodeToNode(data));
+        if (data.type === GRAPH_NODE_TYPE.CAUSE) {
+          const newGraphLinks = cutData.graphLinks.filter((graphLink) => graphLink.source.nodeId === data.nodeId);
+          if (newGraphLinks.length > 0) {
+            newGraphLinks.forEach((graphLink) => {
+              newGraph.graphLinks.push(graphLink);
+              this.graphManager.reDrawCauseEffect(convertGraphLinkToEdge(graphLink));
+            });
+          }
+        }
+        if (data.type === GRAPH_NODE_TYPE.EFFECT) {
+          const newGraphLinks = cutData.graphLinks.filter((graphLink) => graphLink.target.nodeId === data.nodeId);
+          if (newGraphLinks.length > 0) {
+            newGraphLinks.forEach((graphLink) => {
+              newGraph.graphLinks.push(graphLink);
+              this.graphManager.reDrawCauseEffect(convertGraphLinkToEdge(graphLink));
+            });
+          }
+        }
+        const newConstraints = cutData.constraints.filter((constraint) =>
+          constraint.nodes.some((node) => node.graphNodeId === data.id)
+        );
+        if (newConstraints.length > 0) {
+          newConstraints.forEach((constraint) => {
+            newGraph.constraints.push(constraint);
+            if (isDirectConstraint(constraint.type)) {
+              this.graphManager.reDrawCauseEffect(convertDirectConstraintToEdge(constraint));
+            } else {
+              const node = convertUndirectConstraintToNode(constraint);
+              this.graphManager.reDrawCauseEffect(node, G_TYPE.CONSTRAINT);
+              const edges = convertUndirectConstraintToEdge(constraint);
+              edges.forEach((edge) => this.graphManager.reDrawCauseEffect(edge));
+            }
+          });
+        }
       }
     });
     setGraph(newGraph);
