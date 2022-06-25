@@ -405,7 +405,6 @@ export const TEST_CASE_LIMITATION = 100;
 export const TEST_BASIS_EVENT_TYPE = {
   DEFAULT: 'default',
   CUT: 'cut',
-  PASTED: 'pasted',
 };
 
 export const EVENT_LISTENER_LIST = {
