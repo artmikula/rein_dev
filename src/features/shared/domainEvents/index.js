@@ -13,7 +13,6 @@ const domainEvents = {
     GRAPH_ALIGN: 'GRAPH_ALIGN',
     INSERTCAUSES: 'INSERTCAUSES',
     CHANGE_NODE_ID: 'CHANGE_NODE_ID',
-    RECREATE: 'RE_CREATE',
     CUT: 'CUT',
     PASTE: 'PASTE',
   },
