@@ -197,7 +197,7 @@ class CauseEffectTable extends Component {
     const cutData = causeEffects.filter((causeEffect) => eventData.some((item) => item === causeEffect.definitionId));
     if (cutData.length > 0) {
       const value = cutData.map((data) => data.node);
-      this._raiseEvent({ action: domainEvents.ACTION.CUT, value });
+      this._raiseEvent({ action: domainEvents.ACTION.CUT, value, receivers: [domainEvents.DES.GRAPH] });
     }
     this.setState({ cutData });
   };
@@ -214,7 +214,7 @@ class CauseEffectTable extends Component {
     });
     setCauseEffects(newCauseEffects);
     this.setState({ cutData: [] });
-    this._raiseEvent({ action: domainEvents.ACTION.PASTE });
+    this._raiseEvent({ action: domainEvents.ACTION.PASTE, receivers: [domainEvents.DES.GRAPH] });
   };
 
   _handleEvent = (message) => {

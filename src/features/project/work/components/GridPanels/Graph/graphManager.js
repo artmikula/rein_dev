@@ -359,11 +359,7 @@ class GraphManager {
 
   _deleteRelatedUnconstraintNode = (node) => {
     node._private.edges.forEach((edge) => {
-      if (
-        isUndirectConstraint(edge.data().type) &&
-        isUndirectConstraintNode(edge.source()) &&
-        edge.source()._private.edges.length === 2
-      ) {
+      if (isUndirectConstraint(edge.data().type) && isUndirectConstraintNode(edge.source())) {
         this.remove(edge.source());
       }
     });

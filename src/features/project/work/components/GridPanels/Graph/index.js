@@ -220,27 +220,39 @@ class Graph extends Component {
       graphNodes.forEach((graphNode) => {
         // find graph link for cut cause nodes
         if (graphNode.type === GRAPH_NODE_TYPE.CAUSE) {
-          const newGraphLinks = graph.graphLinks.filter((graphLink) => graphLink.source.nodeId === graphNode.nodeId);
-          if (newGraphLinks.length > 0) {
-            newGraphLinks.forEach((graphLink) => graphLinks.push(graphLink));
+          const cutGraphLinks = graph.graphLinks.filter((graphLink) => graphLink.source.nodeId === graphNode.nodeId);
+          if (cutGraphLinks.length > 0) {
+            cutGraphLinks.forEach((cutGraphLink) => {
+              const isExists = graphLinks.find((graphLink) => graphLink.id === cutGraphLink.id);
+              if (!isExists) {
+                graphLinks.push(cutGraphLink);
+              }
+            });
           }
         }
         // find graph link for cut effect nodes
         if (graphNode.type === GRAPH_NODE_TYPE.EFFECT) {
-          const newGraphLinks = graph.graphLinks.filter((graphLink) => graphLink.target.nodeId === graphNode.nodeId);
-          if (newGraphLinks.length > 0) {
-            newGraphLinks.forEach((graphLink) => graphLinks.push(graphLink));
+          const cutGraphLinks = graph.graphLinks.filter((graphLink) => graphLink.target.nodeId === graphNode.nodeId);
+          if (cutGraphLinks.length > 0) {
+            cutGraphLinks.forEach((cutGraphLink) => {
+              const isExists = graphLinks.find((graphLink) => graphLink.id === cutGraphLink.id);
+              if (!isExists) {
+                graphLinks.push(cutGraphLink);
+              }
+            });
           }
         }
         // find constraint related to graph node
-        const currentConstraints = graph.constraints.slice();
-        if (currentConstraints.length > 0) {
-          const findCutConstraints = currentConstraints.filter((currentConstraint) =>
-            currentConstraint.nodes.some((node) => node.graphNodeId === graphNode.id)
-          );
-          if (findCutConstraints.length > 0) {
-            findCutConstraints.forEach((cutConstraint) => constraints.push(cutConstraint));
-          }
+        const cutConstraints = graph.constraints.filter((constraint) =>
+          constraint.nodes.some((node) => node.graphNodeId === graphNode.id)
+        );
+        if (cutConstraints.length > 0) {
+          cutConstraints.forEach((cutConstraint) => {
+            const isExists = constraints.find((constraint) => constraint.id === cutConstraint.id);
+            if (!isExists) {
+              constraints.push(cutConstraint);
+            }
+          });
         }
       });
       const cutData = {
@@ -265,40 +277,65 @@ class Graph extends Component {
       if (!isExists) {
         newGraph.graphNodes.push(data);
         this.graphManager.reDrawCauseEffect(convertGraphNodeToNode(data));
-        if (data.type === GRAPH_NODE_TYPE.CAUSE) {
-          const newGraphLinks = cutData.graphLinks.filter((graphLink) => graphLink.source.nodeId === data.nodeId);
-          if (newGraphLinks.length > 0) {
-            newGraphLinks.forEach((graphLink) => {
+      }
+    });
+
+    // after re-draw all nodes, start to re-draw links and constraints
+    cutData.graphNodes.forEach((data) => {
+      if (data.type === GRAPH_NODE_TYPE.CAUSE) {
+        const newGraphLinks = cutData.graphLinks.filter((graphLink) => graphLink.source.nodeId === data.nodeId);
+        if (newGraphLinks.length > 0) {
+          newGraphLinks.forEach((graphLink) => {
+            const isExists = newGraph.graphLinks.find((newGraphLink) => newGraphLink.id === graphLink.id);
+            if (!isExists) {
               newGraph.graphLinks.push(graphLink);
               this.graphManager.reDrawCauseEffect(convertGraphLinkToEdge(graphLink));
-            });
-          }
+            }
+          });
         }
-        if (data.type === GRAPH_NODE_TYPE.EFFECT) {
-          const newGraphLinks = cutData.graphLinks.filter((graphLink) => graphLink.target.nodeId === data.nodeId);
-          if (newGraphLinks.length > 0) {
-            newGraphLinks.forEach((graphLink) => {
+      }
+      if (data.type === GRAPH_NODE_TYPE.EFFECT) {
+        const newGraphLinks = cutData.graphLinks.filter((graphLink) => graphLink.target.nodeId === data.nodeId);
+        if (newGraphLinks.length > 0) {
+          newGraphLinks.forEach((graphLink) => {
+            const isExists = newGraph.graphLinks.find((newGraphLink) => newGraphLink.id === graphLink.id);
+            if (!isExists) {
               newGraph.graphLinks.push(graphLink);
               this.graphManager.reDrawCauseEffect(convertGraphLinkToEdge(graphLink));
-            });
-          }
+            }
+          });
         }
-        const newConstraints = cutData.constraints.filter((constraint) =>
-          constraint.nodes.some((node) => node.graphNodeId === data.id)
-        );
-        if (newConstraints.length > 0) {
-          newConstraints.forEach((constraint) => {
+      }
+      const newConstraints = cutData.constraints.filter((constraint) =>
+        constraint.nodes.some((node) => node.graphNodeId === data.id)
+      );
+      if (newConstraints.length > 0) {
+        newConstraints.forEach((constraint) => {
+          const isExists = newGraph.constraints.find((oldConstraint) => oldConstraint.id === constraint.id);
+          if (!isExists) {
             newGraph.constraints.push(constraint);
             if (isDirectConstraint(constraint.type)) {
               this.graphManager.reDrawCauseEffect(convertDirectConstraintToEdge(constraint));
             } else {
               const node = convertUndirectConstraintToNode(constraint);
-              this.graphManager.reDrawCauseEffect(node, G_TYPE.CONSTRAINT);
+              this.graphManager.reDrawCauseEffect(node);
               const edges = convertUndirectConstraintToEdge(constraint);
               edges.forEach((edge) => this.graphManager.reDrawCauseEffect(edge));
             }
-          });
-        }
+          } else {
+            const existInOldGraphNodes = graph.graphNodes.find((oldGraphNode) => oldGraphNode.id === data.id);
+            if (!existInOldGraphNodes) {
+              if (isDirectConstraint(constraint.type)) {
+                this.graphManager.reDrawCauseEffect(convertDirectConstraintToEdge(constraint));
+              } else {
+                const node = convertUndirectConstraintToNode(constraint);
+                this.graphManager.reDrawCauseEffect(node);
+                const edges = convertUndirectConstraintToEdge(constraint);
+                edges.forEach((edge) => this.graphManager.reDrawCauseEffect(edge));
+              }
+            }
+          }
+        });
       }
     });
     setGraph(newGraph);
@@ -306,14 +343,14 @@ class Graph extends Component {
   };
 
   _handleCauseEffectEvents = (message) => {
-    const { action, receives, value } = message;
+    const { action, receivers, value } = message;
     switch (action) {
       case domainEvents.ACTION.ADD: {
         this._handleAddNodes(value);
         break;
       }
       case domainEvents.ACTION.ACCEPTDELETE:
-        if (receives === undefined || receives.includes(domainEvents.DES.GRAPH)) {
+        if (receivers === undefined || receivers.includes(domainEvents.DES.GRAPH)) {
           this.graphManager.deleteCauseEffectNode(value);
         }
         break;
@@ -324,10 +361,14 @@ class Graph extends Component {
         this._changeNodeId(value);
         break;
       case domainEvents.ACTION.CUT:
-        this._handleCutEvent(value);
+        if (receivers && receivers.includes(domainEvents.DES.GRAPH)) {
+          this._handleCutEvent(value);
+        }
         break;
       case domainEvents.ACTION.PASTE:
-        this._handlePasteEvent();
+        if (receivers && receivers.includes(domainEvents.DES.GRAPH)) {
+          this._handlePasteEvent();
+        }
         break;
       default:
         break;

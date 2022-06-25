@@ -214,10 +214,12 @@ class TestBasis extends Component {
       // check if delete definition
       if (currentPlainText.length !== prevPlainText.length) {
         const removedEntities = TestBasisManager.findRemovedEntities(drawContent);
-        this._handleCutEvent(removedEntities, selectionState);
-        removedEntities.forEach((item) => {
-          this._raiseEvent(domainEvents.ACTION.REMOVE, { ...item });
-        });
+        if (removedEntities.length > 0) {
+          this._handleCutEvent(removedEntities, selectionState);
+          removedEntities.forEach((item) => {
+            this._raiseEvent(domainEvents.ACTION.REMOVE, { ...item });
+          });
+        }
       }
 
       this.setState({ isOpenClassifyPopover: false });
@@ -294,7 +296,8 @@ class TestBasis extends Component {
     }
     if (type === TEST_BASIS_EVENT_TYPE.DEFAULT) {
       this.setState({ cutState: { entities: [], selection: null } });
-    } else {
+    }
+    if (type === TEST_BASIS_EVENT_TYPE.CUT && entities.length > 0) {
       this.setState({ cutState: { entities, selection } });
       const value = entities.map((entity) => entity.definitionId);
       this._raiseEvent(domainEvents.ACTION.CUT, value);
@@ -302,34 +305,46 @@ class TestBasis extends Component {
   };
 
   _handlePastedText = (text) => {
+    const texts = text.split('\n').filter((text) => text);
     const { cutState } = this.state;
-    const isExistsText = cutState.entities.some((entity) => entity.definition === text);
-    if (isExistsText) {
-      this._handlePasteEvent();
-      this.setState({ cutState: { entities: [], selection: null } });
-    } else {
+    const isContainsText = cutState.entities.every((entity) => texts.includes(entity.definition));
+    if (!isContainsText) {
       alert('Cannot pasted because of non-existed text or duplicated!', {
         title: 'Cannot pasted text',
         error: true,
       });
+      this.setState({ cutState: { entities: [], selection: null } });
+      return true;
     }
+    this._handlePasteEvent();
+    this.setState({ type: TEST_BASIS_EVENT_TYPE.DEFAULT });
+    return false;
   };
 
   _handlePasteEvent = () => {
-    const { cutState, editorState } = this.state;
-    const currentContent = editorState.getCurrentContent();
-    const drawContent = convertToRaw(currentContent);
+    const { type } = this.state;
+    if (type === TEST_BASIS_EVENT_TYPE.CUT) {
+      const { cutState, editorState } = this.state;
+      const currentContent = editorState.getCurrentContent();
+      const drawContent = convertToRaw(currentContent);
 
-    const { entityMap } = drawContent;
-    const entities = Object.values(entityMap);
-    const newEntities = cutState.entities.filter((removedEntity) =>
-      entities.some((entity) => entity.data.definitionId !== removedEntity.definitionId)
-    );
-    if (newEntities.length > 0) {
-      newEntities.forEach((entity) => {
-        this._addCauseEffect(entity);
-      });
-      this._raiseEvent(domainEvents.ACTION.PASTE);
+      const { entityMap } = drawContent;
+      const entities = Object.values(entityMap);
+      let newEntities = [];
+      if (entities.length > 0) {
+        newEntities = cutState.entities.filter((removedEntity) =>
+          entities.some((entity) => entity.data.definitionId !== removedEntity.definitionId)
+        );
+      } else {
+        newEntities = cutState.entities.slice();
+      }
+      if (newEntities.length > 0) {
+        newEntities.forEach((entity) => {
+          this._addCauseEffect(entity);
+        });
+        this._raiseEvent(domainEvents.ACTION.PASTE);
+        this.setState({ cutState: { entities: [], selection: null } });
+      }
     }
   };
   /* End Action */
