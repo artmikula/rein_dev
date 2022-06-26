@@ -358,7 +358,8 @@ class GraphManager {
   };
 
   _deleteRelatedUnconstraintNode = (node) => {
-    node._private.edges.forEach((edge) => {
+    const edges = this.graph.edges().filter((edge) => edge.data().target === node.data().id);
+    edges.forEach((edge) => {
       if (isUndirectConstraint(edge.data().type) && isUndirectConstraintNode(edge.source())) {
         this.remove(edge.source());
       }
@@ -436,15 +437,6 @@ class GraphManager {
     const graphNode = createGraphNode(uuid(), node, nodeType, x, y, inspection, definitionId, definition);
     this.draw(convertGraphNodeToNode(graphNode));
     this.onGraphChange(actionType);
-  };
-
-  reDrawCauseEffect = (ele) => {
-    const existsNode = this.graph.nodes().find((node) => node.data().id === ele.data.id);
-    if (existsNode) {
-      this.remove(existsNode);
-    }
-    this.draw(ele);
-    this.onGraphChange();
   };
 
   removeSelectedElement = () => {

@@ -272,11 +272,16 @@ class Graph extends Component {
       graphNodes: graph.graphNodes.slice(),
       graphLinks: graph.graphLinks.slice(),
     };
+    const reDrawGraph = {
+      constraints: [],
+      graphNodes: [],
+      graphLinks: [],
+    };
     cutData.graphNodes.forEach((data) => {
       const isExists = newGraph.graphNodes.find((graphNode) => graphNode.nodeId === data.nodeId);
       if (!isExists) {
         newGraph.graphNodes.push(data);
-        this.graphManager.reDrawCauseEffect(convertGraphNodeToNode(data));
+        reDrawGraph.graphNodes.push(data);
       }
     });
 
@@ -289,7 +294,7 @@ class Graph extends Component {
             const isExists = newGraph.graphLinks.find((newGraphLink) => newGraphLink.id === graphLink.id);
             if (!isExists) {
               newGraph.graphLinks.push(graphLink);
-              this.graphManager.reDrawCauseEffect(convertGraphLinkToEdge(graphLink));
+              reDrawGraph.graphLinks.push(graphLink);
             }
           });
         }
@@ -301,7 +306,7 @@ class Graph extends Component {
             const isExists = newGraph.graphLinks.find((newGraphLink) => newGraphLink.id === graphLink.id);
             if (!isExists) {
               newGraph.graphLinks.push(graphLink);
-              this.graphManager.reDrawCauseEffect(convertGraphLinkToEdge(graphLink));
+              reDrawGraph.graphLinks.push(graphLink);
             }
           });
         }
@@ -314,31 +319,13 @@ class Graph extends Component {
           const isExists = newGraph.constraints.find((oldConstraint) => oldConstraint.id === constraint.id);
           if (!isExists) {
             newGraph.constraints.push(constraint);
-            if (isDirectConstraint(constraint.type)) {
-              this.graphManager.reDrawCauseEffect(convertDirectConstraintToEdge(constraint));
-            } else {
-              const node = convertUndirectConstraintToNode(constraint);
-              this.graphManager.reDrawCauseEffect(node);
-              const edges = convertUndirectConstraintToEdge(constraint);
-              edges.forEach((edge) => this.graphManager.reDrawCauseEffect(edge));
-            }
-          } else {
-            const existInOldGraphNodes = graph.graphNodes.find((oldGraphNode) => oldGraphNode.id === data.id);
-            if (!existInOldGraphNodes) {
-              if (isDirectConstraint(constraint.type)) {
-                this.graphManager.reDrawCauseEffect(convertDirectConstraintToEdge(constraint));
-              } else {
-                const node = convertUndirectConstraintToNode(constraint);
-                this.graphManager.reDrawCauseEffect(node);
-                const edges = convertUndirectConstraintToEdge(constraint);
-                edges.forEach((edge) => this.graphManager.reDrawCauseEffect(edge));
-              }
-            }
+            reDrawGraph.constraints.push(constraint);
           }
         });
       }
     });
     setGraph(newGraph);
+    this._drawGraph(this.graphManager, reDrawGraph, true);
     this.setState({ cutData: { constraints: [], graphNodes: [], graphLinks: [] } });
   };
 
@@ -461,18 +448,20 @@ class Graph extends Component {
   };
   /* End events */
 
-  _drawGraph = (graphManager, graphNodes = null, forceUpdate = false) => {
+  _drawGraph = (graphManager, graphs = null, forceUpdate = false) => {
     const { graph, workLoaded } = this.props;
-    const _graphNodes = graphNodes ?? graph.graphNodes;
+    const _graphNodes = graphs?.graphNodes ?? graph.graphNodes;
+    const _graphLinks = graphs?.graphLinks ?? graph.graphLinks;
+    const _constraints = graphs?.constraints ?? graph.constraints;
 
     if ((!this.initiatedGraph && workLoaded) || forceUpdate) {
       this.dataIniting = true;
 
       _graphNodes.forEach((graphNode) => graphManager.draw(convertGraphNodeToNode(graphNode)));
 
-      graph.graphLinks.forEach((graphLink) => graphManager.draw(convertGraphLinkToEdge(graphLink)));
+      _graphLinks.forEach((graphLink) => graphManager.draw(convertGraphLinkToEdge(graphLink)));
 
-      graph.constraints.forEach((constraint) => {
+      _constraints.forEach((constraint) => {
         if (isDirectConstraint(constraint.type)) {
           graphManager.draw(convertDirectConstraintToEdge(constraint));
         } else {

@@ -307,7 +307,10 @@ class TestBasis extends Component {
   _handlePastedText = (text) => {
     const texts = text.split('\n').filter((text) => text);
     const { cutState } = this.state;
-    const isContainsText = cutState.entities.every((entity) => texts.includes(entity.definition));
+    let isContainsText = false;
+    if (cutState.entities.length > 0) {
+      isContainsText = cutState.entities.every((entity) => texts.includes(entity.definition));
+    }
     if (!isContainsText) {
       alert('Cannot pasted because of non-existed text or duplicated!', {
         title: 'Cannot pasted text',
