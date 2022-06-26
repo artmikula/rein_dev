@@ -25,6 +25,12 @@
       "rules": {
         "max-lines": "off"
       }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "no-undef": "error"
+      }
     }
   ],
   "rules": {
