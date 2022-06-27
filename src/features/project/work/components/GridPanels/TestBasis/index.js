@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   CompositeDecorator,
   convertFromRaw,
@@ -11,7 +12,7 @@ import {
 import 'draft-js/dist/Draft.css';
 import TestBasisManager from 'features/project/work/biz/TestBasis';
 import { setTestBasis } from 'features/project/work/slices/workSlice';
-import { STRING } from 'features/shared/constants';
+import { STRING, TEST_BASIS_EVENT_TYPE, EVENT_LISTENER_LIST } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
 import PropTypes from 'prop-types';
@@ -31,6 +32,11 @@ class TestBasis extends Component {
       isOpenClassifyPopover: false,
       editorState: EditorState.createEmpty(this._compositeDecorator()),
       selectionState: null,
+      type: TEST_BASIS_EVENT_TYPE.DEFAULT,
+      cutState: {
+        entities: [],
+        selection: null,
+      },
     };
     this.initiatedTestBasis = false;
   }
@@ -45,6 +51,8 @@ class TestBasis extends Component {
       this._handleEventBus(message);
     });
 
+    window.addEventListener(EVENT_LISTENER_LIST.CUT, () => this.setState({ type: TEST_BASIS_EVENT_TYPE.CUT }));
+
     this._initTestBasis();
     this.ready = true;
   }
@@ -54,6 +62,7 @@ class TestBasis extends Component {
   }
 
   componentWillUnmount() {
+    window.removeEventListener(EVENT_LISTENER_LIST.CUT, () => this.setState({ type: TEST_BASIS_EVENT_TYPE.DEFAULT }));
     eventBus.unsubscribe(this);
   }
 
@@ -116,7 +125,11 @@ class TestBasis extends Component {
       }),
     };
 
-    this.setState(newState);
+    this.setState({
+      isOpenClassifyPopover: newState.isOpenClassifyPopover,
+      editorState: newState.editorState,
+      selectionState: newState.selectionState,
+    });
   };
 
   _removeCauseEffect = (definitionId) => {
@@ -198,11 +211,11 @@ class TestBasis extends Component {
       const currentPlainText = currentContent.getPlainText();
       const prevContent = editorState.getCurrentContent();
       const prevPlainText = prevContent.getPlainText();
-
+      // check if delete definition
       if (currentPlainText.length !== prevPlainText.length) {
-        // check if delete definition
-        if (currentPlainText.length !== prevPlainText.length) {
-          const removedEntities = TestBasisManager.findRemovedEntities(drawContent);
+        const removedEntities = TestBasisManager.findRemovedEntities(drawContent);
+        if (removedEntities.length > 0) {
+          this._handleCutEvent(removedEntities, selectionState);
           removedEntities.forEach((item) => {
             this._raiseEvent(domainEvents.ACTION.REMOVE, { ...item });
           });
@@ -243,12 +256,13 @@ class TestBasis extends Component {
   };
 
   _addCauseEffect = (data) => {
-    const { editorState, selectionState } = this.state;
+    const { editorState, selectionState, cutState } = this.state;
     if (this.ready) {
       const contentState = editorState.getCurrentContent();
       const contentStateWithEntity = contentState.createEntity(STRING.DEFINITION, 'MUTABLE', data);
       const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-      const contentStateWithLink = Modifier.applyEntity(contentStateWithEntity, selectionState, entityKey);
+      const currentSelection = cutState.selection || selectionState;
+      const contentStateWithLink = Modifier.applyEntity(contentStateWithEntity, currentSelection, entityKey);
       const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithLink });
 
       this._updateEditorState(newEditorState);
@@ -274,6 +288,68 @@ class TestBasis extends Component {
       this._raiseEvent(domainEvents.ACTION.ADD, [{ type, definitionId, definition: selectedText }]);
     }
   };
+
+  _handleCutEvent = (entities, selection) => {
+    const { type } = this.state;
+    if (!this.ready) {
+      return;
+    }
+    if (type === TEST_BASIS_EVENT_TYPE.DEFAULT) {
+      this.setState({ cutState: { entities: [], selection: null } });
+    }
+    if (type === TEST_BASIS_EVENT_TYPE.CUT && entities.length > 0) {
+      this.setState({ cutState: { entities, selection } });
+      const value = entities.map((entity) => entity.definitionId);
+      this._raiseEvent(domainEvents.ACTION.CUT, value);
+    }
+  };
+
+  _handlePastedText = (text) => {
+    const texts = text.split('\n').filter((text) => text);
+    const { cutState } = this.state;
+    let isContainsText = false;
+    if (cutState.entities.length > 0) {
+      isContainsText = cutState.entities.every((entity) => texts.includes(entity.definition));
+    }
+    if (!isContainsText) {
+      alert('Cannot pasted because of non-existed text or duplicated!', {
+        title: 'Cannot pasted text',
+        error: true,
+      });
+      this.setState({ cutState: { entities: [], selection: null } });
+      return true;
+    }
+    this._handlePasteEvent();
+    this.setState({ type: TEST_BASIS_EVENT_TYPE.DEFAULT });
+    return false;
+  };
+
+  _handlePasteEvent = () => {
+    const { type } = this.state;
+    if (type === TEST_BASIS_EVENT_TYPE.CUT) {
+      const { cutState, editorState } = this.state;
+      const currentContent = editorState.getCurrentContent();
+      const drawContent = convertToRaw(currentContent);
+
+      const { entityMap } = drawContent;
+      const entities = Object.values(entityMap);
+      let newEntities = [];
+      if (entities.length > 0) {
+        newEntities = cutState.entities.filter((removedEntity) =>
+          entities.some((entity) => entity.data.definitionId !== removedEntity.definitionId)
+        );
+      } else {
+        newEntities = cutState.entities.slice();
+      }
+      if (newEntities.length > 0) {
+        newEntities.forEach((entity) => {
+          this._addCauseEffect(entity);
+        });
+        this._raiseEvent(domainEvents.ACTION.PASTE);
+        this.setState({ cutState: { entities: [], selection: null } });
+      }
+    }
+  };
   /* End Action */
 
   render() {
@@ -293,6 +369,7 @@ class TestBasis extends Component {
           editorState={editorState}
           handleKeyCommand={this._handleKeyCommand}
           onChange={this._handleChange}
+          handlePastedText={this._handlePastedText}
         />
         <ClassifyPopover
           isOpen={isOpenClassifyPopover}

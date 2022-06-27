@@ -194,7 +194,7 @@ class TestScenarioAndCase extends Component {
 
     this._raiseEvent({
       action: domainAction,
-      value: newGraphNodes,
+      value: domainAction === domainEvents.ACTION.ACCEPTGENERATE ? scenarioAndGraphNodes : newGraphNodes,
       receivers: [domainEvents.DES.GRAPH, domainEvents.DES.SSMETRIC],
     });
   };

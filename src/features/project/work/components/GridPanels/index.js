@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { GRID_PANEL_SIZE, LAYOUT, VIEW_MODE } from 'features/shared/constants';
+import { EVENT_LISTENER_LIST, GRID_PANEL_SIZE, LAYOUT, VIEW_MODE } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -109,7 +109,7 @@ class GridPanels extends Component {
 
   componentDidMount() {
     this._initLayoutSize();
-    window.addEventListener('resize', this._onChangeLayoutSize);
+    window.addEventListener(EVENT_LISTENER_LIST.RESIZE, this._onChangeLayoutSize);
 
     eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.ACCEPTGENERATE) {
@@ -119,7 +119,9 @@ class GridPanels extends Component {
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', () => this.setState({ wrapperHeight: 0, panelWidth: 0, panelHeight: 0 }));
+    window.removeEventListener(EVENT_LISTENER_LIST.RESIZE, () =>
+      this.setState({ wrapperHeight: 0, panelWidth: 0, panelHeight: 0 })
+    );
     eventBus.unsubscribe(this);
   }
 

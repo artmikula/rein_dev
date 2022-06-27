@@ -29,6 +29,7 @@ class TestDataTable extends Component {
     super(props);
     this.state = {
       importFormOpen: false,
+      cutData: [],
     };
   }
 
@@ -61,7 +62,7 @@ class TestDataTable extends Component {
     Mousetrap.reset();
   }
 
-  _setTestDatas = (testDatas, raiseEvent = true) => {
+  _setTestDatas = (testDatas, raiseEvent = false) => {
     const { setTestDatas } = this.props;
 
     setTestDatas(testDatas);
@@ -91,12 +92,12 @@ class TestDataTable extends Component {
       testDatas = TestData.add(testDatas, item);
     });
 
-    this._setTestDatas(testDatas, false);
+    this._setTestDatas(testDatas);
   };
 
   _removeData = (item) => {
     const { testDatas } = this.props;
-    this._setTestDatas(TestData.remove(testDatas, item), false);
+    this._setTestDatas(TestData.remove(testDatas, item));
   };
 
   _updateData = (nodeId, type, strength = 1) => {
@@ -114,7 +115,7 @@ class TestDataTable extends Component {
 
     const newTestDatas = TestData.update(testDatas, item, index);
 
-    this._setTestDatas(newTestDatas);
+    this._setTestDatas(newTestDatas, true);
   };
 
   _onTrueFalseDataChange = (nodeId, valueType, value) => {
@@ -137,13 +138,39 @@ class TestDataTable extends Component {
     }
 
     const newTestDatas = TestData.update(testDatas, item, index);
-    this._setTestDatas(newTestDatas, false);
+    this._setTestDatas(newTestDatas);
+  };
+
+  _handleCutEvent = (eventData) => {
+    const { testDatas } = this.props;
+    const cutData = testDatas.filter((testData) => eventData.some((data) => data === testData.nodeId));
+    this.setState({ cutData });
+  };
+
+  _handlePasteEvent = () => {
+    const { testDatas } = this.props;
+    const { cutData } = this.state;
+    const newTestDatas = testDatas.slice();
+    cutData.forEach((data) => {
+      const isExists = newTestDatas.find((testData) => testData.nodeId === data.nodeId);
+      if (!isExists) {
+        newTestDatas.push(data);
+      }
+    });
+    this._setTestDatas(newTestDatas);
+    this.setState({ cutData: [] });
   };
 
   _handleCauseEffectEvents = (message) => {
     const { action, value } = message;
     if (action === domainEvents.ACTION.ADD) {
       this._addData(value);
+    }
+    if (action === domainEvents.ACTION.CUT) {
+      this._handleCutEvent(value);
+    }
+    if (action === domainEvents.ACTION.PASTE) {
+      this._handlePasteEvent();
     }
     if (action === domainEvents.ACTION.ACCEPTDELETE) {
       this._removeData(value);
@@ -163,13 +190,12 @@ class TestDataTable extends Component {
 
       newList[index] = newItem;
 
-      this._setTestDatas(newList, false);
+      this._setTestDatas(newList);
     }
   };
 
   _exportData = () => {
-    const { testDatas } = this.props;
-    const { workName } = this.props;
+    const { testDatas, workName } = this.props;
     const dataToConvert = testDatas.map((data) => ({
       Cause: data.nodeId,
       Type: data.type,
@@ -226,7 +252,7 @@ class TestDataTable extends Component {
       if (testData.isChanged) {
         testData.isChanged = false;
         const newTestDatas = TestData.update(testDatas, testData, testDataIndex);
-        this._setTestDatas(newTestDatas, false);
+        this._setTestDatas(newTestDatas);
       }
     }
   };
