@@ -43,6 +43,7 @@ class TestScenarioAndCase extends Component {
   componentDidMount() {
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
+        this.setState({ isCheckAllTestScenarios: false });
         this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
@@ -94,6 +95,7 @@ class TestScenarioAndCase extends Component {
 
   _clearData = () => {
     this._setColumnsAndRows([], [], []);
+    this.setState({ isCheckAllTestScenarios: false });
     testScenarioAnsCaseStorage.set([]);
   };
 
