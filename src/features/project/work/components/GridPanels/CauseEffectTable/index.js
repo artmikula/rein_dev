@@ -16,6 +16,10 @@ import CauseEffectRow from './components/CauseEffectRow';
 import './style.scss';
 
 class CauseEffectTable extends Component {
+  state = {
+    cutData: [],
+  };
+
   mergeItem = null;
 
   componentDidMount() {
@@ -188,12 +192,43 @@ class CauseEffectTable extends Component {
     });
   };
 
+  _handleCutEvent = (eventData) => {
+    const { listData: causeEffects } = this.props;
+    const cutData = causeEffects.filter((causeEffect) => eventData.some((item) => item === causeEffect.definitionId));
+    if (cutData.length > 0) {
+      const value = cutData.map((data) => data.node);
+      this._raiseEvent({ action: domainEvents.ACTION.CUT, value, receivers: [domainEvents.DES.GRAPH] });
+    }
+    this.setState({ cutData });
+  };
+
+  _handlePasteEvent = () => {
+    const { listData: causeEffects, setCauseEffects } = this.props;
+    const { cutData } = this.state;
+    const newCauseEffects = causeEffects.slice();
+    cutData.forEach((data) => {
+      const isExists = newCauseEffects.find((causeEffect) => causeEffect.node === data.node);
+      if (!isExists) {
+        newCauseEffects.push(data);
+      }
+    });
+    setCauseEffects(newCauseEffects);
+    this.setState({ cutData: [] });
+    this._raiseEvent({ action: domainEvents.ACTION.PASTE, receivers: [domainEvents.DES.GRAPH] });
+  };
+
   _handleEvent = (message) => {
     const { action, value, receivers } = message;
     if (receivers === undefined || receivers.includes(domainEvents.DES.CAUSEEFFECT)) {
       switch (action) {
         case domainEvents.ACTION.ADD:
           this._handleAddEvent(value);
+          break;
+        case domainEvents.ACTION.CUT:
+          this._handleCutEvent(value);
+          break;
+        case domainEvents.ACTION.PASTE:
+          this._handlePasteEvent();
           break;
         case domainEvents.ACTION.UPDATE:
           this._handleUpdateEvent(value);
@@ -235,6 +270,7 @@ class CauseEffectTable extends Component {
         (item) => item.nodeId === x.node && (!this.mergeItem || (this.mergeItem && item.nodeId !== this.mergeItem.node))
       )
     );
+
     // get causeEffect need remove include merged causeEffect;
     removedcauseEffects = listData.filter((x) =>
       removedcauseEffects.some(
