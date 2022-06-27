@@ -440,14 +440,16 @@ class TestScenarioAndCase extends Component {
         <Table bordered className="scenario-case-table">
           <thead className="text-primary">
             <tr>
-              <td>
-                <Input
-                  type="checkbox"
-                  className="mt-1"
-                  onChange={(e) => this._handleCheckedAll(e.target.checked)}
-                  checked={isCheckAllTestScenarios}
-                />
-                <span style={{ paddingLeft: 12 }}>{Language.get('name')}</span>
+              <td className="position-relative">
+                <div className="position-absolute header-checkbox-container">
+                  <Input
+                    type="checkbox"
+                    className="mt-1"
+                    onChange={(e) => this._handleCheckedAll(e.target.checked)}
+                    checked={isCheckAllTestScenarios}
+                  />
+                </div>
+                {Language.get('name')}
               </td>
               {columns.map((column, colIndex) => (
                 <td key={colIndex} title={column.title} style={{ cursor: column.title ? 'pointer' : 'default' }}>
