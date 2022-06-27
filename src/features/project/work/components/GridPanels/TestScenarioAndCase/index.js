@@ -35,6 +35,7 @@ class TestScenarioAndCase extends Component {
       columns: [],
       rows: [],
       expandId: {},
+      isCheckAllTestScenarios: false,
     };
     this.initiatedData = false;
   }
@@ -261,7 +262,7 @@ class TestScenarioAndCase extends Component {
       action: domainEvents.ACTION.UPDATE,
     });
 
-    this.setState({ rows });
+    this.setState({ rows }, this._isCheckedAllTestScenarios);
   };
 
   _handleTestCaseChecked = (scenarioId, caseId, checked) => {
@@ -286,6 +287,22 @@ class TestScenarioAndCase extends Component {
     const newRows = testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked, rows);
 
     this._setRows(newRows);
+  };
+
+  _handleCheckedAll = (checked) => {
+    testScenarioAnsCaseStorage.checkAllTestScenarios(checked);
+    const { rows } = this.state;
+    const newRows = testScenarioAnsCaseStorage.checkAllTestScenarios(checked, rows);
+
+    this._setRows(newRows);
+  };
+
+  _isCheckedAllTestScenarios = () => {
+    const { rows } = this.state;
+    const isCheckAllTestScenarios = rows.every(
+      (row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected)
+    );
+    this.setState({ isCheckAllTestScenarios });
   };
 
   _createTestCasesFile = () => {
@@ -374,7 +391,7 @@ class TestScenarioAndCase extends Component {
   }
 
   render() {
-    const { selectedOption, columns, rows, expandId } = this.state;
+    const { selectedOption, columns, rows, expandId, isCheckAllTestScenarios } = this.state;
 
     return (
       <div>
@@ -423,7 +440,15 @@ class TestScenarioAndCase extends Component {
         <Table bordered className="scenario-case-table">
           <thead className="text-primary">
             <tr>
-              <td>{Language.get('name')}</td>
+              <td>
+                <Input
+                  type="checkbox"
+                  className="mt-1"
+                  onChange={(e) => this._handleCheckedAll(e.target.checked)}
+                  checked={isCheckAllTestScenarios}
+                />
+                <span style={{ paddingLeft: 12 }}>{Language.get('name')}</span>
+              </td>
               {columns.map((column, colIndex) => (
                 <td key={colIndex} title={column.title} style={{ cursor: column.title ? 'pointer' : 'default' }}>
                   {column.headerName}
