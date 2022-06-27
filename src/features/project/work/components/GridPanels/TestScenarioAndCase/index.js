@@ -441,14 +441,16 @@ class TestScenarioAndCase extends Component {
           <thead className="text-primary">
             <tr>
               <td className="position-relative">
-                <div className="position-absolute header-checkbox-container">
-                  <Input
-                    type="checkbox"
-                    className="mt-1"
-                    onChange={(e) => this._handleCheckedAll(e.target.checked)}
-                    checked={isCheckAllTestScenarios}
-                  />
-                </div>
+                {rows.length > 0 && (
+                  <div className="position-absolute header-checkbox-container">
+                    <Input
+                      type="checkbox"
+                      className="mt-1"
+                      onChange={(e) => this._handleCheckedAll(e.target.checked)}
+                      checked={isCheckAllTestScenarios}
+                    />
+                  </div>
+                )}
                 {Language.get('name')}
               </td>
               {columns.map((column, colIndex) => (
