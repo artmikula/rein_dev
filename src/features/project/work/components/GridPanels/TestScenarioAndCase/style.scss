@@ -39,7 +39,7 @@ div.vertical-line {
           padding-left: 20px;
           &::before,
           &::after {
-            content: "";
+            content: '';
             position: absolute;
             left: 5px;
             right: auto;
@@ -101,5 +101,15 @@ div.vertical-line {
 .filter-wrapper {
   label {
     word-break: keep-all;
+  }
+}
+
+.header-checkbox-container {
+  left: 53px;
+}
+
+@media all and (max-width: 767px) {
+  .header-checkbox-container {
+    left: 50px;
   }
 }

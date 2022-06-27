@@ -56,6 +56,22 @@ class TestScenarioAnsCaseStorage {
     return data;
   };
 
+  checkAllTestScenarios = (checked, defaultData = null) => {
+    const testScenarios = defaultData ?? this.get();
+
+    if (testScenarios) {
+      for (let i = 0; i < testScenarios.length; i++) {
+        testScenarios[i].isSelected = checked;
+        for (let j = 0; j < testScenarios[i].testCases.length; j++) {
+          testScenarios[i].testCases[j].isSelected = checked;
+        }
+      }
+      this.set(testScenarios);
+    }
+
+    return testScenarios;
+  };
+
   changeTestScenario = (scenarioId, key, value, defaultData = null) => {
     const data = defaultData ?? this.get();
     const testScenario = data.find((x) => x.id === scenarioId);
