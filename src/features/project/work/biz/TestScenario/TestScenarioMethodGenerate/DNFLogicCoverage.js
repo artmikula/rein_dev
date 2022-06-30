@@ -267,31 +267,31 @@ class DNFLogicCoverage {
           (graphNode) => graphNode.id === testAssertion.graphNodeId && graphNode.targetType === testScenarios.targetType
         )
       );
-      for (
-        let expression = filterTestScenarios[0];
-        filterTestScenarios.length > 0;
-        [expression] = filterTestScenarios
-      ) {
-        const assertion = expression;
-        if (!assertion) {
-          testScenarios.testAssertions.push(assertion);
-        }
-        // for (let j = 0; j < assertions.length; j++) {
-        //   const assertion = testScenarios.testAssertions.find(
-        //     (testAssertion) => assertions[j].graphNodeId === testAssertion.graphNodeId
-        //   );
-        //   if (assertion) {
-        //     assertion.result = assertions[j].result;
-        //   } else {
-        //     testScenarios.testAssertions.push(assertions[j]);
-        //   }
-        // }
+      // for (
+      //   let expression = filterTestScenarios[0];
+      //   filterTestScenarios.length > 0;
+      //   [expression] = filterTestScenarios
+      // ) {
+      //   const assertion = expression;
+      //   if (!assertion) {
+      //     testScenarios.testAssertions.push(assertion);
+      //   }
+      //   // for (let j = 0; j < assertions.length; j++) {
+      //   //   const assertion = testScenarios.testAssertions.find(
+      //   //     (testAssertion) => assertions[j].graphNodeId === testAssertion.graphNodeId
+      //   //   );
+      //   //   if (assertion) {
+      //   //     assertion.result = assertions[j].result;
+      //   //   } else {
+      //   //     testScenarios.testAssertions.push(assertions[j]);
+      //   //   }
+      //   // }
 
-        // const index = testScenarios.findIndex(
-        //   (x) => x.testScenario && x.testScenario.id === expression.testScenario.id
-        // );
-        // testScenarios.splice(index, 1);
-      }
+      //   // const index = testScenarios.findIndex(
+      //   //   (x) => x.testScenario && x.testScenario.id === expression.testScenario.id
+      //   // );
+      //   // testScenarios.splice(index, 1);
+      // }
     }
 
     if (applyAbsorptionLaw) {
