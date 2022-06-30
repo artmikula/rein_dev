@@ -3,10 +3,17 @@ import Download from 'downloadjs';
 import testCaseHelper from 'features/project/work/biz/TestCase';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
+import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import reInCloudService from 'features/project/work/services/reInCloudService';
 import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import { setGraph } from 'features/project/work/slices/workSlice';
-import { FILE_NAME, REIN_SHORTCUT_CODE, TEST_CASE_SHORTCUT, TEST_CASE_SHORTCUT_CODE } from 'features/shared/constants';
+import {
+  FILE_NAME,
+  REIN_SHORTCUT_CODE,
+  TEST_CASE_METHOD,
+  TEST_CASE_SHORTCUT,
+  TEST_CASE_SHORTCUT_CODE,
+} from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
@@ -18,6 +25,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import Select from 'react-select';
 import { Button, FormGroup, Input, Label, Table } from 'reactstrap';
+import appConfig from 'features/shared/lib/appConfig';
 import { EXPORT_TYPE_NAME } from '../Graph/constants';
 import './style.scss';
 
@@ -133,11 +141,11 @@ class TestScenarioAndCase extends Component {
     const { workId } = match.params;
     let scenarioAndGraphNodes = null;
 
-    // if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
-    // scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes)
-    // } else {
-    scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
-    // }
+    if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
+      scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
+    } else {
+      scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
+    }
 
     const newTestScenarios = scenarioAndGraphNodes.scenarios
       .filter((x) => !x.isViolated)
