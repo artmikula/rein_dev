@@ -9,6 +9,7 @@ import {
 } from 'features/shared/constants';
 import Enumerable from 'linq';
 import { v4 as uuid } from 'uuid';
+import cloneDeep from 'lodash.clonedeep';
 import constraintHelper from '../../Constraint';
 import TestScenarioGenerator from '../TestScenarioGenerator';
 import TestScenarioHelper from '../TestScenarioHelper';
@@ -165,7 +166,7 @@ class DNFLogicCoverage {
 
   // this is TestScenario.SimplifyExt in C# code
   simplify(effectAssertionDictionary, assertionDictionary = new Map(), applyAbsorptionLaw = true) {
-    let testScenarios = TestScenarioHelper.clone(effectAssertionDictionary);
+    let testScenarioEffect = TestScenarioHelper.clone(effectAssertionDictionary);
 
     const getFirstGroupInTestAssertions = (assertions) => {
       const testAssertions = assertions.find((assertion) =>
@@ -174,72 +175,97 @@ class DNFLogicCoverage {
       return testAssertions;
     };
 
-    let group = getFirstGroupInTestAssertions(testScenarios.testAssertions);
+    let group = getFirstGroupInTestAssertions(testScenarioEffect.testAssertions);
 
     while (group) {
       // for (let group = groups[0]; groups.length > 0; [group] = groups) {
       const groupGraphNodeId = group.graphNodeId;
-      let testScenario1 = assertionDictionary.get(group.graphNodeId);
-      if (testScenario1) {
-        const testAssertion = testScenarios.testAssertions.find((x) => x.graphNodeId === groupGraphNodeId);
+      let testScenarioDictionary = assertionDictionary.get(group.graphNodeId);
+      if (testScenarioDictionary) {
+        const testAssertion = testScenarioEffect.testAssertions.find((x) => x.graphNodeId === groupGraphNodeId);
         if (testAssertion) {
-          const groupT = testScenarios.testAssertions.find((x) => x.graphNodeId === groupGraphNodeId);
-          const groupResult = groupT ? groupT.testScenarios : false;
-          testScenario1 = groupResult ? testScenario1 : TestScenarioHelper.applyDeMorgansLaw(testScenario1);
-          testScenario1 = this.simplifyTestScenario(testScenario1, assertionDictionary, false);
+          const groupT = testScenarioEffect.testAssertions.find((x) => x.graphNodeId === groupGraphNodeId);
+          const groupResult = groupT ? groupT.testScenarioEffect : false;
+          testScenarioDictionary = groupResult
+            ? testScenarioDictionary
+            : TestScenarioHelper.applyDeMorgansLaw(testScenarioDictionary);
+          testScenarioDictionary = this.simplifyTestScenario(testScenarioDictionary, assertionDictionary, false);
 
-          if (testScenario1.targetType === OPERATOR_TYPE.OR && testScenarios.targetType === OPERATOR_TYPE.AND) {
-            const r = {
-              id: uuid(),
-              targetType: testScenario1.targetType,
-              trueResults: testScenarios.trueResults,
-              falseResults: testScenarios.falseResults,
-              testAssertions: [],
-            };
-            const testScenario1Assertions = testScenario1.testAssertions;
+          if (
+            testScenarioDictionary.targetType === OPERATOR_TYPE.OR &&
+            testScenarioEffect.targetType === OPERATOR_TYPE.AND
+          ) {
+            // const r = {
+            //   id: uuid(),
+            //   targetType: testScenarioDictionary.targetType,
+            //   trueResults: testScenarioEffect.trueResults,
+            //   falseResults: testScenarioEffect.falseResults,
+            //   testAssertions: [],
+            // };
+            const newTestScenario = cloneDeep(testScenarioEffect);
+            newTestScenario.id = uuid();
+            newTestScenario.targetType = testScenarioDictionary.targetType;
+            const testScenario1Assertions = testScenarioDictionary.testAssertions;
             for (let j = 0; j < testScenario1Assertions.length; j++) {
-              const child = {
+              const groupTestScenario = {
                 id: uuid(),
-                targetType: testScenarios.targetType,
+                targetType: testScenarioEffect.targetType,
                 testResults: [],
                 testAssertions: [],
               };
 
-              child.testResults.push({ type: RESULT_TYPE.True, graphNodeId: groupGraphNodeId });
-              const assertions = testScenarios.testAssertions.filter((x) => x.graphNodeId !== groupGraphNodeId);
-              assertions.forEach((assertion) => child.testAssertions.push(assertion));
+              groupTestScenario.testResults.push({ type: RESULT_TYPE.True, graphNodeId: groupGraphNodeId });
+              const assertions = testScenarioEffect.testAssertions.filter((x) => x.graphNodeId !== groupGraphNodeId);
+              assertions.forEach((assertion) => groupTestScenario.testAssertions.push(assertion));
               // child.testAssertions.push(...assertions);
 
-              const assertion = child.testAssertions.find(
+              const assertion = groupTestScenario.testAssertions.find(
                 (x) => x.graphNodeId === testScenario1Assertions[j].graphNodeId
               );
 
               if (!assertion) {
-                child.testAssertions.push({
+                groupTestScenario.testAssertions.push({
                   graphNodeId: testScenario1Assertions[j].graphNodeId,
                   nodeId: testScenario1Assertions[j].nodeId,
                   result: testScenario1Assertions[j].result,
                 });
               }
 
-              const simplifiedChild = this.simplifyTestScenario(child, assertionDictionary, false);
+              const simplifiedChild = this.simplifyTestScenario(groupTestScenario, assertionDictionary, false);
 
-              r.testAssertions.push({ testScenario: simplifiedChild, result: true });
+              newTestScenario.testAssertions.push({ testScenario: simplifiedChild, result: true });
+              // child.testAssertions.forEach((testAssertion) =>
+              //   r.testAssertions.push({
+              //     graphNodeId: testAssertion.graphNodeId,
+              //     nodeId: testAssertion.nodeId,
+              //     result: testAssertion.result,
+              //     // targetType: simplifiedChild.targetType,
+              //   })
+              // );
+              // r.testAssertions.push({
+              //   graphNodeId: testScenario1Assertions[j],
+              //   nodeId:,
+              //   result:,
+              //   testScenario: simplifiedChild,
+              // })
 
-              testScenarios = this.simplifyTestScenario(r, assertionDictionary, false);
+              testScenarioEffect = this.simplifyTestScenario(newTestScenario, assertionDictionary, false);
             }
-          } else if (testScenario1.targetType === OPERATOR_TYPE.AND && testScenarios.targetType === OPERATOR_TYPE.OR) {
-            testScenarios.testAssertions.push({ testScenario: testScenario1, result: true });
+          } else if (
+            testScenarioDictionary.targetType === OPERATOR_TYPE.AND &&
+            testScenarioEffect.targetType === OPERATOR_TYPE.OR
+          ) {
+            testScenarioEffect.testAssertions.push({ testScenario: testScenarioDictionary, result: true });
           } else {
-            const testScenario1Assertions = testScenario1.testAssertions;
+            const testScenario1Assertions = testScenarioDictionary.testAssertions;
             for (let j = 0; j < testScenario1Assertions.length; j++) {
-              const assertion = testScenarios.testAssertions.find(
+              const assertion = testScenarioEffect.testAssertions.find(
                 (x) => x.graphNodeId === testScenario1Assertions[j].graphNodeId
               );
               if (assertion) {
                 assertion.result = testScenario1Assertions[j].result;
               } else {
-                testScenarios.testAssertions.push({
+                testScenarioEffect.testAssertions.push({
                   graphNodeId: testScenario1Assertions[j].graphNodeId,
                   nodeId: testScenario1Assertions[j].nodeId,
                   result: testScenario1Assertions[j].result,
@@ -250,21 +276,22 @@ class DNFLogicCoverage {
         }
       }
 
-      const groupIndexInResult = testScenarios.testAssertions.findIndex((x) => x.graphNodeId === groupGraphNodeId);
-      testScenarios.testAssertions.splice(groupIndexInResult, 1);
-      group = getFirstGroupInTestAssertions(testScenarios.testAssertions);
+      // const groupIndexInResult = testScenarioEffect.testAssertions.findIndex((x) => x.graphNodeId === groupGraphNodeId);
+      // testScenarioEffect.testAssertions.splice(groupIndexInResult, 1);
+      group = getFirstGroupInTestAssertions(testScenarioEffect.testAssertions);
     }
 
-    if (testScenarios.testAssertions.length === 1) {
-      const child = testScenarios.testAssertions[0].testScenario;
+    if (testScenarioEffect.testAssertions.length === 1) {
+      const child = testScenarioEffect.testAssertions[0].testScenario;
       if (child) {
-        child.testResults = testScenarios.testResults ? [...testScenarios.testResults] : [];
-        testScenarios = this.simplifyTestScenario(child, assertionDictionary, false);
+        child.testResults = testScenarioEffect.testResults ? [...testScenarioEffect.testResults] : [];
+        testScenarioEffect = this.simplifyTestScenario(child, assertionDictionary, false);
       }
     } else {
-      const filterTestScenarios = testScenarios.testAssertions.filter((testAssertion) =>
+      const filterTestScenarios = testScenarioEffect.testAssertions.filter((testAssertion) =>
         this.graphNodes.some(
-          (graphNode) => graphNode.id === testAssertion.graphNodeId && graphNode.targetType === testScenarios.targetType
+          (graphNode) =>
+            graphNode.id === testAssertion.graphNodeId && graphNode.targetType === testScenarioEffect.targetType
         )
       );
       // for (
@@ -295,7 +322,9 @@ class DNFLogicCoverage {
     }
 
     if (applyAbsorptionLaw) {
-      const assertionScenarios = testScenarios.testAssertions.filter((x) => x.testScenario).map((x) => x.testScenario);
+      const assertionScenarios = testScenarioEffect.testAssertions
+        .filter((x) => x.testScenario)
+        .map((x) => x.testScenario);
       for (let i = 0; i < assertionScenarios.length - 1; i++) {
         const front = assertionScenarios[i];
         let removedFrontItem = false;
@@ -327,7 +356,7 @@ class DNFLogicCoverage {
           });
           if ((assertionsCount === front.length || assertionsCount === rear.length) && isAll) {
             if (front.testAssertions.length > rear.testAssertions.length) {
-              const frontIndex = testScenarios.testAssertions.findIndex(
+              const frontIndex = testScenarioEffect.testAssertions.findIndex(
                 (x) => x.testScenario && x.testScenario.id === front.testScenario.id
               );
 
@@ -335,19 +364,19 @@ class DNFLogicCoverage {
                 (x) => x.testScenario && x.testScenario.id === front.testScenario.id
               );
 
-              testScenarios.testAssertions.splice(frontIndex, 1);
+              testScenarioEffect.testAssertions.splice(frontIndex, 1);
               assertionScenarios.splice(frontIndexInScenarios, 1);
               j--;
               removedFrontItem = true;
             } else {
-              const rearIndex = testScenarios.testAssertions.findIndex(
+              const rearIndex = testScenarioEffect.testAssertions.findIndex(
                 (x) => x.testScenario && x.testScenario.id === rear.testScenario.id
               );
 
               const rearIndexInScenarios = assertionScenarios.findIndex(
                 (x) => x.testScenario && x.testScenario.id === rear.testScenario.id
               );
-              testScenarios.testAssertions.splice(rearIndex, 1);
+              testScenarioEffect.testAssertions.splice(rearIndex, 1);
               assertionScenarios.splice(rearIndexInScenarios, 1);
               j--;
             }
@@ -358,7 +387,7 @@ class DNFLogicCoverage {
         }
       }
     }
-    return testScenarios;
+    return testScenarioEffect;
   }
 
   _getMUTPs(testScenario, expectedValue = true) {
