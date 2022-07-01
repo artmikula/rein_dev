@@ -195,7 +195,7 @@ class DNFLogicCoverage {
             testScenarioDictionary.targetType === OPERATOR_TYPE.OR &&
             testScenarioEffect.targetType === OPERATOR_TYPE.AND
           ) {
-            // const r = {
+            // const newTestScenario = {
             //   id: uuid(),
             //   targetType: testScenarioDictionary.targetType,
             //   trueResults: testScenarioEffect.trueResults,
@@ -233,21 +233,15 @@ class DNFLogicCoverage {
 
               const simplifiedChild = this.simplifyTestScenario(groupTestScenario, assertionDictionary, false);
 
-              newTestScenario.testAssertions.push({ testScenario: simplifiedChild, result: true });
-              // child.testAssertions.forEach((testAssertion) =>
-              //   r.testAssertions.push({
-              //     graphNodeId: testAssertion.graphNodeId,
-              //     nodeId: testAssertion.nodeId,
-              //     result: testAssertion.result,
-              //     // targetType: simplifiedChild.targetType,
-              //   })
-              // );
-              // r.testAssertions.push({
-              //   graphNodeId: testScenario1Assertions[j],
-              //   nodeId:,
-              //   result:,
-              //   testScenario: simplifiedChild,
-              // })
+              // newTestScenario.testAssertions.push({ testScenario: simplifiedChild, result: true });
+              groupTestScenario.testAssertions.forEach((testAssertion) =>
+                newTestScenario.testAssertions.push({
+                  graphNodeId: testAssertion.graphNodeId,
+                  nodeId: testAssertion.nodeId,
+                  result: testAssertion.result,
+                  targetType: simplifiedChild.targetType,
+                })
+              );
 
               testScenarioEffect = this.simplifyTestScenario(newTestScenario, assertionDictionary, false);
             }
@@ -276,8 +270,8 @@ class DNFLogicCoverage {
         }
       }
 
-      // const groupIndexInResult = testScenarioEffect.testAssertions.findIndex((x) => x.graphNodeId === groupGraphNodeId);
-      // testScenarioEffect.testAssertions.splice(groupIndexInResult, 1);
+      const groupIndexInResult = testScenarioEffect.testAssertions.findIndex((x) => x.graphNodeId === groupGraphNodeId);
+      testScenarioEffect.testAssertions.splice(groupIndexInResult, 1);
       group = getFirstGroupInTestAssertions(testScenarioEffect.testAssertions);
     }
 
@@ -287,39 +281,40 @@ class DNFLogicCoverage {
         child.testResults = testScenarioEffect.testResults ? [...testScenarioEffect.testResults] : [];
         testScenarioEffect = this.simplifyTestScenario(child, assertionDictionary, false);
       }
-    } else {
-      const filterTestScenarios = testScenarioEffect.testAssertions.filter((testAssertion) =>
-        this.graphNodes.some(
-          (graphNode) =>
-            graphNode.id === testAssertion.graphNodeId && graphNode.targetType === testScenarioEffect.targetType
-        )
-      );
-      // for (
-      //   let expression = filterTestScenarios[0];
-      //   filterTestScenarios.length > 0;
-      //   [expression] = filterTestScenarios
-      // ) {
-      //   const assertion = expression;
-      //   if (!assertion) {
-      //     testScenarios.testAssertions.push(assertion);
-      //   }
-      //   // for (let j = 0; j < assertions.length; j++) {
-      //   //   const assertion = testScenarios.testAssertions.find(
-      //   //     (testAssertion) => assertions[j].graphNodeId === testAssertion.graphNodeId
-      //   //   );
-      //   //   if (assertion) {
-      //   //     assertion.result = assertions[j].result;
-      //   //   } else {
-      //   //     testScenarios.testAssertions.push(assertions[j]);
-      //   //   }
-      //   // }
-
-      //   // const index = testScenarios.findIndex(
-      //   //   (x) => x.testScenario && x.testScenario.id === expression.testScenario.id
-      //   // );
-      //   // testScenarios.splice(index, 1);
-      // }
     }
+    // else {
+    //   const filterTestScenarios = testScenarioEffect.testAssertions.filter((testAssertion) =>
+    //     this.graphNodes.some(
+    //       (graphNode) =>
+    //         graphNode.id === testAssertion.graphNodeId && graphNode.targetType === testScenarioEffect.targetType
+    //     )
+    //   );
+    //   // for (
+    //   //   let expression = filterTestScenarios[0];
+    //   //   filterTestScenarios.length > 0;
+    //   //   [expression] = filterTestScenarios
+    //   // ) {
+    //   //   const assertion = expression;
+    //   //   if (!assertion) {
+    //   //     testScenarios.testAssertions.push(assertion);
+    //   //   }
+    //   //   // for (let j = 0; j < assertions.length; j++) {
+    //   //   //   const assertion = testScenarios.testAssertions.find(
+    //   //   //     (testAssertion) => assertions[j].graphNodeId === testAssertion.graphNodeId
+    //   //   //   );
+    //   //   //   if (assertion) {
+    //   //   //     assertion.result = assertions[j].result;
+    //   //   //   } else {
+    //   //   //     testScenarios.testAssertions.push(assertions[j]);
+    //   //   //   }
+    //   //   // }
+
+    //   //   // const index = testScenarios.findIndex(
+    //   //   //   (x) => x.testScenario && x.testScenario.id === expression.testScenario.id
+    //   //   // );
+    //   //   // testScenarios.splice(index, 1);
+    //   // }
+    // }
 
     if (applyAbsorptionLaw) {
       const assertionScenarios = testScenarioEffect.testAssertions
