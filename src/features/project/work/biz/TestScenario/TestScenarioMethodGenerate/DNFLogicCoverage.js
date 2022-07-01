@@ -106,12 +106,14 @@ class DNFLogicCoverage {
             if (!testResults.some((x) => x.graphNodeId === target.id && x.type === RESULT_TYPE.True)) {
               testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.True });
             }
-            if (source.effectGroup === target.effectGroup) {
-              let targetInspection = target.inspection;
-              targetInspection |= NODE_INSPECTION.HasRelationInSameGroup;
-              const node = this.graphNodes.find((x) => target.id === x.id);
-              node.inspection = targetInspection;
-            }
+            // temporary comment this because of
+            // 'Cannot assign to read only property 'inspection' of object '#<Object>' error occurs
+            // if (source.effectGroup === target.effectGroup) {
+            //   let targetInspection = target.inspection;
+            //   targetInspection |= NODE_INSPECTION.HasRelationInSameGroup;
+            //   const node = this.graphNodes.find((x) => target.id === x.id);
+            //   node.inspection = targetInspection;
+            // }
           } else if (!testResults.some((x) => x.graphNodeId === target.id && x.type === RESULT_TYPE.False)) {
             testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.False });
           }
@@ -238,8 +240,9 @@ class DNFLogicCoverage {
                 newTestScenario.testAssertions.push({
                   graphNodeId: testAssertion.graphNodeId,
                   nodeId: testAssertion.nodeId,
+                  testScenario: simplifiedChild,
                   result: testAssertion.result,
-                  targetType: simplifiedChild.targetType,
+                  // targetType: simplifiedChild.targetType,
                 })
               );
 
@@ -327,36 +330,36 @@ class DNFLogicCoverage {
           const rear = assertionScenarios[j];
 
           const assertions = front.testAssertions.filter(
-            (x) => x.testScenario && rear.testAssertions.some((y) => x.testScenario.id === y.testScenario.id)
+            (x) => x.testScenario && rear.testAssertions.some((y) => x.testScenario?.id === y.testScenario?.id)
           );
           const assertionsCount = assertions.length;
           const isAll = Enumerable.from(assertions).all((x) => {
             const frontAssertion = front.testAssertions.find(
               (y) =>
-                (x.testScenario && y.testScenario && y.testScenario.id === x.testScenario.id) ||
+                (x.testScenario && y.testScenario && y.testScenario?.id === x.testScenario?.id) ||
                 y.graphNodeId === x.graphNodeId
             );
             const rearAssertion = rear.testAssertions.find(
               (y) =>
-                (x.testScenario && y.testScenario && y.testScenario.id === x.testScenario.id) ||
+                (x.testScenario && y.testScenario && y.testScenario?.id === x.testScenario?.id) ||
                 y.graphNodeId === x.graphNodeId
             );
 
             return (
               (frontAssertion.testScenario &&
                 rearAssertion.testScenario &&
-                frontAssertion.testScenario.id === rearAssertion.testScenario.id) ||
+                frontAssertion.testScenario?.id === rearAssertion.testScenario?.id) ||
               frontAssertion.graphNodeId === rearAssertion.graphNodeId
             );
           });
           if ((assertionsCount === front.length || assertionsCount === rear.length) && isAll) {
             if (front.testAssertions.length > rear.testAssertions.length) {
               const frontIndex = testScenarioEffect.testAssertions.findIndex(
-                (x) => x.testScenario && x.testScenario.id === front.testScenario.id
+                (x) => x.testScenario && x.testScenario?.id === front.testScenario?.id
               );
 
               const frontIndexInScenarios = assertionScenarios.findIndex(
-                (x) => x.testScenario && x.testScenario.id === front.testScenario.id
+                (x) => x.testScenario && x.testScenario?.id === front.testScenario?.id
               );
 
               testScenarioEffect.testAssertions.splice(frontIndex, 1);
@@ -365,11 +368,11 @@ class DNFLogicCoverage {
               removedFrontItem = true;
             } else {
               const rearIndex = testScenarioEffect.testAssertions.findIndex(
-                (x) => x.testScenario && x.testScenario.id === rear.testScenario.id
+                (x) => x.testScenario && x.testScenario?.id === rear.testScenario?.id
               );
 
               const rearIndexInScenarios = assertionScenarios.findIndex(
-                (x) => x.testScenario && x.testScenario.id === rear.testScenario.id
+                (x) => x.testScenario && x.testScenario?.id === rear.testScenario?.id
               );
               testScenarioEffect.testAssertions.splice(rearIndex, 1);
               assertionScenarios.splice(rearIndexInScenarios, 1);
@@ -412,7 +415,7 @@ class DNFLogicCoverage {
             const utpFirstAssertion = utpFirstHalf.testAssertions.find(
               (x) =>
                 x.graphNodeId === testAssertions[k].graphNodeId ||
-                (x.testScenario && x.testScenario.id === testAssertions[k].testScenario.id)
+                (x.testScenario && x.testScenario?.id === testAssertions[k].testScenario?.id)
             );
             if (utpFirstAssertion) {
               utpFirstAssertion.result = testAssertions[k].result;
@@ -428,7 +431,7 @@ class DNFLogicCoverage {
             const utpLastAssertion = utpLastHalf.testAssertions.find(
               (x) =>
                 x.graphNodeId === testAssertions[k].graphNodeId ||
-                (x.testScenario && x.testScenario.id === testAssertions[k].testScenario.id)
+                (x.testScenario && x.testScenario?.id === testAssertions[k].testScenario?.id)
             );
             if (utpLastAssertion) {
               utpLastAssertion.result = testAssertions[k].result;
@@ -471,10 +474,10 @@ class DNFLogicCoverage {
 
       const trueAssertions = testAssertions.filter((x) => x.testScenario).map((x) => x.testScenario);
       for (let i = 0; i < trueAssertions.length; i++) {
-        const utp = TestScenarioHelper.invertedCloneWithExceptId(testScenario, trueAssertions[i].id);
+        const utp = TestScenarioHelper.invertedCloneWithExceptId(testScenario, trueAssertions[i]?.id);
         const trueResults = [...this._getMUTPs(trueAssertions[i])];
         const utpAssertions = utp.testAssertions.filter(
-          (x) => x.testScenario && x.testScenario.id !== trueAssertions[i].id
+          (x) => x.testScenario && x.testScenario?.id !== trueAssertions[i]?.id
         );
 
         for (let j = 0; j < utpAssertions.length; j++) {
@@ -484,7 +487,7 @@ class DNFLogicCoverage {
             const index = falseAssertion.testAssertions.findIndex(
               (x) =>
                 x.graphNodeId === assertionOfTrueAssertions[k].graphNodeId ||
-                (x.testScenario && x.testScenario.id === assertionOfTrueAssertions[k].testScenario.id)
+                (x.testScenario && x.testScenario?.id === assertionOfTrueAssertions[k].testScenario?.id)
             );
             if (
               falseAssertion.testAssertions[index] &&
@@ -512,19 +515,19 @@ class DNFLogicCoverage {
                 const assertions = trueResults[k].testAssertions.filter(
                   (x) =>
                     (x.testScenario &&
-                      nextAssertion.testAssertions.some((y) => x.testScenario.id === y.testScenario.id)) ||
+                      nextAssertion.testAssertions.some((y) => x.testScenario?.id === y.testScenario?.id)) ||
                     nextAssertion.testAssertions.some((y) => x.graphNodeId === y.graphNodeId)
                 );
 
                 const isAll = Enumerable.from(assertions).all((x) => {
                   const resultAssertion = trueResults[k].testAssertions.find(
                     (y) =>
-                      (x.testScenario && y.testScenario && y.testScenario.id === x.testScenario.id) ||
+                      (x.testScenario && y.testScenario && y.testScenario?.id === x.testScenario?.id) ||
                       y.graphNodeId === x.graphNodeId
                   );
                   const next = nextAssertion.testAssertions.find(
                     (y) =>
-                      (x.testScenario && y.testScenario && y.testScenario.id === x.testScenario.id) ||
+                      (x.testScenario && y.testScenario && y.testScenario?.id === x.testScenario?.id) ||
                       y.graphNodeId === x.graphNodeId
                   );
 
@@ -575,7 +578,7 @@ class DNFLogicCoverage {
               x.graphNodeId === testAssertions[i].graphNodeId ||
               (x.testScenario &&
                 testAssertions[i].testScenario &&
-                x.testScenario.id === testAssertions[i].testScenario.id)
+                x.testScenario?.id === testAssertions[i].testScenario?.id)
           );
           if (assertion) {
             assertion.result = !assertion.result;
@@ -605,10 +608,10 @@ class DNFLogicCoverage {
 
       const trueAssertions = testAssertions.filter((x) => x.testScenario).map((x) => x.testScenario);
       for (let i = 0; i < trueAssertions.length; i++) {
-        const cutpnfp = TestScenarioHelper.invertedCloneWithExceptId(testScenario, trueAssertions[i].id);
+        const cutpnfp = TestScenarioHelper.invertedCloneWithExceptId(testScenario, trueAssertions[i]?.id);
         const trueResults = [...this._getCUTPNFPs(trueAssertions[i], true, false)];
         const cutpnfpAssertions = cutpnfp.testAssertions.filter(
-          (x) => x.testScenario && x.testScenario.id !== trueAssertions[i].id
+          (x) => x.testScenario && x.testScenario?.id !== trueAssertions[i]?.id
         );
 
         for (let j = 0; j < trueResults.length; j++) {
@@ -626,7 +629,7 @@ class DNFLogicCoverage {
                 const index = falseAssertionCutpnfp.testAssertions.findIndex(
                   (x) =>
                     x.graphNodeId === assertions[k].graphNodeId ||
-                    (x.testScenario && x.testScenario.id === assertions[k].testScenario.id)
+                    (x.testScenario && x.testScenario?.id === assertions[k].testScenario?.id)
                 );
 
                 if (index >= 0) {
@@ -638,19 +641,19 @@ class DNFLogicCoverage {
             const assertions = trueResults[j].testAssertions.filter(
               (x) =>
                 (x.testScenario &&
-                  falseAssertionCutpnfps[0].testAssertions.some((y) => x.testScenario.id === y.testScenario.id)) ||
+                  falseAssertionCutpnfps[0].testAssertions.some((y) => x.testScenario?.id === y.testScenario?.id)) ||
                 falseAssertionCutpnfps[0].testAssertions.some((y) => x.graphNodeId === y.graphNodeId)
             );
 
             const isAll = Enumerable.from(assertions).all((x) => {
               const resultAssertion = trueResults[j].testAssertions.find(
                 (y) =>
-                  (x.testScenario && y.testScenario && y.testScenario.id === x.testScenario.id) ||
+                  (x.testScenario && y.testScenario && y.testScenario?.id === x.testScenario?.id) ||
                   y.graphNodeId === x.graphNodeId
               );
               const falseAssertion = cutpnfpAssertions[h].testScenario.testAssertions.find(
                 (y) =>
-                  (x.testScenario && y.testScenario && y.testScenario.id === x.testScenario.id) ||
+                  (x.testScenario && y.testScenario && y.testScenario?.id === x.testScenario?.id) ||
                   y.graphNodeId === x.graphNodeId
               );
 
@@ -658,7 +661,7 @@ class DNFLogicCoverage {
                 (resultAssertion.testScenario &&
                   falseAssertion.testScenario &&
                   resultAssertion.testScenario.id === falseAssertion.testScenario.id) ||
-                resultAssertion.graphNodeId === falseAssertion.graphNodeId
+                resultAssertion?.graphNodeId === falseAssertion?.graphNodeId
               );
             });
 
@@ -727,7 +730,7 @@ class DNFLogicCoverage {
             const nfpFirstAssertion = nfpFirstHalf.testAssertions.find(
               (x) =>
                 x.graphNodeId === testAssertions[k].graphNodeId ||
-                (x.testScenario && x.testScenario.id === testAssertions[k].testScenario.id)
+                (x.testScenario && x.testScenario?.id === testAssertions[k].testScenario?.id)
             );
             if (nfpFirstAssertion) {
               nfpFirstAssertion.result = testAssertions[k].result;
@@ -736,7 +739,7 @@ class DNFLogicCoverage {
             const utpLastAssertion = nfpLastHalf.testAssertions.find(
               (x) =>
                 x.graphNodeId === testAssertions[k].graphNodeId ||
-                (x.testScenario && x.testScenario.id === testAssertions[k].testScenario.id)
+                (x.testScenario && x.testScenario?.id === testAssertions[k].testScenario?.id)
             );
             if (utpLastAssertion) {
               utpLastAssertion.result = testAssertions[k].result;
@@ -775,7 +778,7 @@ class DNFLogicCoverage {
         const nfp = TestScenarioHelper.invertedCloneWithExceptId(testScenario, trueAssertions[i].id);
         const trueResults = [...this._getMNFPs(trueAssertions[i])];
         const nfpAssertions = nfp.testAssertions.filter(
-          (x) => x.testScenario && x.testScenario.id !== trueAssertions[i].id
+          (x) => x.testScenario && x.testScenario?.id !== trueAssertions[i]?.id
         );
 
         for (let j = 0; j < nfpAssertions.length; j++) {
@@ -785,7 +788,7 @@ class DNFLogicCoverage {
             const index = falseAssertion.testAssertions.findIndex(
               (x) =>
                 x.graphNodeId === assertionOfTrueAssertions[k].graphNodeId ||
-                (!!x.testScenario && x.testScenario.id === assertionOfTrueAssertions[k].testScenario.id)
+                (!!x.testScenario && x.testScenario?.id === assertionOfTrueAssertions[k].testScenario?.id)
             );
             if (
               falseAssertion.testAssertions[index] &&
@@ -811,26 +814,26 @@ class DNFLogicCoverage {
               const assertions = trueResults[k].testAssertions.filter(
                 (x) =>
                   (x.testScenario &&
-                    nextAssertion.testAssertions.some((y) => x.testScenario.id === y.testScenario.id)) ||
+                    nextAssertion.testAssertions.some((y) => x.testScenario?.id === y.testScenario?.id)) ||
                   nextAssertion.testAssertions.some((y) => x.graphNodeId === y.graphNodeId)
               );
 
               const isAll = Enumerable.from(assertions).all((x) => {
                 const resultAssertion = trueResults[k].testAssertions.find(
                   (y) =>
-                    (x.testScenario && y.testScenario && y.testScenario.id === x.testScenario.id) ||
+                    (x.testScenario && y.testScenario && y.testScenario?.id === x.testScenario?.id) ||
                     y.graphNodeId === x.graphNodeId
                 );
                 const next = nextAssertion.testAssertions.find(
                   (y) =>
-                    (x.testScenario && y.testScenario && y.testScenario.id === x.testScenario.id) ||
+                    (x.testScenario && y.testScenario && y.testScenario?.id === x.testScenario?.id) ||
                     y.graphNodeId === x.graphNodeId
                 );
 
                 return (
                   (resultAssertion.testScenario &&
                     next.testScenario &&
-                    resultAssertion.testScenario.id === next.testScenario.id) ||
+                    resultAssertion.testScenario?.id === next.testScenario?.id) ||
                   resultAssertion.graphNodeId === next.graphNodeId
                 );
               });
