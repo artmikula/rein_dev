@@ -197,13 +197,6 @@ class DNFLogicCoverage {
             testScenarioDictionary.targetType === OPERATOR_TYPE.OR &&
             testScenarioEffect.targetType === OPERATOR_TYPE.AND
           ) {
-            // const newTestScenario = {
-            //   id: uuid(),
-            //   targetType: testScenarioDictionary.targetType,
-            //   trueResults: testScenarioEffect.trueResults,
-            //   falseResults: testScenarioEffect.falseResults,
-            //   testAssertions: [],
-            // };
             const newTestScenario = cloneDeep(testScenarioEffect);
             newTestScenario.id = uuid();
             newTestScenario.targetType = testScenarioDictionary.targetType;
@@ -219,7 +212,6 @@ class DNFLogicCoverage {
               groupTestScenario.testResults.push({ type: RESULT_TYPE.True, graphNodeId: groupGraphNodeId });
               const assertions = testScenarioEffect.testAssertions.filter((x) => x.graphNodeId !== groupGraphNodeId);
               assertions.forEach((assertion) => groupTestScenario.testAssertions.push(assertion));
-              // child.testAssertions.push(...assertions);
 
               const assertion = groupTestScenario.testAssertions.find(
                 (x) => x.graphNodeId === testScenario1Assertions[j].graphNodeId
@@ -235,14 +227,12 @@ class DNFLogicCoverage {
 
               const simplifiedChild = this.simplifyTestScenario(groupTestScenario, assertionDictionary, false);
 
-              // newTestScenario.testAssertions.push({ testScenario: simplifiedChild, result: true });
               groupTestScenario.testAssertions.forEach((testAssertion) =>
                 newTestScenario.testAssertions.push({
                   graphNodeId: testAssertion.graphNodeId,
                   nodeId: testAssertion.nodeId,
                   testScenario: simplifiedChild,
                   result: testAssertion.result,
-                  // targetType: simplifiedChild.targetType,
                 })
               );
 
@@ -285,6 +275,7 @@ class DNFLogicCoverage {
         testScenarioEffect = this.simplifyTestScenario(child, assertionDictionary, false);
       }
     }
+    // TODO: old code, to be handle later
     // else {
     //   const filterTestScenarios = testScenarioEffect.testAssertions.filter((testAssertion) =>
     //     this.graphNodes.some(
