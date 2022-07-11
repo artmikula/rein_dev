@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import CauseEffect from 'features/project/work/biz/CauseEffect';
-import { setCauseEffects } from 'features/project/work/slices/workSlice';
+import { setCauseEffects, setWorkActions } from 'features/project/work/slices/workSlice';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
@@ -71,11 +71,13 @@ class CauseEffectTable extends Component {
   };
 
   /* Handle event */
-  _handleAddEvent = async (data, confirmedAbbreviate = undefined) => {
-    const { setCauseEffects } = this.props;
+  _handleAddEvent = (eventData, confirmedAbbreviate = undefined) => {
+    const { setCauseEffects, setWorkActions, workActions } = this.props;
+    const { data, currentIndex } = eventData;
     let { listData } = this.props;
     const result = [];
     this.needConfirm = false;
+    // console.log('workActions', workActions);
 
     for (let i = 0; i < data.length; i++) {
       const value = data[i];
@@ -106,6 +108,7 @@ class CauseEffectTable extends Component {
 
     this._raiseEvent({ action: domainEvents.ACTION.ADD, value: result });
     setCauseEffects(listData);
+    console.log('work', workActions);
   };
 
   _handleDeleteAction = (item) => {
@@ -424,9 +427,11 @@ class CauseEffectTable extends Component {
 CauseEffectTable.propTypes = {
   setCauseEffects: PropTypes.func.isRequired,
   listData: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+  workActions: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  setWorkActions: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => ({ listData: state.work.causeEffects });
-const mapDispatchToProps = { setCauseEffects };
+const mapStateToProps = (state) => ({ listData: state.work.causeEffects, workActions: state.work.workActions });
+const mapDispatchToProps = { setCauseEffects, setWorkActions };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(CauseEffectTable));

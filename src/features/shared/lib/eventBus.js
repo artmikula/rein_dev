@@ -43,7 +43,7 @@ class EventBus {
   }
 
   publish(eventName, message) {
-    // console.log('EventBus - publishing event', { eventName, message });
+    console.log('EventBus - publishing event', { eventName, message });
     const eventId = uuidv4();
     this.emitter.emit(eventName, { eventId, message });
   }

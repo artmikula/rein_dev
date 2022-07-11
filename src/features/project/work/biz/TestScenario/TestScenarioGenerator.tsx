@@ -47,11 +47,11 @@ class TestScenarioGenerator {
     }
 
     // Log for debug mode
-    const w: any = window;
-    if (w.isDebugMode) {
-      console.log('ASSERTIONS');
-      scenarioDictionary.forEach((value) => console.log(this.getExpressionString(value)));
-    }
+    // const w: any = window;
+    // if (w.isDebugMode) {
+    //   console.log('ASSERTIONS');
+    //   scenarioDictionary.forEach((value) => console.log(this.getExpressionString(value)));
+    // }
 
     return scenarioDictionary;
   }

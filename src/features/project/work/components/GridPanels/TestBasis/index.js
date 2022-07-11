@@ -11,7 +11,7 @@ import {
 } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import TestBasisManager from 'features/project/work/biz/TestBasis';
-import { setTestBasis } from 'features/project/work/slices/workSlice';
+import { setTestBasis, setWorkActions } from 'features/project/work/slices/workSlice';
 import { STRING, TEST_BASIS_EVENT_TYPE, EVENT_LISTENER_LIST } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
@@ -37,6 +37,7 @@ class TestBasis extends Component {
         entities: [],
         selection: null,
       },
+      currentIndex: 0,
     };
     this.initiatedTestBasis = false;
   }
@@ -54,7 +55,11 @@ class TestBasis extends Component {
     window.addEventListener(EVENT_LISTENER_LIST.CUT, () => this.setState({ type: TEST_BASIS_EVENT_TYPE.CUT }));
 
     this._initTestBasis();
+    const { workActions } = this.props;
     this.ready = true;
+    this.setState({
+      currentIndex: workActions?.length > 0 ? workActions[workActions?.length - 1]?.currentIndex : 0,
+    });
   }
 
   componentDidUpdate() {
@@ -256,7 +261,8 @@ class TestBasis extends Component {
   };
 
   _addCauseEffect = (data) => {
-    const { editorState, selectionState, cutState } = this.state;
+    const { editorState, selectionState, cutState, currentIndex } = this.state;
+    const { workActions } = this.props;
     if (this.ready) {
       const contentState = editorState.getCurrentContent();
       const contentStateWithEntity = contentState.createEntity(STRING.DEFINITION, 'MUTABLE', data);
@@ -266,6 +272,11 @@ class TestBasis extends Component {
       const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithLink });
 
       this._updateEditorState(newEditorState);
+      if (workActions.length > 1) {
+        this.setState({ currentIndex: currentIndex + 1 }, this._handleStoreActions);
+      } else {
+        this._handleStoreActions('BEFORE_ADDED');
+      }
     }
   };
 
@@ -274,7 +285,8 @@ class TestBasis extends Component {
       return;
     }
 
-    const { selectionState } = this.state;
+    const { workActions } = this.props;
+    const { selectionState, currentIndex } = this.state;
     const { selectedText, anchorKey, start, end } = this._getSelection(selectionState);
     const existDefinition = TestBasisManager.getEntity(selectedText, anchorKey, start, end);
 
@@ -285,8 +297,35 @@ class TestBasis extends Component {
     if (existDefinition.type !== type) {
       const definitionId = uuidv4();
       this._addCauseEffect({ type, definitionId, definition: selectedText });
-      this._raiseEvent(domainEvents.ACTION.ADD, [{ type, definitionId, definition: selectedText }]);
+      console.log('workActions', workActions);
+      this._raiseEvent(domainEvents.ACTION.ADD, {
+        currentIndex,
+        data: [{ type, definitionId, definition: selectedText }],
+      });
     }
+  };
+
+  _handleStoreActions = (type) => {
+    const { setWorkActions, workActions } = this.props;
+    const { editorState, currentIndex } = this.state;
+    const currentContent = editorState.getCurrentContent();
+    const drawContent = convertToRaw(currentContent);
+    const result = workActions.slice();
+    result.push({
+      actions: [
+        {
+          type,
+          data: {
+            basis: drawContent,
+            causeEffectTable: null,
+            graph: null,
+            testDatas: null,
+          },
+        },
+      ],
+      currentIndex,
+    });
+    setWorkActions(result);
   };
 
   _handleCutEvent = (entities, selection) => {
@@ -384,9 +423,11 @@ class TestBasis extends Component {
 TestBasis.propTypes = {
   decoratedText: PropTypes.string,
   entityKey: PropTypes.string,
+  workActions: PropTypes.oneOfType([PropTypes.array]).isRequired,
   testBasis: PropTypes.shape({ content: PropTypes.string }).isRequired,
   workLoaded: PropTypes.bool.isRequired,
   setTestBasis: PropTypes.func.isRequired,
+  setWorkActions: PropTypes.func.isRequired,
 };
 
 TestBasis.defaultProps = {
@@ -394,8 +435,12 @@ TestBasis.defaultProps = {
   entityKey: undefined,
 };
 
-const mapStateToProps = (state) => ({ testBasis: state.work.testBasis, workLoaded: state.work.loaded });
+const mapStateToProps = (state) => ({
+  testBasis: state.work.testBasis,
+  workLoaded: state.work.loaded,
+  workActions: state.work.workActions,
+});
 
-const mapDispatchToProps = { setTestBasis };
+const mapDispatchToProps = { setTestBasis, setWorkActions };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestBasis));

@@ -411,3 +411,9 @@ export const EVENT_LISTENER_LIST = {
   RESIZE: 'resize',
   CUT: 'cut',
 };
+
+export const ACTIONS_TYPE = {
+  ADD: 'add',
+  EDIT: 'edit',
+  DELETE: 'delete',
+};
