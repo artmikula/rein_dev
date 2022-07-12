@@ -1,0 +1,10 @@
+version: "3.4"
+
+services:
+  re-in-ceta-ui:
+    image: "re-in-ceta-ui:0.1.0"
+    build: .
+    container_name: "re-in-ceta-ui"
+    restart: always
+    ports:
+      - "8094:80"
