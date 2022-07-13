@@ -33,7 +33,6 @@ export const workSlice = createSlice({
     },
     testCoverage: cloneDeep(defaultTestCoverageData),
     testDatas: [],
-    workActions: [],
   },
   reducers: {
     setWorkName: (state, action) => {
@@ -52,30 +51,6 @@ export const workSlice = createSlice({
     setGraph: (state, action) => ({ ...state, graph: action.payload }),
     setTestCoverages: (state, action) => ({ ...state, testCoverage: action.payload }),
     setTestDatas: (state, action) => ({ ...state, testDatas: action.payload }),
-    setWorkActions: (state, action) => {
-      switch (action.type) {
-        case 'new':
-          return {
-            ...state,
-            workActions: action.payload,
-          };
-
-        case 'update': {
-          const index = state.workActions.findIndex(
-            (workAction) => workAction.currentIndex === action.payload.currentIndex
-          );
-          const clone = [...state.workActions];
-          clone[index] = action.payload;
-          if (index > -1) {
-            return { ...state, workActions: [...clone] };
-          }
-          return state;
-        }
-
-        default:
-          return state;
-      }
-    },
   },
 });
 
@@ -88,7 +63,6 @@ export const {
   setGraph,
   setTestCoverages,
   setTestDatas,
-  setWorkActions,
 } = workSlice.actions;
 
 export default workSlice.reducer;
