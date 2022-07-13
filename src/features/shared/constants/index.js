@@ -410,6 +410,7 @@ export const TEST_BASIS_EVENT_TYPE = {
 export const EVENT_LISTENER_LIST = {
   RESIZE: 'resize',
   CUT: 'cut',
+  KEYDOWN: 'keydown',
 };
 
 export const ACTIONS_TYPE = {
@@ -418,6 +419,7 @@ export const ACTIONS_TYPE = {
   ADDED: 'added',
   EDIT: 'edit',
   DELETE: 'delete',
+  UNDO: 'undo',
 };
 
 export const PANEL_NAME = {

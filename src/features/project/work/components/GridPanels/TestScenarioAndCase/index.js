@@ -9,7 +9,6 @@ import testScenarioAnsCaseStorage from 'features/project/work/services/TestScena
 import { setGraph } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
-  PANEL_NAME,
   REIN_SHORTCUT_CODE,
   TEST_CASE_METHOD,
   TEST_CASE_SHORTCUT,
@@ -27,7 +26,6 @@ import { withRouter } from 'react-router-dom';
 import Select from 'react-select';
 import { Button, FormGroup, Input, Label, Table } from 'reactstrap';
 import appConfig from 'features/shared/lib/appConfig';
-import { subscribeUndoHandlers, unSubscribeUndoHandlers } from 'features/project/work/slices/undoSlice';
 import { EXPORT_TYPE_NAME } from '../Graph/constants';
 import './style.scss';
 
@@ -51,7 +49,6 @@ class TestScenarioAndCase extends Component {
   }
 
   componentDidMount() {
-    const { subscribeUndoHandlers } = this.props;
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this.setState({ isCheckAllTestScenarios: false });
@@ -94,10 +91,6 @@ class TestScenarioAndCase extends Component {
     });
 
     this._initData();
-    subscribeUndoHandlers({
-      component: PANEL_NAME.TEST_SCENARIOS_CASES,
-      update: this._updateUndoState,
-    });
   }
 
   componentDidUpdate() {
@@ -105,9 +98,7 @@ class TestScenarioAndCase extends Component {
   }
 
   componentWillUnmount() {
-    const { unSubscribeUndoHandlers } = this.props;
     eventBus.unsubscribe(this);
-    unSubscribeUndoHandlers({ component: PANEL_NAME.TEST_SCENARIOS_CASES });
   }
 
   _clearData = () => {
@@ -590,8 +581,6 @@ TestScenarioAndCase.propTypes = {
   testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   workLoaded: PropTypes.bool.isRequired,
   setGraph: PropTypes.func.isRequired,
-  subscribeUndoHandlers: PropTypes.func.isRequired,
-  unSubscribeUndoHandlers: PropTypes.func.isRequired,
 };
 
 TestScenarioAndCase.defaultProps = {
@@ -607,6 +596,6 @@ const mapStateToProps = (state) => ({
   workLoaded: state.work.loaded,
 });
 
-const mapDispatchToProps = { setGraph, subscribeUndoHandlers, unSubscribeUndoHandlers };
+const mapDispatchToProps = { setGraph };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestScenarioAndCase));
