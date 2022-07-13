@@ -1,4 +1,10 @@
 /* eslint-disable max-lines */
+import React, { Component } from 'react';
+import { debounce } from 'lodash';
+import Mousetrap from 'mousetrap';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
 import { setGraph } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
@@ -8,18 +14,13 @@ import {
   GRAPH_SHORTCUT_CODE,
   G_TYPE,
   OPTION_TYPE,
+  PANEL_NAME,
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
-import { debounce } from 'lodash';
-import Mousetrap from 'mousetrap';
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { withRouter } from 'react-router-dom';
+import { subscribeUndoHandlers, unSubscribeUndoHandlers } from 'features/project/work/slices/undoSlice';
 import { DELETE_KEY } from './constants';
 import GraphManager from './graphManager';
-import './style.scss';
 import {
   caculateInsplectionPalette,
   compareNodeArray,
@@ -33,6 +34,7 @@ import {
   isDirectConstraint,
   separateNodes,
 } from './utils';
+import './style.scss';
 
 class Graph extends Component {
   _raiseEventUpdate = debounce(() => {
@@ -65,7 +67,7 @@ class Graph extends Component {
   }
 
   componentDidMount() {
-    const { onGenerate } = this.props;
+    const { onGenerate, setActionHandler, subscribeUndoHandlers } = this.props;
 
     const container = document.getElementById('graph_container_id');
     this.graphManager = new GraphManager(container, {
@@ -112,15 +114,27 @@ class Graph extends Component {
       });
     });
 
-    const { setActionHandler } = this.props;
     if (setActionHandler) {
       setActionHandler(this.graphManager);
     }
+
+    subscribeUndoHandlers({
+      component: PANEL_NAME.GRAPH,
+      update: this._updateUndoState,
+    });
   }
 
   componentDidUpdate() {
     this._drawGraph(this.graphManager);
   }
+
+  _updateUndoState = (newState) => {
+    const { graph } = this.props;
+    return {
+      ...newState,
+      graph,
+    };
+  };
 
   _raiseEvent = (message) => {
     eventBus.publish(domainEvents.GRAPH_DOMAINEVENT, message);
@@ -482,9 +496,11 @@ class Graph extends Component {
   };
 
   componentWillUnmout() {
+    const { unSubscribeUndoHandlers } = this.props;
     eventBus.unsubscribe(this);
     document.removeEventListener('click', this._handleClick, false);
     Mousetrap.reset();
+    unSubscribeUndoHandlers({ component: PANEL_NAME.GRAPH });
   }
 
   render() {
@@ -503,6 +519,8 @@ Graph.propTypes = {
   workLoaded: PropTypes.bool.isRequired,
   setGraph: PropTypes.func.isRequired,
   onGenerate: PropTypes.func.isRequired,
+  subscribeUndoHandlers: PropTypes.func.isRequired,
+  unSubscribeUndoHandlers: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
@@ -511,6 +529,6 @@ const mapStateToProps = (state) => ({
   workLoaded: state.work.loaded,
 });
 
-const mapDispatchToProps = { setGraph };
+const mapDispatchToProps = { setGraph, subscribeUndoHandlers, unSubscribeUndoHandlers };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Graph));

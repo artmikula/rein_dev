@@ -11,8 +11,9 @@ import {
 } from 'draft-js';
 import 'draft-js/dist/Draft.css';
 import TestBasisManager from 'features/project/work/biz/TestBasis';
-import { setTestBasis, setWorkActions } from 'features/project/work/slices/workSlice';
-import { STRING, TEST_BASIS_EVENT_TYPE, EVENT_LISTENER_LIST } from 'features/shared/constants';
+import { setTestBasis } from 'features/project/work/slices/workSlice';
+import { pushActionStates } from 'features/project/work/slices/undoSlice';
+import { STRING, TEST_BASIS_EVENT_TYPE, EVENT_LISTENER_LIST, ACTIONS_TYPE } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
 import PropTypes from 'prop-types';
@@ -53,12 +54,13 @@ class TestBasis extends Component {
     });
 
     window.addEventListener(EVENT_LISTENER_LIST.CUT, () => this.setState({ type: TEST_BASIS_EVENT_TYPE.CUT }));
+    // window.addEventListener(EVENT_LISTENER_LIST.CUT, () => this.setState({ type: TEST_BASIS_EVENT_TYPE.CUT }));
 
     this._initTestBasis();
-    const { workActions } = this.props;
+    const { actionStates } = this.props;
     this.ready = true;
     this.setState({
-      currentIndex: workActions?.length > 0 ? workActions[workActions?.length - 1]?.currentIndex : 0,
+      currentIndex: actionStates?.length > 0 ? actionStates[actionStates?.length - 1]?.currentIndex : 0,
     });
   }
 
@@ -261,8 +263,7 @@ class TestBasis extends Component {
   };
 
   _addCauseEffect = (data) => {
-    const { editorState, selectionState, cutState, currentIndex } = this.state;
-    const { workActions } = this.props;
+    const { editorState, selectionState, cutState } = this.state;
     if (this.ready) {
       const contentState = editorState.getCurrentContent();
       const contentStateWithEntity = contentState.createEntity(STRING.DEFINITION, 'MUTABLE', data);
@@ -272,20 +273,15 @@ class TestBasis extends Component {
       const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithLink });
 
       this._updateEditorState(newEditorState);
-      if (workActions.length > 1) {
-        this.setState({ currentIndex: currentIndex + 1 }, this._handleStoreActions);
-      } else {
-        this._handleStoreActions('BEFORE_ADDED');
-      }
     }
   };
 
-  _classifyText = (type) => {
+  _classifyText = async (type) => {
     if (!this.ready) {
       return;
     }
 
-    const { workActions } = this.props;
+    const { actionStates } = this.props;
     const { selectionState, currentIndex } = this.state;
     const { selectedText, anchorKey, start, end } = this._getSelection(selectionState);
     const existDefinition = TestBasisManager.getEntity(selectedText, anchorKey, start, end);
@@ -295,37 +291,34 @@ class TestBasis extends Component {
     }
 
     if (existDefinition.type !== type) {
+      if (actionStates.length > 0) {
+        this.setState({ currentIndex: currentIndex + 1 }, await this._handleStoreActions);
+      } else {
+        await this._handleStoreActions();
+      }
       const definitionId = uuidv4();
       this._addCauseEffect({ type, definitionId, definition: selectedText });
-      console.log('workActions', workActions);
-      this._raiseEvent(domainEvents.ACTION.ADD, {
-        currentIndex,
-        data: [{ type, definitionId, definition: selectedText }],
-      });
+      this._raiseEvent(domainEvents.ACTION.ADD, [{ type, definitionId, definition: selectedText }]);
     }
   };
 
-  _handleStoreActions = (type) => {
-    const { setWorkActions, workActions } = this.props;
-    const { editorState, currentIndex } = this.state;
-    const currentContent = editorState.getCurrentContent();
-    const drawContent = convertToRaw(currentContent);
-    const result = workActions.slice();
-    result.push({
-      actions: [
-        {
-          type,
-          data: {
-            basis: drawContent,
-            causeEffectTable: null,
-            graph: null,
-            testDatas: null,
-          },
-        },
-      ],
-      currentIndex,
+  _handleStoreActions = (type = ACTIONS_TYPE.ADDED) => {
+    const { pushActionStates, undoHandlers, testBasis } = this.props;
+    const { currentIndex } = this.state;
+
+    let currentState = {
+      type,
+      testBasis: JSON.parse(testBasis.content),
+    };
+    undoHandlers.forEach((undoHandler) => {
+      if (typeof undoHandler.update === 'function') {
+        currentState = undoHandler.update(currentState);
+      }
     });
-    setWorkActions(result);
+    pushActionStates({
+      currentIndex,
+      actions: currentState,
+    });
   };
 
   _handleCutEvent = (entities, selection) => {
@@ -395,6 +388,8 @@ class TestBasis extends Component {
     const { editorState, isOpenClassifyPopover } = this.state;
     const visibleSelectionRect = getVisibleSelectionRect(window);
 
+    console.log('actionStates', this.props.actionStates);
+
     return (
       <div className="h-100 p-4">
         <StyleControlEditor
@@ -423,11 +418,12 @@ class TestBasis extends Component {
 TestBasis.propTypes = {
   decoratedText: PropTypes.string,
   entityKey: PropTypes.string,
-  workActions: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  actionStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
   testBasis: PropTypes.shape({ content: PropTypes.string }).isRequired,
   workLoaded: PropTypes.bool.isRequired,
   setTestBasis: PropTypes.func.isRequired,
-  setWorkActions: PropTypes.func.isRequired,
+  pushActionStates: PropTypes.func.isRequired,
+  undoHandlers: PropTypes.oneOfType([PropTypes.array]).isRequired,
 };
 
 TestBasis.defaultProps = {
@@ -438,9 +434,10 @@ TestBasis.defaultProps = {
 const mapStateToProps = (state) => ({
   testBasis: state.work.testBasis,
   workLoaded: state.work.loaded,
-  workActions: state.work.workActions,
+  undoHandlers: state.undoHandlers.handlers,
+  actionStates: state.undoHandlers.actionStates,
 });
 
-const mapDispatchToProps = { setTestBasis, setWorkActions };
+const mapDispatchToProps = { setTestBasis, pushActionStates };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestBasis));

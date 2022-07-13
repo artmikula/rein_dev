@@ -1,10 +1,12 @@
 import Download from 'downloadjs';
 import TestData from 'features/project/work/biz/TestData';
 import { setTestDatas } from 'features/project/work/slices/workSlice';
+import { subscribeUndoHandlers, unSubscribeUndoHandlers } from 'features/project/work/slices/undoSlice';
 import {
   CLASSIFY,
   FILE_NAME,
   OPTION_TYPE,
+  PANEL_NAME,
   TESTDATA_TYPE,
   TEST_DATA_SHORTCUT,
   TEST_DATA_SHORTCUT_CODE,
@@ -34,6 +36,7 @@ class TestDataTable extends Component {
   }
 
   async componentDidMount() {
+    const { subscribeUndoHandlers } = this.props;
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleCauseEffectEvents(message);
@@ -55,12 +58,26 @@ class TestDataTable extends Component {
         this._handleShortCutEvents(code);
       });
     });
+    subscribeUndoHandlers({
+      component: PANEL_NAME.TEST_DATA,
+      update: this._updateUndoState,
+    });
   }
 
   componentWillUnmount() {
+    const { unSubscribeUndoHandlers } = this.props;
     eventBus.unsubscribe(this);
     Mousetrap.reset();
+    unSubscribeUndoHandlers({ component: PANEL_NAME.TEST_DATA });
   }
+
+  _updateUndoState = (newState) => {
+    const { testDatas } = this.props;
+    return {
+      ...newState,
+      testDatas,
+    };
+  };
 
   _setTestDatas = (testDatas, raiseEvent = false) => {
     const { setTestDatas } = this.props;
@@ -298,6 +315,8 @@ TestDataTable.propTypes = {
   testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   setTestDatas: PropTypes.func.isRequired,
   onChangeData: PropTypes.func.isRequired,
+  subscribeUndoHandlers: PropTypes.func.isRequired,
+  unSubscribeUndoHandlers: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
@@ -305,6 +324,6 @@ const mapStateToProps = (state) => ({
   testDatas: state.work.testDatas,
 });
 
-const mapDispatchToProps = { setTestDatas };
+const mapDispatchToProps = { setTestDatas, subscribeUndoHandlers, unSubscribeUndoHandlers };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestDataTable));

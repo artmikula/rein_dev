@@ -413,7 +413,19 @@ export const EVENT_LISTENER_LIST = {
 };
 
 export const ACTIONS_TYPE = {
-  ADD: 'add',
+  INIT: 'init',
+  BEFORE_ADDED: 'beforeAdded',
+  ADDED: 'added',
   EDIT: 'edit',
   DELETE: 'delete',
+};
+
+export const PANEL_NAME = {
+  TEST_BASIS: 'Test Basis',
+  CAUSE_EFFECT_TABLE: 'Cause & Effect Table',
+  SSMETRIC: 'SS Metric',
+  TEST_COVERAGE: 'Test Coverage',
+  GRAPH: 'Cause & Effect Graph',
+  TEST_SCENARIOS_CASES: 'Test Scenario/Case',
+  TEST_DATA: 'Test Data',
 };

@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import CauseEffect from 'features/project/work/biz/CauseEffect';
-import { setCauseEffects, setWorkActions } from 'features/project/work/slices/workSlice';
+import { setCauseEffects } from 'features/project/work/slices/workSlice';
+import { subscribeUndoHandlers, unSubscribeUndoHandlers } from 'features/project/work/slices/undoSlice';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
@@ -11,6 +12,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Table } from 'reactstrap';
 import { v4 as uuidv4 } from 'uuid';
+import { PANEL_NAME } from 'features/shared/constants';
 import AbbreviateConfirmContent from './components/AbbreviateConfirmContent';
 import CauseEffectRow from './components/CauseEffectRow';
 import './style.scss';
@@ -23,6 +25,7 @@ class CauseEffectTable extends Component {
   mergeItem = null;
 
   componentDidMount() {
+    const { subscribeUndoHandlers } = this.props;
     eventBus.subscribe(this, domainEvents.TESTBASIC_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleEvent(message);
@@ -35,10 +38,16 @@ class CauseEffectTable extends Component {
       const { message } = event;
       this._handleEvent(message);
     });
+    subscribeUndoHandlers({
+      component: PANEL_NAME.CAUSE_EFFECT_TABLE,
+      update: this._updateUndoState,
+    });
   }
 
   componentWillUnmount() {
+    const { unSubscribeUndoHandlers } = this.props;
     eventBus.unsubscribe(this);
+    unSubscribeUndoHandlers({ component: PANEL_NAME.CAUSE_EFFECT_TABLE });
   }
 
   _raiseEvent = (message) => eventBus.publish(domainEvents.CAUSEEFFECT_DOMAINEVENT, message);
@@ -70,14 +79,20 @@ class CauseEffectTable extends Component {
     return confirmModal;
   };
 
+  _updateUndoState = (newState) => {
+    const { listData } = this.props;
+    return {
+      ...newState,
+      causeEffectTable: listData,
+    };
+  };
+
   /* Handle event */
-  _handleAddEvent = (eventData, confirmedAbbreviate = undefined) => {
-    const { setCauseEffects, setWorkActions, workActions } = this.props;
-    const { data, currentIndex } = eventData;
+  _handleAddEvent = (data, confirmedAbbreviate = undefined) => {
+    const { setCauseEffects } = this.props;
     let { listData } = this.props;
     const result = [];
     this.needConfirm = false;
-    // console.log('workActions', workActions);
 
     for (let i = 0; i < data.length; i++) {
       const value = data[i];
@@ -108,7 +123,6 @@ class CauseEffectTable extends Component {
 
     this._raiseEvent({ action: domainEvents.ACTION.ADD, value: result });
     setCauseEffects(listData);
-    console.log('work', workActions);
   };
 
   _handleDeleteAction = (item) => {
@@ -427,11 +441,11 @@ class CauseEffectTable extends Component {
 CauseEffectTable.propTypes = {
   setCauseEffects: PropTypes.func.isRequired,
   listData: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
-  workActions: PropTypes.oneOfType([PropTypes.array]).isRequired,
-  setWorkActions: PropTypes.func.isRequired,
+  subscribeUndoHandlers: PropTypes.func.isRequired,
+  unSubscribeUndoHandlers: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => ({ listData: state.work.causeEffects, workActions: state.work.workActions });
-const mapDispatchToProps = { setCauseEffects, setWorkActions };
+const mapStateToProps = (state) => ({ listData: state.work.causeEffects });
+const mapDispatchToProps = { setCauseEffects, subscribeUndoHandlers, unSubscribeUndoHandlers };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(CauseEffectTable));
