@@ -13,7 +13,7 @@ import 'draft-js/dist/Draft.css';
 import TestBasisManager from 'features/project/work/biz/TestBasis';
 import { setTestBasis } from 'features/project/work/slices/workSlice';
 import { pushActionStates } from 'features/project/work/slices/undoSlice';
-import { STRING, TEST_BASIS_EVENT_TYPE, EVENT_LISTENER_LIST, ACTIONS_TYPE } from 'features/shared/constants';
+import { STRING, TEST_BASIS_EVENT_TYPE, EVENT_LISTENER_LIST, UNDO_STACKS } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
 import PropTypes from 'prop-types';
@@ -39,7 +39,6 @@ class TestBasis extends Component {
         selection: null,
       },
       currIndex: -1,
-      isCreateNode: false,
     };
     this.initiatedTestBasis = false;
   }
@@ -61,13 +60,8 @@ class TestBasis extends Component {
     this.ready = true;
   }
 
-  componentDidUpdate(prevProps) {
-    const { actionStates } = this.props;
+  componentDidUpdate() {
     this._initTestBasis();
-    if (prevProps.actionStates.length !== actionStates.length) {
-      // eslint-disable-next-line react/no-did-update-set-state
-      this.setState({ currIndex: actionStates.length - 1 });
-    }
   }
 
   componentWillUnmount() {
@@ -87,44 +81,6 @@ class TestBasis extends Component {
 
       this._updateEditorState(editorState);
       this.initiatedTestBasis = true;
-    }
-  };
-
-  _handleKeyDownEvent = ({ ctrlKey, key }) => {
-    const { isCreateNode } = this.state;
-    if (ctrlKey && key === 'z') {
-      if (isCreateNode) {
-        this.setState({ isCreateNode: false });
-        this._handleStoreActions(ACTIONS_TYPE.UNDO);
-      }
-      this._undoEvent();
-    }
-    if (ctrlKey && key === 'y') {
-      this._redoEvent();
-    }
-  };
-
-  _undoEvent = () => {
-    const { currIndex } = this.state;
-    const { actionStates } = this.props;
-    if (currIndex - 1 > -1 && actionStates.length > 0) {
-      const prevIndex = currIndex - 1;
-      const drawContent = convertFromRaw(actionStates[prevIndex].actions.testBasis);
-      const newEditorState = EditorState.createWithContent(drawContent);
-      this._updateEditorState(newEditorState);
-      this.setState({ currIndex: currIndex - 1 });
-    }
-  };
-
-  _redoEvent = () => {
-    const { currIndex } = this.state;
-    const { actionStates } = this.props;
-    if (currIndex + 1 < actionStates.length) {
-      const nextIndex = currIndex + 1;
-      const drawContent = convertFromRaw(actionStates[nextIndex].actions.testBasis);
-      const newEditorState = EditorState.createWithContent(drawContent);
-      this._updateEditorState(newEditorState);
-      this.setState({ currIndex: currIndex + 1 });
     }
   };
 
@@ -180,12 +136,19 @@ class TestBasis extends Component {
     });
   };
 
-  _removeCauseEffect = (definitionId) => {
+  _removeCauseEffect = async (definitionId) => {
     if (this.ready) {
-      const drawContent = TestBasisManager.removeEntity(definitionId);
-      const editorState = EditorState.createWithContent(convertFromRaw(drawContent));
+      const { actionStates } = this.props;
 
-      this._updateEditorState(editorState);
+      if (actionStates.length === 0) {
+        await this._handleStoreActions();
+      }
+
+      const newContent = TestBasisManager.removeEntity(definitionId);
+      const newEditorState = EditorState.createWithContent(convertFromRaw(newContent));
+      // update state
+      await this._updateEditorState(newEditorState);
+      await this._handleStoreActions();
     }
   };
 
@@ -215,9 +178,7 @@ class TestBasis extends Component {
     this._updateEditorState(result.editorState);
   };
 
-  _raiseEvent = (action, value) => {
-    eventBus.publish(domainEvents.TESTBASIC_DOMAINEVENT, { action, value });
-  };
+  _raiseEvent = (action, value) => eventBus.publish(domainEvents.TESTBASIC_DOMAINEVENT, { action, value });
   /* End event */
 
   _getSelection = (selectionState, newEditorState = null) => {
@@ -235,12 +196,12 @@ class TestBasis extends Component {
   };
 
   /* Action */
-  _handleChange = (newEditorState, drawState = undefined) => {
+  _handleChange = (newEditorState) => {
     const { isOpenClassifyPopover, editorState } = this.state;
     const { setTestBasis } = this.props;
 
     const currentContent = newEditorState.getCurrentContent();
-    const drawContent = drawState ?? convertToRaw(currentContent);
+    const drawContent = convertToRaw(currentContent);
 
     if (!this.ready) {
       return;
@@ -303,10 +264,13 @@ class TestBasis extends Component {
     }
   };
 
-  _addCauseEffect = (data) => {
+  _addCauseEffect = async (data) => {
     const { editorState, selectionState, cutState } = this.state;
+    const { actionStates } = this.props;
     if (this.ready) {
-      this.setState({ isCreateNode: true });
+      if (actionStates.length === 0) {
+        await this._handleStoreActions();
+      }
       const contentState = editorState.getCurrentContent();
       const contentStateWithEntity = contentState.createEntity(STRING.DEFINITION, 'MUTABLE', data);
       const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
@@ -314,11 +278,15 @@ class TestBasis extends Component {
       const contentStateWithLink = Modifier.applyEntity(contentStateWithEntity, currentSelection, entityKey);
       const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithLink });
 
+      const drawContent = newEditorState.getCurrentContent();
+      const newTestBasis = convertToRaw(drawContent);
+      await this._handleStoreActions(newTestBasis);
+
       this._updateEditorState(newEditorState);
     }
   };
 
-  _classifyText = async (type) => {
+  _classifyText = (type) => {
     if (!this.ready) {
       return;
     }
@@ -332,30 +300,11 @@ class TestBasis extends Component {
     }
 
     if (existDefinition.type !== type) {
-      await this._handleStoreActions();
+      // await this._handleStoreActions();
       const definitionId = uuidv4();
       this._addCauseEffect({ type, definitionId, definition: selectedText });
       this._raiseEvent(domainEvents.ACTION.ADD, [{ type, definitionId, definition: selectedText }]);
     }
-  };
-
-  _handleStoreActions = async (type = ACTIONS_TYPE.ADDED) => {
-    const { pushActionStates, undoHandlers, testBasis } = this.props;
-
-    let currentState = {
-      type,
-      testBasis: JSON.parse(testBasis.content),
-    };
-
-    undoHandlers.forEach((undoHandler) => {
-      if (typeof undoHandler.update === 'function') {
-        currentState = undoHandler.update(currentState);
-      }
-    });
-
-    pushActionStates({
-      actions: currentState,
-    });
   };
 
   _handleCutEvent = (entities, selection) => {
@@ -421,13 +370,82 @@ class TestBasis extends Component {
   };
   /* End Action */
 
+  /* Undo/Redo Action */
+  _handleStoreActions = async (newTestBasis = undefined) => {
+    const { pushActionStates, undoHandlers, testBasis, actionStates } = this.props;
+
+    if (actionStates.length === UNDO_STACKS) {
+      actionStates.shift();
+    }
+
+    let currentState = {
+      testBasis: newTestBasis ?? JSON.parse(testBasis.content),
+    };
+
+    this.setState({ currIndex: actionStates.length });
+
+    await undoHandlers.forEach((undoHandler) => {
+      if (typeof undoHandler.update === 'function') {
+        currentState = undoHandler.update(currentState);
+      }
+    });
+
+    await pushActionStates({
+      actions: currentState,
+    });
+    clearTimeout();
+  };
+
+  _handleKeyDownEvent = ({ ctrlKey, key }) => {
+    if (ctrlKey && key === 'z') {
+      this._undoEvent();
+    }
+    if (ctrlKey && key === 'y') {
+      this._redoEvent();
+    }
+  };
+
+  _undoEvent = () => {
+    const { currIndex } = this.state;
+    const { actionStates } = this.props;
+    if (currIndex - 1 > -1 && actionStates.length > 0) {
+      const prevIndex = currIndex - 1;
+      const drawContent = convertFromRaw(actionStates[prevIndex].actions.testBasis);
+      const newEditorState = EditorState.createWithContent(drawContent);
+      this._updateEditorState(newEditorState);
+      this._updateUndoState(prevIndex);
+      this.setState({ currIndex: currIndex - 1 });
+    }
+  };
+
+  _redoEvent = () => {
+    const { currIndex } = this.state;
+    const { actionStates } = this.props;
+    if (currIndex + 1 < actionStates.length) {
+      const nextIndex = currIndex + 1;
+      const drawContent = convertFromRaw(actionStates[nextIndex].actions.testBasis);
+      const newEditorState = EditorState.createWithContent(drawContent);
+      this._updateEditorState(newEditorState);
+      this._updateUndoState(nextIndex);
+      this.setState({ currIndex: currIndex + 1 });
+    }
+  };
+
+  _updateUndoState = (currentIndex) => {
+    const { undoHandlers } = this.props;
+    undoHandlers.forEach((undoHandler) => {
+      if (typeof undoHandler.undo === 'function') {
+        undoHandler.undo(currentIndex);
+      }
+    });
+  };
+  /* End Undo/Redo Action */
+
   render() {
     const { editorState, isOpenClassifyPopover } = this.state;
     const visibleSelectionRect = getVisibleSelectionRect(window);
 
-    console.log('actionStates', this.props.actionStates);
-    console.log('currIndex', this.state.currIndex);
-    // console.log('testBasis', this.props.testBasis);
+    console.log('basis index', this.state.currIndex);
 
     return (
       <div className="h-100 p-4">

@@ -61,6 +61,7 @@ class TestDataTable extends Component {
     subscribeUndoHandlers({
       component: PANEL_NAME.TEST_DATA,
       update: this._updateUndoState,
+      undo: this._handleUpdateActions,
     });
   }
 
@@ -70,14 +71,6 @@ class TestDataTable extends Component {
     Mousetrap.reset();
     unSubscribeUndoHandlers({ component: PANEL_NAME.TEST_DATA });
   }
-
-  _updateUndoState = (newState) => {
-    const { testDatas } = this.props;
-    return {
-      ...newState,
-      testDatas,
-    };
-  };
 
   _setTestDatas = (testDatas, raiseEvent = false) => {
     const { setTestDatas } = this.props;
@@ -274,6 +267,24 @@ class TestDataTable extends Component {
     }
   };
 
+  /* Undo/Redo Actions */
+  _updateUndoState = (newState) => {
+    const { testDatas } = this.props;
+    console.log('testDatas', newState);
+    return {
+      ...newState,
+      testDatas,
+    };
+  };
+
+  _handleUpdateActions = (currIndex) => {
+    console.log('testdata index', currIndex);
+    const { actionStates } = this.props;
+    const currentTestDatas = actionStates[currIndex].actions.testDatas;
+    this._setTestDatas(currentTestDatas);
+  };
+  /* End Undo/Redo Actions */
+
   render() {
     const { importFormOpen } = this.state;
     const { testDatas, match } = this.props;
@@ -317,11 +328,13 @@ TestDataTable.propTypes = {
   onChangeData: PropTypes.func.isRequired,
   subscribeUndoHandlers: PropTypes.func.isRequired,
   unSubscribeUndoHandlers: PropTypes.func.isRequired,
+  actionStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
 };
 
 const mapStateToProps = (state) => ({
   workName: state.work.name,
   testDatas: state.work.testDatas,
+  actionStates: state.undoHandlers.actionStates,
 });
 
 const mapDispatchToProps = { setTestDatas, subscribeUndoHandlers, unSubscribeUndoHandlers };

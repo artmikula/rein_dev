@@ -431,3 +431,5 @@ export const PANEL_NAME = {
   TEST_SCENARIOS_CASES: 'Test Scenario/Case',
   TEST_DATA: 'Test Data',
 };
+
+export const UNDO_STACKS = 200;

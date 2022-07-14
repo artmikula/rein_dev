@@ -367,6 +367,7 @@ class GraphManager {
   };
 
   draw = (ele) => {
+    // this.graph.nodes().forEach((node, index) => console.log(index, node.data()));
     return this.graph.add(ele).find((x) => x.data().id === ele.data.id);
   };
 
@@ -460,6 +461,14 @@ class GraphManager {
       });
       this.onGraphChange();
     }
+  };
+
+  deleteNode = () => {
+    this.graph.nodes().forEach((node) => {
+      this._deleteRelatedUnconstraintNode(node);
+      this.remove(node);
+      // this.onGraphChange();
+    });
   };
 
   deleteCauseEffectNode = (causeEffect, actionType) => {
