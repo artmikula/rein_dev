@@ -39,6 +39,7 @@ class TestBasis extends Component {
         selection: null,
       },
       currIndex: -1,
+      isCreateNode: false,
     };
     this.initiatedTestBasis = false;
   }
@@ -90,39 +91,17 @@ class TestBasis extends Component {
   };
 
   _handleKeyDownEvent = ({ ctrlKey, key }) => {
+    const { isCreateNode } = this.state;
     if (ctrlKey && key === 'z') {
-      if (this._isStateChanged()) {
-        // this._handleStoreActions(ACTIONS_TYPE.UNDO);
+      if (isCreateNode) {
+        this.setState({ isCreateNode: false });
+        this._handleStoreActions(ACTIONS_TYPE.UNDO);
       }
-      // this._undoEvent();
+      this._undoEvent();
     }
     if (ctrlKey && key === 'y') {
-      // this._redoEvent();
+      this._redoEvent();
     }
-  };
-
-  _isStateChanged = () => {
-    const { actionStates, testBasis } = this.props;
-    const currentTestBasis = JSON.parse(testBasis.content);
-    const currentEntities = Object.values(currentTestBasis.entityMap);
-    const currentEntityMap = {};
-    const existedTestBasis = { blocks: [], entityMap: {} };
-    actionStates.forEach((actionState) => {
-      const { blocks, entityMap } = actionState.actions.testBasis;
-      const entitiesState = Object.values(entityMap);
-      const entities = entitiesState.filter((entityState) =>
-        currentEntities.some((entity) => entity.data.definitionId !== entityState.data.definitionId)
-      );
-      Object.assign(currentEntityMap, entities);
-      existedTestBasis.blocks = currentTestBasis.blocks.filter((currBlock) =>
-        blocks.some((block) => block.key !== currBlock.key)
-      );
-      existedTestBasis.entityMap = currentEntityMap;
-    });
-    if (existedTestBasis.blocks.length > 0 || Object.keys(existedTestBasis.entityMap).length > 0) {
-      return true;
-    }
-    return false;
   };
 
   _undoEvent = () => {
@@ -130,7 +109,6 @@ class TestBasis extends Component {
     const { actionStates } = this.props;
     if (currIndex - 1 > -1 && actionStates.length > 0) {
       const prevIndex = currIndex - 1;
-      console.log('prevIndex', prevIndex);
       const drawContent = convertFromRaw(actionStates[prevIndex].actions.testBasis);
       const newEditorState = EditorState.createWithContent(drawContent);
       this._updateEditorState(newEditorState);
@@ -143,7 +121,6 @@ class TestBasis extends Component {
     const { actionStates } = this.props;
     if (currIndex + 1 < actionStates.length) {
       const nextIndex = currIndex + 1;
-      console.log('nextIndex', nextIndex);
       const drawContent = convertFromRaw(actionStates[nextIndex].actions.testBasis);
       const newEditorState = EditorState.createWithContent(drawContent);
       this._updateEditorState(newEditorState);
@@ -329,6 +306,7 @@ class TestBasis extends Component {
   _addCauseEffect = (data) => {
     const { editorState, selectionState, cutState } = this.state;
     if (this.ready) {
+      this.setState({ isCreateNode: true });
       const contentState = editorState.getCurrentContent();
       const contentStateWithEntity = contentState.createEntity(STRING.DEFINITION, 'MUTABLE', data);
       const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
