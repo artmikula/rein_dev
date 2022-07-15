@@ -270,17 +270,14 @@ class TestDataTable extends Component {
   /* Undo/Redo Actions */
   _updateUndoState = (newState) => {
     const { testDatas } = this.props;
-    console.log('testDatas', newState);
     return {
       ...newState,
       testDatas,
     };
   };
 
-  _handleUpdateActions = (currIndex) => {
-    console.log('testdata index', currIndex);
-    const { actionStates } = this.props;
-    const currentTestDatas = actionStates[currIndex].actions.testDatas;
+  _handleUpdateActions = (currentState) => {
+    const currentTestDatas = currentState.testDatas;
     this._setTestDatas(currentTestDatas);
   };
   /* End Undo/Redo Actions */
@@ -328,7 +325,6 @@ TestDataTable.propTypes = {
   onChangeData: PropTypes.func.isRequired,
   subscribeUndoHandlers: PropTypes.func.isRequired,
   unSubscribeUndoHandlers: PropTypes.func.isRequired,
-  actionStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
 };
 
 const mapStateToProps = (state) => ({

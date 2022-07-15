@@ -20,13 +20,11 @@ import './style.scss';
 class CauseEffectTable extends Component {
   state = {
     cutData: [],
-    rows: [],
   };
 
   mergeItem = null;
 
   componentDidMount() {
-    this._initCauseEffect();
     const { subscribeUndoHandlers } = this.props;
     eventBus.subscribe(this, domainEvents.TESTBASIC_DOMAINEVENT, (event) => {
       const { message } = event;
@@ -82,11 +80,6 @@ class CauseEffectTable extends Component {
     return confirmModal;
   };
 
-  _initCauseEffect = () => {
-    const { listData } = this.props;
-    this.setState({ rows: listData });
-  };
-
   /* Handle events */
   _handleAddEvent = (data, confirmedAbbreviate = undefined) => {
     const { setCauseEffects, listData } = this.props;
@@ -123,7 +116,6 @@ class CauseEffectTable extends Component {
 
     this._raiseEvent({ action: domainEvents.ACTION.ADD, value: result });
     setCauseEffects(res);
-    this.setState({ rows: res });
   };
 
   _handleDeleteAction = (item) => {
@@ -166,7 +158,6 @@ class CauseEffectTable extends Component {
     });
 
     setCauseEffects(newList);
-    this.setState({ rows: newList });
 
     return removeList;
   };
@@ -198,7 +189,6 @@ class CauseEffectTable extends Component {
     newList[index] = newItem;
 
     setCauseEffects(newList);
-    this.setState({ rows: newList });
     this._raiseEvent({ action: domainEvents.ACTION.UPDATE, value: newItem });
   };
 
@@ -233,7 +223,7 @@ class CauseEffectTable extends Component {
       }
     });
     setCauseEffects(newCauseEffects);
-    this.setState({ cutData: [], rows: newCauseEffects });
+    this.setState({ cutData: [] });
     this._raiseEvent({ action: domainEvents.ACTION.PASTE, receivers: [domainEvents.DES.GRAPH] });
   };
 
@@ -279,7 +269,6 @@ class CauseEffectTable extends Component {
     });
 
     setCauseEffects(listData);
-    this.setState({ rows: listData });
     this._raiseEvent({ action: domainEvents.ACTION.ADD, value: causes });
   };
 
@@ -304,7 +293,6 @@ class CauseEffectTable extends Component {
 
     if (newListData.length !== listData.length) {
       setCauseEffects(newListData);
-      this.setState({ rows: newListData });
 
       removedcauseEffects.forEach((removedcauseEffect) => {
         this._raiseEvent({
@@ -339,7 +327,6 @@ class CauseEffectTable extends Component {
 
         newListData[mergeIndex] = newItem;
         setCauseEffects(newListData);
-        this.setState({ rows: newListData });
 
         this._raiseEvent({
           action: domainEvents.ACTION.ACCEPTDELETE,
@@ -368,7 +355,6 @@ class CauseEffectTable extends Component {
 
       newListData[index] = newItem;
       setCauseEffects(newListData);
-      this.setState({ rows: newListData });
 
       this._raiseEvent({
         action: domainEvents.ACTION.ADD,
@@ -398,7 +384,6 @@ class CauseEffectTable extends Component {
 
       newListData[index] = newItem;
       setCauseEffects(newListData);
-      this.setState({ rows: newListData });
 
       this._raiseEvent({
         action: domainEvents.ACTION.CHANGE_NODE_ID,
@@ -411,34 +396,28 @@ class CauseEffectTable extends Component {
   handleReorder = (...arg) => {
     const { listData, setCauseEffects } = this.props;
     setCauseEffects(CauseEffect.reorder(listData, ...arg));
-    this.setState({ rows: CauseEffect.reorder(listData, ...arg) });
   };
   /* End handle events */
 
   /* Undo/Redo Actions */
   _updateUndoState = (newState) => {
-    const { rows } = this.state;
-    console.log('listData', this.props.listData);
-    console.log('rows', rows);
+    const { listData } = this.props;
     return {
       ...newState,
-      causeEffectTable: rows,
+      causeEffectTable: listData,
     };
   };
 
-  _handleUpdateActions = (currIndex) => {
-    console.log('table index', currIndex);
-    const { actionStates } = this.props;
-    const currentCauseEffectTable = actionStates[currIndex].actions.causeEffectTable;
-    console.log('test', currentCauseEffectTable);
+  _handleUpdateActions = (currentState) => {
+    const { setCauseEffects } = this.props;
+    const currentCauseEffectTable = currentState.causeEffectTable;
     setCauseEffects(currentCauseEffectTable);
-    this.setState({ rows: currentCauseEffectTable });
   };
   /* End Undo/Redo Actions */
 
   render() {
-    const { rows } = this.state;
-    const generateRows = CauseEffect.generateData(rows);
+    const { listData } = this.props;
+    const generateRows = CauseEffect.generateData(listData);
 
     return (
       <Table bordered size="sm" className="border-bottom cause-effect-table">
@@ -473,7 +452,7 @@ CauseEffectTable.propTypes = {
   listData: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   subscribeUndoHandlers: PropTypes.func.isRequired,
   unSubscribeUndoHandlers: PropTypes.func.isRequired,
-  actionStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  // actionStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
 };
 
 const mapStateToProps = (state) => ({

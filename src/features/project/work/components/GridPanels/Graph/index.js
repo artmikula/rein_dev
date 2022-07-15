@@ -499,17 +499,15 @@ class Graph extends Component {
   /* Undo/Redo Actions */
   _updateUndoState = (newState) => {
     const { graph } = this.props;
-    console.log('graph', newState);
     return {
       ...newState,
       graph,
     };
   };
 
-  _handleUpdateActions = async (currIndex) => {
-    console.log('graph index', currIndex);
-    const { actionStates } = this.props;
-    const currentGraphs = actionStates[currIndex].actions.graph;
+  _handleUpdateActions = async (currentState) => {
+    const { setGraph } = this.props;
+    const currentGraphs = currentState.graph;
     await this.graphManager.deleteNode();
     this._drawGraph(this.graphManager, currentGraphs, true);
     setGraph(currentGraphs);
@@ -517,7 +515,6 @@ class Graph extends Component {
   /* End Undo/Redo Actions */
 
   render() {
-    console.log('actionStates', this.props.actionStates);
     return <div className="w-100" id="graph_container_id" />;
   }
 }
@@ -535,14 +532,12 @@ Graph.propTypes = {
   onGenerate: PropTypes.func.isRequired,
   subscribeUndoHandlers: PropTypes.func.isRequired,
   unSubscribeUndoHandlers: PropTypes.func.isRequired,
-  actionStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
 };
 
 const mapStateToProps = (state) => ({
   workName: state.work.name,
   graph: state.work.graph,
   workLoaded: state.work.loaded,
-  actionStates: state.undoHandlers.actionStates,
 });
 
 const mapDispatchToProps = { setGraph, subscribeUndoHandlers, unSubscribeUndoHandlers };

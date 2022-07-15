@@ -12,7 +12,14 @@ import {
 import 'draft-js/dist/Draft.css';
 import TestBasisManager from 'features/project/work/biz/TestBasis';
 import { setTestBasis } from 'features/project/work/slices/workSlice';
-import { pushActionStates } from 'features/project/work/slices/undoSlice';
+import {
+  pushActionStates,
+  pushUndoStates,
+  popUndoStates,
+  pushRedoStates,
+  popRedoStates,
+  clearRedoStates,
+} from 'features/project/work/slices/undoSlice';
 import { STRING, TEST_BASIS_EVENT_TYPE, EVENT_LISTENER_LIST, UNDO_STACKS } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
@@ -38,7 +45,7 @@ class TestBasis extends Component {
         entities: [],
         selection: null,
       },
-      currIndex: -1,
+      oldState: null,
     };
     this.initiatedTestBasis = false;
   }
@@ -80,6 +87,7 @@ class TestBasis extends Component {
       );
 
       this._updateEditorState(editorState);
+      this.setState({ oldState: editorState });
       this.initiatedTestBasis = true;
     }
   };
@@ -136,19 +144,13 @@ class TestBasis extends Component {
     });
   };
 
-  _removeCauseEffect = async (definitionId) => {
+  _removeCauseEffect = (definitionId) => {
     if (this.ready) {
-      const { actionStates } = this.props;
-
-      if (actionStates.length === 0) {
-        await this._handleStoreActions();
-      }
-
+      const { oldState } = this.state;
+      this._storeActionsToUndoStates(oldState);
       const newContent = TestBasisManager.removeEntity(definitionId);
       const newEditorState = EditorState.createWithContent(convertFromRaw(newContent));
-      // update state
-      await this._updateEditorState(newEditorState);
-      await this._handleStoreActions();
+      this._updateEditorState(newEditorState);
     }
   };
 
@@ -235,7 +237,7 @@ class TestBasis extends Component {
     }
     TestBasisManager.set(drawContent);
     setTestBasis(JSON.stringify(drawContent));
-    this.setState({ editorState: newEditorState });
+    this.setState({ editorState: newEditorState, oldState: newEditorState });
   };
 
   _handleKeyCommand = (command, editorState) => {
@@ -266,27 +268,18 @@ class TestBasis extends Component {
 
   _addCauseEffect = async (data) => {
     const { editorState, selectionState, cutState } = this.state;
-    const { actionStates } = this.props;
     if (this.ready) {
-      if (actionStates.length === 0) {
-        await this._handleStoreActions();
-      }
       const contentState = editorState.getCurrentContent();
       const contentStateWithEntity = contentState.createEntity(STRING.DEFINITION, 'MUTABLE', data);
       const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
       const currentSelection = cutState.selection || selectionState;
       const contentStateWithLink = Modifier.applyEntity(contentStateWithEntity, currentSelection, entityKey);
       const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithLink });
-
-      const drawContent = newEditorState.getCurrentContent();
-      const newTestBasis = convertToRaw(drawContent);
-      await this._handleStoreActions(newTestBasis);
-
       this._updateEditorState(newEditorState);
     }
   };
 
-  _classifyText = (type) => {
+  _classifyText = async (type) => {
     if (!this.ready) {
       return;
     }
@@ -300,7 +293,7 @@ class TestBasis extends Component {
     }
 
     if (existDefinition.type !== type) {
-      // await this._handleStoreActions();
+      await this._storeActionsToUndoStates();
       const definitionId = uuidv4();
       this._addCauseEffect({ type, definitionId, definition: selectedText });
       this._raiseEvent(domainEvents.ACTION.ADD, [{ type, definitionId, definition: selectedText }]);
@@ -371,71 +364,84 @@ class TestBasis extends Component {
   /* End Action */
 
   /* Undo/Redo Action */
-  _handleStoreActions = async (newTestBasis = undefined) => {
-    const { pushActionStates, undoHandlers, testBasis, actionStates } = this.props;
-
-    if (actionStates.length === UNDO_STACKS) {
-      actionStates.shift();
+  _storeActionsToUndoStates = async (state = undefined) => {
+    const { undoStates, pushUndoStates, redoStates, clearRedoStates } = this.props;
+    if (undoStates.length === UNDO_STACKS) {
+      undoStates.shift();
     }
 
+    if (redoStates.length > 0) {
+      clearRedoStates();
+    }
+
+    const currentState = this._getCurrentState(state);
+
+    await pushUndoStates(currentState);
+  };
+
+  _getCurrentState = (editorState = undefined) => {
+    const { undoHandlers, testBasis } = this.props;
+    const drawContent = editorState ? convertToRaw(editorState.getCurrentContent()) : undefined;
     let currentState = {
-      testBasis: newTestBasis ?? JSON.parse(testBasis.content),
+      testBasis: drawContent ?? JSON.parse(testBasis.content),
     };
 
-    this.setState({ currIndex: actionStates.length });
-
-    await undoHandlers.forEach((undoHandler) => {
+    undoHandlers.forEach((undoHandler) => {
       if (typeof undoHandler.update === 'function') {
         currentState = undoHandler.update(currentState);
       }
     });
 
-    await pushActionStates({
-      actions: currentState,
-    });
-    clearTimeout();
+    return currentState;
   };
 
   _handleKeyDownEvent = ({ ctrlKey, key }) => {
     if (ctrlKey && key === 'z') {
-      this._undoEvent();
+      this._handleUndoAction();
     }
     if (ctrlKey && key === 'y') {
-      this._redoEvent();
+      this._handleRedoAction();
     }
   };
 
-  _undoEvent = () => {
-    const { currIndex } = this.state;
-    const { actionStates } = this.props;
-    if (currIndex - 1 > -1 && actionStates.length > 0) {
-      const prevIndex = currIndex - 1;
-      const drawContent = convertFromRaw(actionStates[prevIndex].actions.testBasis);
-      const newEditorState = EditorState.createWithContent(drawContent);
-      this._updateEditorState(newEditorState);
-      this._updateUndoState(prevIndex);
-      this.setState({ currIndex: currIndex - 1 });
+  _handleUndoAction = () => {
+    const { undoStates, popUndoStates, pushRedoStates } = this.props;
+    if (undoStates.length > 0) {
+      const lastItem = undoStates[undoStates.length - 1];
+
+      const currentState = this._getCurrentState();
+      pushRedoStates(currentState);
+
+      popUndoStates();
+      this._updateDataToState(lastItem);
     }
   };
 
-  _redoEvent = () => {
-    const { currIndex } = this.state;
-    const { actionStates } = this.props;
-    if (currIndex + 1 < actionStates.length) {
-      const nextIndex = currIndex + 1;
-      const drawContent = convertFromRaw(actionStates[nextIndex].actions.testBasis);
-      const newEditorState = EditorState.createWithContent(drawContent);
-      this._updateEditorState(newEditorState);
-      this._updateUndoState(nextIndex);
-      this.setState({ currIndex: currIndex + 1 });
+  _handleRedoAction = () => {
+    const { redoStates, pushUndoStates, popRedoStates } = this.props;
+    if (redoStates.length > 0) {
+      const lastItem = redoStates[redoStates.length - 1];
+
+      const currentState = this._getCurrentState();
+      pushUndoStates(currentState);
+
+      popRedoStates();
+      this._updateDataToState(lastItem);
     }
   };
 
-  _updateUndoState = (currentIndex) => {
+  _updateDataToState = (currentState) => {
+    const drawContent = convertFromRaw(currentState.testBasis);
+    const newEditorState = EditorState.createWithContent(drawContent);
+    this._updateEditorState(newEditorState);
+    this._updateStateToHandlers(currentState);
+  };
+
+  _updateStateToHandlers = (currentState) => {
     const { undoHandlers } = this.props;
     undoHandlers.forEach((undoHandler) => {
       if (typeof undoHandler.undo === 'function') {
-        undoHandler.undo(currentIndex);
+        undoHandler.undo(currentState);
       }
     });
   };
@@ -445,7 +451,8 @@ class TestBasis extends Component {
     const { editorState, isOpenClassifyPopover } = this.state;
     const visibleSelectionRect = getVisibleSelectionRect(window);
 
-    console.log('basis index', this.state.currIndex);
+    console.log('undoStates', this.props.undoStates);
+    console.log('redoStates', this.props.redoStates);
 
     return (
       <div className="h-100 p-4">
@@ -481,6 +488,13 @@ TestBasis.propTypes = {
   setTestBasis: PropTypes.func.isRequired,
   pushActionStates: PropTypes.func.isRequired,
   undoHandlers: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  undoStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  redoStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  pushUndoStates: PropTypes.func.isRequired,
+  popUndoStates: PropTypes.func.isRequired,
+  popRedoStates: PropTypes.func.isRequired,
+  pushRedoStates: PropTypes.func.isRequired,
+  clearRedoStates: PropTypes.func.isRequired,
 };
 
 TestBasis.defaultProps = {
@@ -493,8 +507,18 @@ const mapStateToProps = (state) => ({
   workLoaded: state.work.loaded,
   undoHandlers: state.undoHandlers.handlers,
   actionStates: state.undoHandlers.actionStates,
+  undoStates: state.undoHandlers.undoStates,
+  redoStates: state.undoHandlers.redoStates,
 });
 
-const mapDispatchToProps = { setTestBasis, pushActionStates };
+const mapDispatchToProps = {
+  setTestBasis,
+  pushActionStates,
+  pushUndoStates,
+  popUndoStates,
+  pushRedoStates,
+  popRedoStates,
+  clearRedoStates,
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestBasis));
