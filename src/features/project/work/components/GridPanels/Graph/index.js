@@ -22,7 +22,7 @@ import { subscribeUndoHandlers, unSubscribeUndoHandlers } from 'features/project
 import { DELETE_KEY } from './constants';
 import GraphManager from './graphManager';
 import {
-  caculateInsplectionPalette,
+  calculateInspectionPalette,
   compareNodeArray,
   convertDirectConstraintToEdge,
   convertGraphLinkToEdge,
@@ -142,7 +142,7 @@ class Graph extends Component {
   };
 
   _updateInspectionPalettes = (data) => {
-    const updatedData = caculateInsplectionPalette(data);
+    const updatedData = calculateInspectionPalette(data);
     this.graphManager.updateInspections(updatedData.graphNodes);
   };
 

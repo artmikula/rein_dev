@@ -8,7 +8,7 @@ import { DEFAULT_NODE_X, EDGE_COLOR, NODE_BG_COLOR } from './constants';
 import P5 from './lib/p5';
 import ruleDefine from './rule-define';
 
-export const caculateInsplectionPalette = (graphData) => {
+export const calculateInspectionPalette = (graphData) => {
   graphData.graphNodes.forEach((graphNode) => {
     if (graphNode.inspectionPalettes) {
       const inspectionPaletteResults = new Set();
