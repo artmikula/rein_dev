@@ -19,8 +19,10 @@ import {
   pushRedoStates,
   popRedoStates,
   clearRedoStates,
+  subscribeUndoHandlers,
+  unSubscribeUndoHandlers,
 } from 'features/project/work/slices/undoSlice';
-import { STRING, TEST_BASIS_EVENT_TYPE, EVENT_LISTENER_LIST, UNDO_STACKS } from 'features/shared/constants';
+import { STRING, TEST_BASIS_EVENT_TYPE, EVENT_LISTENER_LIST, UNDO_STACKS, PANEL_NAME } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
 import PropTypes from 'prop-types';
@@ -51,6 +53,7 @@ class TestBasis extends Component {
   }
 
   componentDidMount() {
+    const { subscribeUndoHandlers } = this.props;
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleEventBus(message);
@@ -65,6 +68,11 @@ class TestBasis extends Component {
 
     this._initTestBasis();
     this.ready = true;
+    subscribeUndoHandlers({
+      component: PANEL_NAME.TEST_BASIS,
+      update: this._updateUndoState,
+      // undo: this._handleUpdateActions,
+    });
   }
 
   componentDidUpdate() {
@@ -75,6 +83,7 @@ class TestBasis extends Component {
     window.removeEventListener(EVENT_LISTENER_LIST.CUT, () => this.setState({ type: TEST_BASIS_EVENT_TYPE.DEFAULT }));
     window.removeEventListener(EVENT_LISTENER_LIST.KEYDOWN, () => {});
     eventBus.unsubscribe(this);
+    unSubscribeUndoHandlers({ component: PANEL_NAME.TEST_BASIS });
   }
 
   _initTestBasis = () => {
@@ -134,6 +143,7 @@ class TestBasis extends Component {
       selectionState: null,
       editorState: EditorState.set(editorState, {
         decorator: this._compositeDecorator(),
+        allowUndo: false,
       }),
     };
 
@@ -274,7 +284,7 @@ class TestBasis extends Component {
       const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
       const currentSelection = cutState.selection || selectionState;
       const contentStateWithLink = Modifier.applyEntity(contentStateWithEntity, currentSelection, entityKey);
-      const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithLink });
+      const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithLink, allowUndo: false });
       this._updateEditorState(newEditorState);
     }
   };
@@ -387,7 +397,7 @@ class TestBasis extends Component {
     };
 
     undoHandlers.forEach((undoHandler) => {
-      if (typeof undoHandler.update === 'function') {
+      if (undoHandler.component !== PANEL_NAME.TEST_BASIS && typeof undoHandler.update === 'function') {
         currentState = undoHandler.update(currentState);
       }
     });
@@ -408,6 +418,7 @@ class TestBasis extends Component {
     const { undoStates, popUndoStates, pushRedoStates } = this.props;
     if (undoStates.length > 0) {
       const lastItem = undoStates[undoStates.length - 1];
+      console.log('last', lastItem);
 
       const currentState = this._getCurrentState();
       pushRedoStates(currentState);
@@ -445,6 +456,22 @@ class TestBasis extends Component {
       }
     });
   };
+
+  _updateUndoState = (newState) => {
+    const { testBasis } = this.props;
+    return {
+      ...newState,
+      testBasis: JSON.parse(testBasis.content),
+    };
+  };
+
+  // _handleUpdateActions = async (currentState) => {
+  //   const { setGraph } = this.props;
+  //   const currentGraphs = currentState.graph;
+  //   await this.graphManager.deleteNode();
+  //   this._drawGraph(this.graphManager, currentGraphs, true);
+  //   setGraph(currentGraphs);
+  // };
   /* End Undo/Redo Action */
 
   render() {
@@ -495,6 +522,8 @@ TestBasis.propTypes = {
   popRedoStates: PropTypes.func.isRequired,
   pushRedoStates: PropTypes.func.isRequired,
   clearRedoStates: PropTypes.func.isRequired,
+  subscribeUndoHandlers: PropTypes.func.isRequired,
+  unSubscribeUndoHandlers: PropTypes.func.isRequired,
 };
 
 TestBasis.defaultProps = {
@@ -519,6 +548,8 @@ const mapDispatchToProps = {
   pushRedoStates,
   popRedoStates,
   clearRedoStates,
+  subscribeUndoHandlers,
+  unSubscribeUndoHandlers,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestBasis));

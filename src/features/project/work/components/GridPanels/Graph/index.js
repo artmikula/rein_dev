@@ -15,10 +15,20 @@ import {
   G_TYPE,
   OPTION_TYPE,
   PANEL_NAME,
+  UNDO_STACKS,
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
-import { subscribeUndoHandlers, unSubscribeUndoHandlers } from 'features/project/work/slices/undoSlice';
+import {
+  subscribeUndoHandlers,
+  unSubscribeUndoHandlers,
+  pushActionStates,
+  pushUndoStates,
+  popUndoStates,
+  pushRedoStates,
+  popRedoStates,
+  clearRedoStates,
+} from 'features/project/work/slices/undoSlice';
 import { DELETE_KEY } from './constants';
 import GraphManager from './graphManager';
 import {
@@ -53,6 +63,8 @@ class Graph extends Component {
         graphNodes: [],
         graphLinks: [],
       },
+      // oldStates: undefined,
+      isFree: false,
     };
     this.graphManager = null;
     this.graphState = null;
@@ -86,6 +98,11 @@ class Graph extends Component {
         await delay(50);
 
         this._raiseEvent({ action: domainEvents.ACTION.GENERATE });
+      },
+      onGrab: this._handleGrabOnNode,
+      onDragFree: (e) => {
+        this._handleDragFreeOnNode(e);
+        this._storeActionsToUndoStates();
       },
     });
 
@@ -136,6 +153,24 @@ class Graph extends Component {
     Mousetrap.reset();
     unSubscribeUndoHandlers({ component: PANEL_NAME.GRAPH });
   }
+
+  _handleDragFreeOnNode = (e) => {
+    let eventData = [];
+    if (eventData.length > 0) {
+      eventData.push(e.target._private);
+    } else {
+      eventData = [e.target._private];
+    }
+    this.setState({ isFree: true });
+    // this._handleGraphChange();
+    return eventData;
+  };
+
+  _handleGrabOnNode = () => {
+    // const grabbedStates = this.graphManager.getGrabbedState();
+    // const oldStates = covertGraphStateToSavedData(grabbedStates);
+    this.setState({ isFree: false });
+  };
 
   _raiseEvent = (message) => {
     eventBus.publish(domainEvents.GRAPH_DOMAINEVENT, message);
@@ -214,6 +249,7 @@ class Graph extends Component {
 
   _handleDeleteAction = (e) => {
     if (e.which === DELETE_KEY) {
+      this._storeActionsToUndoStates();
       this.graphManager.removeSelectedElement();
     }
   };
@@ -497,6 +533,41 @@ class Graph extends Component {
   };
 
   /* Undo/Redo Actions */
+  _storeActionsToUndoStates = async () => {
+    const { isFree } = this.state;
+    const { undoStates, pushUndoStates, redoStates, clearRedoStates } = this.props;
+    if (isFree) {
+      if (undoStates.length === UNDO_STACKS) {
+        undoStates.shift();
+      }
+
+      if (redoStates.length > 0) {
+        clearRedoStates();
+      }
+
+      const currentState = this._getCurrentState();
+
+      await pushUndoStates(currentState);
+    }
+    this._handleGraphChange();
+  };
+
+  _getCurrentState = () => {
+    const { undoHandlers, graph } = this.props;
+
+    let currentState = {
+      graph,
+    };
+
+    undoHandlers.forEach((undoHandler) => {
+      if (undoHandler.component !== PANEL_NAME.GRAPH && typeof undoHandler.update === 'function') {
+        currentState = undoHandler.update(currentState);
+      }
+    });
+
+    return currentState;
+  };
+
   _updateUndoState = (newState) => {
     const { graph } = this.props;
     return {
@@ -532,14 +603,33 @@ Graph.propTypes = {
   onGenerate: PropTypes.func.isRequired,
   subscribeUndoHandlers: PropTypes.func.isRequired,
   unSubscribeUndoHandlers: PropTypes.func.isRequired,
+  undoHandlers: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  undoStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  redoStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  pushUndoStates: PropTypes.func.isRequired,
+  clearRedoStates: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   workName: state.work.name,
   graph: state.work.graph,
   workLoaded: state.work.loaded,
+  undoHandlers: state.undoHandlers.handlers,
+  actionStates: state.undoHandlers.actionStates,
+  undoStates: state.undoHandlers.undoStates,
+  redoStates: state.undoHandlers.redoStates,
 });
 
-const mapDispatchToProps = { setGraph, subscribeUndoHandlers, unSubscribeUndoHandlers };
+const mapDispatchToProps = {
+  setGraph,
+  subscribeUndoHandlers,
+  unSubscribeUndoHandlers,
+  pushActionStates,
+  pushUndoStates,
+  popUndoStates,
+  pushRedoStates,
+  popRedoStates,
+  clearRedoStates,
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Graph));

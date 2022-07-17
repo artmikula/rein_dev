@@ -40,7 +40,7 @@ import {
 
 class GraphManager {
   constructor(container, options = {}) {
-    const { onGraphChange, generate } = options;
+    const { onGraphChange, generate, onDragFree, onGrab } = options;
     this.aligning = false;
     this.onGraphChange = () => onGraphChange(this.aligning);
     this.generate = generate;
@@ -49,6 +49,8 @@ class GraphManager {
     this._init(container);
     this.dblTimeout = null;
     this.targetTap = null;
+    this.graph.on('grab', onGrab);
+    this.graph.on('dragfree', onDragFree);
   }
 
   _init = (container) => {
@@ -367,7 +369,6 @@ class GraphManager {
   };
 
   draw = (ele) => {
-    // this.graph.nodes().forEach((node, index) => console.log(index, node.data()));
     return this.graph.add(ele).find((x) => x.data().id === ele.data.id);
   };
 
@@ -685,6 +686,61 @@ class GraphManager {
       }
     });
     return inspections;
+  };
+
+  getNodePosition = () => {
+    return this.graph.nodes(':grabbed').map((node) => {
+      return {
+        data: node.data(),
+        position: node.position(),
+      };
+    });
+  };
+
+  getGrabbedState = () => {
+    const nodes = [];
+    this.graph.nodes(':grabbed').forEach((node) => {
+      if (isActiveNode(node)) {
+        const { data, position, edges } = node._private;
+        const nodeData = { ...data, ...position };
+        if (isUndirectConstraintNode(node)) {
+          nodeData.edges = edges.map((edge) => edge.data());
+        }
+        nodes.push(nodeData);
+      }
+    });
+
+    const edges = [];
+    this.graph.edges().forEach((edge) => {
+      if (!isUndirectConstraint(edge.data().type) && !edge._private.classes.has('eh-ghost')) {
+        edges.push(edge.data());
+      }
+    });
+
+    return { nodeState: nodes, edgeState: edges };
+  };
+
+  getStateFromEventData = (eventData) => {
+    const nodeState = [];
+    const grabbedNode = this.graph.nodes().find((node) => node.data().id === eventData.data.id);
+    if (grabbedNode) {
+      const { data, position, edges } = eventData;
+      const nodeData = { ...data, ...position };
+      if (isUndirectConstraintNode(grabbedNode)) {
+        nodeData.edges = edges.map((edge) => edge.data());
+      }
+      nodeState.push(nodeData);
+    }
+
+    const edgeState = [];
+    const grabbedEdge = this.graph.edges().find((edge) => edge.data().id === eventData.data.id);
+    if (grabbedEdge) {
+      if (!isUndirectConstraint(grabbedEdge.data().type) && !grabbedEdge._private.classes.has('eh-ghost')) {
+        edgeState.push(grabbedEdge.data());
+      }
+    }
+
+    return { nodeState, edgeState };
   };
 }
 
