@@ -18,6 +18,11 @@ import TestDataTable from './TestDataTable';
 import TestScenarioAndCase from './TestScenarioAndCase';
 
 class GridPanels extends Component {
+  // eslint-disable-next-line react/sort-comp
+  setGraphActionHandler = (graphActionHandler) => {
+    this.setState({ graphActionHandler });
+  };
+
   panels = [
     {
       title: Language.get('testbasis'),
@@ -91,11 +96,6 @@ class GridPanels extends Component {
       loading: false,
     };
   }
-
-  // eslint-disable-next-line react/sort-comp
-  setGraphActionHandler = (graphActionHandler) => {
-    this.setState({ graphActionHandler });
-  };
 
   handleGraphAction = (action) => {
     if (!this.state) {
