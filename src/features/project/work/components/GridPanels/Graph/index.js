@@ -545,7 +545,7 @@ class Graph extends Component {
   _handleUpdateActions = async (currentState) => {
     const { setGraph } = this.props;
     const currentGraphs = currentState.graph;
-    await this.graphManager.deleteNode();
+    await this.graphManager.deleteNodes();
     this._drawGraph(this.graphManager, currentGraphs, true);
     setGraph(currentGraphs);
     this._raiseEventUpdate();

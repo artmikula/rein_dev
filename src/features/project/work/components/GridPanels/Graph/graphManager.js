@@ -467,11 +467,10 @@ class GraphManager {
     }
   };
 
-  deleteNode = () => {
+  deleteNodes = () => {
     this.graph.nodes().forEach((node) => {
       this._deleteRelatedUnconstraintNode(node);
       this.remove(node);
-      // this.onGraphChange();
     });
   };
 
