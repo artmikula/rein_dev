@@ -535,17 +535,7 @@ class Graph extends Component {
   _getCurrentState = () => {
     const { undoHandlers, graph } = this.props;
 
-    let currentState = {
-      graph,
-    };
-
-    undoHandlers.forEach((undoHandler) => {
-      if (undoHandler.component !== PANELS_NAME.GRAPH && typeof undoHandler.update === 'function') {
-        currentState = undoHandler.update(currentState);
-      }
-    });
-
-    return currentState;
+    return ActionsHelper.getCurrentState(undoHandlers, ACTIONS_STATE_NAME.GRAPH, graph, PANELS_NAME.GRAPH);
   };
 
   _updateUndoState = (newState) => {

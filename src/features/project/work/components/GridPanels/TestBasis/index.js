@@ -414,17 +414,13 @@ class TestBasis extends Component {
   _getCurrentState = (editorState = undefined) => {
     const { undoHandlers, testBasis } = this.props;
     const drawContent = editorState ? convertToRaw(editorState.getCurrentContent()) : undefined;
-    let currentState = {
-      testBasis: drawContent ?? JSON.parse(testBasis.content),
-    };
 
-    undoHandlers.forEach((undoHandler) => {
-      if (undoHandler.component !== PANELS_NAME.TEST_BASIS && typeof undoHandler.update === 'function') {
-        currentState = undoHandler.update(currentState);
-      }
-    });
-
-    return currentState;
+    return ActionsHelper.getCurrentState(
+      undoHandlers,
+      ACTIONS_STATE_NAME.TEST_BASIS,
+      drawContent ?? JSON.parse(testBasis.content),
+      PANELS_NAME.TEST_BASIS
+    );
   };
 
   _handleKeyDownEvent = ({ ctrlKey, key }) => {
@@ -463,19 +459,11 @@ class TestBasis extends Component {
   };
 
   _updateDataToState = (currentState) => {
+    const { undoHandlers } = this.props;
     const drawContent = convertFromRaw(currentState.testBasis);
     const newEditorState = EditorState.createWithContent(drawContent);
     this._updateEditorState(newEditorState);
-    this._updateStateToHandlers(currentState);
-  };
-
-  _updateStateToHandlers = (currentState) => {
-    const { undoHandlers } = this.props;
-    undoHandlers.forEach((undoHandler) => {
-      if (typeof undoHandler.undo === 'function') {
-        undoHandler.undo(currentState);
-      }
-    });
+    ActionsHelper.updateStateToHandlers(undoHandlers, currentState);
   };
 
   _updateUndoState = (newState) => {
