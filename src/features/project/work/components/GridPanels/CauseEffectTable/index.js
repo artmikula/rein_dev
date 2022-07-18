@@ -85,7 +85,7 @@ class CauseEffectTable extends Component {
   _handleAddEvent = (data, confirmedAbbreviate = undefined) => {
     const { setCauseEffects, listData } = this.props;
     const result = [];
-    let res = listData.slice();
+    let causeEffects = listData.slice();
     this.needConfirm = false;
 
     for (let i = 0; i < data.length; i++) {
@@ -112,11 +112,11 @@ class CauseEffectTable extends Component {
       const newItem = CauseEffect.generateCauseEffectItem(listData, value, parent);
       newItem.id = uuidv4();
       result.push(newItem);
-      res = res.concat(newItem);
+      causeEffects = causeEffects.concat(newItem);
     }
 
     this._raiseEvent({ action: domainEvents.ACTION.ADD, value: result });
-    setCauseEffects(res);
+    setCauseEffects(causeEffects);
   };
 
   _handleDeleteAction = (item) => {
