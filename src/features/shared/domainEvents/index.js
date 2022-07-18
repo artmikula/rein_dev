@@ -15,7 +15,6 @@ const domainEvents = {
     CHANGE_NODE_ID: 'CHANGE_NODE_ID',
     CUT: 'CUT',
     PASTE: 'PASTE',
-    COMPLETE_ADD: 'COMPLETE_ADD',
   },
   DES: {
     TESTBASIS: 'TESTBASIS',

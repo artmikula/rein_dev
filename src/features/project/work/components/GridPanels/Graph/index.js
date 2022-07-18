@@ -23,7 +23,6 @@ import eventBus from 'features/shared/lib/eventBus';
 import {
   subscribeUndoHandlers,
   unSubscribeUndoHandlers,
-  pushActionStates,
   pushUndoStates,
   popUndoStates,
   pushRedoStates,
@@ -583,7 +582,6 @@ const mapStateToProps = (state) => ({
   graph: state.work.graph,
   workLoaded: state.work.loaded,
   undoHandlers: state.undoHandlers.handlers,
-  actionStates: state.undoHandlers.actionStates,
   undoStates: state.undoHandlers.undoStates,
   redoStates: state.undoHandlers.redoStates,
 });
@@ -592,7 +590,6 @@ const mapDispatchToProps = {
   setGraph,
   subscribeUndoHandlers,
   unSubscribeUndoHandlers,
-  pushActionStates,
   pushUndoStates,
   popUndoStates,
   pushRedoStates,

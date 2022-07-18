@@ -15,7 +15,6 @@ import 'draft-js/dist/Draft.css';
 import TestBasisManager from 'features/project/work/biz/TestBasis';
 import { setTestBasis } from 'features/project/work/slices/workSlice';
 import {
-  pushActionStates,
   pushUndoStates,
   popUndoStates,
   pushRedoStates,
@@ -505,11 +504,9 @@ class TestBasis extends Component {
 TestBasis.propTypes = {
   decoratedText: PropTypes.string,
   entityKey: PropTypes.string,
-  actionStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
   testBasis: PropTypes.shape({ content: PropTypes.string }).isRequired,
   workLoaded: PropTypes.bool.isRequired,
   setTestBasis: PropTypes.func.isRequired,
-  pushActionStates: PropTypes.func.isRequired,
   undoHandlers: PropTypes.oneOfType([PropTypes.array]).isRequired,
   undoStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
   redoStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
@@ -531,14 +528,12 @@ const mapStateToProps = (state) => ({
   testBasis: state.work.testBasis,
   workLoaded: state.work.loaded,
   undoHandlers: state.undoHandlers.handlers,
-  actionStates: state.undoHandlers.actionStates,
   undoStates: state.undoHandlers.undoStates,
   redoStates: state.undoHandlers.redoStates,
 });
 
 const mapDispatchToProps = {
   setTestBasis,
-  pushActionStates,
   pushUndoStates,
   popUndoStates,
   pushRedoStates,

@@ -329,7 +329,6 @@ TestDataTable.propTypes = {
 const mapStateToProps = (state) => ({
   workName: state.work.name,
   testDatas: state.work.testDatas,
-  actionStates: state.undoHandlers.actionStates,
 });
 
 const mapDispatchToProps = { setTestDatas, subscribeUndoHandlers, unSubscribeUndoHandlers };

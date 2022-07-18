@@ -691,15 +691,6 @@ class GraphManager {
     return inspections;
   };
 
-  getNodePosition = () => {
-    return this.graph.nodes(':grabbed').map((node) => {
-      return {
-        data: node.data(),
-        position: node.position(),
-      };
-    });
-  };
-
   getGrabbedState = () => {
     const nodes = [];
     this.graph.nodes(':grabbed').forEach((node) => {

@@ -421,7 +421,7 @@ class CauseEffectTable extends Component {
 
   render() {
     const { listData } = this.props;
-    const generateRows = CauseEffect.generateData(listData);
+    const rows = CauseEffect.generateData(listData);
 
     return (
       <Table bordered size="sm" className="border-bottom cause-effect-table">
@@ -434,7 +434,7 @@ class CauseEffectTable extends Component {
         </thead>
 
         <tbody>
-          {generateRows.map((item) => (
+          {rows.map((item) => (
             <CauseEffectRow
               key={item.id}
               data={item}
@@ -456,12 +456,10 @@ CauseEffectTable.propTypes = {
   listData: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   subscribeUndoHandlers: PropTypes.func.isRequired,
   unSubscribeUndoHandlers: PropTypes.func.isRequired,
-  // actionStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
 };
 
 const mapStateToProps = (state) => ({
   listData: state.work.causeEffects,
-  actionStates: state.undoHandlers.actionStates,
 });
 const mapDispatchToProps = { setCauseEffects, subscribeUndoHandlers, unSubscribeUndoHandlers };
 
