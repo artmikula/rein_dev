@@ -3,10 +3,11 @@ import TestData from 'features/project/work/biz/TestData';
 import { setTestDatas } from 'features/project/work/slices/workSlice';
 import { subscribeUndoHandlers, unSubscribeUndoHandlers } from 'features/project/work/slices/undoSlice';
 import {
+  ACTIONS_STATE_NAME,
   CLASSIFY,
   FILE_NAME,
   OPTION_TYPE,
-  PANEL_NAME,
+  PANELS_NAME,
   TESTDATA_TYPE,
   TEST_DATA_SHORTCUT,
   TEST_DATA_SHORTCUT_CODE,
@@ -16,6 +17,7 @@ import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
+import ActionsHelper from 'features/shared/lib/actionsHelper';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -59,7 +61,7 @@ class TestDataTable extends Component {
       });
     });
     subscribeUndoHandlers({
-      component: PANEL_NAME.TEST_DATA,
+      component: PANELS_NAME.TEST_DATA,
       update: this._updateUndoState,
       undo: this._handleUpdateActions,
     });
@@ -69,7 +71,7 @@ class TestDataTable extends Component {
     const { unSubscribeUndoHandlers } = this.props;
     eventBus.unsubscribe(this);
     Mousetrap.reset();
-    unSubscribeUndoHandlers({ component: PANEL_NAME.TEST_DATA });
+    unSubscribeUndoHandlers({ component: PANELS_NAME.TEST_DATA });
   }
 
   _setTestDatas = (testDatas, raiseEvent = false) => {
@@ -270,10 +272,7 @@ class TestDataTable extends Component {
   /* Undo/Redo Actions */
   _updateUndoState = (newState) => {
     const { testDatas } = this.props;
-    return {
-      ...newState,
-      testDatas,
-    };
+    return ActionsHelper.updateUndoState(newState, ACTIONS_STATE_NAME.TEST_DATAS, testDatas);
   };
 
   _handleUpdateActions = (currentState) => {

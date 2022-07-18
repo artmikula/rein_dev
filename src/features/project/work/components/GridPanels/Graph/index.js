@@ -7,6 +7,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { setGraph } from 'features/project/work/slices/workSlice';
 import {
+  ACTIONS_STATE_NAME,
   FILE_NAME,
   GRAPH_LINK_TYPE,
   GRAPH_NODE_TYPE,
@@ -14,8 +15,8 @@ import {
   GRAPH_SHORTCUT_CODE,
   G_TYPE,
   OPTION_TYPE,
-  PANEL_NAME,
-  UNDO_STACKS,
+  PANELS_NAME,
+  UNDO_ACTIONS_STACKS,
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
@@ -29,6 +30,7 @@ import {
   popRedoStates,
   clearRedoStates,
 } from 'features/project/work/slices/undoSlice';
+import ActionsHelper from 'features/shared/lib/actionsHelper';
 import { DELETE_KEY } from './constants';
 import GraphManager from './graphManager';
 import {
@@ -63,8 +65,6 @@ class Graph extends Component {
         graphNodes: [],
         graphLinks: [],
       },
-      // oldStates: undefined,
-      isFree: false,
     };
     this.graphManager = null;
     this.graphState = null;
@@ -76,6 +76,7 @@ class Graph extends Component {
     ];
     this.dataIniting = false;
     this.initiatedGraph = false;
+    this.storeActions = false;
   }
 
   componentDidMount() {
@@ -99,11 +100,8 @@ class Graph extends Component {
 
         this._raiseEvent({ action: domainEvents.ACTION.GENERATE });
       },
-      onGrab: this._handleGrabOnNode,
-      onDragFree: (e) => {
-        this._handleDragFreeOnNode(e);
-        this._storeActionsToUndoStates();
-      },
+      onDragFreeOn: this._storeActionsToUndoStates,
+      storeActionsWhenDelete: this._storeActionsToUndoStates,
     });
 
     this._drawGraph(this.graphManager);
@@ -136,7 +134,7 @@ class Graph extends Component {
     }
 
     subscribeUndoHandlers({
-      component: PANEL_NAME.GRAPH,
+      component: PANELS_NAME.GRAPH,
       update: this._updateUndoState,
       undo: this._handleUpdateActions,
     });
@@ -151,26 +149,8 @@ class Graph extends Component {
     eventBus.unsubscribe(this);
     document.removeEventListener('click', this._handleClick, false);
     Mousetrap.reset();
-    unSubscribeUndoHandlers({ component: PANEL_NAME.GRAPH });
+    unSubscribeUndoHandlers({ component: PANELS_NAME.GRAPH });
   }
-
-  _handleDragFreeOnNode = (e) => {
-    let eventData = [];
-    if (eventData.length > 0) {
-      eventData.push(e.target._private);
-    } else {
-      eventData = [e.target._private];
-    }
-    this.setState({ isFree: true });
-    // this._handleGraphChange();
-    return eventData;
-  };
-
-  _handleGrabOnNode = () => {
-    // const grabbedStates = this.graphManager.getGrabbedState();
-    // const oldStates = covertGraphStateToSavedData(grabbedStates);
-    this.setState({ isFree: false });
-  };
 
   _raiseEvent = (message) => {
     eventBus.publish(domainEvents.GRAPH_DOMAINEVENT, message);
@@ -200,6 +180,7 @@ class Graph extends Component {
             action: domainEvents.ACTION.ACCEPTDELETE,
             value: graphNodes,
             'g-type': G_TYPE.NODE,
+            storeActions: this.storeActions,
           });
         }
 
@@ -208,6 +189,7 @@ class Graph extends Component {
         setGraph(data);
       }
     }
+    this.storeActions = false;
   };
 
   _getGraphImage = () => {
@@ -381,13 +363,14 @@ class Graph extends Component {
   };
 
   _handleCauseEffectEvents = (message) => {
-    const { action, receivers, value } = message;
+    const { action, receivers, value, storeActions } = message;
     switch (action) {
       case domainEvents.ACTION.ADD: {
         this._handleAddNodes(value);
         break;
       }
       case domainEvents.ACTION.ACCEPTDELETE:
+        this.storeActions = storeActions;
         if (receivers === undefined || receivers.includes(domainEvents.DES.GRAPH)) {
           this.graphManager.deleteCauseEffectNode(value);
         }
@@ -534,21 +517,18 @@ class Graph extends Component {
 
   /* Undo/Redo Actions */
   _storeActionsToUndoStates = async () => {
-    const { isFree } = this.state;
     const { undoStates, pushUndoStates, redoStates, clearRedoStates } = this.props;
-    if (isFree) {
-      if (undoStates.length === UNDO_STACKS) {
-        undoStates.shift();
-      }
-
-      if (redoStates.length > 0) {
-        clearRedoStates();
-      }
-
-      const currentState = this._getCurrentState();
-
-      await pushUndoStates(currentState);
+    if (undoStates.length === UNDO_ACTIONS_STACKS) {
+      undoStates.shift();
     }
+
+    if (redoStates.length > 0) {
+      clearRedoStates();
+    }
+
+    const currentState = this._getCurrentState();
+
+    await pushUndoStates(currentState);
     this._handleGraphChange();
   };
 
@@ -560,7 +540,7 @@ class Graph extends Component {
     };
 
     undoHandlers.forEach((undoHandler) => {
-      if (undoHandler.component !== PANEL_NAME.GRAPH && typeof undoHandler.update === 'function') {
+      if (undoHandler.component !== PANELS_NAME.GRAPH && typeof undoHandler.update === 'function') {
         currentState = undoHandler.update(currentState);
       }
     });
@@ -570,10 +550,7 @@ class Graph extends Component {
 
   _updateUndoState = (newState) => {
     const { graph } = this.props;
-    return {
-      ...newState,
-      graph,
-    };
+    return ActionsHelper.updateUndoState(newState, ACTIONS_STATE_NAME.GRAPH, graph);
   };
 
   _handleUpdateActions = async (currentState) => {
@@ -582,6 +559,7 @@ class Graph extends Component {
     await this.graphManager.deleteNode();
     this._drawGraph(this.graphManager, currentGraphs, true);
     setGraph(currentGraphs);
+    this._raiseEventUpdate();
   };
   /* End Undo/Redo Actions */
 

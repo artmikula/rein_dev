@@ -6,13 +6,14 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
+import ActionsHelper from 'features/shared/lib/actionsHelper';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Table } from 'reactstrap';
 import { v4 as uuidv4 } from 'uuid';
-import { PANEL_NAME } from 'features/shared/constants';
+import { ACTIONS_STATE_NAME, PANELS_NAME } from 'features/shared/constants';
 import AbbreviateConfirmContent from './components/AbbreviateConfirmContent';
 import CauseEffectRow from './components/CauseEffectRow';
 import './style.scss';
@@ -39,7 +40,7 @@ class CauseEffectTable extends Component {
       this._handleEvent(message);
     });
     subscribeUndoHandlers({
-      component: PANEL_NAME.CAUSE_EFFECT_TABLE,
+      component: PANELS_NAME.CAUSE_EFFECT_TABLE,
       update: this._updateUndoState,
       undo: this._handleUpdateActions,
     });
@@ -48,7 +49,7 @@ class CauseEffectTable extends Component {
   componentWillUnmount() {
     const { unSubscribeUndoHandlers } = this.props;
     eventBus.unsubscribe(this);
-    unSubscribeUndoHandlers({ component: PANEL_NAME.CAUSE_EFFECT_TABLE });
+    unSubscribeUndoHandlers({ component: PANELS_NAME.CAUSE_EFFECT_TABLE });
   }
 
   _raiseEvent = (message) => eventBus.publish(domainEvents.CAUSEEFFECT_DOMAINEVENT, message);
@@ -162,7 +163,7 @@ class CauseEffectTable extends Component {
     return removeList;
   };
 
-  _handleRemoveEvent = (item) => {
+  _handleRemoveEvent = (item, storeActions = false) => {
     const removeList = this._delete(item);
     if (removeList) {
       removeList.forEach((e) => {
@@ -170,7 +171,12 @@ class CauseEffectTable extends Component {
         if (e.isMerged) {
           receivers.push(domainEvents.DES.TESTBASIS);
         }
-        this._raiseEvent({ action: domainEvents.ACTION.ACCEPTDELETE, value: e, receivers });
+        this._raiseEvent({
+          action: domainEvents.ACTION.ACCEPTDELETE,
+          value: e,
+          receivers,
+          storeActions,
+        });
       });
     }
   };
@@ -228,7 +234,7 @@ class CauseEffectTable extends Component {
   };
 
   _handleEvent = async (message) => {
-    const { action, value, receivers } = message;
+    const { action, value, receivers, storeActions } = message;
     if (receivers === undefined || receivers.includes(domainEvents.DES.CAUSEEFFECT)) {
       switch (action) {
         case domainEvents.ACTION.ADD:
@@ -244,10 +250,10 @@ class CauseEffectTable extends Component {
           this._handleUpdateEvent(value);
           break;
         case domainEvents.ACTION.REMOVE:
-          this._handleRemoveEvent(value);
+          this._handleRemoveEvent(value, storeActions);
           break;
         case domainEvents.ACTION.ACCEPTDELETE:
-          this._handleAcceptDeleteEvent(value);
+          this._handleAcceptDeleteEvent(value, storeActions);
           break;
         case domainEvents.ACTION.REPORTWORK:
           this._handleWorkMenuEvent();
@@ -272,7 +278,7 @@ class CauseEffectTable extends Component {
     this._raiseEvent({ action: domainEvents.ACTION.ADD, value: causes });
   };
 
-  _handleAcceptDeleteEvent = (items) => {
+  _handleAcceptDeleteEvent = (items, storeActions = false) => {
     const { listData, setCauseEffects } = this.props;
     // get causeEffect need remove
     let removedcauseEffects = listData.filter((x) =>
@@ -299,6 +305,7 @@ class CauseEffectTable extends Component {
           action: domainEvents.ACTION.ACCEPTDELETE,
           value: removedcauseEffect,
           receivers: [domainEvents.DES.TESTBASIS, domainEvents.DES.TESTDATA],
+          storeActions,
         });
       });
     }
@@ -402,10 +409,7 @@ class CauseEffectTable extends Component {
   /* Undo/Redo Actions */
   _updateUndoState = (newState) => {
     const { listData } = this.props;
-    return {
-      ...newState,
-      causeEffectTable: listData,
-    };
+    return ActionsHelper.updateUndoState(newState, ACTIONS_STATE_NAME.CAUSEEFFECT_TABLE, listData);
   };
 
   _handleUpdateActions = (currentState) => {

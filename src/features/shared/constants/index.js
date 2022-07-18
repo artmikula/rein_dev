@@ -413,16 +413,14 @@ export const EVENT_LISTENER_LIST = {
   KEYDOWN: 'keydown',
 };
 
-export const ACTIONS_TYPE = {
-  INIT: 'init',
-  BEFORE_ADDED: 'beforeAdded',
-  ADDED: 'added',
-  EDIT: 'edit',
-  DELETE: 'delete',
-  UNDO: 'undo',
+export const ACTIONS_STATE_NAME = {
+  CAUSEEFFECT_TABLE: 'causeEffectTable',
+  GRAPH: 'graph',
+  TEST_BASIS: 'testBasis',
+  TEST_DATAS: 'testDatas',
 };
 
-export const PANEL_NAME = {
+export const PANELS_NAME = {
   TEST_BASIS: 'Test Basis',
   CAUSE_EFFECT_TABLE: 'Cause & Effect Table',
   SSMETRIC: 'SS Metric',
@@ -432,4 +430,4 @@ export const PANEL_NAME = {
   TEST_DATA: 'Test Data',
 };
 
-export const UNDO_STACKS = 200;
+export const UNDO_ACTIONS_STACKS = 200;

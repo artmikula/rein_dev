@@ -40,7 +40,7 @@ import {
 
 class GraphManager {
   constructor(container, options = {}) {
-    const { onGraphChange, generate, onDragFree, onGrab } = options;
+    const { onGraphChange, generate, onDragFreeOn, storeActionsWhenDelete } = options;
     this.aligning = false;
     this.onGraphChange = () => onGraphChange(this.aligning);
     this.generate = generate;
@@ -49,8 +49,8 @@ class GraphManager {
     this._init(container);
     this.dblTimeout = null;
     this.targetTap = null;
-    this.graph.on('grab', onGrab);
-    this.graph.on('dragfree', onDragFree);
+    this.graph.on('dragfreeon', onDragFreeOn);
+    this.storeActions = () => storeActionsWhenDelete();
   }
 
   _init = (container) => {
@@ -64,7 +64,10 @@ class GraphManager {
       align: this.align,
       addGroup: this.addGroup,
       generate: this.generate,
-      delete: this.removeSelectedElement,
+      delete: () => {
+        this.storeActions();
+        this.removeSelectedElement();
+      },
       addExclusive: () => this.addUndirectConstraint(GRAPH_LINK_TYPE.EXCLUSIVE),
       addInclusive: () => this.addUndirectConstraint(GRAPH_LINK_TYPE.INCLUSIVE),
       addOnlyOne: () => this.addUndirectConstraint(GRAPH_LINK_TYPE.ONLYONE),
@@ -718,29 +721,6 @@ class GraphManager {
     });
 
     return { nodeState: nodes, edgeState: edges };
-  };
-
-  getStateFromEventData = (eventData) => {
-    const nodeState = [];
-    const grabbedNode = this.graph.nodes().find((node) => node.data().id === eventData.data.id);
-    if (grabbedNode) {
-      const { data, position, edges } = eventData;
-      const nodeData = { ...data, ...position };
-      if (isUndirectConstraintNode(grabbedNode)) {
-        nodeData.edges = edges.map((edge) => edge.data());
-      }
-      nodeState.push(nodeData);
-    }
-
-    const edgeState = [];
-    const grabbedEdge = this.graph.edges().find((edge) => edge.data().id === eventData.data.id);
-    if (grabbedEdge) {
-      if (!isUndirectConstraint(grabbedEdge.data().type) && !grabbedEdge._private.classes.has('eh-ghost')) {
-        edgeState.push(grabbedEdge.data());
-      }
-    }
-
-    return { nodeState, edgeState };
   };
 }
 
