@@ -431,3 +431,14 @@ export const PANELS_NAME = {
 };
 
 export const UNDO_ACTIONS_STACKS = 200;
+
+export const TEST_BASIS_KEY_BINDING = {
+  Z_KEY: 'z',
+  Y_KEY: 'y',
+};
+
+export const TEST_BASIS_KEY_COMMAND = {
+  UNDO: 'undoActions',
+  HANDLED: 'handled',
+  NOT_HANDLED: 'not-handled',
+};

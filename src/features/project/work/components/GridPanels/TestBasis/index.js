@@ -30,6 +30,8 @@ import {
   UNDO_ACTIONS_STACKS,
   PANELS_NAME,
   ACTIONS_STATE_NAME,
+  TEST_BASIS_KEY_COMMAND,
+  TEST_BASIS_KEY_BINDING,
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
@@ -264,20 +266,23 @@ class TestBasis extends Component {
   _handleKeyCommand = (command, editorState) => {
     if (this.ready) {
       const newState = RichUtils.handleKeyCommand(editorState, command);
-      if (command === 'undoActions') {
-        return 'not-handled';
+      if (command === TEST_BASIS_KEY_COMMAND.UNDO) {
+        return TEST_BASIS_KEY_COMMAND.NOT_HANDLED;
       }
       if (newState) {
         this._handleChange(newState);
-        return 'handled';
+        return TEST_BASIS_KEY_COMMAND.HANDLED;
       }
     }
-    return 'not-handled';
+    return TEST_BASIS_KEY_COMMAND.NOT_HANDLED;
   };
 
   _keyBindingFn = (e) => {
-    if ((e.key === 'z' || e.key === 'y') && KeyBindingUtil.hasCommandModifier(e)) {
-      return 'undoActions';
+    if (
+      (e.key === TEST_BASIS_KEY_BINDING.Z_KEY || e.key === TEST_BASIS_KEY_BINDING.Y_KEY) &&
+      KeyBindingUtil.hasCommandModifier(e)
+    ) {
+      return TEST_BASIS_KEY_COMMAND.UNDO;
     }
     return getDefaultKeyBinding(e);
   };
@@ -397,7 +402,7 @@ class TestBasis extends Component {
   /* Undo/Redo Action */
   _storeActionsToUndoStates = async (state = undefined) => {
     const { undoStates, pushUndoStates, redoStates, clearRedoStates } = this.props;
-    if (undoStates.length === UNDO_ACTIONS_STACKS) {
+    if (undoStates.length >= UNDO_ACTIONS_STACKS) {
       undoStates.shift();
     }
 
@@ -423,10 +428,10 @@ class TestBasis extends Component {
   };
 
   _handleKeyDownEvent = ({ ctrlKey, key }) => {
-    if (ctrlKey && key === 'z') {
+    if (ctrlKey && key === TEST_BASIS_KEY_BINDING.Z_KEY) {
       this._handleUndoAction();
     }
-    if (ctrlKey && key === 'y') {
+    if (ctrlKey && key === TEST_BASIS_KEY_BINDING.Y_KEY) {
       this._handleRedoAction();
     }
   };

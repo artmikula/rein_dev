@@ -517,7 +517,7 @@ class Graph extends Component {
   /* Undo/Redo Actions */
   _storeActionsToUndoStates = async () => {
     const { undoStates, pushUndoStates, redoStates, clearRedoStates } = this.props;
-    if (undoStates.length === UNDO_ACTIONS_STACKS) {
+    if (undoStates.length >= UNDO_ACTIONS_STACKS) {
       undoStates.shift();
     }
 
