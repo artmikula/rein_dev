@@ -302,7 +302,7 @@ class TestBasis extends Component {
     }
   };
 
-  _addCauseEffect = async (data) => {
+  _addCauseEffect = (data) => {
     const { editorState, selectionState, cutState } = this.state;
     if (this.ready) {
       const contentState = editorState.getCurrentContent();
