@@ -233,12 +233,12 @@ class CauseEffectTable extends Component {
     this._raiseEvent({ action: domainEvents.ACTION.PASTE, receivers: [domainEvents.DES.GRAPH] });
   };
 
-  _handleEvent = async (message) => {
+  _handleEvent = (message) => {
     const { action, value, receivers, storeActions } = message;
     if (receivers === undefined || receivers.includes(domainEvents.DES.CAUSEEFFECT)) {
       switch (action) {
         case domainEvents.ACTION.ADD:
-          await this._handleAddEvent(value);
+          this._handleAddEvent(value);
           break;
         case domainEvents.ACTION.CUT:
           this._handleCutEvent(value);
