@@ -1,6 +1,13 @@
 /* eslint-disable max-lines */
+import React, { Component } from 'react';
+import { debounce } from 'lodash';
+import Mousetrap from 'mousetrap';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
 import { setGraph } from 'features/project/work/slices/workSlice';
 import {
+  ACTIONS_STATE_NAME,
   FILE_NAME,
   GRAPH_LINK_TYPE,
   GRAPH_NODE_TYPE,
@@ -8,20 +15,25 @@ import {
   GRAPH_SHORTCUT_CODE,
   G_TYPE,
   OPTION_TYPE,
+  PANELS_NAME,
+  UNDO_ACTIONS_STACKS,
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
-import { debounce } from 'lodash';
-import Mousetrap from 'mousetrap';
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { withRouter } from 'react-router-dom';
+import {
+  subscribeUndoHandlers,
+  unSubscribeUndoHandlers,
+  pushUndoStates,
+  popUndoStates,
+  pushRedoStates,
+  popRedoStates,
+  clearRedoStates,
+} from 'features/project/work/slices/undoSlice';
+import ActionsHelper from 'features/shared/lib/actionsHelper';
 import { DELETE_KEY } from './constants';
 import GraphManager from './graphManager';
-import './style.scss';
 import {
-  caculateInsplectionPalette,
+  calculateInspectionPalette,
   compareNodeArray,
   convertDirectConstraintToEdge,
   convertGraphLinkToEdge,
@@ -33,6 +45,7 @@ import {
   isDirectConstraint,
   separateNodes,
 } from './utils';
+import './style.scss';
 
 class Graph extends Component {
   _raiseEventUpdate = debounce(() => {
@@ -62,10 +75,11 @@ class Graph extends Component {
     ];
     this.dataIniting = false;
     this.initiatedGraph = false;
+    this.storeActions = false;
   }
 
   componentDidMount() {
-    const { onGenerate } = this.props;
+    const { onGenerate, setActionHandler, subscribeUndoHandlers } = this.props;
 
     const container = document.getElementById('graph_container_id');
     this.graphManager = new GraphManager(container, {
@@ -85,6 +99,8 @@ class Graph extends Component {
 
         this._raiseEvent({ action: domainEvents.ACTION.GENERATE });
       },
+      onDragFreeOn: this._storeActionsToUndoStates,
+      storeActionsWhenDelete: this._storeActionsToUndoStates,
     });
 
     this._drawGraph(this.graphManager);
@@ -112,14 +128,27 @@ class Graph extends Component {
       });
     });
 
-    const { setActionHandler } = this.props;
     if (setActionHandler) {
       setActionHandler(this.graphManager);
     }
+
+    subscribeUndoHandlers({
+      component: PANELS_NAME.GRAPH,
+      update: this._updateUndoState,
+      undo: this._handleUpdateActions,
+    });
   }
 
   componentDidUpdate() {
     this._drawGraph(this.graphManager);
+  }
+
+  componentWillUnmount() {
+    const { unSubscribeUndoHandlers } = this.props;
+    eventBus.unsubscribe(this);
+    document.removeEventListener('click', this._handleClick, false);
+    Mousetrap.reset();
+    unSubscribeUndoHandlers({ component: PANELS_NAME.GRAPH });
   }
 
   _raiseEvent = (message) => {
@@ -127,7 +156,7 @@ class Graph extends Component {
   };
 
   _updateInspectionPalettes = (data) => {
-    const updatedData = caculateInsplectionPalette(data);
+    const updatedData = calculateInspectionPalette(data);
     this.graphManager.updateInspections(updatedData.graphNodes);
   };
 
@@ -150,6 +179,7 @@ class Graph extends Component {
             action: domainEvents.ACTION.ACCEPTDELETE,
             value: graphNodes,
             'g-type': G_TYPE.NODE,
+            storeActions: this.storeActions,
           });
         }
 
@@ -158,6 +188,7 @@ class Graph extends Component {
         setGraph(data);
       }
     }
+    this.storeActions = false;
   };
 
   _getGraphImage = () => {
@@ -199,6 +230,7 @@ class Graph extends Component {
 
   _handleDeleteAction = (e) => {
     if (e.which === DELETE_KEY) {
+      this._storeActionsToUndoStates();
       this.graphManager.removeSelectedElement();
     }
   };
@@ -330,13 +362,14 @@ class Graph extends Component {
   };
 
   _handleCauseEffectEvents = (message) => {
-    const { action, receivers, value } = message;
+    const { action, receivers, value, storeActions } = message;
     switch (action) {
       case domainEvents.ACTION.ADD: {
         this._handleAddNodes(value);
         break;
       }
       case domainEvents.ACTION.ACCEPTDELETE:
+        this.storeActions = storeActions;
         if (receivers === undefined || receivers.includes(domainEvents.DES.GRAPH)) {
           this.graphManager.deleteCauseEffectNode(value);
         }
@@ -481,11 +514,43 @@ class Graph extends Component {
     }
   };
 
-  componentWillUnmout() {
-    eventBus.unsubscribe(this);
-    document.removeEventListener('click', this._handleClick, false);
-    Mousetrap.reset();
-  }
+  /* Undo/Redo Actions */
+  _storeActionsToUndoStates = async () => {
+    const { undoStates, pushUndoStates, redoStates, clearRedoStates } = this.props;
+    if (undoStates.length >= UNDO_ACTIONS_STACKS) {
+      undoStates.shift();
+    }
+
+    if (redoStates.length > 0) {
+      clearRedoStates();
+    }
+
+    const currentState = this._getCurrentState();
+
+    await pushUndoStates(currentState);
+    this._handleGraphChange();
+  };
+
+  _getCurrentState = () => {
+    const { undoHandlers, graph } = this.props;
+
+    return ActionsHelper.getCurrentState(undoHandlers, ACTIONS_STATE_NAME.GRAPH, graph, PANELS_NAME.GRAPH);
+  };
+
+  _updateUndoState = (newState) => {
+    const { graph } = this.props;
+    return ActionsHelper.updateUndoState(newState, ACTIONS_STATE_NAME.GRAPH, graph);
+  };
+
+  _handleUpdateActions = async (currentState) => {
+    const { setGraph } = this.props;
+    const currentGraphs = currentState.graph;
+    await this.graphManager.deleteNodes();
+    this._drawGraph(this.graphManager, currentGraphs, true);
+    setGraph(currentGraphs);
+    this._raiseEventUpdate();
+  };
+  /* End Undo/Redo Actions */
 
   render() {
     return <div className="w-100" id="graph_container_id" />;
@@ -503,14 +568,33 @@ Graph.propTypes = {
   workLoaded: PropTypes.bool.isRequired,
   setGraph: PropTypes.func.isRequired,
   onGenerate: PropTypes.func.isRequired,
+  subscribeUndoHandlers: PropTypes.func.isRequired,
+  unSubscribeUndoHandlers: PropTypes.func.isRequired,
+  undoHandlers: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  undoStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  redoStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  pushUndoStates: PropTypes.func.isRequired,
+  clearRedoStates: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   workName: state.work.name,
   graph: state.work.graph,
   workLoaded: state.work.loaded,
+  undoHandlers: state.undoHandlers.handlers,
+  undoStates: state.undoHandlers.undoStates,
+  redoStates: state.undoHandlers.redoStates,
 });
 
-const mapDispatchToProps = { setGraph };
+const mapDispatchToProps = {
+  setGraph,
+  subscribeUndoHandlers,
+  unSubscribeUndoHandlers,
+  pushUndoStates,
+  popUndoStates,
+  pushRedoStates,
+  popRedoStates,
+  clearRedoStates,
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Graph));

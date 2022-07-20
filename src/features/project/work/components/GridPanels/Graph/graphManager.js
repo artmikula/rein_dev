@@ -40,7 +40,7 @@ import {
 
 class GraphManager {
   constructor(container, options = {}) {
-    const { onGraphChange, generate } = options;
+    const { onGraphChange, generate, onDragFreeOn, storeActionsWhenDelete } = options;
     this.aligning = false;
     this.onGraphChange = () => onGraphChange(this.aligning);
     this.generate = generate;
@@ -49,6 +49,8 @@ class GraphManager {
     this._init(container);
     this.dblTimeout = null;
     this.targetTap = null;
+    this.graph.on('dragfreeon', onDragFreeOn);
+    this.storeActions = () => storeActionsWhenDelete();
   }
 
   _init = (container) => {
@@ -62,7 +64,10 @@ class GraphManager {
       align: this.align,
       addGroup: this.addGroup,
       generate: this.generate,
-      delete: this.removeSelectedElement,
+      delete: () => {
+        this.storeActions();
+        this.removeSelectedElement();
+      },
       addExclusive: () => this.addUndirectConstraint(GRAPH_LINK_TYPE.EXCLUSIVE),
       addInclusive: () => this.addUndirectConstraint(GRAPH_LINK_TYPE.INCLUSIVE),
       addOnlyOne: () => this.addUndirectConstraint(GRAPH_LINK_TYPE.ONLYONE),
@@ -462,6 +467,13 @@ class GraphManager {
     }
   };
 
+  deleteNodes = () => {
+    this.graph.nodes().forEach((node) => {
+      this._deleteRelatedUnconstraintNode(node);
+      this.remove(node);
+    });
+  };
+
   deleteCauseEffectNode = (causeEffect, actionType) => {
     const node = this.graph.nodes().find((x) => x.data().definitionId === causeEffect.definitionId);
     if (node) {
@@ -676,6 +688,29 @@ class GraphManager {
       }
     });
     return inspections;
+  };
+
+  getGrabbedState = () => {
+    const nodes = [];
+    this.graph.nodes(':grabbed').forEach((node) => {
+      if (isActiveNode(node)) {
+        const { data, position, edges } = node._private;
+        const nodeData = { ...data, ...position };
+        if (isUndirectConstraintNode(node)) {
+          nodeData.edges = edges.map((edge) => edge.data());
+        }
+        nodes.push(nodeData);
+      }
+    });
+
+    const edges = [];
+    this.graph.edges().forEach((edge) => {
+      if (!isUndirectConstraint(edge.data().type) && !edge._private.classes.has('eh-ghost')) {
+        edges.push(edge.data());
+      }
+    });
+
+    return { nodeState: nodes, edgeState: edges };
   };
 }
 

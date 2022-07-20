@@ -1,10 +1,13 @@
 import Download from 'downloadjs';
 import TestData from 'features/project/work/biz/TestData';
 import { setTestDatas } from 'features/project/work/slices/workSlice';
+import { subscribeUndoHandlers, unSubscribeUndoHandlers } from 'features/project/work/slices/undoSlice';
 import {
+  ACTIONS_STATE_NAME,
   CLASSIFY,
   FILE_NAME,
   OPTION_TYPE,
+  PANELS_NAME,
   TESTDATA_TYPE,
   TEST_DATA_SHORTCUT,
   TEST_DATA_SHORTCUT_CODE,
@@ -14,6 +17,7 @@ import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
+import ActionsHelper from 'features/shared/lib/actionsHelper';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -34,6 +38,7 @@ class TestDataTable extends Component {
   }
 
   async componentDidMount() {
+    const { subscribeUndoHandlers } = this.props;
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleCauseEffectEvents(message);
@@ -55,11 +60,18 @@ class TestDataTable extends Component {
         this._handleShortCutEvents(code);
       });
     });
+    subscribeUndoHandlers({
+      component: PANELS_NAME.TEST_DATA,
+      update: this._updateUndoState,
+      undo: this._handleUpdateActions,
+    });
   }
 
   componentWillUnmount() {
+    const { unSubscribeUndoHandlers } = this.props;
     eventBus.unsubscribe(this);
     Mousetrap.reset();
+    unSubscribeUndoHandlers({ component: PANELS_NAME.TEST_DATA });
   }
 
   _setTestDatas = (testDatas, raiseEvent = false) => {
@@ -257,6 +269,18 @@ class TestDataTable extends Component {
     }
   };
 
+  /* Undo/Redo Actions */
+  _updateUndoState = (newState) => {
+    const { testDatas } = this.props;
+    return ActionsHelper.updateUndoState(newState, ACTIONS_STATE_NAME.TEST_DATAS, testDatas);
+  };
+
+  _handleUpdateActions = (currentState) => {
+    const currentTestDatas = currentState.testDatas;
+    this._setTestDatas(currentTestDatas);
+  };
+  /* End Undo/Redo Actions */
+
   render() {
     const { importFormOpen } = this.state;
     const { testDatas, match } = this.props;
@@ -298,6 +322,8 @@ TestDataTable.propTypes = {
   testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   setTestDatas: PropTypes.func.isRequired,
   onChangeData: PropTypes.func.isRequired,
+  subscribeUndoHandlers: PropTypes.func.isRequired,
+  unSubscribeUndoHandlers: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
@@ -305,6 +331,6 @@ const mapStateToProps = (state) => ({
   testDatas: state.work.testDatas,
 });
 
-const mapDispatchToProps = { setTestDatas };
+const mapDispatchToProps = { setTestDatas, subscribeUndoHandlers, unSubscribeUndoHandlers };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestDataTable));
