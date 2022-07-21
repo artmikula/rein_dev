@@ -1,11 +1,5 @@
 import { connect } from 'react-redux';
-import {
-  EVENT_LISTENER_LIST,
-  GRAPH_SHORTCUT_CODE,
-  GRID_PANEL_SIZE,
-  LAYOUT,
-  VIEW_MODE,
-} from 'features/shared/constants';
+import { EVENT_LISTENER_LIST, GRAPH_ACTIONS, GRID_PANEL_SIZE, LAYOUT, VIEW_MODE } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -71,19 +65,19 @@ class GridPanels extends Component {
               <div className="btn-actions">
                 <Button
                   className="icons-img icon-btn icon-add"
-                  onClick={() => this.handleGraphAction(GRAPH_SHORTCUT_CODE.GENERATE)}
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.GENERATE)}
                 />
                 <Button
                   className="icons-img icon-btn icon-aline"
-                  onClick={() => this.handleGraphAction(GRAPH_SHORTCUT_CODE.ALIGN)}
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.ALIGN)}
                 />
                 <Button
                   className="icons-img icon-btn icon-zoom-in"
-                  onClick={() => this.handleGraphAction(GRAPH_SHORTCUT_CODE.ZOOM_IN)}
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.ZOOM_IN)}
                 />
                 <Button
                   className="icons-img icon-btn icon-zoom-out"
-                  onClick={() => this.handleGraphAction(GRAPH_SHORTCUT_CODE.ZOOM_OUT)}
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.ZOOM_OUT)}
                 />
               </div>
             </div>
@@ -113,27 +107,12 @@ class GridPanels extends Component {
   }
 
   handleGraphAction = (action) => {
+    if (!this.state) {
+      return;
+    }
     const { graphActionHandler } = this.state;
-
-    switch (action) {
-      case GRAPH_SHORTCUT_CODE.GENERATE:
-        graphActionHandler.generate();
-        break;
-
-      case GRAPH_SHORTCUT_CODE.ALIGN:
-        graphActionHandler.align();
-        break;
-
-      case GRAPH_SHORTCUT_CODE.ZOOM_IN:
-        graphActionHandler.zoomIn();
-        break;
-
-      case GRAPH_SHORTCUT_CODE.ZOOM_OUT:
-        graphActionHandler.zoomOut();
-        break;
-
-      default:
-        break;
+    if (graphActionHandler && graphActionHandler[action]) {
+      graphActionHandler[action]();
     }
   };
 

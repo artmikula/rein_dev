@@ -444,3 +444,10 @@ export const TEST_BASIS_KEY_COMMAND = {
   HANDLED: 'handled',
   NOT_HANDLED: 'not-handled',
 };
+
+export const GRAPH_ACTIONS = {
+  ALIGN: 'align',
+  GENERATE: 'generate',
+  ZOOM_IN: 'zoomIn',
+  ZOOM_OUT: 'zoomOut',
+};
