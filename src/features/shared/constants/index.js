@@ -198,6 +198,8 @@ export const GRAPH_SHORTCUT_CODE = {
   ONLYONE: 'ONLYONE',
   REQUIRE: 'REQUIRE',
   MASK: 'MASK',
+  ZOOM_IN: 'zoomIn',
+  ZOOM_OUT: 'zoomOut',
 };
 
 const isMacOS = navigator.platform.search('Mac') >= 0;
