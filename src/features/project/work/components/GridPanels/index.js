@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { EVENT_LISTENER_LIST, GRID_PANEL_SIZE, LAYOUT, VIEW_MODE } from 'features/shared/constants';
+import { EVENT_LISTENER_LIST, GRAPH_ACTIONS, GRID_PANEL_SIZE, LAYOUT, VIEW_MODE } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -63,12 +63,21 @@ class GridPanels extends Component {
             <div className="title-text">{title}</div>
             <div>
               <div className="btn-actions">
-                <Button className="icons-img icon-btn icon-add" onClick={() => this.handleGraphAction('generate')} />
-                <Button className="icons-img icon-btn icon-aline" onClick={() => this.handleGraphAction('align')} />
-                <Button className="icons-img icon-btn icon-zoom-in" onClick={() => this.handleGraphAction('zoomIn')} />
+                <Button
+                  className="icons-img icon-btn icon-add"
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.GENERATE)}
+                />
+                <Button
+                  className="icons-img icon-btn icon-aline"
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.ALIGN)}
+                />
+                <Button
+                  className="icons-img icon-btn icon-zoom-in"
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.ZOOM_IN)}
+                />
                 <Button
                   className="icons-img icon-btn icon-zoom-out"
-                  onClick={() => this.handleGraphAction('zoomOut')}
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.ZOOM_OUT)}
                 />
               </div>
             </div>
