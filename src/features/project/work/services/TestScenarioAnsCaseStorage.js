@@ -66,7 +66,9 @@ class TestScenarioAnsCaseStorage {
           testScenarios[i].testCases[j].isSelected = checked;
         }
       }
-      this.set(testScenarios);
+      if (!defaultData) {
+        this.set(testScenarios);
+      }
     }
 
     return testScenarios;
