@@ -88,7 +88,17 @@
 }
 
 @keyframes spin {
-100% {
-  transform: rotate(360deg);
+  100% {
+    transform: rotate(360deg);
+  }
 }
+
+.hide-panels {
+  visibility: hidden;
+  width: 0;
+  height: 0;
+}
+
+.show-panels {
+  visibility: visible;
 }
