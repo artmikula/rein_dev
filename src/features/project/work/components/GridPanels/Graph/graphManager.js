@@ -695,29 +695,6 @@ class GraphManager {
     return inspections;
   };
 
-  getGrabbedState = () => {
-    const nodes = [];
-    this.graph.nodes(GRAPH_CONFIGS.SELECTORS.GRABBED).forEach((node) => {
-      if (isActiveNode(node)) {
-        const { data, position, edges } = node._private;
-        const nodeData = { ...data, ...position };
-        if (isUndirectConstraintNode(node)) {
-          nodeData.edges = edges.map((edge) => edge.data());
-        }
-        nodes.push(nodeData);
-      }
-    });
-
-    const edges = [];
-    this.graph.edges().forEach((edge) => {
-      if (!isUndirectConstraint(edge.data().type) && !edge._private.classes.has('eh-ghost')) {
-        edges.push(edge.data());
-      }
-    });
-
-    return { nodeState: nodes, edgeState: edges };
-  };
-
   _getScratch = (graph, name) => {
     if (graph.scratch(GRAPH_CONFIGS.SCRATCH.AUTO_PAN) === undefined) {
       graph.scratch(GRAPH_CONFIGS.SCRATCH.AUTO_PAN, {});
