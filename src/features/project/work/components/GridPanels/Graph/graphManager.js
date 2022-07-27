@@ -77,6 +77,7 @@ class GraphManager {
       addMask: () => this.addDirectConstraint(GRAPH_LINK_TYPE.MASK),
       setPalette: () => this._handleSetPalette(),
     });
+
     this.graph.on('ehcomplete', this._handleDrawEdgeComplete);
     this.graph.on('select', 'node', this._handleSelect);
     this.graph.on('unselect', 'node', this._handleUnselect);
@@ -92,6 +93,9 @@ class GraphManager {
     this.graph.on('vdblclick', 'node', this._handleDblTap);
     this.graph.on('dblclick', 'node', this._handleDblTap);
     this.graph.on('tap', 'node', this._handleDblTap);
+    this.graph.on('tapstart', this.onTapStart);
+    this.graph.on('tapdrag', this.onTapDrag);
+    this.graph.on('tapend', this.onTapEnd);
   };
 
   changeNodeId = (oldNodeId, newNodeId) => {
@@ -711,6 +715,73 @@ class GraphManager {
     });
 
     return { nodeState: nodes, edgeState: edges };
+  };
+
+  _getScratch = (eleOrCy, name) => {
+    if (eleOrCy.scratch('_autopanOnDrag') === undefined) {
+      eleOrCy.scratch('_autopanOnDrag', {});
+    }
+
+    const scratchPad = eleOrCy.scratch('_autopanOnDrag');
+    return name === undefined ? scratchPad : scratchPad[name];
+  };
+
+  _setScratch = (eleOrCy, name, val) => {
+    const scratchPad = this._getScratch(eleOrCy);
+    scratchPad[name] = val;
+    eleOrCy.scratch('_autopanOnDrag', scratchPad);
+  };
+
+  onTapStart = (e) => {
+    const node = e.target;
+    if (!node.data().nodeId) {
+      this.graph.panningEnabled(true);
+      this._setScratch(this.graph, 'currentEdge', node);
+    }
+  };
+
+  onTapDrag = (e) => {
+    let exceedX;
+    let exceedY;
+    const currentEdge = this._getScratch(this.graph, 'currentEdge');
+    if (currentEdge === undefined) {
+      return;
+    }
+    const { x: mouseX, y: mouseY } = e.position;
+    const maxWidth = this.graph.width();
+    const maxHeight = this.graph.height();
+
+    if (mouseX >= maxWidth) {
+      exceedX = -mouseX - maxWidth;
+      console.log('exceedX >', exceedX);
+      console.log('mouseX', mouseX);
+      console.log('maxWidth', maxWidth);
+    }
+    if (mouseX <= 0) {
+      exceedX = -mouseX;
+      console.log('exceedX <', exceedX);
+      console.log('mouseX', mouseX);
+      console.log('maxWidth', maxWidth);
+    }
+
+    if (mouseY >= maxHeight) {
+      exceedY = mouseY + maxHeight;
+    }
+    if (mouseY <= 0) {
+      exceedY = mouseY;
+    }
+
+    if (exceedX) {
+      this.graph.panBy({ x: exceedX * 0.01 });
+    }
+    if (exceedY) {
+      this.graph.panBy({ y: exceedY * 0.01 });
+    }
+  };
+
+  onTapEnd = () => {
+    this._setScratch(this.graph, 'currentEdge', undefined);
+    this.graph.panningEnabled(false);
   };
 }
 
