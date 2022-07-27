@@ -102,21 +102,19 @@ export default function GridPanelItem(props) {
           </UncontrolledTooltip>
         </>
       )}
-      {!isCollapse && (
-        <div className={`h-100 scrollbar-sm ${isCollapse ? 'overflow-hidden' : 'overflow-auto'}`}>
-          {children.length && children.length > 0 ? (
-            <TabContent activeTab={activeTab}>
-              {children.map((child, index) => (
-                <TabPane tabId={index} key={index}>
-                  {child}
-                </TabPane>
-              ))}
-            </TabContent>
-          ) : (
-            children
-          )}
-        </div>
-      )}
+      <div className={`scrollbar-sm ${isCollapse ? 'hide-panels' : 'show-panels h-100'} overflow-auto`}>
+        {children.length && children.length > 0 ? (
+          <TabContent activeTab={activeTab}>
+            {children.map((child, index) => (
+              <TabPane tabId={index} key={index}>
+                {child}
+              </TabPane>
+            ))}
+          </TabContent>
+        ) : (
+          children
+        )}
+      </div>
     </>
   );
 }
