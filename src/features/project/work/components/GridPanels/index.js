@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { GRID_PANEL_SIZE, LAYOUT, VIEW_MODE } from 'features/shared/constants';
+import { EVENT_LISTENER_LIST, GRAPH_ACTIONS, GRID_PANEL_SIZE, LAYOUT, VIEW_MODE } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -18,6 +18,11 @@ import TestDataTable from './TestDataTable';
 import TestScenarioAndCase from './TestScenarioAndCase';
 
 class GridPanels extends Component {
+  // eslint-disable-next-line react/sort-comp
+  setGraphActionHandler = (graphActionHandler) => {
+    this.setState({ graphActionHandler });
+  };
+
   panels = [
     {
       title: Language.get('testbasis'),
@@ -58,12 +63,21 @@ class GridPanels extends Component {
             <div className="title-text">{title}</div>
             <div>
               <div className="btn-actions">
-                <Button className="icons-img icon-btn icon-add" onClick={() => this.handleGraphAction('generate')} />
-                <Button className="icons-img icon-btn icon-aline" onClick={() => this.handleGraphAction('align')} />
-                <Button className="icons-img icon-btn icon-zoom-in" onClick={() => this.handleGraphAction('zoomIn')} />
+                <Button
+                  className="icons-img icon-btn icon-add"
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.GENERATE)}
+                />
+                <Button
+                  className="icons-img icon-btn icon-aline"
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.ALIGN)}
+                />
+                <Button
+                  className="icons-img icon-btn icon-zoom-in"
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.ZOOM_IN)}
+                />
                 <Button
                   className="icons-img icon-btn icon-zoom-out"
-                  onClick={() => this.handleGraphAction('zoomOut')}
+                  onClick={() => this.handleGraphAction(GRAPH_ACTIONS.ZOOM_OUT)}
                 />
               </div>
             </div>
@@ -92,11 +106,6 @@ class GridPanels extends Component {
     };
   }
 
-  // eslint-disable-next-line react/sort-comp
-  setGraphActionHandler = (graphActionHandler) => {
-    this.setState({ graphActionHandler });
-  };
-
   handleGraphAction = (action) => {
     if (!this.state) {
       return;
@@ -109,7 +118,7 @@ class GridPanels extends Component {
 
   componentDidMount() {
     this._initLayoutSize();
-    window.addEventListener('resize', this._onChangeLayoutSize);
+    window.addEventListener(EVENT_LISTENER_LIST.RESIZE, this._onChangeLayoutSize);
 
     eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.ACCEPTGENERATE) {
@@ -119,7 +128,9 @@ class GridPanels extends Component {
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', () => this.setState({ wrapperHeight: 0, panelWidth: 0, panelHeight: 0 }));
+    window.removeEventListener(EVENT_LISTENER_LIST.RESIZE, () =>
+      this.setState({ wrapperHeight: 0, panelWidth: 0, panelHeight: 0 })
+    );
     eventBus.unsubscribe(this);
   }
 

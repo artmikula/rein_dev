@@ -1,10 +1,13 @@
 import Download from 'downloadjs';
 import TestData from 'features/project/work/biz/TestData';
 import { setTestDatas } from 'features/project/work/slices/workSlice';
+import { subscribeUndoHandlers, unSubscribeUndoHandlers } from 'features/project/work/slices/undoSlice';
 import {
+  ACTIONS_STATE_NAME,
   CLASSIFY,
   FILE_NAME,
   OPTION_TYPE,
+  PANELS_NAME,
   TESTDATA_TYPE,
   TEST_DATA_SHORTCUT,
   TEST_DATA_SHORTCUT_CODE,
@@ -14,6 +17,7 @@ import Language from 'features/shared/languages/Language';
 import appConfig from 'features/shared/lib/appConfig';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
+import ActionsHelper from 'features/shared/lib/actionsHelper';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -29,10 +33,12 @@ class TestDataTable extends Component {
     super(props);
     this.state = {
       importFormOpen: false,
+      cutData: [],
     };
   }
 
   async componentDidMount() {
+    const { subscribeUndoHandlers } = this.props;
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, (event) => {
       const { message } = event;
       this._handleCauseEffectEvents(message);
@@ -54,14 +60,21 @@ class TestDataTable extends Component {
         this._handleShortCutEvents(code);
       });
     });
+    subscribeUndoHandlers({
+      component: PANELS_NAME.TEST_DATA,
+      update: this._updateUndoState,
+      undo: this._handleUpdateActions,
+    });
   }
 
   componentWillUnmount() {
+    const { unSubscribeUndoHandlers } = this.props;
     eventBus.unsubscribe(this);
     Mousetrap.reset();
+    unSubscribeUndoHandlers({ component: PANELS_NAME.TEST_DATA });
   }
 
-  _setTestDatas = (testDatas, raiseEvent = true) => {
+  _setTestDatas = (testDatas, raiseEvent = false) => {
     const { setTestDatas } = this.props;
 
     setTestDatas(testDatas);
@@ -91,12 +104,12 @@ class TestDataTable extends Component {
       testDatas = TestData.add(testDatas, item);
     });
 
-    this._setTestDatas(testDatas, false);
+    this._setTestDatas(testDatas);
   };
 
   _removeData = (item) => {
     const { testDatas } = this.props;
-    this._setTestDatas(TestData.remove(testDatas, item), false);
+    this._setTestDatas(TestData.remove(testDatas, item));
   };
 
   _updateData = (nodeId, type, strength = 1) => {
@@ -114,7 +127,7 @@ class TestDataTable extends Component {
 
     const newTestDatas = TestData.update(testDatas, item, index);
 
-    this._setTestDatas(newTestDatas);
+    this._setTestDatas(newTestDatas, true);
   };
 
   _onTrueFalseDataChange = (nodeId, valueType, value) => {
@@ -137,13 +150,39 @@ class TestDataTable extends Component {
     }
 
     const newTestDatas = TestData.update(testDatas, item, index);
-    this._setTestDatas(newTestDatas, false);
+    this._setTestDatas(newTestDatas);
+  };
+
+  _handleCutEvent = (eventData) => {
+    const { testDatas } = this.props;
+    const cutData = testDatas.filter((testData) => eventData.some((data) => data === testData.nodeId));
+    this.setState({ cutData });
+  };
+
+  _handlePasteEvent = () => {
+    const { testDatas } = this.props;
+    const { cutData } = this.state;
+    const newTestDatas = testDatas.slice();
+    cutData.forEach((data) => {
+      const isExists = newTestDatas.find((testData) => testData.nodeId === data.nodeId);
+      if (!isExists) {
+        newTestDatas.push(data);
+      }
+    });
+    this._setTestDatas(newTestDatas);
+    this.setState({ cutData: [] });
   };
 
   _handleCauseEffectEvents = (message) => {
     const { action, value } = message;
     if (action === domainEvents.ACTION.ADD) {
       this._addData(value);
+    }
+    if (action === domainEvents.ACTION.CUT) {
+      this._handleCutEvent(value);
+    }
+    if (action === domainEvents.ACTION.PASTE) {
+      this._handlePasteEvent();
     }
     if (action === domainEvents.ACTION.ACCEPTDELETE) {
       this._removeData(value);
@@ -163,13 +202,12 @@ class TestDataTable extends Component {
 
       newList[index] = newItem;
 
-      this._setTestDatas(newList, false);
+      this._setTestDatas(newList);
     }
   };
 
   _exportData = () => {
-    const { testDatas } = this.props;
-    const { workName } = this.props;
+    const { testDatas, workName } = this.props;
     const dataToConvert = testDatas.map((data) => ({
       Cause: data.nodeId,
       Type: data.type,
@@ -226,10 +264,22 @@ class TestDataTable extends Component {
       if (testData.isChanged) {
         testData.isChanged = false;
         const newTestDatas = TestData.update(testDatas, testData, testDataIndex);
-        this._setTestDatas(newTestDatas, false);
+        this._setTestDatas(newTestDatas);
       }
     }
   };
+
+  /* Undo/Redo Actions */
+  _updateUndoState = (newState) => {
+    const { testDatas } = this.props;
+    return ActionsHelper.updateUndoState(newState, ACTIONS_STATE_NAME.TEST_DATAS, testDatas);
+  };
+
+  _handleUpdateActions = (currentState) => {
+    const currentTestDatas = currentState.testDatas;
+    this._setTestDatas(currentTestDatas);
+  };
+  /* End Undo/Redo Actions */
 
   render() {
     const { importFormOpen } = this.state;
@@ -272,6 +322,8 @@ TestDataTable.propTypes = {
   testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   setTestDatas: PropTypes.func.isRequired,
   onChangeData: PropTypes.func.isRequired,
+  subscribeUndoHandlers: PropTypes.func.isRequired,
+  unSubscribeUndoHandlers: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
@@ -279,6 +331,6 @@ const mapStateToProps = (state) => ({
   testDatas: state.work.testDatas,
 });
 
-const mapDispatchToProps = { setTestDatas };
+const mapDispatchToProps = { setTestDatas, subscribeUndoHandlers, unSubscribeUndoHandlers };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestDataTable));

@@ -20,7 +20,7 @@ import edgehandleSetup from './configs/edgehandles';
 import effectGroupSetup from './configs/effectGroup';
 import gridlinesSetup from './configs/gridlines';
 import inspectionSetup from './configs/inspection';
-import { DEFAULT_NODE_X, DEFAULT_SPACE, NODE_INPECTION_TEXT_KEY } from './constants';
+import { DEFAULT_NODE_X, DEFAULT_SPACE, GRAPH_CONFIGS, NODE_INPECTION_TEXT_KEY } from './constants';
 import {
   convertGraphNodeToNode,
   createAngleNode,
@@ -40,7 +40,7 @@ import {
 
 class GraphManager {
   constructor(container, options = {}) {
-    const { onGraphChange, generate } = options;
+    const { onGraphChange, generate, onDragFreeOn, storeActionsWhenDelete } = options;
     this.aligning = false;
     this.onGraphChange = () => onGraphChange(this.aligning);
     this.generate = generate;
@@ -49,6 +49,9 @@ class GraphManager {
     this._init(container);
     this.dblTimeout = null;
     this.targetTap = null;
+    this.graph.on('dragfreeon', onDragFreeOn);
+    this.storeActions = () => storeActionsWhenDelete();
+    this._panSpeed = GRAPH_CONFIGS.AUTO_PAN_SPEED;
   }
 
   _init = (container) => {
@@ -62,7 +65,10 @@ class GraphManager {
       align: this.align,
       addGroup: this.addGroup,
       generate: this.generate,
-      delete: this.removeSelectedElement,
+      delete: () => {
+        this.storeActions();
+        this.removeSelectedElement();
+      },
       addExclusive: () => this.addUndirectConstraint(GRAPH_LINK_TYPE.EXCLUSIVE),
       addInclusive: () => this.addUndirectConstraint(GRAPH_LINK_TYPE.INCLUSIVE),
       addOnlyOne: () => this.addUndirectConstraint(GRAPH_LINK_TYPE.ONLYONE),
@@ -72,21 +78,25 @@ class GraphManager {
       addMask: () => this.addDirectConstraint(GRAPH_LINK_TYPE.MASK),
       setPalette: () => this._handleSetPalette(),
     });
+
     this.graph.on('ehcomplete', this._handleDrawEdgeComplete);
-    this.graph.on('select', 'node', this._handleSelect);
-    this.graph.on('unselect', 'node', this._handleUnselect);
+    this.graph.on('select', GRAPH_CONFIGS.EVENT_TYPES.NODE, this._handleSelect);
+    this.graph.on('unselect', GRAPH_CONFIGS.EVENT_TYPES.NODE, this._handleUnselect);
     this.graph.on('position', 'node[type]', this._handleNodePositionChange);
-    this.graph.on('add', 'node', this._handleAddNode);
-    this.graph.on('remove', 'node', this._handleRemoveNode);
-    this.graph.on('add', 'edge', this._handleAddEdge);
-    this.graph.on('remove', 'edge', this._handleRemoveEdge);
-    this.graph.on('tap', 'node', this._handleOperatorNodeTap);
-    this.graph.on('mousedown', 'node', this._handleMouseDownOnNode);
-    this.graph.on('mouseup', 'node', this._handleMouseUpOnNode);
-    this.graph.on('dblclick', 'node', this._handleDblTap);
-    this.graph.on('vdblclick', 'node', this._handleDblTap);
-    this.graph.on('dblclick', 'node', this._handleDblTap);
-    this.graph.on('tap', 'node', this._handleDblTap);
+    this.graph.on('add', GRAPH_CONFIGS.EVENT_TYPES.NODE, this._handleAddNode);
+    this.graph.on('remove', GRAPH_CONFIGS.EVENT_TYPES.NODE, this._handleRemoveNode);
+    this.graph.on('add', GRAPH_CONFIGS.EVENT_TYPES.EDGE, this._handleAddEdge);
+    this.graph.on('remove', GRAPH_CONFIGS.EVENT_TYPES.EDGE, this._handleRemoveEdge);
+    this.graph.on('tap', GRAPH_CONFIGS.EVENT_TYPES.NODE, this._handleOperatorNodeTap);
+    this.graph.on('mousedown', GRAPH_CONFIGS.EVENT_TYPES.NODE, this._handleMouseDownOnNode);
+    this.graph.on('mouseup', GRAPH_CONFIGS.EVENT_TYPES.NODE, this._handleMouseUpOnNode);
+    this.graph.on('dblclick', GRAPH_CONFIGS.EVENT_TYPES.NODE, this._handleDblTap);
+    this.graph.on('vdblclick', GRAPH_CONFIGS.EVENT_TYPES.NODE, this._handleDblTap);
+    this.graph.on('dblclick', GRAPH_CONFIGS.EVENT_TYPES.NODE, this._handleDblTap);
+    this.graph.on('tap', GRAPH_CONFIGS.EVENT_TYPES.NODE, this._handleDblTap);
+    this.graph.on('tapstart', this._onTapStart);
+    this.graph.on('tapdrag', this._onTapDrag);
+    this.graph.on('tapend', this._onTapEnd);
   };
 
   changeNodeId = (oldNodeId, newNodeId) => {
@@ -115,7 +125,7 @@ class GraphManager {
   };
 
   _handleSetPalette = () => {
-    const nodes = this.graph.nodes(':selected');
+    const nodes = this.graph.nodes(GRAPH_CONFIGS.SELECTORS.SELECTED);
     if (nodes.length === 0) {
       return;
     }
@@ -172,7 +182,7 @@ class GraphManager {
 
   _handleMouseDownOnNode = (e) => {
     if (e.target.selected()) {
-      this.graph.nodes(':selected').forEach((node) => {
+      this.graph.nodes(GRAPH_CONFIGS.SELECTORS.SELECTED).forEach((node) => {
         this._hideOperator(node);
       });
     } else {
@@ -182,7 +192,7 @@ class GraphManager {
 
   _handleMouseUpOnNode = (e) => {
     if (e.target.selected()) {
-      this.graph.nodes(':selected').forEach((node) => {
+      this.graph.nodes(GRAPH_CONFIGS.SELECTORS.SELECTED).forEach((node) => {
         this._showOperator(node);
       });
     } else {
@@ -358,12 +368,9 @@ class GraphManager {
   };
 
   _deleteRelatedUnconstraintNode = (node) => {
-    node._private.edges.forEach((edge) => {
-      if (
-        isUndirectConstraint(edge.data().type) &&
-        isUndirectConstraintNode(edge.source()) &&
-        edge.source()._private.edges.length === 2
-      ) {
+    const edges = this.graph.edges().filter((edge) => edge.data().target === node.data().id);
+    edges.forEach((edge) => {
+      if (isUndirectConstraint(edge.data().type) && isUndirectConstraintNode(edge.source())) {
         this.remove(edge.source());
       }
     });
@@ -443,8 +450,8 @@ class GraphManager {
   };
 
   removeSelectedElement = () => {
-    const nodes = this.graph.nodes(':selected');
-    const edges = this.graph.edges(':selected');
+    const nodes = this.graph.nodes(GRAPH_CONFIGS.SELECTORS.SELECTED);
+    const edges = this.graph.edges(GRAPH_CONFIGS.SELECTORS.SELECTED);
     if (nodes.length > 0) {
       nodes.forEach((node) => {
         this._deleteRelatedUnconstraintNode(node);
@@ -463,6 +470,13 @@ class GraphManager {
       });
       this.onGraphChange();
     }
+  };
+
+  deleteNodes = () => {
+    this.graph.nodes().forEach((node) => {
+      this._deleteRelatedUnconstraintNode(node);
+      this.remove(node);
+    });
   };
 
   deleteCauseEffectNode = (causeEffect, actionType) => {
@@ -571,7 +585,7 @@ class GraphManager {
   };
 
   lockPosition = () => {
-    const nodes = this.graph.nodes(':selected');
+    const nodes = this.graph.nodes(GRAPH_CONFIGS.SELECTORS.SELECTED);
     if (nodes.length === 0) {
       return;
     }
@@ -587,7 +601,7 @@ class GraphManager {
   };
 
   unlockPosition = () => {
-    const nodes = this.graph.nodes(':selected');
+    const nodes = this.graph.nodes(GRAPH_CONFIGS.SELECTORS.SELECTED);
     if (nodes.length === 0) {
       return;
     }
@@ -603,7 +617,7 @@ class GraphManager {
   };
 
   addUndirectConstraint = (graphLinkType) => {
-    const nodes = this.graph.nodes(':selected');
+    const nodes = this.graph.nodes(GRAPH_CONFIGS.SELECTORS.SELECTED);
     const nodeType = getNodeTypeFromConstraintType(graphLinkType);
 
     if (canAddUndirectConstraint(nodes, nodeType)) {
@@ -622,7 +636,7 @@ class GraphManager {
   };
 
   addDirectConstraint = (graphLinkType) => {
-    const nodes = this.graph.nodes(':selected');
+    const nodes = this.graph.nodes(GRAPH_CONFIGS.SELECTORS.SELECTED);
 
     if (canAddDirectConstraint(nodes, graphLinkType)) {
       const oldEdge = hasEdge(nodes, graphLinkType);
@@ -679,6 +693,75 @@ class GraphManager {
       }
     });
     return inspections;
+  };
+
+  _getScratch = (graph, name) => {
+    if (graph.scratch(GRAPH_CONFIGS.SCRATCH.AUTO_PAN) === undefined) {
+      graph.scratch(GRAPH_CONFIGS.SCRATCH.AUTO_PAN, {});
+    }
+
+    const scratchPad = graph.scratch(GRAPH_CONFIGS.SCRATCH.AUTO_PAN);
+    return name === undefined ? scratchPad : scratchPad[name];
+  };
+
+  _setScratch = (graph, name, val) => {
+    const scratchPad = this._getScratch(graph);
+    scratchPad[name] = val;
+    graph.scratch(GRAPH_CONFIGS.SCRATCH.AUTO_PAN, scratchPad);
+  };
+
+  _onTapStart = (e) => {
+    const node = e.target;
+    if (!node.data().nodeId) {
+      let isExceed = false;
+      const { x: mouseX, y: mouseY } = e.renderedPosition;
+      const maxWidth = this.graph.width();
+      const maxHeight = this.graph.height();
+      if (mouseX >= maxWidth || mouseX <= 0 || mouseY >= maxHeight || mouseY <= 0) {
+        isExceed = true;
+      }
+      if (!isExceed) {
+        this.graph.panningEnabled(true);
+        this._setScratch(this.graph, GRAPH_CONFIGS.SCRATCH.CURRENT_EDGE, node);
+      }
+    }
+  };
+
+  _onTapDrag = (e) => {
+    let exceedX;
+    let exceedY;
+    const currentEdge = this._getScratch(this.graph, GRAPH_CONFIGS.SCRATCH.CURRENT_EDGE);
+    if (currentEdge === undefined) {
+      return;
+    }
+    const { x: mouseX, y: mouseY } = e.renderedPosition;
+    const maxWidth = this.graph.width();
+    const maxHeight = this.graph.height();
+
+    if (mouseX >= maxWidth) {
+      exceedX = -mouseX + maxWidth;
+    }
+    if (mouseX <= 0) {
+      exceedX = -mouseX;
+    }
+
+    if (mouseY >= maxHeight) {
+      exceedY = -mouseY + maxHeight;
+    }
+    if (mouseY <= 0) {
+      exceedY = -mouseY;
+    }
+
+    if (exceedX) {
+      this.graph.panBy({ x: exceedX * this._panSpeed });
+    }
+    if (exceedY) {
+      this.graph.panBy({ y: exceedY * this._panSpeed });
+    }
+  };
+
+  _onTapEnd = () => {
+    this._setScratch(this.graph, GRAPH_CONFIGS.SCRATCH.CURRENT_EDGE, undefined);
   };
 }
 

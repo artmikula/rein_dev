@@ -211,7 +211,7 @@ class SSMetric {
 
     assertionDictionary.forEach((value, key) => {
       if (this.effectNodes.some((x) => x.id === key)) {
-        const simplified = DNFLogicCoverage.simplify(value, assertionDictionary);
+        const simplified = DNFLogicCoverage.SimplifyExt(value, assertionDictionary);
         const expression = this._getLogicalExpression(simplified, flattenGroups);
         const { testResults } = simplified;
         for (let i = 0; i < testResults.length; i++) {

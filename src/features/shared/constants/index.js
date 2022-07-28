@@ -198,6 +198,8 @@ export const GRAPH_SHORTCUT_CODE = {
   ONLYONE: 'ONLYONE',
   REQUIRE: 'REQUIRE',
   MASK: 'MASK',
+  ZOOM_IN: 'zoomIn',
+  ZOOM_OUT: 'zoomOut',
 };
 
 const isMacOS = navigator.platform.search('Mac') >= 0;
@@ -401,3 +403,51 @@ export const SORT_DEFAULT = {
 };
 
 export const TEST_CASE_LIMITATION = 100;
+
+export const TEST_BASIS_EVENT_TYPE = {
+  DEFAULT: 'default',
+  CUT: 'cut',
+};
+
+export const EVENT_LISTENER_LIST = {
+  RESIZE: 'resize',
+  CUT: 'cut',
+  KEYDOWN: 'keydown',
+};
+
+export const ACTIONS_STATE_NAME = {
+  CAUSEEFFECT_TABLE: 'causeEffectTable',
+  GRAPH: 'graph',
+  TEST_BASIS: 'testBasis',
+  TEST_DATAS: 'testDatas',
+};
+
+export const PANELS_NAME = {
+  TEST_BASIS: 'Test Basis',
+  CAUSE_EFFECT_TABLE: 'Cause & Effect Table',
+  SSMETRIC: 'SS Metric',
+  TEST_COVERAGE: 'Test Coverage',
+  GRAPH: 'Cause & Effect Graph',
+  TEST_SCENARIOS_CASES: 'Test Scenario/Case',
+  TEST_DATA: 'Test Data',
+};
+
+export const UNDO_ACTIONS_STACKS = 200;
+
+export const TEST_BASIS_KEY_BINDING = {
+  Z_KEY: 'z',
+  Y_KEY: 'y',
+};
+
+export const TEST_BASIS_KEY_COMMAND = {
+  UNDO: 'undoActions',
+  HANDLED: 'handled',
+  NOT_HANDLED: 'not-handled',
+};
+
+export const GRAPH_ACTIONS = {
+  ALIGN: 'align',
+  GENERATE: 'generate',
+  ZOOM_IN: 'zoomIn',
+  ZOOM_OUT: 'zoomOut',
+};

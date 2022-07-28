@@ -25,6 +25,12 @@
       "rules": {
         "max-lines": "off"
       }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "no-undef": "error"
+      }
     }
   ],
   "rules": {
@@ -59,7 +65,7 @@
     "no-plusplus": "off",
     "no-shadow": "off",
     "no-script-url": "warn",
-    "no-undef": "warn",
+    "no-undef": "error",
     "no-underscore-dangle": [
       "off",
       {
@@ -81,7 +87,7 @@
       }
     ],
     "react/no-array-index-key": "off",
-    "react/jsx-no-undef": "warn",
+    "react/jsx-no-undef": "error",
     "react/prop-types": [
       "warn",
       {

@@ -70,6 +70,18 @@ interface ITestData {
   nodeId?: string;
 }
 
+interface ITestDataDetail {
+  id: string;
+  workId: string;
+  type: string;
+  trueDatas: string;
+  falseDatas: string;
+  nodeId: string;
+  strength: 1;
+  createdDate: Date;
+  lastModifiedDate: Date;
+}
+
 interface ISimpleTestScenario {
   // basic fields
   id: string;
@@ -85,9 +97,11 @@ interface ISimpleTestScenario {
   targetType?: string;
   isEffectAssertion?: boolean;
 
-  // Other fields for graph and inspetion
+  // Other fields for graph, inspetion and test coverage
   isBaseScenario?: boolean;
   isViolated?: boolean;
+  isValid?: boolean;
+  isSelected?: boolean;
 
   // Fields for generate process
   expectedResults?: string; // Ex: E1, or !E1
@@ -174,6 +188,7 @@ export type {
   ITestAssertion,
   ITestResult,
   ITestData,
+  ITestDataDetail,
   ITestCase,
   ISimpleTestScenario,
 };

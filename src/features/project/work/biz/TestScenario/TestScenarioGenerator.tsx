@@ -47,11 +47,11 @@ class TestScenarioGenerator {
     }
 
     // Log for debug mode
-    const w: any = window;
-    if (w.isDebugMode) {
-      console.log('ASSERTIONS');
-      scenarioDictionary.forEach((value) => console.log(this.getExpressionString(value)));
-    }
+    // const w: any = window;
+    // if (w.isDebugMode) {
+    //   console.log('ASSERTIONS');
+    //   scenarioDictionary.forEach((value) => console.log(this.getExpressionString(value)));
+    // }
 
     return scenarioDictionary;
   }
@@ -88,6 +88,22 @@ class TestScenarioGenerator {
         resultList.push(tc);
       });
     }
+
+    /* check duplicated test scenarios */
+    resultList.forEach((testScenarioResult, index) => {
+      const duplicateIndex = resultList.findIndex((testScenario) =>
+        testScenario.testAssertions.every((testAssertion) =>
+          testScenarioResult.testAssertions.some(
+            (testAssertionResult) =>
+              testAssertionResult.graphNodeId === testAssertion.graphNodeId &&
+              testAssertionResult.result === testAssertion.result
+          )
+        )
+      );
+      if (duplicateIndex !== index) {
+        resultList.splice(duplicateIndex, 1);
+      }
+    });
 
     // console.log('RESULT SCENARIOS', resultList);
     // resultList.forEach((value) => console.log(this.getExpressionString(value)));

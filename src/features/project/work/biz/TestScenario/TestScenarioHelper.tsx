@@ -87,7 +87,8 @@ class TestScenarioHelper {
     const { testAssertions } = testScenario;
     for (let i = 0; i < testAssertions.length; i++) {
       const testAssertion = {
-        graphNode: testAssertions[i].graphNode ? { ...testAssertions[i].graphNode } : null,
+        graphNodeId: testAssertions[i].graphNodeId,
+        // graphNode: testAssertions[i].graphNode ? { ...testAssertions[i].graphNode } : null,
         testScenario: testAssertions[i].testScenario ? { ...testAssertions[i].testScenario } : null,
         result:
           ((!!testAssertions[i].graphNode && !!exceptId && testAssertions[i].graphNode?.id === exceptId) ||
@@ -138,8 +139,11 @@ class TestScenarioHelper {
     for (let i = 0; i < length; i++) {
       const isExept = exceptIds.includes(testAssertions[i].nodeId);
 
+      // const scenario = testAssertions[i].testScenarioId ? { ...testAssertions[i].testScenario } : null;
+
       const testAssertion: ITestAssertion = {
         ...testAssertions[i],
+        // testScenarioId: scenario?.id,
         result: isExept ? testAssertions[i].result : !testAssertions[i].result,
       };
 
@@ -330,7 +334,9 @@ class TestScenarioHelper {
     result.targetType = result.targetType === OPERATOR_TYPE.AND ? OPERATOR_TYPE.OR : OPERATOR_TYPE.AND;
     const { testAssertions } = testScenario;
     for (let i = 0; i < testAssertions.length; i++) {
-      const testAssertion = result.testAssertions.find((x) => x.graphNode?.id === testAssertions[i].graphNode?.id);
+      const testAssertion = result.testAssertions.find(
+        (testAssertion) => testAssertion.graphNodeId === testAssertions[i].graphNodeId
+      );
       if (testAssertion) {
         testAssertion.result = !testAssertions[i].result;
       }

@@ -3,10 +3,17 @@ import Download from 'downloadjs';
 import testCaseHelper from 'features/project/work/biz/TestCase';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
+import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import reInCloudService from 'features/project/work/services/reInCloudService';
 import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import { setGraph } from 'features/project/work/slices/workSlice';
-import { FILE_NAME, REIN_SHORTCUT_CODE, TEST_CASE_SHORTCUT, TEST_CASE_SHORTCUT_CODE } from 'features/shared/constants';
+import {
+  FILE_NAME,
+  REIN_SHORTCUT_CODE,
+  TEST_CASE_METHOD,
+  TEST_CASE_SHORTCUT,
+  TEST_CASE_SHORTCUT_CODE,
+} from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
@@ -18,6 +25,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import Select from 'react-select';
 import { Button, FormGroup, Input, Label, Table } from 'reactstrap';
+import appConfig from 'features/shared/lib/appConfig';
 import { EXPORT_TYPE_NAME } from '../Graph/constants';
 import './style.scss';
 
@@ -35,6 +43,7 @@ class TestScenarioAndCase extends Component {
       columns: [],
       rows: [],
       expandId: {},
+      isCheckAllTestScenarios: false,
     };
     this.initiatedData = false;
   }
@@ -42,6 +51,7 @@ class TestScenarioAndCase extends Component {
   componentDidMount() {
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
+        this.setState({ isCheckAllTestScenarios: false });
         this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
@@ -93,6 +103,7 @@ class TestScenarioAndCase extends Component {
 
   _clearData = () => {
     this._setColumnsAndRows([], [], []);
+    this.setState({ isCheckAllTestScenarios: false });
     testScenarioAnsCaseStorage.set([]);
   };
 
@@ -132,11 +143,11 @@ class TestScenarioAndCase extends Component {
     const { workId } = match.params;
     let scenarioAndGraphNodes = null;
 
-    // if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
-    // scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes)
-    // } else {
-    scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
-    // }
+    if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
+      scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
+    } else {
+      scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
+    }
 
     const newTestScenarios = scenarioAndGraphNodes.scenarios
       .filter((x) => !x.isViolated)
@@ -193,7 +204,7 @@ class TestScenarioAndCase extends Component {
 
     this._raiseEvent({
       action: domainAction,
-      value: newGraphNodes,
+      value: domainAction === domainEvents.ACTION.ACCEPTGENERATE ? scenarioAndGraphNodes : newGraphNodes,
       receivers: [domainEvents.DES.GRAPH, domainEvents.DES.SSMETRIC],
     });
   };
@@ -261,7 +272,7 @@ class TestScenarioAndCase extends Component {
       action: domainEvents.ACTION.UPDATE,
     });
 
-    this.setState({ rows });
+    this.setState({ rows }, this._isCheckedAllTestScenarios);
   };
 
   _handleTestCaseChecked = (scenarioId, caseId, checked) => {
@@ -286,6 +297,22 @@ class TestScenarioAndCase extends Component {
     const newRows = testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked, rows);
 
     this._setRows(newRows);
+  };
+
+  _handleCheckedAll = (checked) => {
+    testScenarioAnsCaseStorage.checkAllTestScenarios(checked);
+    const { rows } = this.state;
+    const newRows = testScenarioAnsCaseStorage.checkAllTestScenarios(checked, rows);
+
+    this._setRows(newRows);
+  };
+
+  _isCheckedAllTestScenarios = () => {
+    const { rows } = this.state;
+    const isCheckAllTestScenarios = rows.every(
+      (row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected)
+    );
+    this.setState({ isCheckAllTestScenarios });
   };
 
   _createTestCasesFile = () => {
@@ -374,7 +401,7 @@ class TestScenarioAndCase extends Component {
   }
 
   render() {
-    const { selectedOption, columns, rows, expandId } = this.state;
+    const { selectedOption, columns, rows, expandId, isCheckAllTestScenarios } = this.state;
 
     return (
       <div>
@@ -423,7 +450,19 @@ class TestScenarioAndCase extends Component {
         <Table bordered className="scenario-case-table">
           <thead className="text-primary">
             <tr>
-              <td>{Language.get('name')}</td>
+              <td className="position-relative">
+                {rows.length > 0 && (
+                  <div className="position-absolute header-checkbox-container">
+                    <Input
+                      type="checkbox"
+                      className="mt-1"
+                      onChange={(e) => this._handleCheckedAll(e.target.checked)}
+                      checked={isCheckAllTestScenarios}
+                    />
+                  </div>
+                )}
+                {Language.get('name')}
+              </td>
               {columns.map((column, colIndex) => (
                 <td key={colIndex} title={column.title} style={{ cursor: column.title ? 'pointer' : 'default' }}>
                   {column.headerName}
