@@ -6,7 +6,7 @@ import { FormGroup, Input, Label } from 'reactstrap';
 
 function General(props, ref) {
   const [data, setData] = useState(appConfig.general);
-  const { testCaseMethod, viewOmitted } = data;
+  const { testCaseMethod, viewOmmited } = data;
 
   const _handleOptionChange = (key, value) => {
     setData({ ...data, [key]: value });
@@ -55,8 +55,8 @@ function General(props, ref) {
           <Input
             type="checkbox"
             color="primary"
-            checked={viewOmitted}
-            onChange={(e) => _handleOptionChange('viewOmitted', e.target.checked)}
+            checked={viewOmmited}
+            onChange={(e) => _handleOptionChange('viewOmmited', e.target.checked)}
           />
           {Language.get('viewommitedscenariosandtestcases')}
         </Label>

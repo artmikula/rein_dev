@@ -9,7 +9,7 @@ import { COMPLEX_LOGICAL, TEST_CASE_METHOD } from '../constants';
 export const defaultOption = {
   general: {
     testCaseMethod: TEST_CASE_METHOD.MyersTechnique,
-    viewOmitted: true,
+    viewOmmited: true,
   },
   graph: {
     nodeSize: 50,
