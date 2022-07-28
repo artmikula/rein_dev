@@ -49,3 +49,19 @@ export const NODE_INPECTION_TEXT_KEY = {
 export const EXPORT_TYPE_NAME = {
   TestCase: 'TestCase',
 };
+
+export const GRAPH_CONFIGS = {
+  AUTO_PAN_SPEED: 0.3,
+  SCRATCH: {
+    AUTO_PAN: '_autopanOnDrag',
+    CURRENT_EDGE: 'currentEdge',
+  },
+  SELECTORS: {
+    GRABBED: ':grabbed',
+    SELECTED: ':selected',
+  },
+  EVENT_TYPES: {
+    NODE: 'node',
+    EDGE: 'edge',
+  },
+};
