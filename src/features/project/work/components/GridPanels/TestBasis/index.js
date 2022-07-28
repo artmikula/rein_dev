@@ -222,7 +222,7 @@ class TestBasis extends Component {
 
   /* Action */
   _handleChange = (newEditorState) => {
-    const { isOpenClassifyPopover, editorState } = this.state;
+    const { editorState } = this.state;
     const { setTestBasis } = this.props;
 
     const currentContent = newEditorState.getCurrentContent();
@@ -235,11 +235,7 @@ class TestBasis extends Component {
     const selectionState = newEditorState.getSelection();
     const { selectedText, anchorKey, end, start } = this._getSelection(selectionState, newEditorState);
 
-    if (
-      selectedText.trim().length > 0 &&
-      !TestBasisManager.checkSameEntity(anchorKey, start, end) &&
-      !isOpenClassifyPopover
-    ) {
+    if (selectedText.trim().length > 0 && !TestBasisManager.checkSameEntity(anchorKey, start, end)) {
       this.setState({ isOpenClassifyPopover: true, selectionState });
     } else {
       const currentPlainText = currentContent.getPlainText();
