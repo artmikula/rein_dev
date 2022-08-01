@@ -55,7 +55,7 @@ div.vertical-line {
             border-left: 1px dashed #999;
             top: 19px;
             width: 1px;
-            height: 7px;
+            height: 100%;
           }
           &:last-child::after {
             content: none;
