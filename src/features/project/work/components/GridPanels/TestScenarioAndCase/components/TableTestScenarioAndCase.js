@@ -46,18 +46,22 @@ function TableTestScenarioAndCase(props) {
     <Table bordered className="scenario-case-table">
       <thead className="text-primary">
         <tr>
-          <td className="position-relative">
-            {rows.length > 0 && (
-              <div className="position-absolute header-checkbox-container">
-                <Input
-                  type="checkbox"
-                  className="mt-1"
-                  onChange={(e) => _handleCheckedAll(e.target.checked)}
-                  checked={isCheckAllTestScenarios}
-                />
-              </div>
-            )}
-            {Language.get('name')}
+          <td style={{ minWidth: '170px' }}>
+            <FormGroup check className="d-inline-flex align-items-center">
+              {rows.length > 0 && (
+                <Label check>
+                  <Input
+                    type="checkbox"
+                    style={{ left: -4, top: 0 }}
+                    onChange={(e) => _handleCheckedAll(e.target.checked)}
+                    checked={isCheckAllTestScenarios}
+                  />
+                </Label>
+              )}
+              <span className="font-weight-500" style={{ lineHeight: '21px' }}>
+                {Language.get('name')}
+              </span>
+            </FormGroup>
           </td>
           {columns.map((column, colIndex) => (
             <td key={colIndex} title={column.title} style={{ cursor: column.title ? 'pointer' : 'default' }}>
@@ -71,7 +75,14 @@ function TableTestScenarioAndCase(props) {
           return (
             <React.Fragment key={tsIndex}>
               <tr key={`${tsIndex}test-scenario-row`} className={testScenario.isViolated ? 'isViolated' : ''}>
-                <td rowSpan={expandId[testScenario.id] ? testScenario.testCases.length + 1 : 1} className="treeview">
+                <td
+                  className="treeview"
+                  rowSpan={
+                    expandId[`${tsIndex}-${testScenario.id}`] && expandId[testScenario.id]
+                      ? testScenario.testCases.length + 2
+                      : 1
+                  }
+                >
                   <ul>
                     <li>
                       <ul className="d-inline-flex">
@@ -82,11 +93,16 @@ function TableTestScenarioAndCase(props) {
                           }}
                           href="#collapse"
                           className="text-dark"
-                          onClick={(e) => _toggleRow(e, testScenario.id)}
+                          onClick={(e) => {
+                            const customExpandId = `${tsIndex}-${testScenario.id}`;
+                            _toggleRow(e, customExpandId);
+                          }}
                         >
                           <i
                             className={`mr-1 cursor-pointer ${
-                              expandId[testScenario.id] ? 'bi bi-dash-square-fill' : 'bi bi-plus-square-fill'
+                              expandId[`${tsIndex}-${testScenario.id}`]
+                                ? 'bi bi-dash-square-fill'
+                                : 'bi bi-plus-square-fill'
                             }`}
                           />
                         </a>
@@ -99,36 +115,83 @@ function TableTestScenarioAndCase(props) {
                               checked={testScenario.isSelected ?? false}
                             />
                             <span className="font-weight-500" style={{ lineHeight: '21px' }}>
-                              {testScenario.Name}
+                              {testScenario.results}
                             </span>
                           </Label>
                         </FormGroup>
                       </ul>
                       <ul>
-                        {expandId[testScenario.id] &&
-                          testScenario.testCases.map((testCase, testIndex) => (
-                            <li className="align-middle" key={`${testIndex}test-case-tree`}>
+                        {expandId[`${tsIndex}-${testScenario.id}`] && (
+                          <li>
+                            <ul className="d-inline-flex">
+                              <a
+                                style={{
+                                  paddingTop: '2px',
+                                  visibility: testScenario.testCases.length === 0 ? 'hidden' : 'visible',
+                                }}
+                                href="#collapse"
+                                className="text-dark"
+                                onClick={(e) => _toggleRow(e, testScenario.id)}
+                              >
+                                <i
+                                  className={`mr-1 cursor-pointer ${
+                                    expandId[testScenario.id] ? 'bi bi-dash-square-fill' : 'bi bi-plus-square-fill'
+                                  }`}
+                                />
+                              </a>
                               <FormGroup check>
                                 <Label check>
                                   <Input
                                     type="checkbox"
                                     className="mt-1"
-                                    onChange={(e) =>
-                                      _handleTestCaseChecked(testScenario.id, testCase.id, e.target.checked)
-                                    }
-                                    checked={testCase.isSelected ?? false}
+                                    onChange={(e) => _handleTestScenarioChecked(testScenario.id, e.target.checked)}
+                                    checked={testScenario.isSelected ?? false}
                                   />
-                                  {testCase.Name}
+                                  <span className="font-weight-500" style={{ lineHeight: '21px' }}>
+                                    {testScenario.Name}
+                                  </span>
                                 </Label>
                               </FormGroup>
-                            </li>
-                          ))}
+                            </ul>
+                            <ul>
+                              <ul>
+                                {expandId[testScenario.id] &&
+                                  testScenario.testCases.map((testCase, testIndex) => (
+                                    <li className="align-middle" key={`${testIndex}test-case-tree`}>
+                                      <FormGroup check>
+                                        <Label check>
+                                          <Input
+                                            type="checkbox"
+                                            className="mt-1"
+                                            onChange={(e) =>
+                                              _handleTestCaseChecked(testScenario.id, testCase.id, e.target.checked)
+                                            }
+                                            checked={testCase.isSelected ?? false}
+                                          />
+                                          {testCase.Name}
+                                        </Label>
+                                      </FormGroup>
+                                    </li>
+                                  ))}
+                              </ul>
+                            </ul>
+                          </li>
+                        )}
                       </ul>
                     </li>
                   </ul>
                 </td>
                 {columns.map((column, colIndex) => (
-                  <td key={`${colIndex}test-scenario-col`}>
+                  <td
+                    key={`${colIndex}test-scenario-col`}
+                    style={{
+                      visibility:
+                        (expandId[`${tsIndex}-${testScenario.id}`] && !expandId[testScenario.id]) ||
+                        !expandId[`${tsIndex}-${testScenario.id}`]
+                          ? 'visible'
+                          : 'collapse',
+                    }}
+                  >
                     {typeof testScenario[column.key] === 'boolean' ? (
                       <span className="d-flex">
                         <input
@@ -143,14 +206,38 @@ function TableTestScenarioAndCase(props) {
                   </td>
                 ))}
               </tr>
-              {expandId[testScenario.id] &&
-                testScenario.testCases.map((testCase, tcIndex) => (
-                  <tr key={`${tcIndex}test-case-row`}>
-                    {columns.map((column, colIndex) => (
-                      <td key={`${colIndex}test-case-col`}>{testCase[column.key]}</td>
-                    ))}
-                  </tr>
-                ))}
+              {expandId[`${tsIndex}-${testScenario.id}`] && expandId[testScenario.id] && (
+                <tr>
+                  {columns.map((column, colIndex) => (
+                    <td key={`${colIndex}test-scenario-col`}>
+                      {typeof testScenario[column.key] === 'boolean' ? (
+                        <span className="d-flex">
+                          <input
+                            type="checkbox"
+                            onChange={(e) => _handleCheckboxChange(testScenario.id, column.key, e.target.checked)}
+                            checked={testScenario[column.key]}
+                          />
+                        </span>
+                      ) : (
+                        testScenario[column.key]
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              )}
+              {testScenario.testCases.map((testCase, tcIndex) => (
+                <tr
+                  key={`${tcIndex}test-case-row`}
+                  style={{
+                    visibility:
+                      expandId[`${tsIndex}-${testScenario.id}`] && expandId[testScenario.id] ? 'visible' : 'collapse',
+                  }}
+                >
+                  {columns.map((column, colIndex) => (
+                    <td key={`${colIndex}test-case-col`}>{testCase[column.key]}</td>
+                  ))}
+                </tr>
+              ))}
             </React.Fragment>
           );
         })}
