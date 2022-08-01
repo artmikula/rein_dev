@@ -7,11 +7,11 @@ import testScenarioAnsCaseStorage from 'features/project/work/services/TestScena
 function TableTestScenarioAndCase(props) {
   const { rows, columns, setRows, isCheckAllTestScenarios } = props;
 
-  const [expandId, setExpandId] = useState(null);
+  const [expandId, setExpandId] = useState({});
 
   const _toggleRow = (e, id) => {
     e.preventDefault();
-    setExpandId((state) => ({ expandId: { ...state.expandId, [id]: !state.expandId[id] } }));
+    setExpandId((prevState) => ({ ...prevState, [id]: !prevState[id] }));
   };
 
   const _handleCheckedAll = (checked) => {

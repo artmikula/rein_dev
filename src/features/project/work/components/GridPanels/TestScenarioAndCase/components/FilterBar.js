@@ -60,8 +60,12 @@ function FilterBar(props) {
 }
 
 FilterBar.propTypes = {
-  selectedOption: PropTypes.oneOfType([PropTypes.object]).isRequired,
   onChange: PropTypes.func.isRequired,
+  selectedOption: PropTypes.oneOfType([PropTypes.object]),
+};
+
+FilterBar.defaultProps = {
+  selectedOption: null,
 };
 
 export default FilterBar;
