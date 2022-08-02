@@ -46,7 +46,7 @@ class MyerTechnique {
   updateTestScenario(scenarioDictionary = new Map()) {
     const tmpScenarioList = TestScenarioGenerator.generateScenariosForEffectNodes(
       scenarioDictionary,
-      appConfig.showReducedScenariosAndCases
+      appConfig.general.viewOmmited
     );
 
     for (let i = 0; i < tmpScenarioList.length; i++) {
@@ -61,7 +61,7 @@ class MyerTechnique {
       this.effectNodes,
       this.constraints,
       tmpScenarioList,
-      appConfig.showReducedScenariosAndCases
+      appConfig.general.viewOmmited
     );
 
     const { testScenarios, inspectionDictionary } = scenarioInspection;
