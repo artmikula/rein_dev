@@ -451,3 +451,8 @@ export const GRAPH_ACTIONS = {
   ZOOM_IN: 'zoomIn',
   ZOOM_OUT: 'zoomOut',
 };
+
+export const TEST_SCENARIO_TYPES = {
+  BASE: 'base',
+  VALID: 'valid',
+};

@@ -33,10 +33,10 @@ class TestScenarioAndCase extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedOption: null,
       columns: [],
       rows: [],
       isCheckAllTestScenarios: false,
+      filterRows: undefined,
     };
     this.initiatedData = false;
   }
@@ -96,7 +96,7 @@ class TestScenarioAndCase extends Component {
 
   _clearData = () => {
     this._setColumnsAndRows([], [], []);
-    this.setState({ isCheckAllTestScenarios: false });
+    this.setState({ isCheckAllTestScenarios: false, filterRows: undefined });
     testScenarioAnsCaseStorage.set([]);
   };
 
@@ -202,10 +202,6 @@ class TestScenarioAndCase extends Component {
     });
   };
 
-  handleChange = (selectedOption) => {
-    this.setState({ selectedOption });
-  };
-
   _raiseEvent = (message) => {
     eventBus.publish(domainEvents.TEST_SCENARIO_DOMAINEVENT, message);
   };
@@ -284,6 +280,24 @@ class TestScenarioAndCase extends Component {
     return arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
   };
 
+  _onChangeFilterOptions = (filterOptions, type = 'default') => {
+    const { rows } = this.state;
+    const filterRows = rows.filter(
+      (row) =>
+        filterOptions.targetType === row.targetType ||
+        filterOptions.resultType === row.resultType ||
+        filterOptions.isBaseScenario === row.isBaseScenario ||
+        filterOptions.isValid === row.isValid ||
+        (filterOptions.effectNodes?.length > 0 &&
+          filterOptions.effectNodes?.some((effectNode) => row.results === effectNode.value))
+    );
+    if (type === 'reset') {
+      this.setState({ filterRows: undefined });
+    } else {
+      this.setState({ filterRows: filterRows.length > 0 ? filterRows : undefined });
+    }
+  };
+
   _createExportRowData(item, columns) {
     const row = { Name: item.Name, Checked: item.isSelected };
     columns.forEach((col) => {
@@ -357,13 +371,17 @@ class TestScenarioAndCase extends Component {
   }
 
   render() {
-    const { selectedOption, columns, rows, isCheckAllTestScenarios } = this.state;
+    const { columns, rows, isCheckAllTestScenarios, filterRows } = this.state;
+
+    const effectNodes = rows
+      .filter((row, index, array) => array.findIndex((arr) => arr.results === row.results) === index)
+      .map((row) => ({ value: row.results, label: row.results }));
 
     return (
       <div>
-        <FilterBar selectedOption={selectedOption} onChange={this.handleChange} />
+        <FilterBar effectNodes={effectNodes} onChangeFilter={this._onChangeFilterOptions} />
         <TableTestScenarioAndCase
-          rows={rows}
+          rows={filterRows ?? rows}
           columns={columns}
           setRows={this._setRows}
           isCheckAllTestScenarios={isCheckAllTestScenarios}

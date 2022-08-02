@@ -489,6 +489,8 @@ class TestScenarioHelper {
       testScenarioItem.isSelected = !!testScenario.isSelected;
       testScenarioItem.id = testScenario.id;
       testScenarioItem.isViolated = testScenario.isViolated;
+      testScenarioItem.targetType = testScenario.targetType;
+      testScenarioItem.resultType = testScenario.resultType ?? RESULT_TYPE.True;
 
       columns.forEach((column) => {
         if (column.key === 'results') {

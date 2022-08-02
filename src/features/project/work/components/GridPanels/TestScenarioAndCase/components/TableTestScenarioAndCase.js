@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Language from 'features/shared/languages/Language';
 import { FormGroup, Input, Label, Table } from 'reactstrap';
 import PropTypes from 'prop-types';
@@ -9,6 +9,7 @@ function TableTestScenarioAndCase(props) {
 
   const [expandId, setExpandId] = useState({});
   const [groupRows, setGroupRows] = useState([]);
+  const [rowSpan, setRowSpan] = useState({});
 
   const _getGroupRows = React.useCallback(
     (rows) => {
@@ -19,12 +20,17 @@ function TableTestScenarioAndCase(props) {
           groups.push({
             key: row.results,
             isSelected: false,
-            values: [{ ...row, testCases: row.testCases.slice() }],
+            testScenarios: [{ ...row, testCases: row.testCases.slice() }],
           });
         } else {
-          groups[isExists].values?.push({ ...row, testCases: row.testCases.slice() });
+          groups[isExists].testScenarios?.push({ ...row, testCases: row.testCases.slice() });
         }
         return groups;
+      });
+      groups.forEach((group) => {
+        const isSelected = group.testScenarios.every((testScenario) => testScenario.isSelected);
+        // eslint-disable-next-line no-param-reassign
+        group.isSelected = isSelected;
       });
       groups.sort((a, b) => {
         if (a.key < b.key) {
@@ -40,9 +46,32 @@ function TableTestScenarioAndCase(props) {
     [rows]
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     _getGroupRows(rows);
   }, [rows]);
+
+  useEffect(() => {
+    const rowSpanByGroup = {};
+    groupRows.forEach((groupRow) => {
+      if (expandId[groupRow?.key]) {
+        groupRow?.testScenarios?.forEach((testScenario) => {
+          if (expandId[testScenario.id]) {
+            if (!Object.prototype.hasOwnProperty.call(rowSpanByGroup, groupRow?.key)) {
+              rowSpanByGroup[groupRow?.key] = groupRow?.testScenarios?.length + testScenario.testCases.length + 1;
+            } else {
+              rowSpanByGroup[groupRow?.key] += testScenario.testCases.length;
+            }
+          }
+          if (!expandId[testScenario.id]) {
+            rowSpanByGroup[groupRow?.key] = groupRow?.testScenarios?.length + 1;
+          }
+        });
+      } else {
+        rowSpanByGroup[groupRow?.key] = 1;
+      }
+    });
+    setRowSpan(rowSpanByGroup);
+  }, [expandId]);
 
   const _toggleRow = (e, id) => {
     e.preventDefault();
@@ -84,11 +113,11 @@ function TableTestScenarioAndCase(props) {
   const _handleCheckedByGroup = (groupKey, checked) => {
     const checkedIndex = groupRows.findIndex((groupRow) => groupRow.key === groupKey);
     if (checkedIndex > -1) {
-      groupRows[checkedIndex].isSelected = checked;
-      groupRows[checkedIndex].values.forEach((testScenario) => _handleTestScenarioChecked(testScenario.id, checked));
+      groupRows[checkedIndex].testScenarios.forEach((testScenario) =>
+        _handleTestScenarioChecked(testScenario.id, checked)
+      );
     }
   };
-  console.log('expandId', expandId);
 
   return (
     <Table bordered className="scenario-case-table">
@@ -123,7 +152,7 @@ function TableTestScenarioAndCase(props) {
           return (
             <React.Fragment key={rowIndex}>
               <tr key={`${rowIndex}-grouped-test-scenario`}>
-                <td className="treeview" rowSpan={expandId[row?.key] ? row.values.length : 1}>
+                <td className="treeview" rowSpan={rowSpan[row?.key]}>
                   <ul>
                     <li>
                       <ul className="d-inline-flex">
@@ -154,8 +183,8 @@ function TableTestScenarioAndCase(props) {
                         </FormGroup>
                       </ul>
                       <ul>
-                        {expandId[row.key] &&
-                          row.values.map((testScenario) => (
+                        {expandId[row?.key] &&
+                          row.testScenarios.map((testScenario) => (
                             <li key={`${row.key}-${testScenario.id}`}>
                               <ul className="d-inline-flex">
                                 <a
@@ -213,41 +242,24 @@ function TableTestScenarioAndCase(props) {
                     </li>
                   </ul>
                 </td>
-                {expandId[row?.key] &&
-                  row.values.map((testScenario) =>
-                    columns.map((column, colIndex) => (
-                      <td
-                        key={`${colIndex}test-scenario-col`}
-                        style={{
-                          visibility:
-                            (expandId[row?.key] && !expandId[testScenario.id]) || !expandId[row?.key]
-                              ? 'visible'
-                              : 'collapse',
-                        }}
-                        rowSpan={expandId[testScenario.id] ? testScenario.testCases.length + 2 : 1}
-                      >
-                        {typeof testScenario[column.key] === 'boolean' ? (
-                          <span className="d-flex">
-                            <input
-                              type="checkbox"
-                              onChange={(e) => _handleCheckboxChange(testScenario.id, column.key, e.target.checked)}
-                              checked={testScenario[column.key]}
-                            />
-                          </span>
-                        ) : (
-                          testScenario[column.key]
-                        )}
-                      </td>
-                    ))
-                  )}
+                {columns.map((_column, colIndex) => (
+                  <td
+                    key={`${colIndex}test-scenario-col`}
+                    style={{
+                      visibility: 'collapse',
+                    }}
+                  >
+                    <input type="checkbox" />
+                  </td>
+                ))}
               </tr>
-              {row.values.map(
+              {row.testScenarios.map(
                 (testScenario) =>
-                  expandId[row.key] &&
-                  expandId[testScenario.id] && (
+                  expandId[row?.key] &&
+                  !expandId[testScenario.id] && (
                     <tr key={`test-scenario-columns-${testScenario.id}`}>
                       {columns.map((column, colIndex) => (
-                        <td key={`${colIndex}test-scenario-col`}>
+                        <td key={`${colIndex}test-scenario-col`} style={{}}>
                           {typeof testScenario[column.key] === 'boolean' ? (
                             <span className="d-flex">
                               <input
@@ -264,22 +276,43 @@ function TableTestScenarioAndCase(props) {
                     </tr>
                   )
               )}
-              {row.values.map(
-                (testScenario) =>
-                  expandId[row.key] &&
-                  expandId[testScenario.id] &&
-                  testScenario.testCases.map((testCase, tcIndex) => (
-                    <tr
-                      key={`${tcIndex}test-case-row`}
-                      style={{
-                        visibility: expandId[row.key] && expandId[testScenario.id] ? 'visible' : 'collapse',
-                      }}
-                    >
+              {row.testScenarios.map((testScenario) => {
+                if (expandId[row?.key] && expandId[testScenario.id]) {
+                  return (
+                    <tr key={`test-case-row-${testScenario.id}`}>
                       {columns.map((column, colIndex) => (
-                        <td key={`${colIndex}test-case-col`}>{testCase[column.key]}</td>
+                        <td key={`${colIndex}test-scenario-col`} rowSpan={testScenario.testCases.length}>
+                          {typeof testScenario[column.key] === 'boolean' ? (
+                            <span className="d-flex">
+                              <input
+                                type="checkbox"
+                                onChange={(e) => _handleCheckboxChange(testScenario.id, column.key, e.target.checked)}
+                                checked={testScenario[column.key]}
+                              />
+                            </span>
+                          ) : (
+                            testScenario[column.key]
+                          )}
+                        </td>
                       ))}
                     </tr>
-                  ))
+                  );
+                }
+                return null;
+              })}
+              {row.testScenarios.map((testScenario) =>
+                testScenario.testCases.map((testCase, tcIndex) => (
+                  <tr
+                    key={`${tcIndex}test-case-row`}
+                    style={{
+                      visibility: expandId[row.key] && expandId[testScenario.id] ? 'visible' : 'collapse',
+                    }}
+                  >
+                    {columns.map((column, colIndex) => (
+                      <td key={`${colIndex}test-case-col`}>{testCase[column.key]}</td>
+                    ))}
+                  </tr>
+                ))
               )}
             </React.Fragment>
           );
