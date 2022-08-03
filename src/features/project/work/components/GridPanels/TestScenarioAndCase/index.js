@@ -29,6 +29,15 @@ import './style.scss';
 import FilterBar from './components/FilterBar';
 import TableTestScenarioAndCase from './components/TableTestScenarioAndCase';
 
+const defaultFilterOptions = {
+  effectNodes: undefined,
+  results: undefined,
+  resultType: undefined,
+  isBaseScenario: undefined,
+  isValid: undefined,
+  targetType: undefined,
+};
+
 class TestScenarioAndCase extends Component {
   constructor(props) {
     super(props);
@@ -37,6 +46,7 @@ class TestScenarioAndCase extends Component {
       rows: [],
       isCheckAllTestScenarios: false,
       filterRows: undefined,
+      filterOptions: structuredClone(defaultFilterOptions),
     };
     this.initiatedData = false;
   }
@@ -280,21 +290,42 @@ class TestScenarioAndCase extends Component {
     return arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
   };
 
+  _setFilterOptions = (value) => {
+    this.setState((prevState) => ({ filterOptions: { ...prevState.filterOptions, ...value } }));
+  };
+
+  _clearFilterOptions = () => {
+    const { filterOptions } = this.state;
+    this.setState({ filterOptions: structuredClone(defaultFilterOptions) }, () =>
+      this._onChangeFilterOptions(filterOptions, 'reset')
+    );
+  };
+
   _onChangeFilterOptions = (filterOptions, type = 'default') => {
     const { rows } = this.state;
-    const filterRows = rows.filter(
-      (row) =>
-        filterOptions.targetType === row.targetType ||
-        filterOptions.resultType === row.resultType ||
-        filterOptions.isBaseScenario === row.isBaseScenario ||
-        filterOptions.isValid === row.isValid ||
-        (filterOptions.effectNodes?.length > 0 &&
-          filterOptions.effectNodes?.some((effectNode) => row.results === effectNode.value))
-    );
+    const { effectNodes, targetType, resultType, isBaseScenario, isValid } = filterOptions;
+    const filterRows = rows.filter((row) => {
+      if (typeof effectNodes !== 'undefined' && effectNodes?.some((effectNode) => row.results !== effectNode.value)) {
+        return false;
+      }
+      if (typeof targetType !== 'undefined' && targetType !== row.targetType) {
+        return false;
+      }
+      if (typeof resultType !== 'undefined' && resultType !== row.resultType) {
+        return false;
+      }
+      if (typeof isBaseScenario !== 'undefined' && isBaseScenario !== row.isBaseScenario) {
+        return false;
+      }
+      if (typeof isValid !== 'undefined' && isValid !== row.isValid) {
+        return false;
+      }
+      return true;
+    });
     if (type === 'reset') {
       this.setState({ filterRows: undefined });
     } else {
-      this.setState({ filterRows: filterRows.length > 0 ? filterRows : undefined });
+      this.setState({ filterRows });
     }
   };
 
@@ -371,17 +402,33 @@ class TestScenarioAndCase extends Component {
   }
 
   render() {
-    const { columns, rows, isCheckAllTestScenarios, filterRows } = this.state;
+    const { columns, rows, isCheckAllTestScenarios, filterRows, filterOptions } = this.state;
 
     const effectNodes = rows
       .filter((row, index, array) => array.findIndex((arr) => arr.results === row.results) === index)
-      .map((row) => ({ value: row.results, label: row.results }));
+      .map((row) => ({ value: row.results, label: row.results }))
+      .sort((a, b) => {
+        if (a.label < b.label) {
+          return -1;
+        }
+        if (a.label > b.label) {
+          return 1;
+        }
+        return 0;
+      });
 
     return (
       <div>
-        <FilterBar effectNodes={effectNodes} onChangeFilter={this._onChangeFilterOptions} />
+        <FilterBar
+          effectNodes={effectNodes}
+          filterOptions={filterOptions}
+          resetFilter={this._clearFilterOptions}
+          onChangeFilter={this._setFilterOptions}
+          submitFilter={this._onChangeFilterOptions}
+        />
         <TableTestScenarioAndCase
-          rows={filterRows ?? rows}
+          rows={rows}
+          filterRows={filterRows}
           columns={columns}
           setRows={this._setRows}
           isCheckAllTestScenarios={isCheckAllTestScenarios}

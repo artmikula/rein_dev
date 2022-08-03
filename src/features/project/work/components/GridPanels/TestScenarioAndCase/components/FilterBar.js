@@ -11,38 +11,26 @@ const defaultOptions = [
   { value: 'vanilla', label: 'Vanilla' },
 ];
 
-const defaultFilterOptions = {
-  effectNodes: null,
-  results: undefined,
-  resultType: undefined,
-  isBaseScenario: undefined,
-  isValid: undefined,
-  targetType: undefined,
-};
-
 function FilterBar(props) {
-  const { onChangeFilter, effectNodes } = props;
-
-  const [filterOptions, setFilterOptions] = React.useState(defaultFilterOptions);
+  const { resetFilter, onChangeFilter, submitFilter, effectNodes, filterOptions } = props;
 
   const _onResetFilter = () => {
     document.getElementById('base-checkbox').checked = false;
     document.getElementById('valid-checkbox').checked = false;
-    setFilterOptions({ ...filterOptions, effectNodes: null });
     document.getElementById('result-type-selection').value = RESULT_TYPE.True;
     document.getElementById('target-type-and').checked = false;
     document.getElementById('target-type-or').checked = false;
-    onChangeFilter(defaultFilterOptions, 'reset');
+    resetFilter();
   };
 
   return (
-    <div className="d-flex justify-content-between m-2">
+    <div className="d-flex m-2">
       <div className="d-flex justify-content-around align-items-center small filter-wrapper">
         <div className="auto-complete">
           <Select
             isMulti
-            value={filterOptions.effectNodes}
-            onChange={(values) => setFilterOptions({ ...filterOptions, effectNodes: values })}
+            value={filterOptions.effectNodes ?? null}
+            onChange={(values) => onChangeFilter({ effectNodes: values })}
             options={effectNodes.length > 0 ? effectNodes : defaultOptions}
             placeholder={Language.get('select')}
           />
@@ -54,7 +42,7 @@ function FilterBar(props) {
           bsSize="sm"
           className="ml-2"
           style={{ minWidth: 66 }}
-          onChange={(e) => setFilterOptions((prevState) => ({ ...prevState, resultType: e.target.value }))}
+          onChange={(e) => onChangeFilter({ resultType: e.target.value })}
         >
           <option value={RESULT_TYPE.True}>{RESULT_TYPE.True}</option>
           <option value={RESULT_TYPE.False}>{RESULT_TYPE.False}</option>
@@ -66,7 +54,7 @@ function FilterBar(props) {
             <input
               id="target-type-and"
               className="form-check-input"
-              onChange={(e) => setFilterOptions((prevState) => ({ ...prevState, targetType: e.target.value }))}
+              onChange={(e) => onChangeFilter({ targetType: e.target.value })}
               type="radio"
               name="inlineRadioOptions"
               value={OPERATOR_TYPE.AND}
@@ -77,7 +65,7 @@ function FilterBar(props) {
             <input
               id="target-type-or"
               className="form-check-input"
-              onChange={(e) => setFilterOptions((prevState) => ({ ...prevState, targetType: e.target.value }))}
+              onChange={(e) => onChangeFilter({ targetType: e.target.value })}
               type="radio"
               name="inlineRadioOptions"
               value={OPERATOR_TYPE.OR}
@@ -94,12 +82,7 @@ function FilterBar(props) {
               className="form-check-input"
               type="checkbox"
               value={TEST_SCENARIO_TYPES.BASE}
-              onChange={(e) =>
-                setFilterOptions((prevState) => ({
-                  ...prevState,
-                  isBaseScenario: e.target.checked,
-                }))
-              }
+              onChange={(e) => onChangeFilter({ isBaseScenario: e.target.checked })}
             />
             <Label className="form-check-label">{Language.get('base')}</Label>
           </div>
@@ -107,12 +90,7 @@ function FilterBar(props) {
             <input
               id="valid-checkbox"
               className="form-check-input"
-              onChange={(e) =>
-                setFilterOptions((prevState) => ({
-                  ...prevState,
-                  isValid: e.target.checked,
-                }))
-              }
+              onChange={(e) => onChangeFilter({ isValid: e.target.checked })}
               type="checkbox"
               value={TEST_SCENARIO_TYPES.VALID}
             />
@@ -121,7 +99,7 @@ function FilterBar(props) {
         </div>
       </div>
 
-      <Button color="primary" size="sm" className="mr-2" onClick={() => onChangeFilter(filterOptions)}>
+      <Button color="primary" size="sm" className="mr-2" onClick={() => submitFilter(filterOptions)}>
         {Language.get('apply')}
       </Button>
       <Button color="primary" size="sm" onClick={_onResetFilter}>
@@ -132,7 +110,10 @@ function FilterBar(props) {
 }
 
 FilterBar.propTypes = {
+  filterOptions: PropTypes.oneOfType([PropTypes.object]).isRequired,
+  resetFilter: PropTypes.func.isRequired,
   onChangeFilter: PropTypes.func.isRequired,
+  submitFilter: PropTypes.func.isRequired,
   effectNodes: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
 };
 
