@@ -406,7 +406,7 @@ class TestScenarioAndCase extends Component {
 
     const effectNodes = rows
       .filter((row, index, array) => array.findIndex((arr) => arr.results === row.results) === index)
-      .map((row) => ({ value: row.results, label: row.results }))
+      .map((row) => ({ value: row.results, label: `${row.results}: ${row.effectDefinition}` }))
       .sort((a, b) => {
         if (a.label < b.label) {
           return -1;
