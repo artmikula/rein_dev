@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
 import Language from 'features/shared/languages/Language';
@@ -8,12 +8,18 @@ import { OPERATOR_TYPE, RESULT_TYPE, TEST_SCENARIO_TYPES } from 'features/shared
 function FilterBar(props) {
   const { resetFilter, onChangeFilter, submitFilter, effectNodes, filterOptions } = props;
 
+  const resultTypeFilter = useRef(null);
+  const isBaseScenarioFilter = useRef(null);
+  const isValidFilter = useRef(null);
+  const orTypeFilter = useRef(null);
+  const andTypeFilter = useRef(null);
+
   const _onResetFilter = () => {
-    document.getElementById('base-checkbox').checked = false;
-    document.getElementById('valid-checkbox').checked = false;
-    document.getElementById('result-type-selection').value = RESULT_TYPE.True;
-    document.getElementById('target-type-and').checked = false;
-    document.getElementById('target-type-or').checked = false;
+    isBaseScenarioFilter.current.checked = false;
+    isValidFilter.current.checked = false;
+    resultTypeFilter.current.value = RESULT_TYPE.True;
+    andTypeFilter.current.checked = false;
+    orTypeFilter.current.checked = false;
     resetFilter();
   };
 
@@ -31,7 +37,7 @@ function FilterBar(props) {
         </div>
 
         <Input
-          id="result-type-selection"
+          ref={resultTypeFilter}
           type="select"
           bsSize="sm"
           className="ml-2"
@@ -46,7 +52,7 @@ function FilterBar(props) {
         <div className="ml-2 d-flex justify-content-center">
           <div className="form-check form-check-inline">
             <input
-              id="target-type-and"
+              ref={andTypeFilter}
               className="form-check-input"
               onChange={(e) => onChangeFilter({ targetType: e.target.value })}
               type="radio"
@@ -57,7 +63,7 @@ function FilterBar(props) {
           </div>
           <div className="form-check form-check-inline">
             <input
-              id="target-type-or"
+              ref={orTypeFilter}
               className="form-check-input"
               onChange={(e) => onChangeFilter({ targetType: e.target.value })}
               type="radio"
@@ -72,7 +78,7 @@ function FilterBar(props) {
         <div className="d-flex ml-2">
           <div className="form-check form-check-inline">
             <input
-              id="base-checkbox"
+              ref={isBaseScenarioFilter}
               className="form-check-input"
               type="checkbox"
               value={TEST_SCENARIO_TYPES.BASE}
@@ -82,7 +88,7 @@ function FilterBar(props) {
           </div>
           <div className="form-check form-check-inline">
             <input
-              id="valid-checkbox"
+              ref={isValidFilter}
               className="form-check-input"
               onChange={(e) => onChangeFilter({ isValid: e.target.checked })}
               type="checkbox"
