@@ -218,7 +218,7 @@ class TestScenarioAndCase extends Component {
 
   _setColumnsAndRows = (testCases = [], scenarios = [], graphNodes = []) => {
     const columns = TestScenarioHelper.convertToColumns(graphNodes, Language);
-    const rows = TestScenarioHelper.convertToRows(testCases, scenarios, columns);
+    const rows = TestScenarioHelper.convertToRows(testCases, scenarios, columns, graphNodes);
 
     this.setState({ rows, columns });
   };

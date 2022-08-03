@@ -19,6 +19,7 @@ function TableTestScenarioAndCase(props) {
         if (isExists === -1) {
           groups.push({
             key: row.results,
+            definition: row.effectDefinition,
             isSelected: false,
             testScenarios: [{ ...row, testCases: row.testCases.slice() }],
           });

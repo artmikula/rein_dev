@@ -119,7 +119,7 @@ function TableRow(props) {
                       onChange={(e) => _handleCheckedByGroup(row?.key ?? '', e.target.checked)}
                       labelRenderer={
                         <span className="font-weight-500" style={{ lineHeight: '21px' }}>
-                          {row?.key}
+                          {row?.key}: {row?.definition}
                         </span>
                       }
                     />
