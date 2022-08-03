@@ -9,7 +9,7 @@ function TableHeader(props) {
   return (
     <thead className="text-primary">
       <tr>
-        <td style={{ position: 'relative' }}>
+        <td style={{ position: 'relative', minWidth: 140 }}>
           {typeof filterRows !== 'undefined'
             ? filterRows.length > 0 && (
                 <Input type="checkbox" className="input-checkbox" onChange={onChangeCheckbox} checked={checked} />
