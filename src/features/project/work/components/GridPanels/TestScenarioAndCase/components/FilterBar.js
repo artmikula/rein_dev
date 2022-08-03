@@ -5,12 +5,6 @@ import Language from 'features/shared/languages/Language';
 import { Button, Input, Label } from 'reactstrap';
 import { OPERATOR_TYPE, RESULT_TYPE, TEST_SCENARIO_TYPES } from 'features/shared/constants';
 
-const defaultOptions = [
-  { value: 'chocolate', label: 'Chocolate' },
-  { value: 'strawberry', label: 'Strawberry' },
-  { value: 'vanilla', label: 'Vanilla' },
-];
-
 function FilterBar(props) {
   const { resetFilter, onChangeFilter, submitFilter, effectNodes, filterOptions } = props;
 
@@ -31,7 +25,7 @@ function FilterBar(props) {
             isMulti
             value={filterOptions.effectNodes ?? null}
             onChange={(values) => onChangeFilter({ effectNodes: values })}
-            options={effectNodes.length > 0 ? effectNodes : defaultOptions}
+            options={effectNodes.length > 0 ? effectNodes : []}
             placeholder={Language.get('select')}
           />
         </div>
