@@ -76,6 +76,7 @@ class Graph extends Component {
     this.dataIniting = false;
     this.initiatedGraph = false;
     this.storeActions = false;
+    this.isNodeMoved = false;
   }
 
   componentDidMount() {
@@ -99,7 +100,10 @@ class Graph extends Component {
 
         this._raiseEvent({ action: domainEvents.ACTION.GENERATE });
       },
-      onDragFreeOn: this._storeActionsToUndoStates,
+      onDragFreeOn: () => {
+        this.isNodeMoved = true;
+        this._storeActionsToUndoStates();
+      },
       storeActionsWhenDelete: this._storeActionsToUndoStates,
     });
 
@@ -184,7 +188,9 @@ class Graph extends Component {
         }
 
         // raise update event and save graph data
-        this._raiseEventUpdate();
+        if (!this.isNodeMoved) {
+          this._raiseEventUpdate();
+        }
         setGraph(data);
       }
     }
@@ -548,7 +554,10 @@ class Graph extends Component {
     await this.graphManager.deleteNodes();
     this._drawGraph(this.graphManager, currentGraphs, true);
     setGraph(currentGraphs);
-    this._raiseEventUpdate();
+    if (!this.isNodeMoved) {
+      this._raiseEventUpdate();
+    }
+    this.isNodeMoved = false;
   };
   /* End Undo/Redo Actions */
 
