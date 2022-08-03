@@ -5,7 +5,7 @@ import testScenarioAnsCaseStorage from 'features/project/work/services/TestScena
 import Checkbox from './TableCheckbox';
 
 function TableRow(props) {
-  const { groupRows, rows, filterRows, columns, updateGroupRows, updateRows } = props;
+  const { groupByEffectNodes, rows, filterRows, columns, updateGroupByEffectNodes, updateRows } = props;
 
   const [expandId, setExpandId] = useState({});
   const [rowSpan, setRowSpan] = useState({});
@@ -13,7 +13,7 @@ function TableRow(props) {
   useEffect(() => {
     // handle get row span by group
     const rowSpanByGroup = {};
-    groupRows.forEach((groupRow) => {
+    groupByEffectNodes.forEach((groupRow) => {
       if (expandId[groupRow?.key]) {
         groupRow?.testScenarios?.forEach((testScenario) => {
           if (expandId[testScenario.id]) {
@@ -34,7 +34,7 @@ function TableRow(props) {
       }
     });
     setRowSpan(rowSpanByGroup);
-  }, [expandId, groupRows]);
+  }, [expandId, groupByEffectNodes]);
 
   useEffect(() => {
     setExpandId({});
@@ -52,7 +52,7 @@ function TableRow(props) {
     (scenarioId, checked) => {
       testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked);
       const newRows = testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked, rows);
-      updateGroupRows(filterRows ?? newRows);
+      updateGroupByEffectNodes(filterRows ?? newRows);
 
       updateRows(newRows);
     },
@@ -63,7 +63,7 @@ function TableRow(props) {
     (scenarioId, caseId, checked) => {
       testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked);
       const newRows = testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked, rows);
-      updateGroupRows(newRows);
+      updateGroupByEffectNodes(newRows);
 
       updateRows(newRows);
     },
@@ -74,7 +74,7 @@ function TableRow(props) {
     (scenarioId, key, checked) => {
       testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked);
       const newRows = testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked, rows);
-      updateGroupRows(filterRows ?? newRows);
+      updateGroupByEffectNodes(filterRows ?? newRows);
 
       updateRows(newRows);
     },
@@ -83,19 +83,19 @@ function TableRow(props) {
 
   const _handleCheckedByGroup = useCallback(
     (groupKey, checked) => {
-      const checkedIndex = groupRows.findIndex((groupRow) => groupRow.key === groupKey);
+      const checkedIndex = groupByEffectNodes.findIndex((groupRow) => groupRow.key === groupKey);
       if (checkedIndex > -1) {
-        groupRows[checkedIndex].testScenarios.forEach((testScenario) =>
+        groupByEffectNodes[checkedIndex].testScenarios.forEach((testScenario) =>
           _handleTestScenarioChecked(testScenario.id, checked)
         );
       }
     },
-    [groupRows]
+    [groupByEffectNodes]
   );
 
   return (
     <tbody>
-      {groupRows.map((row, rowIndex) => (
+      {groupByEffectNodes.map((row, rowIndex) => (
         <Fragment key={rowIndex}>
           <tr key={`${rowIndex}-grouped-test-scenario`}>
             <td className="treeview" rowSpan={rowSpan[row?.key]}>
@@ -224,10 +224,10 @@ function TableRow(props) {
 }
 
 TableRow.propTypes = {
-  groupRows: PropTypes.oneOfType([PropTypes.array]).isRequired,
+  groupByEffectNodes: PropTypes.oneOfType([PropTypes.array]).isRequired,
   rows: PropTypes.oneOfType([PropTypes.array]).isRequired,
   columns: PropTypes.oneOfType([PropTypes.array]).isRequired,
-  updateGroupRows: PropTypes.func.isRequired,
+  updateGroupByEffectNodes: PropTypes.func.isRequired,
   updateRows: PropTypes.func.isRequired,
   filterRows: PropTypes.oneOfType([PropTypes.array]),
 };

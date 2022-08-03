@@ -9,9 +9,9 @@ import TableRow from './TableRow';
 function TableTestScenarioAndCase(props) {
   const { rows, columns, setRows, isCheckAllTestScenarios, filterRows } = props;
 
-  const [groupRows, setGroupRows] = useState([]);
+  const [groupByEffectNodes, setGroupByEffectNodes] = useState([]);
 
-  const _getGroupRows = useCallback(
+  const _getGroupByEffectNodes = useCallback(
     (rows) => {
       const groups = [];
       rows.forEach((row) => {
@@ -41,20 +41,20 @@ function TableTestScenarioAndCase(props) {
         }
         return 0;
       });
-      setGroupRows(groups);
+      setGroupByEffectNodes(groups);
     },
     [rows]
   );
 
   useEffect(() => {
-    _getGroupRows(filterRows ?? rows);
+    _getGroupByEffectNodes(filterRows ?? rows);
   }, [rows, filterRows]);
 
   const _handleCheckedAll = useCallback(
     (checked) => {
       testScenarioAnsCaseStorage.checkAllTestScenarios(checked);
       const newRows = testScenarioAnsCaseStorage.checkAllTestScenarios(checked, rows);
-      _getGroupRows(filterRows ?? newRows);
+      _getGroupByEffectNodes(filterRows ?? newRows);
 
       setRows(newRows);
     },
@@ -72,9 +72,9 @@ function TableTestScenarioAndCase(props) {
       />
       <TableRow
         rows={rows}
-        updateGroupRows={_getGroupRows}
+        updateGroupByEffectNodes={_getGroupByEffectNodes}
         updateRows={setRows}
-        groupRows={groupRows}
+        groupByEffectNodes={groupByEffectNodes}
         filterRows={filterRows}
         columns={columns}
       />
