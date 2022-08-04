@@ -198,7 +198,7 @@ class Workspace extends Component {
       testScenarioAnsCaseStorage.set(data);
     } catch (e) {
       if (e instanceof DOMException && (e.code === 22 || e.code === 1024)) {
-        alert('Your browser storage is full, click ‘OK’ to clear cache', {
+        alert(Language.get('workquotaexceed'), {
           warning: true,
           actionText: 'OK',
           onClose: this._onCloseAlert,
