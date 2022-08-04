@@ -402,7 +402,7 @@ class TestScenarioAndCase extends Component {
   }
 
   render() {
-    const { columns, rows, isCheckAllTestScenarios, filterRows, filterOptions } = this.state;
+    const { columns, rows, isCheckAllTestScenarios, filterRows } = this.state;
 
     const effectNodes = rows
       .filter((row, index, array) => array.findIndex((arr) => arr.results === row.results) === index)
@@ -421,9 +421,8 @@ class TestScenarioAndCase extends Component {
       <div>
         <FilterBar
           effectNodes={effectNodes}
-          filterOptions={filterOptions}
           resetFilter={this._clearFilterOptions}
-          onChangeFilter={this._setFilterOptions}
+          setFilterOptions={this._setFilterOptions}
           submitFilter={this._onChangeFilterOptions}
         />
         <TableTestScenarioAndCase
