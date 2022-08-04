@@ -409,6 +409,7 @@ class Graph extends Component {
     data.forEach((item) => {
       const { isMerged } = item;
       if (!isMerged) {
+        this.isNodeMoved = false;
         this.graphManager.drawCauseEffect(item);
       }
     });
@@ -495,6 +496,7 @@ class Graph extends Component {
 
     if ((!this.initiatedGraph && workLoaded) || forceUpdate) {
       this.dataIniting = true;
+      this.isNodeMoved = false;
 
       _graphNodes.forEach((graphNode) => graphManager.draw(convertGraphNodeToNode(graphNode)));
 
@@ -557,7 +559,6 @@ class Graph extends Component {
     if (!this.isNodeMoved) {
       this._raiseEventUpdate();
     }
-    this.isNodeMoved = false;
   };
   /* End Undo/Redo Actions */
 
