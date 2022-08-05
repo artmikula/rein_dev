@@ -73,10 +73,10 @@ function TableTestScenarioAndCase(props) {
       />
       <TableRow
         rows={rows}
+        filterRows={filterRows}
         updateGroupByEffectNodes={_getGroupByEffectNodes}
         updateRows={setRows}
         groupByEffectNodes={groupByEffectNodes}
-        filterRows={filterRows}
         columns={columns}
       />
     </Table>

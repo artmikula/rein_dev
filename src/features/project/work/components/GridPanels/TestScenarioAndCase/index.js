@@ -10,6 +10,7 @@ import { setGraph } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
   REIN_SHORTCUT_CODE,
+  RESULT_TYPE,
   TEST_CASE_METHOD,
   TEST_CASE_SHORTCUT,
   TEST_CASE_SHORTCUT_CODE,
@@ -32,10 +33,10 @@ import TableTestScenarioAndCase from './components/TableTestScenarioAndCase';
 const defaultFilterOptions = {
   effectNodes: undefined,
   results: undefined,
-  resultType: undefined,
+  resultType: RESULT_TYPE.True,
   isBaseScenario: undefined,
   isValid: undefined,
-  targetType: undefined,
+  sourceTargetType: undefined,
 };
 
 class TestScenarioAndCase extends Component {
@@ -54,7 +55,7 @@ class TestScenarioAndCase extends Component {
   componentDidMount() {
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
-        this.setState({ isCheckAllTestScenarios: false });
+        this.setState({ isCheckAllTestScenarios: false, filterOptions: structuredClone(defaultFilterOptions) });
         this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
@@ -295,20 +296,17 @@ class TestScenarioAndCase extends Component {
   };
 
   _clearFilterOptions = () => {
-    const { filterOptions } = this.state;
-    this.setState({ filterOptions: structuredClone(defaultFilterOptions) }, () =>
-      this._onChangeFilterOptions(filterOptions, 'reset')
-    );
+    this.setState({ filterOptions: structuredClone(defaultFilterOptions) }, () => this._onChangeFilterOptions('reset'));
   };
 
-  _onChangeFilterOptions = (filterOptions, type = 'default') => {
-    const { rows } = this.state;
-    const { effectNodes, targetType, resultType, isBaseScenario, isValid } = filterOptions;
+  _onChangeFilterOptions = (type = 'default') => {
+    const { rows, filterOptions } = this.state;
+    const { effectNodes, sourceTargetType, resultType, isBaseScenario, isValid } = filterOptions;
     const filterRows = rows.filter((row) => {
-      if (typeof effectNodes !== 'undefined' && effectNodes?.some((effectNode) => row.results !== effectNode.value)) {
+      if (typeof effectNodes !== 'undefined' && !effectNodes?.some((effectNode) => row.results === effectNode.value)) {
         return false;
       }
-      if (typeof targetType !== 'undefined' && targetType !== row.targetType) {
+      if (typeof sourceTargetType !== 'undefined' && sourceTargetType !== row.sourceTargetType) {
         return false;
       }
       if (typeof resultType !== 'undefined' && resultType !== row.resultType) {
@@ -402,7 +400,7 @@ class TestScenarioAndCase extends Component {
   }
 
   render() {
-    const { columns, rows, isCheckAllTestScenarios, filterRows } = this.state;
+    const { columns, rows, isCheckAllTestScenarios, filterRows, filterOptions } = this.state;
 
     const effectNodes = rows
       .filter((row, index, array) => array.findIndex((arr) => arr.results === row.results) === index)
@@ -421,6 +419,7 @@ class TestScenarioAndCase extends Component {
       <div>
         <FilterBar
           effectNodes={effectNodes}
+          filterOptions={filterOptions}
           resetFilter={this._clearFilterOptions}
           setFilterOptions={this._setFilterOptions}
           submitFilter={this._onChangeFilterOptions}

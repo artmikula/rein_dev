@@ -107,6 +107,7 @@ export default class FlattenScenarioProcess {
         group.forEach((exceptIds: any[]) => {
           const scenario2 = TestScenarioHelper.invertedCloneSimple(scenario, exceptIds);
           scenario2.targetType = OPERATOR_TYPE.AND;
+          scenario2.sourceTargetType = scenario.targetType;
 
           const p = new FlattenScenarioProcess(scenario2, this.scenarioDictionary, this.showReducedScenariosAndCases);
           const flattenScenariosOfGroup = p.run();
