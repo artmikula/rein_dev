@@ -476,7 +476,12 @@ class TestScenarioHelper {
     return true;
   }
 
-  convertToRows(testCases: any[] = [], scenarios: ITestScenario[] = [], columns: any[] = []) {
+  convertToRows(
+    testCases: any[] = [],
+    scenarios: ISimpleTestScenario[] = [],
+    columns: any[] = [],
+    graphNodes: IGraphNode[] = []
+  ) {
     const rows = scenarios.map((scenario) => ({
       ...scenario,
       testCases: testCases.filter((e) => e.testScenarioId === scenario.id),
@@ -489,6 +494,11 @@ class TestScenarioHelper {
       testScenarioItem.isSelected = !!testScenario.isSelected;
       testScenarioItem.id = testScenario.id;
       testScenarioItem.isViolated = testScenario.isViolated;
+      testScenarioItem.sourceTargetType = testScenario.sourceTargetType;
+      testScenarioItem.resultType = testScenario.resultType ?? RESULT_TYPE.True;
+      testScenarioItem.effectDefinition = graphNodes.find(
+        (graphNode) => graphNode.nodeId === testScenario.expectedResults
+      )?.definition;
 
       columns.forEach((column) => {
         if (column.key === 'results') {

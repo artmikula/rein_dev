@@ -10,6 +10,7 @@ import { setGraph } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
   REIN_SHORTCUT_CODE,
+  RESULT_TYPE,
   TEST_CASE_METHOD,
   TEST_CASE_SHORTCUT,
   TEST_CASE_SHORTCUT_CODE,
@@ -23,27 +24,30 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import Select from 'react-select';
-import { Button, FormGroup, Input, Label, Table } from 'reactstrap';
 import appConfig from 'features/shared/lib/appConfig';
 import { EXPORT_TYPE_NAME } from '../Graph/constants';
 import './style.scss';
+import FilterBar from './components/FilterBar';
+import TableTestScenarioAndCase from './components/TableTestScenarioAndCase';
 
-const options = [
-  { value: 'chocolate', label: 'Chocolate' },
-  { value: 'strawberry', label: 'Strawberry' },
-  { value: 'vanilla', label: 'Vanilla' },
-];
+const defaultFilterOptions = {
+  effectNodes: undefined,
+  results: undefined,
+  resultType: RESULT_TYPE.True,
+  isBaseScenario: undefined,
+  isValid: undefined,
+  sourceTargetType: undefined,
+};
 
 class TestScenarioAndCase extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedOption: null,
       columns: [],
       rows: [],
-      expandId: {},
       isCheckAllTestScenarios: false,
+      filterRows: undefined,
+      filterOptions: structuredClone(defaultFilterOptions),
     };
     this.initiatedData = false;
   }
@@ -51,7 +55,7 @@ class TestScenarioAndCase extends Component {
   componentDidMount() {
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
-        this.setState({ isCheckAllTestScenarios: false });
+        this.setState({ isCheckAllTestScenarios: false, filterOptions: structuredClone(defaultFilterOptions) });
         this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
@@ -103,7 +107,7 @@ class TestScenarioAndCase extends Component {
 
   _clearData = () => {
     this._setColumnsAndRows([], [], []);
-    this.setState({ isCheckAllTestScenarios: false });
+    this.setState({ isCheckAllTestScenarios: false, filterRows: undefined });
     testScenarioAnsCaseStorage.set([]);
   };
 
@@ -209,22 +213,13 @@ class TestScenarioAndCase extends Component {
     });
   };
 
-  handleChange = (selectedOption) => {
-    this.setState({ selectedOption });
-  };
-
   _raiseEvent = (message) => {
     eventBus.publish(domainEvents.TEST_SCENARIO_DOMAINEVENT, message);
   };
 
-  _toggleRow = (e, id) => {
-    e.preventDefault();
-    this.setState((state) => ({ expandId: { ...state.expandId, [id]: !state.expandId[id] } }));
-  };
-
   _setColumnsAndRows = (testCases = [], scenarios = [], graphNodes = []) => {
     const columns = TestScenarioHelper.convertToColumns(graphNodes, Language);
-    const rows = TestScenarioHelper.convertToRows(testCases, scenarios, columns);
+    const rows = TestScenarioHelper.convertToRows(testCases, scenarios, columns, graphNodes);
 
     this.setState({ rows, columns });
   };
@@ -275,38 +270,6 @@ class TestScenarioAndCase extends Component {
     this.setState({ rows }, this._isCheckedAllTestScenarios);
   };
 
-  _handleTestCaseChecked = (scenarioId, caseId, checked) => {
-    testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked);
-    const { rows } = this.state;
-    const newRows = testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked, rows);
-
-    this._setRows(newRows);
-  };
-
-  _handleTestScenarioChecked = (scenarioId, checked) => {
-    testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked);
-    const { rows } = this.state;
-    const newRows = testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked, rows);
-
-    this._setRows(newRows);
-  };
-
-  _handleCheckboxChange = (scenarioId, key, checked) => {
-    testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked);
-    const { rows } = this.state;
-    const newRows = testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked, rows);
-
-    this._setRows(newRows);
-  };
-
-  _handleCheckedAll = (checked) => {
-    testScenarioAnsCaseStorage.checkAllTestScenarios(checked);
-    const { rows } = this.state;
-    const newRows = testScenarioAnsCaseStorage.checkAllTestScenarios(checked, rows);
-
-    this._setRows(newRows);
-  };
-
   _isCheckedAllTestScenarios = () => {
     const { rows } = this.state;
     const isCheckAllTestScenarios = rows.every(
@@ -326,6 +289,42 @@ class TestScenarioAndCase extends Component {
       });
     });
     return arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
+  };
+
+  _setFilterOptions = (value) => {
+    this.setState((prevState) => ({ filterOptions: { ...prevState.filterOptions, ...value } }));
+  };
+
+  _clearFilterOptions = () => {
+    this.setState({ filterOptions: structuredClone(defaultFilterOptions) }, () => this._onChangeFilterOptions('reset'));
+  };
+
+  _onChangeFilterOptions = (type = 'default') => {
+    const { rows, filterOptions } = this.state;
+    const { effectNodes, sourceTargetType, resultType, isBaseScenario, isValid } = filterOptions;
+    const filterRows = rows.filter((row) => {
+      if (typeof effectNodes !== 'undefined' && !effectNodes?.some((effectNode) => row.results === effectNode.value)) {
+        return false;
+      }
+      if (typeof sourceTargetType !== 'undefined' && sourceTargetType !== row.sourceTargetType) {
+        return false;
+      }
+      if (typeof resultType !== 'undefined' && resultType !== row.resultType) {
+        return false;
+      }
+      if (typeof isBaseScenario !== 'undefined' && isBaseScenario !== row.isBaseScenario) {
+        return false;
+      }
+      if (typeof isValid !== 'undefined' && isValid !== row.isValid) {
+        return false;
+      }
+      return true;
+    });
+    if (type === 'reset') {
+      this.setState({ filterRows: undefined });
+    } else {
+      this.setState({ filterRows });
+    }
   };
 
   _createExportRowData(item, columns) {
@@ -401,170 +400,37 @@ class TestScenarioAndCase extends Component {
   }
 
   render() {
-    const { selectedOption, columns, rows, expandId, isCheckAllTestScenarios } = this.state;
+    const { columns, rows, isCheckAllTestScenarios, filterRows, filterOptions } = this.state;
+
+    const effectNodes = rows
+      .filter((row, index, array) => array.findIndex((arr) => arr.results === row.results) === index)
+      .map((row) => ({ value: row.results, label: `${row.results}: ${row.effectDefinition}` }))
+      .sort((a, b) => {
+        if (a.label < b.label) {
+          return -1;
+        }
+        if (a.label > b.label) {
+          return 1;
+        }
+        return 0;
+      });
 
     return (
       <div>
-        <div className="d-flex justify-content-between m-2">
-          <div className="d-flex justify-content-around align-items-center small filter-wrapper">
-            <div className="auto-complete">
-              <Select
-                isMulti
-                value={selectedOption}
-                onChange={this.handleChange}
-                options={options}
-                placeholder={Language.get('select')}
-              />
-            </div>
-            <Input type="select" bsSize="sm" className="ml-2" style={{ minWidth: 66 }}>
-              <option value="true">True</option>
-              <option value="false">False</option>
-            </Input>
-            <div className="vertical-line d-flex ml-2" />
-            <div className="ml-2 d-flex justify-content-center">
-              <div className="form-check form-check-inline">
-                <input className="form-check-input" type="radio" name="inlineRadioOptions" value="option1" />
-                <Label className="form-check-label">{Language.get('and')}</Label>
-              </div>
-              <div className="form-check form-check-inline">
-                <input className="form-check-input" type="radio" name="inlineRadioOptions" value="option2" />
-                <Label className="form-check-label">{Language.get('or')}</Label>
-              </div>
-            </div>
-            <div className="vertical-line" />
-            <div className="d-flex ml-2">
-              <div className="form-check form-check-inline">
-                <input className="form-check-input" type="checkbox" value="option1" />
-                <Label className="form-check-label">{Language.get('base')}</Label>
-              </div>
-              <div className="form-check form-check-inline">
-                <input className="form-check-input" type="checkbox" value="option2" />
-                <Label className="form-check-label">{Language.get('valid')}</Label>
-              </div>
-            </div>
-          </div>
-          <Button color="primary" size="sm">
-            {Language.get('apply')}
-          </Button>
-        </div>
-        <Table bordered className="scenario-case-table">
-          <thead className="text-primary">
-            <tr>
-              <td className="position-relative">
-                {rows.length > 0 && (
-                  <div className="position-absolute header-checkbox-container">
-                    <Input
-                      type="checkbox"
-                      className="mt-1"
-                      onChange={(e) => this._handleCheckedAll(e.target.checked)}
-                      checked={isCheckAllTestScenarios}
-                    />
-                  </div>
-                )}
-                {Language.get('name')}
-              </td>
-              {columns.map((column, colIndex) => (
-                <td key={colIndex} title={column.title} style={{ cursor: column.title ? 'pointer' : 'default' }}>
-                  {column.headerName}
-                </td>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((testScenario, tsIndex) => {
-              return (
-                <React.Fragment key={tsIndex}>
-                  <tr key={`${tsIndex}test-scenario-row`} className={testScenario.isViolated ? 'isViolated' : ''}>
-                    <td
-                      rowSpan={expandId[testScenario.id] ? testScenario.testCases.length + 1 : 1}
-                      className="treeview"
-                    >
-                      <ul>
-                        <li>
-                          <ul className="d-inline-flex">
-                            <a
-                              style={{
-                                paddingTop: '2px',
-                                visibility: testScenario.testCases.length === 0 ? 'hidden' : 'visible',
-                              }}
-                              href="#collapse"
-                              className="text-dark"
-                              onClick={(e) => this._toggleRow(e, testScenario.id)}
-                            >
-                              <i
-                                className={`mr-1 cursor-pointer ${
-                                  expandId[testScenario.id] ? 'bi bi-dash-square-fill' : 'bi bi-plus-square-fill'
-                                }`}
-                              />
-                            </a>
-                            <FormGroup check>
-                              <Label check>
-                                <Input
-                                  type="checkbox"
-                                  className="mt-1"
-                                  onChange={(e) => this._handleTestScenarioChecked(testScenario.id, e.target.checked)}
-                                  checked={testScenario.isSelected ?? false}
-                                />
-                                <span className="font-weight-500" style={{ lineHeight: '21px' }}>
-                                  {testScenario.Name}
-                                </span>
-                              </Label>
-                            </FormGroup>
-                          </ul>
-                          <ul>
-                            {expandId[testScenario.id] &&
-                              testScenario.testCases.map((testCase, testIndex) => (
-                                <li className="align-middle" key={`${testIndex}test-case-tree`}>
-                                  <FormGroup check>
-                                    <Label check>
-                                      <Input
-                                        type="checkbox"
-                                        className="mt-1"
-                                        onChange={(e) =>
-                                          this._handleTestCaseChecked(testScenario.id, testCase.id, e.target.checked)
-                                        }
-                                        checked={testCase.isSelected ?? false}
-                                      />
-                                      {testCase.Name}
-                                    </Label>
-                                  </FormGroup>
-                                </li>
-                              ))}
-                          </ul>
-                        </li>
-                      </ul>
-                    </td>
-                    {columns.map((column, colIndex) => (
-                      <td key={`${colIndex}test-scenario-col`}>
-                        {typeof testScenario[column.key] === 'boolean' ? (
-                          <span className="d-flex">
-                            <input
-                              type="checkbox"
-                              onChange={(e) =>
-                                this._handleCheckboxChange(testScenario.id, column.key, e.target.checked)
-                              }
-                              checked={testScenario[column.key]}
-                            />
-                          </span>
-                        ) : (
-                          testScenario[column.key]
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                  {expandId[testScenario.id] &&
-                    testScenario.testCases.map((testCase, tcIndex) => (
-                      <tr key={`${tcIndex}test-case-row`}>
-                        {columns.map((column, colIndex) => (
-                          <td key={`${colIndex}test-case-col`}>{testCase[column.key]}</td>
-                        ))}
-                      </tr>
-                    ))}
-                </React.Fragment>
-              );
-            })}
-          </tbody>
-        </Table>
+        <FilterBar
+          effectNodes={effectNodes}
+          filterOptions={filterOptions}
+          resetFilter={this._clearFilterOptions}
+          setFilterOptions={this._setFilterOptions}
+          submitFilter={this._onChangeFilterOptions}
+        />
+        <TableTestScenarioAndCase
+          rows={rows}
+          filterRows={filterRows}
+          columns={columns}
+          setRows={this._setRows}
+          isCheckAllTestScenarios={isCheckAllTestScenarios}
+        />
       </div>
     );
   }

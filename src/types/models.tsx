@@ -95,6 +95,7 @@ interface ISimpleTestScenario {
 
   isFeasible?: boolean;
   targetType?: string;
+  sourceTargetType?: string;
   isEffectAssertion?: boolean;
 
   // Other fields for graph, inspetion and test coverage
@@ -146,6 +147,8 @@ export class SimpleTestScenario implements ISimpleTestScenario {
 
   targetType: string | undefined;
 
+  sourceTargetType: string | undefined;
+
   isEffectAssertion: boolean | undefined;
 
   isBaseScenario: boolean | undefined;
@@ -158,6 +161,7 @@ export class SimpleTestScenario implements ISimpleTestScenario {
     this.targetNodeId = target.nodeId;
     this.targetGraphNodeId = target.id;
     this.targetType = target.targetType;
+    this.sourceTargetType = target.targetType;
 
     this.isEffectAssertion = isEffectAssertion;
     this.testAssertions = testAssertions;

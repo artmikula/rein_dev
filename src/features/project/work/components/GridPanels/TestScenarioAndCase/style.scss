@@ -55,7 +55,7 @@ div.vertical-line {
             border-left: 1px dashed #999;
             top: 19px;
             width: 1px;
-            height: 7px;
+            height: 100%;
           }
           &:last-child::after {
             content: none;
@@ -104,12 +104,14 @@ div.vertical-line {
   }
 }
 
-.header-checkbox-container {
+.input-checkbox {
+  position: absolute;
+  top: 3;
   left: 53px;
 }
 
 @media all and (max-width: 767px) {
-  .header-checkbox-container {
-    left: 50px;
+  .input-checkbox {
+    left: 49px;
   }
 }

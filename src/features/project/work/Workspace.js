@@ -86,15 +86,20 @@ class Workspace extends Component {
     this.unlisten();
   }
 
-  _convertTestScenarios = (testScenarios = []) =>
-    testScenarios.map((testScenario) => ({
-      ...testScenario,
-      testCases: testScenario.testCases.map((testCase) => ({
-        ...testCase,
-        testDatas: JSON.parse(testCase.testDatas),
-        results: JSON.parse(testCase.results),
-      })),
-    }));
+  _convertTestScenarios = (testScenarios = [], graphNodes = []) =>
+    testScenarios.map((testScenario) => {
+      const { expectedResults } = testScenario;
+      const sourceTargetType = graphNodes.find((graphNode) => graphNode.nodeId === expectedResults)?.targetType;
+      return {
+        ...testScenario,
+        sourceTargetType,
+        testCases: testScenario.testCases.map((testCase) => ({
+          ...testCase,
+          testDatas: JSON.parse(testCase.testDatas),
+          results: JSON.parse(testCase.results),
+        })),
+      };
+    });
 
   _orderCauseEffect = (causeEffects) => {
     let causes = causeEffects.filter((x) => x.type === CLASSIFY.CAUSE);
@@ -184,7 +189,10 @@ class Workspace extends Component {
         },
       });
     } else {
-      const testScenariosAndCases = this._convertTestScenarios(result.data.testScenarios ?? []);
+      const testScenariosAndCases = this._convertTestScenarios(
+        result.data.testScenarios ?? [],
+        result.data.graphNodes ?? []
+      );
       this._saveWorkToLocalStorage(testScenariosAndCases);
 
       workData = this._getWorkData(result.data);
