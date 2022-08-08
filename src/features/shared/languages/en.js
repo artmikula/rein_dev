@@ -233,6 +233,7 @@ const en = {
   info: 'Info',
   exitednodealert: 'newNode has been exited!',
   cannotaccessproject: 'You are not granted to access this project.',
+  workquotaexceed: 'Your browser storage is full, click ‘OK’ to clear cache.',
 };
 
 export default en;

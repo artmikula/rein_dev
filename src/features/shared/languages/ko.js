@@ -210,6 +210,7 @@ const ko = {
   info: '정보',
   exitednodealert: 'newNode가 종료되었습니다!',
   canaccessproject: '이 프로젝트에 액세스할 수 있는 권한이 없습니다.',
+  workquotaexceed: '브라우저 저장 공간이 가득 찼습니다. 캐시를 지우려면 ‘확인’ 을 클릭하세요.',
 };
 
 export default ko;

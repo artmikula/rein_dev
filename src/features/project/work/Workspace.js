@@ -193,12 +193,31 @@ class Workspace extends Component {
         result.data.testScenarios ?? [],
         result.data.graphNodes ?? []
       );
-      testScenarioAnsCaseStorage.set(testScenariosAndCases);
+      this._saveWorkToLocalStorage(testScenariosAndCases);
 
       workData = this._getWorkData(result.data);
     }
 
     setWork({ ...workData, loaded: true });
+  };
+
+  _saveWorkToLocalStorage = (data) => {
+    try {
+      testScenarioAnsCaseStorage.set(data);
+    } catch (e) {
+      if (e instanceof DOMException && (e.code === 22 || e.code === 1024)) {
+        alert(Language.get('workquotaexceed'), {
+          warning: true,
+          actionText: 'OK',
+          onClose: this._onCloseAlert,
+        });
+      }
+    }
+  };
+
+  _onCloseAlert = () => {
+    localStorage.clear();
+    window.location.reload();
   };
 
   _handleChangePanelLayout = (layouts, mode) => {
