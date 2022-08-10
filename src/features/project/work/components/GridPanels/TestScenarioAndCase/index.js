@@ -31,7 +31,7 @@ import FilterBar from './components/FilterBar';
 import TableTestScenarioAndCase from './components/TableTestScenarioAndCase';
 
 const defaultFilterOptions = {
-  effectNodes: undefined,
+  causeNodes: undefined,
   results: undefined,
   resultType: RESULT_TYPE.True,
   isBaseScenario: undefined,
@@ -301,9 +301,12 @@ class TestScenarioAndCase extends Component {
 
   _onChangeFilterOptions = (type = 'default') => {
     const { rows, filterOptions } = this.state;
-    const { effectNodes, sourceTargetType, resultType, isBaseScenario, isValid } = filterOptions;
+    const { causeNodes, sourceTargetType, resultType, isBaseScenario, isValid } = filterOptions;
     const filterRows = rows.filter((row) => {
-      if (typeof effectNodes !== 'undefined' && !effectNodes?.some((effectNode) => row.results === effectNode.value)) {
+      const causeNodesFilter = row.testAssertions?.filter((testAssertion) =>
+        causeNodes?.some((causeNode) => causeNode?.value === testAssertion?.graphNodeId)
+      );
+      if (typeof causeNodes !== 'undefined' && causeNodesFilter?.length === 0 && causeNodes?.length > 0) {
         return false;
       }
       if (typeof sourceTargetType !== 'undefined' && sourceTargetType !== row.sourceTargetType) {
@@ -402,23 +405,10 @@ class TestScenarioAndCase extends Component {
   render() {
     const { columns, rows, isCheckAllTestScenarios, filterRows, filterOptions } = this.state;
 
-    const effectNodes = rows
-      .filter((row, index, array) => array.findIndex((arr) => arr.results === row.results) === index)
-      .map((row) => ({ value: row.results, label: `${row.results}: ${row.effectDefinition}` }))
-      .sort((a, b) => {
-        if (a.label < b.label) {
-          return -1;
-        }
-        if (a.label > b.label) {
-          return 1;
-        }
-        return 0;
-      });
-
     return (
       <div>
         <FilterBar
-          effectNodes={effectNodes}
+          rows={rows}
           filterOptions={filterOptions}
           resetFilter={this._clearFilterOptions}
           setFilterOptions={this._setFilterOptions}

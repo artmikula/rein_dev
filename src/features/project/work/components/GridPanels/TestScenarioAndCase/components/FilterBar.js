@@ -6,9 +6,33 @@ import { Button, Input, Label } from 'reactstrap';
 import { OPERATOR_TYPE, RESULT_TYPE } from 'features/shared/constants';
 
 function FilterBar(props) {
-  const { resetFilter, setFilterOptions, submitFilter, effectNodes, filterOptions } = props;
+  const { resetFilter, setFilterOptions, submitFilter, rows, filterOptions } = props;
 
-  const { effectNodes: effectNodesState, resultType, sourceTargetType, isBaseScenario, isValid } = filterOptions;
+  const { causeNodes, resultType, sourceTargetType, isBaseScenario, isValid } = filterOptions;
+
+  const _getCauseNodes = React.useMemo(() => {
+    const _testAssertions = rows.map((row) => row.testAssertions);
+    const _causeNodes = _testAssertions
+      .filter(
+        (testAssertion, index, array) =>
+          array.findIndex((arr) => arr?.graphNodeId === testAssertion?.graphNodeId) === index
+      )
+      .flat()
+      .map((testAssertion) => ({
+        value: testAssertion?.graphNodeId ?? '',
+        label: `${testAssertion.nodeId}: ${testAssertion.definition}` ?? '',
+      }))
+      .sort((a, b) => {
+        if (a.label < b.label) {
+          return -1;
+        }
+        if (a.label > b.label) {
+          return 1;
+        }
+        return 0;
+      });
+    return _causeNodes;
+  }, [rows]);
 
   return (
     <div className="d-flex m-2">
@@ -16,9 +40,9 @@ function FilterBar(props) {
         <div className="auto-complete">
           <Select
             isMulti
-            value={effectNodesState ?? null}
-            onChange={(values) => setFilterOptions({ effectNodes: values })}
-            options={effectNodes.length > 0 ? effectNodes : []}
+            value={causeNodes ?? null}
+            onChange={(values) => setFilterOptions({ causeNodes: values })}
+            options={_getCauseNodes?.length > 0 ? _getCauseNodes : []}
             placeholder={Language.get('select')}
           />
         </div>
@@ -99,11 +123,11 @@ FilterBar.propTypes = {
   resetFilter: PropTypes.func.isRequired,
   setFilterOptions: PropTypes.func.isRequired,
   submitFilter: PropTypes.func.isRequired,
-  effectNodes: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
+  rows: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
 };
 
 FilterBar.defaultProps = {
-  effectNodes: [],
+  rows: [],
 };
 
 export default FilterBar;
