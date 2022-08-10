@@ -110,6 +110,11 @@ div.vertical-line {
   left: 53px;
 }
 
+.filter-button {
+  height: 50%;
+  align-self: center;
+}
+
 @media all and (max-width: 767px) {
   .input-checkbox {
     left: 49px;

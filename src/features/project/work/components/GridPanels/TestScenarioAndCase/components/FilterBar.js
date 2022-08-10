@@ -108,10 +108,10 @@ function FilterBar(props) {
         </div>
       </div>
 
-      <Button color="primary" size="sm" className="mr-2" onClick={submitFilter}>
+      <Button color="primary" size="sm" className="filter-button" style={{ marginRight: 10 }} onClick={submitFilter}>
         {Language.get('apply')}
       </Button>
-      <Button color="primary" size="sm" onClick={resetFilter}>
+      <Button color="primary" size="sm" className="filter-button" onClick={resetFilter}>
         Reset
       </Button>
     </div>
