@@ -64,7 +64,7 @@ class MyerTechnique {
       appConfig.general.viewOmmited
     );
 
-    const { testScenarios, inspectionDictionary } = scenarioInspection;
+    const { testScenarios: originalTestScenarios, inspectionDictionary } = scenarioInspection;
     // testScenarios = TestScenarioHelper.findBaseScenario(testScenarios, this.causeNodes);
 
     inspectionDictionary.forEach((value, key) => {
@@ -74,17 +74,30 @@ class MyerTechnique {
       this.graphNodes[nodeIndex] = { ...node, inspection: value };
     });
 
-    for (let i = 0; i < testScenarios.length; i++) {
-      testScenarios[i].id = uuid();
-      testScenarios[i].scenarioType = TEST_SCENARIO_TYPE.Myers;
-      if (testScenarios[i].isValid === undefined) {
-        testScenarios[i].isValid = true;
+    for (let i = 0; i < originalTestScenarios.length; i++) {
+      originalTestScenarios[i].id = uuid();
+      originalTestScenarios[i].scenarioType = TEST_SCENARIO_TYPE.Myers;
+      if (originalTestScenarios[i].isValid === undefined) {
+        originalTestScenarios[i].isValid = true;
       }
 
-      if (testScenarios[i].isFeasible === undefined) {
-        testScenarios[i].isFeasible = true;
+      if (originalTestScenarios[i].isFeasible === undefined) {
+        originalTestScenarios[i].isFeasible = true;
       }
     }
+
+    const testScenarios = originalTestScenarios.filter(
+      (testScenario, index, testScenarioList) =>
+        testScenarioList.findIndex((testScenarioItem) =>
+          testScenario.testAssertions.every((testAssertion) =>
+            testScenarioItem.testAssertions.some(
+              (testAssertionItem) =>
+                testAssertion.graphNodeId === testAssertionItem.graphNodeId &&
+                testAssertion.result === testAssertionItem.result
+            )
+          )
+        ) === index
+    );
 
     // testScenarios = testScenarios.filter((x) => x.expectedResults);
 
