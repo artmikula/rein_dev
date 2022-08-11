@@ -11,13 +11,12 @@ function FilterBar(props) {
   const { causeNodes, resultType, sourceTargetType, isBaseScenario, isValid } = filterOptions;
 
   const _getCauseNodes = React.useMemo(() => {
-    const _testAssertions = rows.map((row) => row.testAssertions);
+    const _testAssertions = rows.map((row) => row.testAssertions).flat();
     const _causeNodes = _testAssertions
       .filter(
         (testAssertion, index, array) =>
           array.findIndex((arr) => arr?.graphNodeId === testAssertion?.graphNodeId) === index
       )
-      .flat()
       .map((testAssertion) => ({
         value: testAssertion?.graphNodeId ?? '',
         label: `${testAssertion.nodeId}: ${testAssertion.definition}` ?? '',
