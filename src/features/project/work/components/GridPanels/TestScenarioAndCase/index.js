@@ -31,9 +31,9 @@ import FilterBar from './components/FilterBar';
 import TableTestScenarioAndCase from './components/TableTestScenarioAndCase';
 
 const defaultFilterOptions = {
-  causeNodes: undefined,
+  causeNodes: null,
   results: undefined,
-  resultType: RESULT_TYPE.True,
+  resultType: RESULT_TYPE.None,
   isBaseScenario: undefined,
   isValid: undefined,
   sourceTargetType: undefined,
@@ -302,17 +302,33 @@ class TestScenarioAndCase extends Component {
   _onChangeFilterOptions = (type = 'default') => {
     const { rows, filterOptions } = this.state;
     const { causeNodes, sourceTargetType, resultType, isBaseScenario, isValid } = filterOptions;
+    let _resultType;
+    if (resultType !== RESULT_TYPE.None) {
+      _resultType = resultType === RESULT_TYPE.True;
+    } else {
+      _resultType = undefined;
+    }
     const filterRows = rows.filter((row) => {
-      const causeNodesFilter = row.testAssertions?.filter((testAssertion) =>
+      const testAssertionFilter = row.testAssertions?.filter((testAssertion) =>
         causeNodes?.some((causeNode) => causeNode?.value === testAssertion?.graphNodeId)
       );
-      if (typeof causeNodes !== 'undefined' && causeNodesFilter?.length === 0 && causeNodes?.length > 0) {
+      const isExist = causeNodes?.every((causeNode) =>
+        row.testAssertions?.some((testAssertion) => causeNode?.value === testAssertion?.graphNodeId)
+      );
+      const causeNodesResultType = testAssertionFilter.every((testAssertion) => testAssertion.result === _resultType);
+      // replace this if use AND operator: if (typeof isExist !== 'undefined' && !isExist)
+      if (typeof causeNodes !== 'undefined' && testAssertionFilter?.length === 0 && causeNodes?.length > 0) {
         return false;
       }
-      if (typeof sourceTargetType !== 'undefined' && sourceTargetType !== row.sourceTargetType) {
+      if (typeof _resultType !== 'undefined' && !causeNodesResultType) {
         return false;
       }
-      if (typeof resultType !== 'undefined' && resultType !== row.resultType) {
+      // remove if change operator
+      if (typeof sourceTargetType !== 'undefined' && !isExist) {
+        return false;
+      }
+      // remove if change operator
+      if (typeof sourceTargetType !== 'undefined' && isExist && sourceTargetType !== row.sourceTargetType) {
         return false;
       }
       if (typeof isBaseScenario !== 'undefined' && isBaseScenario !== row.isBaseScenario) {
