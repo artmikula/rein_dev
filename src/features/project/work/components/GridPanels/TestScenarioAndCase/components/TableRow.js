@@ -127,7 +127,10 @@ function TableRow(props) {
                   <ul>
                     {expandId[row?.key] &&
                       row.testScenarios.map((testScenario) => (
-                        <li key={`${row.key}-${testScenario.id}`}>
+                        <li
+                          key={`${row.key}-${testScenario.id}`}
+                          className={testScenario.isViolated ? 'ommit-row' : ''}
+                        >
                           <ul className="d-inline-flex">
                             <a
                               style={{
@@ -189,7 +192,7 @@ function TableRow(props) {
             (testScenario) =>
               expandId[row?.key] && (
                 <Fragment key={`test-scenario-columns-${testScenario.id}`}>
-                  <tr>
+                  <tr className={testScenario.isViolated ? 'isViolated' : ''}>
                     {columns.map((column, colIndex) => (
                       <td key={`${colIndex}test-scenario-col`}>
                         {typeof testScenario[column.key] === 'boolean' ? (
