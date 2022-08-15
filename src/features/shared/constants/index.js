@@ -99,6 +99,10 @@ export const G_TYPE = {
 };
 
 export const RESULT_TYPE = {
+  // use for filter
+  All: 'All',
+  // use for filter
+
   None: 'None',
   True: 'True',
   False: 'False',
@@ -450,9 +454,4 @@ export const GRAPH_ACTIONS = {
   GENERATE: 'generate',
   ZOOM_IN: 'zoomIn',
   ZOOM_OUT: 'zoomOut',
-};
-
-export const TEST_SCENARIO_TYPES = {
-  BASE: 'base',
-  VALID: 'valid',
 };

@@ -31,9 +31,9 @@ import FilterBar from './components/FilterBar';
 import TableTestScenarioAndCase from './components/TableTestScenarioAndCase';
 
 const defaultFilterOptions = {
-  causeNodes: undefined,
+  causeNodes: null,
   results: undefined,
-  resultType: RESULT_TYPE.True,
+  resultType: RESULT_TYPE.All,
   isBaseScenario: undefined,
   isValid: undefined,
   sourceTargetType: undefined,
@@ -55,7 +55,11 @@ class TestScenarioAndCase extends Component {
   componentDidMount() {
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
-        this.setState({ isCheckAllTestScenarios: false, filterOptions: structuredClone(defaultFilterOptions) });
+        this.setState({
+          isCheckAllTestScenarios: false,
+          filterOptions: structuredClone(defaultFilterOptions),
+          filterRows: undefined,
+        });
         this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
@@ -300,23 +304,46 @@ class TestScenarioAndCase extends Component {
   _onChangeFilterOptions = (type = 'default') => {
     const { rows, filterOptions } = this.state;
     const { causeNodes, sourceTargetType, resultType, isBaseScenario, isValid } = filterOptions;
+    let _resultType;
+    if (resultType !== RESULT_TYPE.All) {
+      _resultType = resultType === RESULT_TYPE.True;
+    } else {
+      _resultType = undefined;
+    }
     const filterRows = rows.filter((row) => {
-      const causeNodesFilter = row.testAssertions?.filter((testAssertion) =>
+      const testAssertionFilter = row.testAssertions?.filter((testAssertion) =>
         causeNodes?.some((causeNode) => causeNode?.value === testAssertion?.graphNodeId)
       );
-      if (typeof causeNodes !== 'undefined' && causeNodesFilter?.length === 0 && causeNodes?.length > 0) {
+      const isExist = causeNodes?.every((causeNode) =>
+        row.testAssertions?.some((testAssertion) => causeNode?.value === testAssertion?.graphNodeId)
+      );
+      const causeNodesResultType = testAssertionFilter.every((testAssertion) => testAssertion.result === _resultType);
+      // replace this if use AND operator: if (typeof isExist !== 'undefined' && !isExist)
+      if (typeof causeNodes !== 'undefined' && testAssertionFilter?.length === 0 && causeNodes?.length > 0) {
         return false;
       }
-      if (typeof sourceTargetType !== 'undefined' && sourceTargetType !== row.sourceTargetType) {
+      if (typeof _resultType !== 'undefined' && !causeNodesResultType) {
         return false;
       }
-      if (typeof resultType !== 'undefined' && resultType !== row.resultType) {
+      if (typeof sourceTargetType !== 'undefined' && isExist && sourceTargetType !== row.sourceTargetType) {
         return false;
       }
-      if (typeof isBaseScenario !== 'undefined' && isBaseScenario !== row.isBaseScenario) {
+      if (
+        typeof sourceTargetType !== 'undefined' &&
+        typeof isExist === 'undefined' &&
+        sourceTargetType !== row.sourceTargetType
+      ) {
         return false;
       }
-      if (typeof isValid !== 'undefined' && isValid !== row.isValid) {
+      // remove if change to AND operator
+      if (typeof sourceTargetType !== 'undefined' && isExist === false) {
+        return false;
+      }
+      // end comment
+      if (typeof isBaseScenario !== 'undefined' && isBaseScenario === true && isBaseScenario !== row.isBaseScenario) {
+        return false;
+      }
+      if (typeof isValid !== 'undefined' && isValid === true && isValid !== row.isValid) {
         return false;
       }
       return true;
