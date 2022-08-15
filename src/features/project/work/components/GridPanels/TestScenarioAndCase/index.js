@@ -323,14 +323,21 @@ class TestScenarioAndCase extends Component {
       if (typeof _resultType !== 'undefined' && !causeNodesResultType) {
         return false;
       }
-      // remove if change operator
-      if (typeof sourceTargetType !== 'undefined' && !isExist) {
-        return false;
-      }
-      // remove if change operator
       if (typeof sourceTargetType !== 'undefined' && isExist && sourceTargetType !== row.sourceTargetType) {
         return false;
       }
+      if (
+        typeof sourceTargetType !== 'undefined' &&
+        typeof isExist === 'undefined' &&
+        sourceTargetType !== row.sourceTargetType
+      ) {
+        return false;
+      }
+      // remove if change operator
+      if (typeof sourceTargetType !== 'undefined' && isExist === false) {
+        return false;
+      }
+      // remove if change operator
       if (typeof isBaseScenario !== 'undefined' && isBaseScenario !== row.isBaseScenario) {
         return false;
       }
