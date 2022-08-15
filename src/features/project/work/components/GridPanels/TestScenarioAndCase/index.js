@@ -33,7 +33,7 @@ import TableTestScenarioAndCase from './components/TableTestScenarioAndCase';
 const defaultFilterOptions = {
   causeNodes: null,
   results: undefined,
-  resultType: RESULT_TYPE.None,
+  resultType: RESULT_TYPE.All,
   isBaseScenario: undefined,
   isValid: undefined,
   sourceTargetType: undefined,
@@ -307,7 +307,7 @@ class TestScenarioAndCase extends Component {
     const { rows, filterOptions } = this.state;
     const { causeNodes, sourceTargetType, resultType, isBaseScenario, isValid } = filterOptions;
     let _resultType;
-    if (resultType !== RESULT_TYPE.None) {
+    if (resultType !== RESULT_TYPE.All) {
       _resultType = resultType === RESULT_TYPE.True;
     } else {
       _resultType = undefined;

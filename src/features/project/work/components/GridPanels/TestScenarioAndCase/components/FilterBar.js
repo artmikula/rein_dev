@@ -55,7 +55,7 @@ function FilterBar(props) {
           disabled={causeNodes === null || causeNodes?.length === 0}
           onChange={(e) => setFilterOptions({ resultType: e.target.value })}
         >
-          <option value={RESULT_TYPE.None}>{RESULT_TYPE.None}</option>
+          <option value={RESULT_TYPE.All}>{RESULT_TYPE.All}</option>
           <option value={RESULT_TYPE.True}>{RESULT_TYPE.True}</option>
           <option value={RESULT_TYPE.False}>{RESULT_TYPE.False}</option>
         </Input>
