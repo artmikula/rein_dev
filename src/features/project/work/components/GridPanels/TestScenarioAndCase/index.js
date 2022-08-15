@@ -55,7 +55,11 @@ class TestScenarioAndCase extends Component {
   componentDidMount() {
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
-        this.setState({ isCheckAllTestScenarios: false, filterOptions: structuredClone(defaultFilterOptions) });
+        this.setState({
+          isCheckAllTestScenarios: false,
+          filterOptions: structuredClone(defaultFilterOptions),
+          filterRows: undefined,
+        });
         this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
@@ -154,7 +158,7 @@ class TestScenarioAndCase extends Component {
     }
 
     const newTestScenarios = scenarioAndGraphNodes.scenarios
-      .filter((x) => !x.isViolated)
+      // .filter((x) => !x.isViolated)
       .map((x) => {
         const scenario = {
           ...x,
@@ -427,6 +431,8 @@ class TestScenarioAndCase extends Component {
 
   render() {
     const { columns, rows, isCheckAllTestScenarios, filterRows, filterOptions } = this.state;
+
+    console.log('rows', rows);
 
     return (
       <div>
