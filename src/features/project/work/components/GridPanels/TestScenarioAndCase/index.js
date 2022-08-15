@@ -97,12 +97,6 @@ class TestScenarioAndCase extends Component {
         });
       }
     });
-
-    this._initData();
-  }
-
-  componentDidUpdate() {
-    this._initData();
   }
 
   componentWillUnmount() {
@@ -113,37 +107,6 @@ class TestScenarioAndCase extends Component {
     this._setColumnsAndRows([], [], []);
     this.setState({ isCheckAllTestScenarios: false, filterRows: undefined });
     testScenarioAnsCaseStorage.set([]);
-  };
-
-  _initData = () => {
-    const { graph, workLoaded } = this.props;
-    const testCases = [];
-    const testScenariosAndCases = testScenarioAnsCaseStorage.get();
-
-    if (!this.initiatedData && workLoaded) {
-      testScenariosAndCases.forEach((testScenario) => {
-        testScenario.testCases.forEach((testCase) => {
-          const testDatas = testCase.testDatas.map((x) => {
-            const result = {
-              graphNodeId: x.graphNodeId,
-              data: x.data,
-            };
-
-            return result;
-          });
-
-          testCases.push({
-            ...testCase,
-            testScenario: { ...testScenario },
-            testDatas,
-            results: testCase.results,
-          });
-        });
-      });
-
-      this.initiatedData = true;
-      this._setColumnsAndRows(testCases, testScenariosAndCases, graph.graphNodes);
-    }
   };
 
   _calculateTestScenarioAndCase = async (domainAction) => {
