@@ -158,7 +158,7 @@ class TestScenarioAndCase extends Component {
     }
 
     const newTestScenarios = scenarioAndGraphNodes.scenarios
-      // .filter((x) => !x.isViolated)
+      .filter((x) => !x.isViolated)
       .map((x) => {
         const scenario = {
           ...x,
