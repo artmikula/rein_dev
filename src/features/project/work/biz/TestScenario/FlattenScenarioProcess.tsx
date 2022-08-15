@@ -106,6 +106,9 @@ export default class FlattenScenarioProcess {
       if (!ignore) {
         group.forEach((exceptIds: any[]) => {
           const scenario2 = TestScenarioHelper.invertedCloneSimple(scenario, exceptIds);
+          const isOmmit = scenario2.testAssertions.every((testAssertion) => testAssertion.result);
+
+          scenario2.isViolated = isOmmit || undefined;
           scenario2.targetType = OPERATOR_TYPE.AND;
           scenario2.sourceTargetType = scenario.targetType;
 

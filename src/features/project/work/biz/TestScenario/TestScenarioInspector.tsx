@@ -47,7 +47,7 @@ class TestScenarioInspector {
         scenario.isViolated = scenarioInspection.violated;
         inspectionDictionary = scenarioInspection.inspectionDictionary;
 
-        if (!scenario.isViolated) {
+        if (!scenario.isViolated || (scenario.isViolated && showReducedScenariosAndCases)) {
           testScenarios.push(scenario);
         }
       }

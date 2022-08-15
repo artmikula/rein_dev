@@ -68,6 +68,12 @@ div.vertical-line {
             margin-right: 3px;
             padding: 0;
           }
+          .ommit-row {
+            color: red;
+            &::before {
+              width: 30px;
+            }
+          }
         }
       }
       & > ul {
