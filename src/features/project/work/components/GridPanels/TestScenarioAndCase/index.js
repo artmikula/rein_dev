@@ -333,15 +333,15 @@ class TestScenarioAndCase extends Component {
       ) {
         return false;
       }
-      // remove if change operator
+      // remove if change to AND operator
       if (typeof sourceTargetType !== 'undefined' && isExist === false) {
         return false;
       }
-      // remove if change operator
-      if (typeof isBaseScenario !== 'undefined' && isBaseScenario !== row.isBaseScenario) {
+      // end comment
+      if (typeof isBaseScenario !== 'undefined' && isBaseScenario === true && isBaseScenario !== row.isBaseScenario) {
         return false;
       }
-      if (typeof isValid !== 'undefined' && isValid !== row.isValid) {
+      if (typeof isValid !== 'undefined' && isValid === true && isValid !== row.isValid) {
         return false;
       }
       return true;
