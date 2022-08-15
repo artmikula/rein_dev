@@ -496,6 +496,9 @@ class TestScenarioHelper {
       testScenarioItem.isViolated = testScenario.isViolated;
       testScenarioItem.sourceTargetType = testScenario.sourceTargetType;
       testScenarioItem.resultType = testScenario.resultType ?? RESULT_TYPE.True;
+      testScenarioItem.effectDefinition = graphNodes.find(
+        (graphNode) => graphNode.nodeId === testScenario.expectedResults
+      )?.definition;
 
       columns.forEach((column) => {
         if (column.key === 'results') {
@@ -512,14 +515,17 @@ class TestScenarioHelper {
         }
       });
 
-      testScenarioItem.testAssertions = testScenario.testAssertions.map(({ graphNodeId }: { graphNodeId: string }) => {
-        const causeNode = graphNodes.find((graphNode) => graphNode.id === graphNodeId);
-        return {
-          graphNodeId,
-          nodeId: causeNode?.nodeId ?? '',
-          definition: causeNode?.definition ?? '',
-        };
-      });
+      testScenarioItem.testAssertions = testScenario.testAssertions.map(
+        ({ graphNodeId, result }: { graphNodeId: string; result: boolean }) => {
+          const causeNode = graphNodes.find((graphNode) => graphNode.id === graphNodeId);
+          return {
+            graphNodeId,
+            nodeId: causeNode?.nodeId ?? '',
+            definition: causeNode?.definition ?? '',
+            result,
+          };
+        }
+      );
 
       testScenarioItem.testCases = testScenario.testCases.map((testCase: any, testCaseIndex: number) => {
         const testCaseItem: any = {};

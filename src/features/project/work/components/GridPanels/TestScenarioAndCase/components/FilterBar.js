@@ -51,9 +51,11 @@ function FilterBar(props) {
           type="select"
           bsSize="sm"
           className="ml-2"
-          style={{ minWidth: 66 }}
+          style={{ minWidth: 66, fontSize: 'inherit' }}
+          disabled={causeNodes === null || causeNodes?.length === 0}
           onChange={(e) => setFilterOptions({ resultType: e.target.value })}
         >
+          <option value={RESULT_TYPE.All}>{RESULT_TYPE.All}</option>
           <option value={RESULT_TYPE.True}>{RESULT_TYPE.True}</option>
           <option value={RESULT_TYPE.False}>{RESULT_TYPE.False}</option>
         </Input>
@@ -118,7 +120,13 @@ function FilterBar(props) {
 }
 
 FilterBar.propTypes = {
-  filterOptions: PropTypes.oneOfType([PropTypes.object]).isRequired,
+  filterOptions: PropTypes.shape({
+    causeNodes: PropTypes.oneOfType([PropTypes.array]),
+    sourceTargetType: PropTypes.string,
+    resultType: PropTypes.string,
+    isBaseScenario: PropTypes.bool,
+    isValid: PropTypes.bool,
+  }).isRequired,
   resetFilter: PropTypes.func.isRequired,
   setFilterOptions: PropTypes.func.isRequired,
   submitFilter: PropTypes.func.isRequired,
