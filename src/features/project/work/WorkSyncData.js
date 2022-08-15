@@ -8,7 +8,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { Button, UncontrolledTooltip } from 'reactstrap';
-import testScenarioAnsCaseStorage from './services/TestScenarioAnsCaseStorage';
 import workService from './services/workService';
 
 const SYNC_STATUS = {
@@ -50,15 +49,12 @@ class WorkSyncData extends Component {
     const { testBasis, causeEffects, graph, testCoverage, testDatas, match } = this.props;
     const { projectId, workId } = match.params;
 
-    const testScenariosAndCases = testScenarioAnsCaseStorage.get();
-
     const data = {
       testBasis,
       causeEffects,
       graph,
       testCoverages: testCoverage,
       testDatas,
-      testScenariosAndCases,
     };
 
     const result = await workService.updateWorkDataAsync(projectId, workId, data);
