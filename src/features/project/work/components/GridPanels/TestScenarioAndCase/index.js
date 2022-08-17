@@ -318,7 +318,6 @@ class TestScenarioAndCase extends Component {
         row.testAssertions?.some((testAssertion) => causeNode?.value === testAssertion?.graphNodeId)
       );
       const causeNodesResultType = testAssertionFilter.every((testAssertion) => testAssertion.result === _resultType);
-      // replace this if use AND operator: if (typeof isExist !== 'undefined' && !isExist)
       if (typeof isExist !== 'undefined' && !isExist) {
         return false;
       }
