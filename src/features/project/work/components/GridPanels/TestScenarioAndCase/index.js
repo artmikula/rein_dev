@@ -319,7 +319,7 @@ class TestScenarioAndCase extends Component {
       );
       const causeNodesResultType = testAssertionFilter.every((testAssertion) => testAssertion.result === _resultType);
       // replace this if use AND operator: if (typeof isExist !== 'undefined' && !isExist)
-      if (typeof causeNodes !== 'undefined' && testAssertionFilter?.length === 0 && causeNodes?.length > 0) {
+      if (typeof isExist !== 'undefined' && !isExist) {
         return false;
       }
       if (typeof _resultType !== 'undefined' && !causeNodesResultType) {
@@ -335,11 +335,6 @@ class TestScenarioAndCase extends Component {
       ) {
         return false;
       }
-      // remove if change to AND operator
-      if (typeof sourceTargetType !== 'undefined' && isExist === false) {
-        return false;
-      }
-      // end comment
       if (typeof isBaseScenario !== 'undefined' && isBaseScenario === true && isBaseScenario !== row.isBaseScenario) {
         return false;
       }
