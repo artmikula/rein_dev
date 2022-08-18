@@ -131,19 +131,7 @@ class Workspace extends Component {
   };
 
   _getWorkData = (data) => {
-    const {
-      testBasis,
-      causeEffects,
-      graphNodes,
-      graphLinks,
-      constraints,
-      testCoverage,
-      testDatas,
-      testScenarios,
-      ...others
-    } = data;
-
-    testScenarios.forEach((x) => x);
+    const { testBasis, causeEffects, graphNodes, graphLinks, constraints, testCoverage, testDatas, ...others } = data;
 
     let _causeEffects = causeEffects ?? [];
     if (_causeEffects.some((x) => !x.orderIndex)) {
@@ -189,30 +177,10 @@ class Workspace extends Component {
         },
       });
     } else {
-      const testScenariosAndCases = this._convertTestScenarios(
-        result.data.testScenarios ?? [],
-        result.data.graphNodes ?? []
-      );
-      this._saveWorkToLocalStorage(testScenariosAndCases);
-
       workData = this._getWorkData(result.data);
     }
 
     setWork({ ...workData, loaded: true });
-  };
-
-  _saveWorkToLocalStorage = (data) => {
-    try {
-      testScenarioAnsCaseStorage.set(data);
-    } catch (e) {
-      if (e instanceof DOMException && (e.code === 22 || e.code === 1024)) {
-        alert(Language.get('workquotaexceed'), {
-          warning: true,
-          actionText: 'OK',
-          onClose: this._onCloseAlert,
-        });
-      }
-    }
   };
 
   _onCloseAlert = () => {
