@@ -86,21 +86,6 @@ class Workspace extends Component {
     this.unlisten();
   }
 
-  _convertTestScenarios = (testScenarios = [], graphNodes = []) =>
-    testScenarios.map((testScenario) => {
-      const { expectedResults } = testScenario;
-      const sourceTargetType = graphNodes.find((graphNode) => graphNode.nodeId === expectedResults)?.targetType;
-      return {
-        ...testScenario,
-        sourceTargetType,
-        testCases: testScenario.testCases.map((testCase) => ({
-          ...testCase,
-          testDatas: JSON.parse(testCase.testDatas),
-          results: JSON.parse(testCase.results),
-        })),
-      };
-    });
-
   _orderCauseEffect = (causeEffects) => {
     let causes = causeEffects.filter((x) => x.type === CLASSIFY.CAUSE);
     causes = causes.sort((a, b) => {
