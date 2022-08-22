@@ -1,7 +1,10 @@
 /* eslint-disable no-loop-func */
+import lf from 'lovefield';
 import { CLASSIFY, RESULT_TYPE, TEST_CASE_LIMITATION } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
 import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario } from 'types/models';
+import indexedDbHelper from 'features/shared/indexedDb/indexedDbHelper';
+import { TABLES } from 'features/shared/indexedDb/constants';
 import testDataService from './TestData';
 
 interface ITestDataList {
@@ -18,6 +21,7 @@ interface ITestDataList {
 
 class TestCase {
   updateTestCase(
+    db: lf.Database,
     testScenarios: ISimpleTestScenario[] = [],
     testDataList: ITestDataList[] = [],
     graphNodes: IGraphNode[] = []
@@ -55,10 +59,12 @@ class TestCase {
                     nodeId: causeAssertions[j]?.nodeId,
                   });
                 }
+                if (clone.testDatas.length === causeAssertions.length) {
+                  indexedDbHelper.addData(db, TABLES.TEST_CASES, clone);
+                }
                 tmp.push(clone);
               });
             }
-
             testCasesOfScenario = tmp;
           } else {
             const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
@@ -67,7 +73,7 @@ class TestCase {
                 id: uuid(),
                 testScenarioId: testScenarios[i].id,
                 // testScenario: { ...testScenarios[i] },
-                testDatas: [{ graphNodeId: causeAssertions[j]?.graphNodeId, data }],
+                testDatas: [{ graphNodeId: causeAssertions[j]?.graphNodeId, data, nodeId: causeAssertions[j]?.nodeId }],
                 results: [],
               };
               if (testScenarios[i].resultType === RESULT_TYPE.False) {

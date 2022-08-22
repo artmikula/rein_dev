@@ -15,6 +15,8 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import LocalStorage from 'features/shared/lib/localStorage';
+import { WorkSpaceContext } from 'features/shared/indexedDb/contextForIndexedDb';
+import indexedDbHelper from 'features/shared/indexedDb/indexedDbHelper';
 import { cloneDeep, debounce } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -54,7 +56,12 @@ class Workspace extends Component {
       gridPanelLayout: intialLayouts || DEFAULT_LAYOUTS,
       formName: '',
       openRenameWorkModal: false,
+      contexts: {
+        indexedDb: null,
+      },
     };
+
+    this.db = null;
   }
 
   async componentDidMount() {
@@ -62,6 +69,8 @@ class Workspace extends Component {
     const { projectId, workId } = match.params;
 
     await this._getWorkById(projectId, workId);
+    const indexedDb = await indexedDbHelper.initIndexedDb(projectId);
+    this.setState((prevState) => ({ contexts: { ...prevState.contexts, indexedDb } }));
 
     const { history } = this.props;
     this.unlisten = history.listen((location) => {
@@ -284,95 +293,98 @@ class Workspace extends Component {
   };
 
   render() {
-    const { viewMode, isLockedPanel, gridPanelLayout, formName, openRenameWorkModal } = this.state;
+    const { viewMode, isLockedPanel, gridPanelLayout, formName, openRenameWorkModal, contexts } = this.state;
     const { workName, projectName } = this.props;
     const isSplitView = viewMode === VIEW_MODE.SPLIT;
+
     const menus = <MenuContainer />;
 
     return (
-      <ProjectLayout menus={menus}>
-        {/* eslint-disable-next-line max-len */}
-        <div className="d-flex flex-wrap align-items-center justify-content-between border-bottom bg-white px-3 small position-relative py-1">
-          <span>
-            <span className="text-muted">{Language.get('project')}: </span>
-            {projectName}
-            <i className="bi bi-chevron-right text-muted mx-1" />
-            <Link to="#" onClick={this._openRenameWorkModal}>
-              {workName}
-            </Link>
-            <Button
-              color="link"
-              size="sm"
-              className="icon-btn sm mx-2"
-              id="create-new-work"
-              onClick={this._initCreateWork}
-            >
-              <i className="bi bi-plus central" />
-            </Button>
-            <UncontrolledTooltip target="create-new-work">
-              <small>{Language.get('createnewwork')}</small>
-            </UncontrolledTooltip>
-          </span>
-          <AlertGenerateReport />
-          <span>
-            <WorkSyncData />
-            <Button
-              color="link"
-              size="sm"
-              className="icon-btn sm"
-              id="tooltip-view-mode"
-              onClick={() => this._handleChangeViewMode(isSplitView ? VIEW_MODE.SINGLE : VIEW_MODE.SPLIT)}
-            >
-              {isSplitView ? <i className="bi bi-square central" /> : <i className="bi bi-layout-split central" />}
-            </Button>
-            <UncontrolledTooltip target="tooltip-view-mode">
-              <small>{isSplitView ? Language.get('changetosingleview') : Language.get('changetosplitview')}</small>
-            </UncontrolledTooltip>
-            <Button
-              color="link"
-              size="sm"
-              className="icon-btn sm"
-              id="tooltip-lock-panel"
-              onClick={this._toggleLockPanel}
-            >
-              {isLockedPanel ? (
-                <i className="bi bi-lock text-success central" />
-              ) : (
-                <i className="bi bi-unlock text-orange central" />
-              )}
-            </Button>
-            <UncontrolledTooltip target="tooltip-lock-panel">
-              <small>{isLockedPanel ? Language.get('unlockpanel') : Language.get('lockpanel')}</small>
-            </UncontrolledTooltip>
-            <Button
-              color="link"
-              size="sm"
-              className="icon-btn sm"
-              id="tooltip-reset-grid-panel-layout"
-              onClick={this._handleResetLayout}
-            >
-              <i className="bi bi-grid-1x2" />
-            </Button>
-            <UncontrolledTooltip target="tooltip-reset-grid-panel-layout">
-              <small>{Language.get('resettodefaultlayout')}</small>
-            </UncontrolledTooltip>
-          </span>
-        </div>
-        <GridPanels
-          viewMode={viewMode}
-          isLockedPanel={isLockedPanel}
-          layouts={gridPanelLayout}
-          onLayoutChange={this._handleChangePanelLayout}
-        />
-        <CreateForm isOpenModel={formName === WORK_FORM_NAME.CREATE} onToggleModal={this._handleToggleModalForm} />
+      <WorkSpaceContext.Provider value={contexts}>
+        <ProjectLayout menus={menus}>
+          {/* eslint-disable-next-line max-len */}
+          <div className="d-flex flex-wrap align-items-center justify-content-between border-bottom bg-white px-3 small position-relative py-1">
+            <span>
+              <span className="text-muted">{Language.get('project')}: </span>
+              {projectName}
+              <i className="bi bi-chevron-right text-muted mx-1" />
+              <Link to="#" onClick={this._openRenameWorkModal}>
+                {workName}
+              </Link>
+              <Button
+                color="link"
+                size="sm"
+                className="icon-btn sm mx-2"
+                id="create-new-work"
+                onClick={this._initCreateWork}
+              >
+                <i className="bi bi-plus central" />
+              </Button>
+              <UncontrolledTooltip target="create-new-work">
+                <small>{Language.get('createnewwork')}</small>
+              </UncontrolledTooltip>
+            </span>
+            <AlertGenerateReport />
+            <span>
+              <WorkSyncData />
+              <Button
+                color="link"
+                size="sm"
+                className="icon-btn sm"
+                id="tooltip-view-mode"
+                onClick={() => this._handleChangeViewMode(isSplitView ? VIEW_MODE.SINGLE : VIEW_MODE.SPLIT)}
+              >
+                {isSplitView ? <i className="bi bi-square central" /> : <i className="bi bi-layout-split central" />}
+              </Button>
+              <UncontrolledTooltip target="tooltip-view-mode">
+                <small>{isSplitView ? Language.get('changetosingleview') : Language.get('changetosplitview')}</small>
+              </UncontrolledTooltip>
+              <Button
+                color="link"
+                size="sm"
+                className="icon-btn sm"
+                id="tooltip-lock-panel"
+                onClick={this._toggleLockPanel}
+              >
+                {isLockedPanel ? (
+                  <i className="bi bi-lock text-success central" />
+                ) : (
+                  <i className="bi bi-unlock text-orange central" />
+                )}
+              </Button>
+              <UncontrolledTooltip target="tooltip-lock-panel">
+                <small>{isLockedPanel ? Language.get('unlockpanel') : Language.get('lockpanel')}</small>
+              </UncontrolledTooltip>
+              <Button
+                color="link"
+                size="sm"
+                className="icon-btn sm"
+                id="tooltip-reset-grid-panel-layout"
+                onClick={this._handleResetLayout}
+              >
+                <i className="bi bi-grid-1x2" />
+              </Button>
+              <UncontrolledTooltip target="tooltip-reset-grid-panel-layout">
+                <small>{Language.get('resettodefaultlayout')}</small>
+              </UncontrolledTooltip>
+            </span>
+          </div>
+          <GridPanels
+            viewMode={viewMode}
+            isLockedPanel={isLockedPanel}
+            layouts={gridPanelLayout}
+            onLayoutChange={this._handleChangePanelLayout}
+          />
+          <CreateForm isOpenModel={formName === WORK_FORM_NAME.CREATE} onToggleModal={this._handleToggleModalForm} />
 
-        <ModalForm
-          isOpen={openRenameWorkModal}
-          formData={this._getWorkSchema(workName)}
-          onToggle={() => this._closeRenameWorkModal()}
-          onSubmit={this._handleSubmitRenameWork}
-        />
-      </ProjectLayout>
+          <ModalForm
+            isOpen={openRenameWorkModal}
+            formData={this._getWorkSchema(workName)}
+            onToggle={() => this._closeRenameWorkModal()}
+            onSubmit={this._handleSubmitRenameWork}
+          />
+        </ProjectLayout>
+      </WorkSpaceContext.Provider>
     );
   }
 }

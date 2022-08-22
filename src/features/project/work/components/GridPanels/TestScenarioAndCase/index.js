@@ -19,6 +19,9 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
+import { WorkSpaceContext } from 'features/shared/indexedDb/contextForIndexedDb';
+import indexedDbHelper from 'features/shared/indexedDb/indexedDbHelper';
+import { TABLES } from 'features/shared/indexedDb/constants';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -97,6 +100,11 @@ class TestScenarioAndCase extends Component {
         });
       }
     });
+    this._initData();
+  }
+
+  componentDidUpdate() {
+    this._initData();
   }
 
   componentWillUnmount() {
@@ -109,10 +117,63 @@ class TestScenarioAndCase extends Component {
     testScenarioAnsCaseStorage.set([]);
   };
 
+  _initData = async () => {
+    const { graph, workLoaded } = this.props;
+    const { indexedDb } = this.context;
+    const testCasesRows = [];
+
+    const tblTestScenarios = await indexedDbHelper.getTable(indexedDb, TABLES.TEST_SCENARIOS);
+    const tblTestCases = await indexedDbHelper.getTable(indexedDb, TABLES.TEST_CASES);
+
+    if (!this.initiatedData && workLoaded) {
+      const testScenarios = await indexedDb.select().from(tblTestScenarios).exec();
+
+      testScenarios.forEach(async (testScenario) => {
+        const testCases = await indexedDb
+          .select()
+          .from(tblTestCases)
+          .where(tblTestCases.testScenarioId.eq(testScenario.id))
+          .exec();
+
+        testCases.forEach((testCase) => {
+          const testDatas = testCase.testDatas.map((x) => {
+            const result = {
+              graphNodeId: x.graphNodeId,
+              data: x.data,
+            };
+
+            return result;
+          });
+
+          testCasesRows.push({
+            ...testCase,
+            testScenario: { ...testScenario },
+            testDatas,
+            results: testCase.results,
+          });
+        });
+
+        // eslint-disable-next-line no-param-reassign
+        testScenario.testCases = testCases;
+        return testScenario;
+      });
+
+      this.initiatedData = true;
+      this._setColumnsAndRows(testCasesRows, testScenarios, graph.graphNodes);
+    }
+  };
+
   _calculateTestScenarioAndCase = async (domainAction) => {
     const { graph, testDatas, setGraph, match } = this.props;
+    const { indexedDb } = this.context;
     const { workId } = match.params;
     let scenarioAndGraphNodes = null;
+
+    const tblTestScenarios = await indexedDbHelper.getTable(indexedDb, TABLES.TEST_SCENARIOS);
+    const testScenarios = await indexedDb.select().from(tblTestScenarios).exec();
+    if (testScenarios.length > 0) {
+      await indexedDbHelper.deleteTable(indexedDb, TABLES.TEST_SCENARIOS);
+    }
 
     if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
       scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
@@ -146,23 +207,18 @@ class TestScenarioAndCase extends Component {
       return scenario;
     });
 
+    indexedDbHelper.addData(indexedDb, TABLES.TEST_SCENARIOS, newTestScenarios);
+
     const newGraphNodes = scenarioAndGraphNodes.graphNodes;
 
-    const testCases = testCaseHelper.updateTestCase(newTestScenarios, testDatas, newGraphNodes);
+    const testCases = testCaseHelper.updateTestCase(indexedDb, newTestScenarios, testDatas, newGraphNodes);
 
     this._setColumnsAndRows(testCases, newTestScenarios, newGraphNodes);
 
     const newTestScenariosAndCases = newTestScenarios.map((x) => {
       const scenario = {
         ...x,
-        testCases: testCases
-          .filter((e) => e.testScenarioId === x.id)
-          .map((y) => {
-            return {
-              ...y,
-              workId,
-            };
-          }),
+        testCases: testCases.filter((e) => e.testScenarioId === x.id).map((y) => y),
       };
 
       return scenario;
@@ -435,5 +491,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = { setGraph };
+
+TestScenarioAndCase.contextType = WorkSpaceContext;
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestScenarioAndCase));
