@@ -8,12 +8,16 @@ interface ICustomWindow extends Window {
 class IndexedDbHelper {
   db: lf.Database | null;
 
+  builder: lf.schema.Builder | null;
+
   constructor() {
     this.db = null;
+    this.builder = null;
   }
 
-  initIndexedDb(dbName: string = INDEXED_DB.NAME, dbVersion: number = INDEXED_DB.VERSION) {
-    const schemaBuilder: lf.schema.Builder = lf.schema.create(dbName, dbVersion);
+  async initIndexedDb(dbName: string = INDEXED_DB.NAME, dbVersion: number = INDEXED_DB.VERSION) {
+    const schemaBuilder: lf.schema.Builder = await lf.schema.create(dbName, dbVersion);
+    this.builder = schemaBuilder;
 
     schemaBuilder
       .createTable(TABLES.TEST_SCENARIOS)
@@ -50,8 +54,12 @@ class IndexedDbHelper {
     return schemaBuilder.connect();
   }
 
-  async setDb(db: lf.Database) {
+  set(db: lf.Database) {
     this.db = db;
+  }
+
+  get() {
+    return this.db;
   }
 
   async addData(db: lf.Database, tableName: string, data: lf.Row[] | lf.Row) {
@@ -83,8 +91,10 @@ class IndexedDbHelper {
   }
 }
 
+const indexedDbHelper = new IndexedDbHelper();
+
 const customWindow: ICustomWindow = window;
 
-customWindow.LocalIndexedDb = new IndexedDbHelper();
+customWindow.LocalIndexedDb = indexedDbHelper;
 
-export default new IndexedDbHelper();
+export default indexedDbHelper;

@@ -19,7 +19,6 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
-import { WorkSpaceContext } from 'features/shared/indexedDb/contextForIndexedDb';
 import indexedDbHelper from 'features/shared/indexedDb/indexedDbHelper';
 import { TABLES } from 'features/shared/indexedDb/constants';
 import Mousetrap from 'mousetrap';
@@ -55,7 +54,12 @@ class TestScenarioAndCase extends Component {
     this.initiatedData = false;
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    const { workId, match } = this.props;
+    const { workId: workIdParam } = match.params;
+
+    const indexedDb = indexedDbHelper.db;
+
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this.setState({
@@ -100,11 +104,11 @@ class TestScenarioAndCase extends Component {
         });
       }
     });
-    this._initData();
-  }
-
-  componentDidUpdate() {
-    this._initData();
+    if (indexedDb === null) {
+      const indexedDb = await indexedDbHelper.initIndexedDb(workId ?? workIdParam);
+      await indexedDbHelper.set(indexedDb);
+      await this._initData(indexedDb);
+    }
   }
 
   componentWillUnmount() {
@@ -119,53 +123,55 @@ class TestScenarioAndCase extends Component {
 
   _initData = async () => {
     const { graph, workLoaded } = this.props;
-    const { indexedDb } = this.context;
+    const indexedDb = indexedDbHelper.db;
     const testCasesRows = [];
 
-    const tblTestScenarios = await indexedDbHelper.getTable(indexedDb, TABLES.TEST_SCENARIOS);
-    const tblTestCases = await indexedDbHelper.getTable(indexedDb, TABLES.TEST_CASES);
+    if (indexedDb) {
+      const tblTestScenarios = await indexedDbHelper.getTable(indexedDb, TABLES.TEST_SCENARIOS);
+      const tblTestCases = await indexedDbHelper.getTable(indexedDb, TABLES.TEST_CASES);
 
-    if (!this.initiatedData && workLoaded) {
-      const testScenarios = await indexedDb.select().from(tblTestScenarios).exec();
+      if (!this.initiatedData && workLoaded) {
+        const testScenarios = await indexedDb.select().from(tblTestScenarios).exec();
 
-      testScenarios.forEach(async (testScenario) => {
-        const testCases = await indexedDb
-          .select()
-          .from(tblTestCases)
-          .where(tblTestCases.testScenarioId.eq(testScenario.id))
-          .exec();
+        testScenarios.forEach(async (testScenario) => {
+          const testCases = await indexedDb
+            .select()
+            .from(tblTestCases)
+            .where(tblTestCases.testScenarioId.eq(testScenario.id))
+            .exec();
 
-        testCases.forEach((testCase) => {
-          const testDatas = testCase.testDatas.map((x) => {
-            const result = {
-              graphNodeId: x.graphNodeId,
-              data: x.data,
-            };
+          testCases.forEach((testCase) => {
+            const testDatas = testCase.testDatas.map((x) => {
+              const result = {
+                graphNodeId: x.graphNodeId,
+                data: x.data,
+              };
 
-            return result;
+              return result;
+            });
+
+            testCasesRows.push({
+              ...testCase,
+              testScenario: { ...testScenario },
+              testDatas,
+              results: testCase.results,
+            });
           });
 
-          testCasesRows.push({
-            ...testCase,
-            testScenario: { ...testScenario },
-            testDatas,
-            results: testCase.results,
-          });
+          // eslint-disable-next-line no-param-reassign
+          testScenario.testCases = testCases;
+          return testScenario;
         });
 
-        // eslint-disable-next-line no-param-reassign
-        testScenario.testCases = testCases;
-        return testScenario;
-      });
-
-      this.initiatedData = true;
-      this._setColumnsAndRows(testCasesRows, testScenarios, graph.graphNodes);
+        this.initiatedData = true;
+        this._setColumnsAndRows(testCasesRows, testScenarios, graph.graphNodes);
+      }
     }
   };
 
   _calculateTestScenarioAndCase = async (domainAction) => {
     const { graph, testDatas, setGraph, match } = this.props;
-    const { indexedDb } = this.context;
+    const indexedDb = indexedDbHelper.db;
     const { workId } = match.params;
     let scenarioAndGraphNodes = null;
 
@@ -442,6 +448,7 @@ class TestScenarioAndCase extends Component {
 
   render() {
     const { columns, rows, isCheckAllTestScenarios, filterRows, filterOptions } = this.state;
+    console.log('indexedDb', indexedDbHelper.db);
 
     return (
       <div>
@@ -491,7 +498,5 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = { setGraph };
-
-TestScenarioAndCase.contextType = WorkSpaceContext;
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestScenarioAndCase));
