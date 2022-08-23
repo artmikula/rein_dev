@@ -20,6 +20,7 @@ import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
 import indexedDbHelper from 'features/shared/indexedDb/indexedDbHelper';
+import { initDb } from 'features/project/work/slices/indexedDbSlice';
 import { TABLES } from 'features/shared/indexedDb/constants';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
@@ -55,9 +56,11 @@ class TestScenarioAndCase extends Component {
   }
 
   async componentDidMount() {
-    const { workId, match } = this.props;
+    const { workId, match, db, initDb } = this.props;
     const { workId: workIdParam } = match.params;
 
+    console.log('ts db', db);
+    initDb();
     const indexedDb = indexedDbHelper.db;
 
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
@@ -122,19 +125,19 @@ class TestScenarioAndCase extends Component {
   };
 
   _initData = async () => {
-    const { graph, workLoaded } = this.props;
+    const { graph, workLoaded, db } = this.props;
     const indexedDb = indexedDbHelper.db;
     const testCasesRows = [];
 
-    if (indexedDb) {
+    if (db) {
       const tblTestScenarios = await indexedDbHelper.getTable(indexedDb, TABLES.TEST_SCENARIOS);
       const tblTestCases = await indexedDbHelper.getTable(indexedDb, TABLES.TEST_CASES);
 
       if (!this.initiatedData && workLoaded) {
-        const testScenarios = await indexedDb.select().from(tblTestScenarios).exec();
+        const testScenarios = await db.select().from(tblTestScenarios).exec();
 
         testScenarios.forEach(async (testScenario) => {
-          const testCases = await indexedDb
+          const testCases = await db
             .select()
             .from(tblTestCases)
             .where(tblTestCases.testScenarioId.eq(testScenario.id))
@@ -481,11 +484,14 @@ TestScenarioAndCase.propTypes = {
   testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   workLoaded: PropTypes.bool.isRequired,
   setGraph: PropTypes.func.isRequired,
+  initDb: PropTypes.func.isRequired,
+  db: PropTypes.oneOfType([PropTypes.object]),
 };
 
 TestScenarioAndCase.defaultProps = {
   workId: undefined,
   workName: undefined,
+  db: null,
 };
 
 const mapStateToProps = (state) => ({
@@ -494,8 +500,12 @@ const mapStateToProps = (state) => ({
   graph: state.work.graph,
   testDatas: state.work.testDatas,
   workLoaded: state.work.loaded,
+  db: state.dbContext.db,
 });
 
-const mapDispatchToProps = { setGraph };
+const mapDispatchToProps = {
+  setGraph,
+  initDb,
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestScenarioAndCase));

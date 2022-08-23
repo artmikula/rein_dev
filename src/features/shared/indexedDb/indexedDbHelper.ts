@@ -15,8 +15,8 @@ class IndexedDbHelper {
     this.builder = null;
   }
 
-  async initIndexedDb(dbName: string = INDEXED_DB.NAME, dbVersion: number = INDEXED_DB.VERSION) {
-    const schemaBuilder: lf.schema.Builder = await lf.schema.create(dbName, dbVersion);
+  initIndexedDb(dbName: string = INDEXED_DB.NAME, dbVersion: number = INDEXED_DB.VERSION) {
+    const schemaBuilder: lf.schema.Builder = lf.schema.create(dbName, dbVersion);
     this.builder = schemaBuilder;
 
     schemaBuilder

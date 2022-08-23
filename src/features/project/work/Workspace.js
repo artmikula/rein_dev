@@ -148,6 +148,14 @@ class Workspace extends Component {
 
     testScenarioAnsCaseStorage.setId(workId);
 
+    /** init indexedDb */
+    // const context = new DbContext();
+    // await context.init();
+
+    /** set redux state here */
+    // setReduxState(context)
+    // context.TS.get(filter);
+
     if (result.error) {
       let { message } = result.error;
 
@@ -285,8 +293,10 @@ class Workspace extends Component {
 
   render() {
     const { viewMode, isLockedPanel, gridPanelLayout, formName, openRenameWorkModal } = this.state;
-    const { workName, projectName } = this.props;
+    const { workName, projectName, db } = this.props;
     const isSplitView = viewMode === VIEW_MODE.SPLIT;
+
+    console.log('work db', db);
 
     const menus = <MenuContainer />;
 
@@ -383,13 +393,21 @@ Workspace.propTypes = {
   workName: PropTypes.string.isRequired,
   projectName: PropTypes.string.isRequired,
   loadedWork: PropTypes.bool.isRequired,
+  db: PropTypes.oneOfType([PropTypes.object]),
 };
 
-const mapDispatchToProps = { setWork };
+Workspace.defaultProps = {
+  db: null,
+};
+
+const mapDispatchToProps = {
+  setWork,
+};
 const mapStateToProps = (state) => ({
   loadedWork: state.work.loaded,
   workName: state.work.name,
   projectName: state.work.projectName,
+  db: state.dbContext.db,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Workspace);
