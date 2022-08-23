@@ -448,7 +448,6 @@ class TestScenarioAndCase extends Component {
 
   render() {
     const { columns, rows, isCheckAllTestScenarios, filterRows, filterOptions } = this.state;
-    console.log('indexedDb', indexedDbHelper.db);
 
     return (
       <div>
