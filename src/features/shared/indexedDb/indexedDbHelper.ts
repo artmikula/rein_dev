@@ -58,10 +58,6 @@ class IndexedDbHelper {
     this.db = db;
   }
 
-  get() {
-    return this.db;
-  }
-
   async addData(db: lf.Database, tableName: string, data: lf.Row[] | lf.Row) {
     if (db) {
       const tbl = await db.getSchema().table(tableName);
