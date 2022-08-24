@@ -2,7 +2,7 @@
 import { CLASSIFY, RESULT_TYPE, TEST_CASE_LIMITATION } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
 import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario } from 'types/models';
-import { ITestCaseSet } from 'features/shared/local-stotage-services/dbContext/models';
+import { ITestCaseSet } from 'features/shared/storage-services/dbContext/models';
 import testDataService from './TestData';
 
 interface ITestDataList {

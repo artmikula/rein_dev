@@ -12,7 +12,7 @@ import {
   WORK_FORM_NAME,
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
-import DbContext from 'features/shared/local-stotage-services/dbContext/DbContext';
+import DbContext from 'features/shared/storage-services/dbContext/DbContext';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import LocalStorage from 'features/shared/lib/localStorage';
