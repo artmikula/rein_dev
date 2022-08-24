@@ -1,23 +1,9 @@
 import lf from 'lovefield';
 import { INDEXED_DB, TABLES } from './constants';
 
-interface ICustomWindow extends Window {
-  LocalIndexedDb?: any;
-}
-
 class IndexedDbHelper {
-  db: lf.Database | null;
-
-  builder: lf.schema.Builder | null;
-
-  constructor() {
-    this.db = null;
-    this.builder = null;
-  }
-
   initIndexedDb(dbName: string = INDEXED_DB.NAME, dbVersion: number = INDEXED_DB.VERSION) {
     const schemaBuilder: lf.schema.Builder = lf.schema.create(dbName, dbVersion);
-    this.builder = schemaBuilder;
 
     schemaBuilder
       .createTable(TABLES.TEST_SCENARIOS)
@@ -54,43 +40,32 @@ class IndexedDbHelper {
     return schemaBuilder.connect();
   }
 
-  set(db: lf.Database) {
-    this.db = db;
+  close(db: lf.Database) {
+    db.close();
   }
 
-  async addData(db: lf.Database, tableName: string, data: lf.Row[] | lf.Row) {
-    if (db) {
-      const tbl = await db.getSchema().table(tableName);
+  async addData(db: lf.Database, table: lf.schema.Table, data: lf.Row[] | lf.Row) {
+    try {
       if (Array.isArray(data)) {
-        const newRows = data.map((item) => tbl.createRow(item));
-        await db.insertOrReplace().into(tbl).values(newRows).exec();
+        const newRows = data.map((item) => table.createRow(item));
+        await db.insertOrReplace().into(table).values(newRows).exec();
       } else {
-        const newRow = tbl.createRow(data);
-        await db.insertOrReplace().into(tbl).values([newRow]).exec();
+        const newRow = table.createRow(data);
+        await db.insertOrReplace().into(table).values([newRow]).exec();
       }
+    } catch (error) {
+      console.log('err', error);
     }
   }
 
-  async getTable(db: lf.Database, tableName: string) {
-    if (db) {
-      const tbl = await db.getSchema().table(tableName);
-      return tbl;
-    }
-    return null;
+  async getTable(db: lf.Database, tableName: string): Promise<lf.schema.Table> {
+    const tbl = await db.getSchema().table(tableName);
+    return tbl;
   }
 
-  async deleteTable(db: lf.Database, tableName: string) {
-    if (db) {
-      const tbl = await db.getSchema().table(tableName);
-      await db.delete().from(tbl).exec();
-    }
+  async deleteTable(db: lf.Database, table: lf.schema.Table) {
+    await db.delete().from(table).exec();
   }
 }
 
-const indexedDbHelper = new IndexedDbHelper();
-
-const customWindow: ICustomWindow = window;
-
-customWindow.LocalIndexedDb = indexedDbHelper;
-
-export default indexedDbHelper;
+export default new IndexedDbHelper();

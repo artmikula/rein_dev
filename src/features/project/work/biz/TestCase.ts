@@ -1,10 +1,8 @@
 /* eslint-disable no-loop-func */
-import lf from 'lovefield';
 import { CLASSIFY, RESULT_TYPE, TEST_CASE_LIMITATION } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
 import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario } from 'types/models';
-import indexedDbHelper from 'features/shared/indexedDb/indexedDbHelper';
-import { TABLES } from 'features/shared/indexedDb/constants';
+import { ITestCaseSet } from 'features/shared/local-stotage-services/dbContext/models';
 import testDataService from './TestData';
 
 interface ITestDataList {
@@ -21,7 +19,7 @@ interface ITestDataList {
 
 class TestCase {
   updateTestCase(
-    db: lf.Database,
+    testCaseSet: ITestCaseSet,
     testScenarios: ISimpleTestScenario[] = [],
     testDataList: ITestDataList[] = [],
     graphNodes: IGraphNode[] = []
@@ -46,7 +44,7 @@ class TestCase {
               testCasesOfScenario.length < TEST_CASE_LIMITATION ? testCasesOfScenario.length : TEST_CASE_LIMITATION;
             for (let k = 0; k < maxNumberOfTestCases; k++) {
               const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
-              testDataArray.forEach((data) => {
+              testDataArray.forEach(async (data) => {
                 const clone: ITestCase = this._clone(testCasesOfScenario[k]);
                 clone.id = uuid();
                 const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j]?.graphNodeId);
@@ -60,7 +58,7 @@ class TestCase {
                   });
                 }
                 if (clone.testDatas.length === causeAssertions.length) {
-                  indexedDbHelper.addData(db, TABLES.TEST_CASES, clone);
+                  await testCaseSet.add(clone);
                 }
                 tmp.push(clone);
               });

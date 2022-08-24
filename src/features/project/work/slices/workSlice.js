@@ -33,6 +33,7 @@ export const workSlice = createSlice({
     },
     testCoverage: cloneDeep(defaultTestCoverageData),
     testDatas: [],
+    dbContext: null,
   },
   reducers: {
     setWorkName: (state, action) => {
@@ -51,6 +52,11 @@ export const workSlice = createSlice({
     setGraph: (state, action) => ({ ...state, graph: action.payload }),
     setTestCoverages: (state, action) => ({ ...state, testCoverage: action.payload }),
     setTestDatas: (state, action) => ({ ...state, testDatas: action.payload }),
+    setDbContext: (state, action) => {
+      const _state = state;
+      _state.dbContext = action.payload;
+      return _state;
+    },
   },
 });
 
@@ -63,6 +69,7 @@ export const {
   setGraph,
   setTestCoverages,
   setTestDatas,
+  setDbContext,
 } = workSlice.actions;
 
 export default workSlice.reducer;

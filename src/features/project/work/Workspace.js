@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import ProjectLayout from 'features/project/components/ProjectLayout';
-import { defaultTestCoverageData, setWork } from 'features/project/work/slices/workSlice';
+import { defaultTestCoverageData, setWork, setDbContext } from 'features/project/work/slices/workSlice';
 import { ModalForm } from 'features/shared/components';
 import alert from 'features/shared/components/Alert';
 import {
@@ -12,6 +12,7 @@ import {
   WORK_FORM_NAME,
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
+import DbContext from 'features/shared/local-stotage-services/dbContext/DbContext';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import LocalStorage from 'features/shared/lib/localStorage';
@@ -83,6 +84,9 @@ class Workspace extends Component {
   }
 
   componentWillUnmount() {
+    const { dbContext, setDbContext } = this.props;
+    dbContext.close();
+    setDbContext(null);
     this.unlisten();
   }
 
@@ -142,18 +146,15 @@ class Workspace extends Component {
   };
 
   _getWorkById = async (projectId, workId) => {
-    const { setWork, history } = this.props;
+    const { setWork, history, setDbContext } = this.props;
     const result = await workService.getAsync(projectId, workId);
     let workData = {};
 
     testScenarioAnsCaseStorage.setId(workId);
 
-    /** init indexedDb */
-    // const context = new DbContext();
-    // await context.init();
-
-    /** set redux state here */
-    // setReduxState(context)
+    const context = new DbContext();
+    await context.init(workId);
+    setDbContext(context);
     // context.TS.get(filter);
 
     if (result.error) {
@@ -293,10 +294,8 @@ class Workspace extends Component {
 
   render() {
     const { viewMode, isLockedPanel, gridPanelLayout, formName, openRenameWorkModal } = this.state;
-    const { workName, projectName, db } = this.props;
+    const { workName, projectName } = this.props;
     const isSplitView = viewMode === VIEW_MODE.SPLIT;
-
-    console.log('work db', db);
 
     const menus = <MenuContainer />;
 
@@ -393,21 +392,21 @@ Workspace.propTypes = {
   workName: PropTypes.string.isRequired,
   projectName: PropTypes.string.isRequired,
   loadedWork: PropTypes.bool.isRequired,
-  db: PropTypes.oneOfType([PropTypes.object]),
+  setDbContext: PropTypes.func.isRequired,
+  dbContext: PropTypes.oneOfType([PropTypes.object]),
 };
 
 Workspace.defaultProps = {
-  db: null,
+  dbContext: null,
 };
 
-const mapDispatchToProps = {
-  setWork,
-};
+const mapDispatchToProps = { setWork, setDbContext };
+
 const mapStateToProps = (state) => ({
   loadedWork: state.work.loaded,
   workName: state.work.name,
   projectName: state.work.projectName,
-  db: state.dbContext.db,
+  dbContext: state.work.dbContext,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Workspace);
