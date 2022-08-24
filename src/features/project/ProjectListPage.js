@@ -7,7 +7,6 @@ import { CustomList } from 'features/shared/components';
 import toLocalTime from 'features/shared/lib/utils';
 import { SORT_DIRECTION, SORT_DEFAULT } from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
-import indexedDbHelper from 'features/shared/indexedDb/indexedDbHelper';
 import ProjectLayout from './components/ProjectLayout';
 
 const defaultSort = `${SORT_DEFAULT.column},${SORT_DEFAULT.direction}`;
@@ -167,8 +166,6 @@ class ProjectListPage extends Component {
     const data = await workService.listAsync(projectId, 1, 1);
 
     if (data?.items?.length > 0) {
-      const db = await indexedDbHelper.initIndexedDb(data.items[0].id);
-      indexedDbHelper.set(db);
       await history.push(`/project/${projectId}/work/${data.items[0].id}`);
     }
   };
