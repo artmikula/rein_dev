@@ -22,7 +22,7 @@ interface IFilter {
 }
 
 interface ITestScenarioSet {
-  get: (filter?: IFilter) => Promise<ISimpleTestScenario[] | Object[]>;
+  get: () => Promise<ISimpleTestScenario[] | Object[]>;
   delete: () => Promise<void>;
   add: (data: ISimpleTestScenario | ISimpleTestScenario[]) => Promise<void>;
 }

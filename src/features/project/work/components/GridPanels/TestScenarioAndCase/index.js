@@ -211,6 +211,7 @@ class TestScenarioAndCase extends Component {
 
       this._setColumnsAndRows(testCases, newTestScenarios, newGraphNodes);
 
+      /** TODO: remove this after finish implement indexedDb */
       // const newTestScenariosAndCases = newTestScenarios.map((x) => {
       //   const scenario = {
       //     ...x,
