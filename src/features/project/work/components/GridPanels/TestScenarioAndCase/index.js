@@ -53,13 +53,21 @@ class TestScenarioAndCase extends Component {
   }
 
   async componentDidMount() {
-    eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
+    const { dbContext } = this.props;
+    eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, async (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this.setState({
           isCheckAllTestScenarios: false,
           filterOptions: structuredClone(defaultFilterOptions),
           filterRows: undefined,
         });
+        if (dbContext && dbContext.db) {
+          const { testScenarios: testScenariosSet } = dbContext;
+          const testScenarios = await testScenariosSet.get();
+          if (testScenarios.length > 0) {
+            await testScenariosSet.delete();
+          }
+        }
         this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
@@ -108,9 +116,16 @@ class TestScenarioAndCase extends Component {
     eventBus.unsubscribe(this);
   }
 
-  _clearData = () => {
+  _clearData = async () => {
+    const { dbContext } = this.props;
     this._setColumnsAndRows([], [], []);
     this.setState({ isCheckAllTestScenarios: false, filterRows: undefined });
+    const { testScenarios: testScenariosSet } = dbContext;
+    const testScenarios = await testScenariosSet.get();
+    if (testScenarios.length > 0) {
+      await testScenariosSet.delete();
+    }
+    /** TODO: remove this after finish implement indexedDb */
     testScenarioAnsCaseStorage.set([]);
   };
 
@@ -124,8 +139,8 @@ class TestScenarioAndCase extends Component {
       if (!this.initiatedData && workLoaded) {
         const testScenarios = await testScenariosSet.get();
 
-        testScenarios.forEach(async (testScenario) => {
-          const testCases = await testCasesSet.getByTestScenario(testScenario.id);
+        const promises = testScenarios.map(async (testScenario) => {
+          const testCases = await testCasesSet.get(testCasesSet.table.testScenarioId.eq(testScenario.id));
 
           testCases.forEach((testCase) => {
             const testDatas = testCase.testDatas.map((x) => {
@@ -150,6 +165,8 @@ class TestScenarioAndCase extends Component {
           return testScenario;
         });
 
+        await Promise.all(promises);
+
         this.initiatedData = true;
         this._setColumnsAndRows(testCasesRows, testScenarios, graph.graphNodes);
       }
@@ -163,11 +180,6 @@ class TestScenarioAndCase extends Component {
 
     if (dbContext && dbContext.db) {
       const { testScenarios: testScenariosSet, testCases: testCasesSet } = dbContext;
-      const testScenarios = await testScenariosSet.get();
-      if (testScenarios.length > 0) {
-        await testScenariosSet.delete();
-      }
-
       if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
         scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(
           graph.graphLinks,
@@ -178,14 +190,16 @@ class TestScenarioAndCase extends Component {
         scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
       }
 
-      const newTestScenarioSet = scenarioAndGraphNodes.scenarios.map((scenario) => {
-        const _scenario = scenario;
-        _scenario.workId = workId;
-        return _scenario;
+      const testScenarioSet = scenarioAndGraphNodes.scenarios.map((testScenario) => {
+        const _testScenario = testScenario;
+        _testScenario.workId = workId;
+        _testScenario.isSelected = false;
+        _testScenario.isBaseScenario = Boolean(_testScenario.isBaseScenario);
+        return _testScenario;
       });
-      testScenariosSet.add(newTestScenarioSet);
+      await testScenariosSet.add(testScenarioSet);
 
-      const newTestScenarios = scenarioAndGraphNodes.scenarios.map((x) => {
+      const testScenarios = scenarioAndGraphNodes.scenarios.map((x) => {
         const scenario = {
           ...x,
           testAssertions: x.testAssertions.map((y) => {
@@ -207,9 +221,9 @@ class TestScenarioAndCase extends Component {
 
       const newGraphNodes = scenarioAndGraphNodes.graphNodes;
 
-      const testCases = testCaseHelper.updateTestCase(testCasesSet, newTestScenarios, testDatas, newGraphNodes);
+      const testCases = testCaseHelper.updateTestCase(testCasesSet, testScenarios, testDatas, newGraphNodes);
 
-      this._setColumnsAndRows(testCases, newTestScenarios, newGraphNodes);
+      this._setColumnsAndRows(testCases, testScenarios, newGraphNodes);
 
       // const newTestScenariosAndCases = newTestScenarios.map((x) => {
       //   const scenario = {

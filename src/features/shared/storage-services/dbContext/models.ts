@@ -1,40 +1,24 @@
 import lf from 'lovefield';
 import { ISimpleTestScenario, ITestCase } from 'types/models';
 
-interface IFilter {
-  select?: lf.schema.Column;
-  groupBy?: lf.schema.Column[];
-  innerJoin?: {
-    table?: lf.schema.Table;
-    predicate?: lf.Predicate;
-  };
-  leftOuterJoin?: {
-    table?: lf.schema.Table;
-    predicate?: lf.Predicate;
-  };
-  limit?: lf.Binder | number;
-  orderBy?: {
-    column?: lf.schema.Column;
-    order?: lf.Order;
-  };
-  skip?: lf.Binder | number;
-  where?: lf.Predicate;
+interface IDbSet {
+  get: (filter?: lf.Predicate) => Promise<Object[]>;
+  update: (columnName: string, value: any, filter: lf.Predicate) => Promise<Object[]>;
 }
 
-interface ITestScenarioSet {
-  get: (filter?: IFilter) => Promise<ISimpleTestScenario[] | Object[]>;
+interface ITestScenarioSet extends IDbSet {
   delete: () => Promise<void>;
-  add: (data: ISimpleTestScenario | ISimpleTestScenario[]) => Promise<void>;
+  add: (data: ISimpleTestScenario | ISimpleTestScenario[]) => Promise<Object[]>;
 }
 
-interface ITestCaseSet {
-  getByTestScenario: (testScenarioId: string) => Promise<ITestCase[] | Object[]>;
-  add: (data: ITestCase | ITestCase[]) => Promise<void>;
+interface ITestCaseSet extends IDbSet {
+  add: (data: ITestCase | ITestCase[]) => Promise<Object[]>;
 }
 
 interface IDbContext {
+  db: lf.Database | null;
   testScenarios: ITestScenarioSet | null;
   testCases: ITestCaseSet | null;
 }
 
-export type { ITestScenarioSet, ITestCaseSet, IDbContext, IFilter };
+export type { ITestScenarioSet, ITestCaseSet, IDbContext };

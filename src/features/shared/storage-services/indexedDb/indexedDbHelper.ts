@@ -8,9 +8,12 @@ class IndexedDbHelper {
     schemaBuilder
       .createTable(TABLES.TEST_SCENARIOS)
       .addColumn('id', lf.Type.STRING)
+      .addColumn('isBaseScenario', lf.Type.BOOLEAN)
       .addColumn('isEffectAssertion', lf.Type.BOOLEAN)
       .addColumn('isFeasible', lf.Type.BOOLEAN)
       .addColumn('isValid', lf.Type.BOOLEAN)
+      .addColumn('isSelected', lf.Type.BOOLEAN)
+      .addColumn('isViolated', lf.Type.BOOLEAN)
       .addColumn('result', lf.Type.BOOLEAN)
       .addColumn('resultType', lf.Type.STRING)
       .addColumn('scenarioType', lf.Type.STRING)
@@ -22,6 +25,7 @@ class IndexedDbHelper {
       .addColumn('testAssertions', lf.Type.OBJECT)
       .addColumn('testResults', lf.Type.OBJECT)
       .addColumn('workId', lf.Type.STRING)
+      .addNullable(['isViolated'])
       .addPrimaryKey(['id']);
 
     schemaBuilder
@@ -30,6 +34,7 @@ class IndexedDbHelper {
       .addColumn('results', lf.Type.STRING)
       .addColumn('testDatas', lf.Type.BOOLEAN)
       .addColumn('testScenarioId', lf.Type.STRING)
+      .addColumn('isSelected', lf.Type.BOOLEAN)
       .addPrimaryKey(['id'])
       .addForeignKey('fk_testScenarioId', {
         local: 'testScenarioId',
@@ -44,18 +49,11 @@ class IndexedDbHelper {
     db.close();
   }
 
-  async addData(db: lf.Database, table: lf.schema.Table, data: lf.Row[] | lf.Row) {
-    try {
-      if (Array.isArray(data)) {
-        const newRows = data.map((item) => table.createRow(item));
-        await db.insertOrReplace().into(table).values(newRows).exec();
-      } else {
-        const newRow = table.createRow(data);
-        await db.insertOrReplace().into(table).values([newRow]).exec();
-      }
-    } catch (error) {
-      console.log('err', error);
-    }
+  async addData(db: lf.Database, table: lf.schema.Table): Promise<lf.query.Insert> {
+    return db
+      .insertOrReplace()
+      .into(table)
+      .values([lf.bind(0)]);
   }
 
   async getTable(db: lf.Database, tableName: string): Promise<lf.schema.Table> {
@@ -65,6 +63,13 @@ class IndexedDbHelper {
 
   async deleteTable(db: lf.Database, table: lf.schema.Table) {
     await db.delete().from(table).exec();
+  }
+
+  updateByFilter(db: lf.Database, table: lf.schema.Table, columnName: string, filter?: lf.Predicate): lf.query.Update {
+    if (filter) {
+      return db.update(table).set(table[columnName], lf.bind(0)).where(filter);
+    }
+    return db.update(table).set(table[columnName], lf.bind(0));
   }
 }
 

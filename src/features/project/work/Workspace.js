@@ -84,10 +84,10 @@ class Workspace extends Component {
   }
 
   componentWillUnmount() {
+    this.unlisten();
     const { dbContext, setDbContext } = this.props;
     dbContext.close();
     setDbContext(null);
-    this.unlisten();
   }
 
   _orderCauseEffect = (causeEffects) => {

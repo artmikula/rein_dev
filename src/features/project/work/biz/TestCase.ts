@@ -44,7 +44,7 @@ class TestCase {
               testCasesOfScenario.length < TEST_CASE_LIMITATION ? testCasesOfScenario.length : TEST_CASE_LIMITATION;
             for (let k = 0; k < maxNumberOfTestCases; k++) {
               const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
-              testDataArray.forEach(async (data) => {
+              testDataArray.forEach((data) => {
                 const clone: ITestCase = this._clone(testCasesOfScenario[k]);
                 clone.id = uuid();
                 const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j]?.graphNodeId);
@@ -58,11 +58,13 @@ class TestCase {
                   });
                 }
                 if (clone.testDatas.length === causeAssertions.length) {
-                  await testCaseSet.add(clone);
+                  clone.isSelected = false;
+                  testCaseSet.add(clone);
                 }
                 tmp.push(clone);
               });
             }
+
             testCasesOfScenario = tmp;
           } else {
             const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
