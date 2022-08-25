@@ -1,25 +1,4 @@
-import lf from 'lovefield';
 import { ISimpleTestScenario, ITestCase } from 'types/models';
-
-interface IFilter {
-  select?: lf.schema.Column;
-  groupBy?: lf.schema.Column[];
-  innerJoin?: {
-    table?: lf.schema.Table;
-    predicate?: lf.Predicate;
-  };
-  leftOuterJoin?: {
-    table?: lf.schema.Table;
-    predicate?: lf.Predicate;
-  };
-  limit?: lf.Binder | number;
-  orderBy?: {
-    column?: lf.schema.Column;
-    order?: lf.Order;
-  };
-  skip?: lf.Binder | number;
-  where?: lf.Predicate;
-}
 
 interface ITestScenarioSet {
   get: () => Promise<ISimpleTestScenario[] | Object[]>;
@@ -37,4 +16,4 @@ interface IDbContext {
   testCases: ITestCaseSet | null;
 }
 
-export type { ITestScenarioSet, ITestCaseSet, IDbContext, IFilter };
+export type { ITestScenarioSet, ITestCaseSet, IDbContext };
