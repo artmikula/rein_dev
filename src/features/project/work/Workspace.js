@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import ProjectLayout from 'features/project/components/ProjectLayout';
-import { defaultTestCoverageData, setWork } from 'features/project/work/slices/workSlice';
+import { defaultTestCoverageData, setWork, setDbContext } from 'features/project/work/slices/workSlice';
 import { ModalForm } from 'features/shared/components';
 import alert from 'features/shared/components/Alert';
 import {
@@ -12,6 +12,7 @@ import {
   WORK_FORM_NAME,
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
+import DbContext from 'features/shared/storage-services/dbContext/DbContext';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import LocalStorage from 'features/shared/lib/localStorage';
@@ -84,22 +85,10 @@ class Workspace extends Component {
 
   componentWillUnmount() {
     this.unlisten();
+    const { dbContext, setDbContext } = this.props;
+    dbContext.close();
+    setDbContext(null);
   }
-
-  _convertTestScenarios = (testScenarios = [], graphNodes = []) =>
-    testScenarios.map((testScenario) => {
-      const { expectedResults } = testScenario;
-      const sourceTargetType = graphNodes.find((graphNode) => graphNode.nodeId === expectedResults)?.targetType;
-      return {
-        ...testScenario,
-        sourceTargetType,
-        testCases: testScenario.testCases.map((testCase) => ({
-          ...testCase,
-          testDatas: JSON.parse(testCase.testDatas),
-          results: JSON.parse(testCase.results),
-        })),
-      };
-    });
 
   _orderCauseEffect = (causeEffects) => {
     let causes = causeEffects.filter((x) => x.type === CLASSIFY.CAUSE);
@@ -157,11 +146,16 @@ class Workspace extends Component {
   };
 
   _getWorkById = async (projectId, workId) => {
-    const { setWork, history } = this.props;
+    const { setWork, history, setDbContext } = this.props;
     const result = await workService.getAsync(projectId, workId);
     let workData = {};
 
     testScenarioAnsCaseStorage.setId(workId);
+
+    const context = new DbContext();
+    await context.init(workId);
+    setDbContext(context);
+    // context.TS.get(filter);
 
     if (result.error) {
       let { message } = result.error;
@@ -302,6 +296,7 @@ class Workspace extends Component {
     const { viewMode, isLockedPanel, gridPanelLayout, formName, openRenameWorkModal } = this.state;
     const { workName, projectName } = this.props;
     const isSplitView = viewMode === VIEW_MODE.SPLIT;
+
     const menus = <MenuContainer />;
 
     return (
@@ -397,13 +392,21 @@ Workspace.propTypes = {
   workName: PropTypes.string.isRequired,
   projectName: PropTypes.string.isRequired,
   loadedWork: PropTypes.bool.isRequired,
+  setDbContext: PropTypes.func.isRequired,
+  dbContext: PropTypes.oneOfType([PropTypes.object]),
 };
 
-const mapDispatchToProps = { setWork };
+Workspace.defaultProps = {
+  dbContext: null,
+};
+
+const mapDispatchToProps = { setWork, setDbContext };
+
 const mapStateToProps = (state) => ({
   loadedWork: state.work.loaded,
   workName: state.work.name,
   projectName: state.work.projectName,
+  dbContext: state.work.dbContext,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Workspace);

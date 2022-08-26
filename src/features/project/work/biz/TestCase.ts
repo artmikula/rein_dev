@@ -2,6 +2,7 @@
 import { CLASSIFY, RESULT_TYPE, TEST_CASE_LIMITATION } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
 import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario } from 'types/models';
+import { ITestCaseSet } from 'features/shared/storage-services/dbContext/models';
 import testDataService from './TestData';
 
 interface ITestDataList {
@@ -18,6 +19,7 @@ interface ITestDataList {
 
 class TestCase {
   updateTestCase(
+    testCaseSet: ITestCaseSet,
     testScenarios: ISimpleTestScenario[] = [],
     testDataList: ITestDataList[] = [],
     graphNodes: IGraphNode[] = []
@@ -55,6 +57,10 @@ class TestCase {
                     nodeId: causeAssertions[j]?.nodeId,
                   });
                 }
+                if (clone.testDatas.length === causeAssertions.length) {
+                  clone.isSelected = false;
+                  testCaseSet.add(clone);
+                }
                 tmp.push(clone);
               });
             }
@@ -67,7 +73,7 @@ class TestCase {
                 id: uuid(),
                 testScenarioId: testScenarios[i].id,
                 // testScenario: { ...testScenarios[i] },
-                testDatas: [{ graphNodeId: causeAssertions[j]?.graphNodeId, data }],
+                testDatas: [{ graphNodeId: causeAssertions[j]?.graphNodeId, data, nodeId: causeAssertions[j]?.nodeId }],
                 results: [],
               };
               if (testScenarios[i].resultType === RESULT_TYPE.False) {
