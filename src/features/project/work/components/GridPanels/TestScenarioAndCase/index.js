@@ -237,11 +237,12 @@ class TestScenarioAndCase extends Component {
       // testScenarioAnsCaseStorage.set(newTestScenariosAndCases);
       setGraph({ ...graph, graphNodes: newGraphNodes });
 
-    this._raiseEvent({
-      action: domainAction,
-      value: newGraphNodes,
-      receivers: [domainEvents.DES.GRAPH, domainEvents.DES.SSMETRIC],
-    });
+      this._raiseEvent({
+        action: domainAction,
+        value: newGraphNodes,
+        receivers: [domainEvents.DES.GRAPH, domainEvents.DES.SSMETRIC],
+      });
+    }
   };
 
   _raiseEvent = (message) => {
