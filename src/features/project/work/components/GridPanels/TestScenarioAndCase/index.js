@@ -216,7 +216,7 @@ class TestScenarioAndCase extends Component {
 
       const newGraphNodes = scenarioAndGraphNodes.graphNodes;
 
-      const testCases = testCaseHelper.updateTestCase(testCaseSet, testScenarios, testDatas, newGraphNodes);
+      const testCases = testCaseHelper.updateTestCase(testCaseSet, newTestScenarios, testDatas, newGraphNodes);
 
       this._setColumnsAndRows(testCases, newTestScenarios, newGraphNodes);
 
