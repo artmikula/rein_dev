@@ -124,7 +124,6 @@ interface ITestCase {
   results: string[];
   testDatas: ITestData[];
   isSelected?: boolean;
-  testScenario?: ISimpleTestScenario;
 }
 
 export class SimpleTestScenario implements ISimpleTestScenario {

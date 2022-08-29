@@ -171,7 +171,7 @@ export default function Range({ value, kiloValue, className, onChange, editable,
           />
         ) : (
           <span ref={labelRef} className={`position-absolute value ${!editable ? 'd-block' : 'd-none'}`}>
-            {value.toFixed(1)}
+            {value?.toFixed(1) ?? 0}
           </span>
         )}
       </div>

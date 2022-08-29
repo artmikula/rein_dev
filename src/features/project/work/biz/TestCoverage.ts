@@ -1,24 +1,21 @@
 /* eslint-disable max-lines */
 import { COMPLEX_LOGICAL, COVERAGE_ASPECT, GRAPH_NODE_TYPE } from 'features/shared/constants';
-import { ITestDataDetail, IGraphLink, IGraphNode, ISimpleTestScenario, ITestAssertion, ITestData } from 'types/models';
+import {
+  ITestDataDetail,
+  IGraphLink,
+  IGraphNode,
+  ISimpleTestScenario,
+  ITestAssertion,
+  ITestData,
+  ITestCase,
+} from 'types/models';
 import appConfig from 'features/shared/lib/appConfig';
 import Enumerable from 'linq';
 import TestCase from './TestCase';
 
-interface ITestCoverage {
+interface ITestCoverageResult {
   numerator: number;
   denominator: number;
-}
-
-interface ITestCase {
-  id: string;
-  testScenarioId: string;
-  workId: string;
-  isChecked: boolean;
-  isSelected: boolean;
-  results: string[];
-  testDatas: ITestData[];
-  testScenario?: ISimpleTestScenario;
 }
 
 interface ITestCoverageReportData {
@@ -41,6 +38,10 @@ interface ITestCoverageReport {
   name: string;
 }
 
+interface ITestScenario extends ISimpleTestScenario {
+  testCases: ITestCase[];
+}
+
 class TestCoverage {
   graphLinks: IGraphLink[];
 
@@ -52,7 +53,7 @@ class TestCoverage {
 
   testCases: ITestCase[];
 
-  testScenarios: ISimpleTestScenario[];
+  testScenarios: ITestScenario[];
 
   testDatas: ITestDataDetail[];
 
@@ -66,17 +67,23 @@ class TestCoverage {
     this.testDatas = [];
   }
 
-  initValue(graphNodes = [], testCases = [], testScenarios = [], graphLinks = [], testDatas = []) {
-    this.graphNodes = [...graphNodes];
-    this.testCases = [...testCases];
-    this.causeNodes = this.graphNodes.filter((x) => x.type === GRAPH_NODE_TYPE.CAUSE);
-    this.effectNodes = this.graphNodes.filter((x) => x.type === GRAPH_NODE_TYPE.EFFECT);
-    this.testScenarios = [...testScenarios];
-    this.graphLinks = [...graphLinks];
-    this.testDatas = [...testDatas];
+  initValue(
+    graphNodes: IGraphNode[] = [],
+    testCases: ITestCase[] = [],
+    testScenarios: ITestScenario[] = [],
+    graphLinks: IGraphLink[] = [],
+    testDatas: ITestDataDetail[] = []
+  ) {
+    this.graphNodes = graphNodes.slice();
+    this.testCases = testCases.slice();
+    this.causeNodes = this.graphNodes.filter((graphNode) => graphNode.type === GRAPH_NODE_TYPE.CAUSE);
+    this.effectNodes = this.graphNodes.filter((graphNode) => graphNode.type === GRAPH_NODE_TYPE.EFFECT);
+    this.testScenarios = testScenarios.slice();
+    this.graphLinks = graphLinks.slice();
+    this.testDatas = testDatas.slice();
   }
 
-  calculateCoverage(aspect: string): ITestCoverage {
+  calculateCoverage(aspect: string): ITestCoverageResult {
     switch (aspect) {
       case COVERAGE_ASPECT.TestCase:
         return this.calculateCoverageByTestCase();
@@ -101,7 +108,7 @@ class TestCoverage {
     }
   }
 
-  calculateCoverageByTestCase(): ITestCoverage {
+  calculateCoverageByTestCase(): ITestCoverageResult {
     const casesCount: number = this.testCases.length;
     const checkedCasesCount: number = this.testCases.filter((testCase) => testCase.isSelected).length;
 
@@ -111,15 +118,18 @@ class TestCoverage {
     };
   }
 
-  calculateCoverageByCause(): ITestCoverage {
+  calculateCoverageByCause(): ITestCoverageResult {
     const causes: number = this.causeNodes.length;
     const trueCauses: ITestAssertion[] = [];
     const falseCauses: ITestAssertion[] = [];
 
     const selectedTestCases = this.testCases.filter((selectedTestCase) => selectedTestCase.isSelected);
     selectedTestCases.forEach((selectedTestCase) => {
-      const testAssertions: ITestAssertion[] | undefined = selectedTestCase.testScenario?.testAssertions.filter(
-        (testAssertion) => this.causeNodes.some((causeNode) => causeNode.id === testAssertion.graphNodeId)
+      const testScenario: ITestScenario | undefined = this.testScenarios.find(
+        (testScenario) => testScenario.id === selectedTestCase.testScenarioId
+      );
+      const testAssertions: ITestAssertion[] | undefined = testScenario?.testAssertions.filter((testAssertion) =>
+        this.causeNodes.some((causeNode) => causeNode.id === testAssertion.graphNodeId)
       );
 
       if (testAssertions) {
@@ -153,7 +163,7 @@ class TestCoverage {
     };
   }
 
-  calculateCoverageByCauseTestData(): ITestCoverage {
+  calculateCoverageByCauseTestData(): ITestCoverageResult {
     const causesCount: number = this.causeNodes.length;
     const trueCauses: string[] = [];
     const falseCauses: string[] = [];
@@ -163,8 +173,11 @@ class TestCoverage {
 
     const selectedTestCases: ITestCase[] = this.testCases.filter((testCase) => testCase.isSelected);
     selectedTestCases.forEach((selectedTestCase) => {
-      const testAssertions: ITestAssertion[] | undefined = selectedTestCase.testScenario?.testAssertions.filter(
-        (testAssertion) => this.causeNodes.some((causeNode) => causeNode.id === testAssertion.graphNodeId)
+      const testScenario: ITestScenario | undefined = this.testScenarios.find(
+        (testScenario) => testScenario.id === selectedTestCase.testScenarioId
+      );
+      const testAssertions: ITestAssertion[] | undefined = testScenario?.testAssertions.filter((testAssertion) =>
+        this.causeNodes.some((causeNode) => causeNode.id === testAssertion.graphNodeId)
       );
 
       if (testAssertions && testAssertions.length > 0) {
@@ -243,7 +256,7 @@ class TestCoverage {
     };
   }
 
-  calculateCoverageByEffect(): ITestCoverage {
+  calculateCoverageByEffect(): ITestCoverageResult {
     const effects: number = this.effectNodes.length;
     const unCheckedCases: ITestCase[] = this.testCases.filter((x) => !x.isSelected);
     const notConnectedEffects: IGraphNode[] = this.effectNodes.filter(
@@ -252,8 +265,11 @@ class TestCoverage {
     const exceptedEffects: Map<string, string> = new Map();
 
     unCheckedCases.forEach((unCheckedCase) => {
+      const testScenario: ITestScenario | undefined = this.testScenarios.find(
+        (testScenario) => testScenario.id === unCheckedCase.testScenarioId
+      );
       const results: IGraphNode | undefined = this.effectNodes.find(
-        (effectNode) => effectNode.id === unCheckedCase.testScenario?.targetGraphNodeId
+        (effectNode) => effectNode.id === testScenario?.targetGraphNodeId
       );
 
       if (results) {
@@ -275,7 +291,7 @@ class TestCoverage {
     };
   }
 
-  calculateCoverageByComplexLogicalRelation(): ITestCoverage {
+  calculateCoverageByComplexLogicalRelation(): ITestCoverageResult {
     const causes: IGraphNode[] = this._findComplexCauses();
     const causesIds: string[] = causes.map((cause) => cause.id);
     const testCasesContainsCauses: ITestCase[] = this.testCases.filter((testCase) =>
@@ -299,9 +315,9 @@ class TestCoverage {
     };
   }
 
-  calculateCoverageByScenario(): ITestCoverage {
+  calculateCoverageByScenario(): ITestCoverageResult {
     const scenariosCount: number = this.testScenarios.length;
-    const checkedScenariosCount: number = this.testScenarios.filter((x) => x.isSelected).length;
+    const checkedScenariosCount: number = this.testScenarios.filter((testScenario) => testScenario.isSelected).length;
 
     return {
       numerator: checkedScenariosCount,
@@ -309,12 +325,15 @@ class TestCoverage {
     };
   }
 
-  calculateCoverageByBaseScenario(): ITestCoverage {
+  calculateCoverageByBaseScenario(): ITestCoverageResult {
     let cases: number = 0.0;
     let checkedCases: number = 0.0;
 
     this.testCases.forEach((testCase) => {
-      if (testCase.testScenario?.isBaseScenario) {
+      const testScenario: ITestScenario | undefined = this.testScenarios.find(
+        (testScenario) => testScenario.id === testCase.testScenarioId
+      );
+      if (testScenario?.isBaseScenario) {
         cases += 1.0;
         if (testCase.isSelected) {
           checkedCases += 1.0;
@@ -328,12 +347,15 @@ class TestCoverage {
     };
   }
 
-  calculateCoverageByValidScenario(): ITestCoverage {
+  calculateCoverageByValidScenario(): ITestCoverageResult {
     let cases: number = 0.0;
     let checkedCases: number = 0.0;
 
     this.testCases.forEach((testCase) => {
-      if (testCase.testScenario?.isValid) {
+      const testScenario: ITestScenario | undefined = this.testScenarios.find(
+        (testScenario) => testScenario.id === testCase.testScenarioId
+      );
+      if (testScenario?.isValid) {
         cases += 1.0;
         if (testCase.isSelected) {
           checkedCases += 1.0;
@@ -347,12 +369,15 @@ class TestCoverage {
     };
   }
 
-  calculateCoverageByInvalidScenario(): ITestCoverage {
+  calculateCoverageByInvalidScenario(): ITestCoverageResult {
     let cases: number = 0.0;
     let checkedCases: number = 0.0;
 
     this.testCases.forEach((testCase) => {
-      if (!testCase.testScenario?.isValid) {
+      const testScenario: ITestScenario | undefined = this.testScenarios.find(
+        (testScenario) => testScenario.id === testCase.testScenarioId
+      );
+      if (!testScenario?.isValid) {
         cases += 1.0;
         if (testCase.isSelected) {
           checkedCases += 1.0;
