@@ -7,7 +7,7 @@ interface IDbSet {
 }
 
 interface ITestScenarioSet extends IDbSet {
-  delete: () => Promise<void>;
+  delete: () => Promise<Object[]>;
   add: (data: ISimpleTestScenario | ISimpleTestScenario[]) => Promise<Object[]>;
 }
 
@@ -17,8 +17,8 @@ interface ITestCaseSet extends IDbSet {
 
 interface IDbContext {
   db: lf.Database | null;
-  testScenarios: ITestScenarioSet | null;
-  testCases: ITestCaseSet | null;
+  testScenarioSet: ITestScenarioSet | null;
+  testCaseSet: ITestCaseSet | null;
 }
 
 export type { ITestScenarioSet, ITestCaseSet, IDbContext };

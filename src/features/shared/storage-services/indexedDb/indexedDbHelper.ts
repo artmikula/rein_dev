@@ -61,8 +61,8 @@ class IndexedDbHelper {
     return tbl;
   }
 
-  async deleteTable(db: lf.Database, table: lf.schema.Table) {
-    await db.delete().from(table).exec();
+  async deleteTable(db: lf.Database, table: lf.schema.Table): Promise<Object[]> {
+    return db.delete().from(table).exec();
   }
 
   updateByFilter(db: lf.Database, table: lf.schema.Table, columnName: string, filter?: lf.Predicate): lf.query.Update {

@@ -71,6 +71,9 @@ class Workspace extends Component {
       const newProjectId = routes.pop();
 
       if (projectId !== newProjectId || workId !== newWorkid) {
+        const { dbContext, setDbContext } = this.props;
+        dbContext.close();
+        setDbContext(null);
         window.location.reload();
       }
     });
@@ -85,9 +88,6 @@ class Workspace extends Component {
 
   componentWillUnmount() {
     this.unlisten();
-    const { dbContext, setDbContext } = this.props;
-    dbContext.close();
-    setDbContext(null);
   }
 
   _orderCauseEffect = (causeEffects) => {
@@ -155,7 +155,6 @@ class Workspace extends Component {
     const context = new DbContext();
     await context.init(workId);
     setDbContext(context);
-    // context.TS.get(filter);
 
     if (result.error) {
       let { message } = result.error;
@@ -296,7 +295,6 @@ class Workspace extends Component {
     const { viewMode, isLockedPanel, gridPanelLayout, formName, openRenameWorkModal } = this.state;
     const { workName, projectName } = this.props;
     const isSplitView = viewMode === VIEW_MODE.SPLIT;
-
     const menus = <MenuContainer />;
 
     return (

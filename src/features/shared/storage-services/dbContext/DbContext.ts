@@ -6,16 +6,16 @@ import TestCaseSet from './TestCaseSet';
 import TestScenarioSet from './TestScenarioSet';
 
 export default class DbContext implements IDbContext {
-  testScenarios: ITestScenarioSet | null;
+  testScenarioSet: ITestScenarioSet | null;
 
-  testCases: ITestCaseSet | null;
+  testCaseSet: ITestCaseSet | null;
 
   db: lf.Database | null;
 
   constructor() {
     this.db = null;
-    this.testScenarios = null;
-    this.testCases = null;
+    this.testScenarioSet = null;
+    this.testCaseSet = null;
   }
 
   async init(workId: string) {
@@ -23,18 +23,17 @@ export default class DbContext implements IDbContext {
     if (this.db) {
       const tblTestScenario = await indexedDbHelper.getTable(this.db, TABLES.TEST_SCENARIOS);
       const tblTestCase = await indexedDbHelper.getTable(this.db, TABLES.TEST_CASES);
-      this.testScenarios = new TestScenarioSet(this.db, tblTestScenario);
-      this.testCases = new TestCaseSet(this.db, tblTestCase);
+      this.testScenarioSet = new TestScenarioSet(this.db, tblTestScenario);
+      this.testCaseSet = new TestCaseSet(this.db, tblTestCase);
     }
   }
 
   close() {
-    console.log('close');
     if (this.db) {
       indexedDbHelper.close(this.db);
       this.db = null;
-      this.testScenarios = null;
-      this.testCases = null;
+      this.testScenarioSet = null;
+      this.testCaseSet = null;
     }
   }
 }
