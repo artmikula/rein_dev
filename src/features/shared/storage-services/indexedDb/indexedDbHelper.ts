@@ -8,9 +8,12 @@ class IndexedDbHelper {
     schemaBuilder
       .createTable(TABLES.TEST_SCENARIOS)
       .addColumn('id', lf.Type.STRING)
+      .addColumn('isBaseScenario', lf.Type.BOOLEAN)
       .addColumn('isEffectAssertion', lf.Type.BOOLEAN)
       .addColumn('isFeasible', lf.Type.BOOLEAN)
       .addColumn('isValid', lf.Type.BOOLEAN)
+      .addColumn('isSelected', lf.Type.BOOLEAN)
+      .addColumn('isViolated', lf.Type.BOOLEAN)
       .addColumn('result', lf.Type.BOOLEAN)
       .addColumn('resultType', lf.Type.STRING)
       .addColumn('scenarioType', lf.Type.STRING)
@@ -22,6 +25,7 @@ class IndexedDbHelper {
       .addColumn('testAssertions', lf.Type.OBJECT)
       .addColumn('testResults', lf.Type.OBJECT)
       .addColumn('workId', lf.Type.STRING)
+      .addNullable(['isViolated'])
       .addPrimaryKey(['id']);
 
     schemaBuilder
@@ -63,8 +67,8 @@ class IndexedDbHelper {
     return tbl;
   }
 
-  async deleteTable(db: lf.Database, table: lf.schema.Table) {
-    await db.delete().from(table).exec();
+  async deleteTable(db: lf.Database, table: lf.schema.Table): Promise<Object[]> {
+    return db.delete().from(table).exec();
   }
 }
 

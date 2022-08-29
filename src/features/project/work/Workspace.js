@@ -71,6 +71,9 @@ class Workspace extends Component {
       const newProjectId = routes.pop();
 
       if (projectId !== newProjectId || workId !== newWorkid) {
+        const { dbContext, setDbContext } = this.props;
+        dbContext.close();
+        setDbContext(null);
         window.location.reload();
       }
     });
@@ -84,9 +87,6 @@ class Workspace extends Component {
   }
 
   componentWillUnmount() {
-    const { dbContext, setDbContext } = this.props;
-    dbContext.close();
-    setDbContext(null);
     this.unlisten();
   }
 

@@ -53,14 +53,14 @@ class TestScenarioAndCase extends Component {
   }
 
   async componentDidMount() {
-    eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, async (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this.setState({
           isCheckAllTestScenarios: false,
           filterOptions: structuredClone(defaultFilterOptions),
           filterRows: undefined,
         });
-        this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
+        await this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
         event.message.action !== domainEvents.ACTION.GRAPH_ALIGN
@@ -74,9 +74,9 @@ class TestScenarioAndCase extends Component {
       this._handleShortCutEvents(code);
     });
 
-    eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, async (event) => {
       if (event.message.action === domainEvents.ACTION.UPDATE) {
-        this._calculateTestScenarioAndCase(domainEvents.ACTION.UPDATE);
+        await this._calculateTestScenarioAndCase(domainEvents.ACTION.UPDATE);
       }
     });
 
@@ -97,35 +97,37 @@ class TestScenarioAndCase extends Component {
         });
       }
     });
-    this._initData();
-  }
-
-  componentDidUpdate() {
-    this._initData();
+    await this._getData();
   }
 
   componentWillUnmount() {
     eventBus.unsubscribe(this);
   }
 
-  _clearData = () => {
+  _clearData = async () => {
+    const { dbContext } = this.props;
     this._setColumnsAndRows([], [], []);
     this.setState({ isCheckAllTestScenarios: false, filterRows: undefined });
+
+    const { testScenarioSet } = dbContext;
+    await testScenarioSet.delete();
+
+    /** TODO: remove this after finish implement indexedDb */
     testScenarioAnsCaseStorage.set([]);
   };
 
-  _initData = async () => {
+  _getData = async () => {
     const { graph, workLoaded, dbContext } = this.props;
     const testCasesRows = [];
 
     if (dbContext && dbContext.db) {
-      const { testScenarios: testScenariosSet, testCases: testCasesSet } = dbContext;
+      const { testScenarioSet, testCaseSet } = dbContext;
 
       if (!this.initiatedData && workLoaded) {
-        const testScenarios = await testScenariosSet.get();
+        const testScenarios = await testScenarioSet.get();
 
-        testScenarios.forEach(async (testScenario) => {
-          const testCases = await testCasesSet.getByTestScenario(testScenario.id);
+        const promises = testScenarios.forEach(async (testScenario) => {
+          const testCases = await testCaseSet.getByTestScenario(testScenario.id);
 
           testCases.forEach((testCase) => {
             const testDatas = testCase.testDatas.map((x) => {
@@ -145,10 +147,12 @@ class TestScenarioAndCase extends Component {
             });
           });
 
-          // eslint-disable-next-line no-param-reassign
-          testScenario.testCases = testCases;
-          return testScenario;
+          const _testScenario = testScenario;
+          _testScenario.testCases = testCases;
+          return _testScenario;
         });
+
+        await Promise.all(promises);
 
         this.initiatedData = true;
         this._setColumnsAndRows(testCasesRows, testScenarios, graph.graphNodes);
@@ -162,11 +166,8 @@ class TestScenarioAndCase extends Component {
     let scenarioAndGraphNodes = null;
 
     if (dbContext && dbContext.db) {
-      const { testScenarios: testScenariosSet, testCases: testCasesSet } = dbContext;
-      const testScenarios = await testScenariosSet.get();
-      if (testScenarios.length > 0) {
-        await testScenariosSet.delete();
-      }
+      const { testScenarioSet, testCaseSet } = dbContext;
+      await testScenarioSet.delete();
 
       if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
         scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(
@@ -178,12 +179,14 @@ class TestScenarioAndCase extends Component {
         scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
       }
 
-      const newTestScenarioSet = scenarioAndGraphNodes.scenarios.map((scenario) => {
-        const _scenario = scenario;
-        _scenario.workId = workId;
-        return _scenario;
+      const testScenarios = scenarioAndGraphNodes.scenarios.map((testScenario) => {
+        const _testScenario = testScenario;
+        _testScenario.workId = workId;
+        _testScenario.isSelected = Boolean(_testScenario.isSelected);
+        _testScenario.isBaseScenario = Boolean(_testScenario.isBaseScenario);
+        return _testScenario;
       });
-      testScenariosSet.add(newTestScenarioSet);
+      await testScenarioSet.add(testScenarios);
 
       const newTestScenarios = scenarioAndGraphNodes.scenarios.map((x) => {
         const scenario = {
@@ -207,7 +210,7 @@ class TestScenarioAndCase extends Component {
 
       const newGraphNodes = scenarioAndGraphNodes.graphNodes;
 
-      const testCases = testCaseHelper.updateTestCase(testCasesSet, newTestScenarios, testDatas, newGraphNodes);
+      const testCases = testCaseHelper.updateTestCase(testCaseSet, testScenarios, testDatas, newGraphNodes);
 
       this._setColumnsAndRows(testCases, newTestScenarios, newGraphNodes);
 

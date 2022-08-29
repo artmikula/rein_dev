@@ -123,6 +123,7 @@ interface ITestCase {
   testScenarioId: string;
   results: string[];
   testDatas: ITestData[];
+  isSelected?: boolean;
   testScenario?: ISimpleTestScenario;
 }
 

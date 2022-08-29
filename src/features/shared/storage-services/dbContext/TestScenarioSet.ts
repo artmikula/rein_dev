@@ -1,28 +1,31 @@
 import lf from 'lovefield';
 import { ISimpleTestScenario } from 'types/models';
-import { TABLES } from '../indexedDb/constants';
 import indexedDbHelper from '../indexedDb/indexedDbHelper';
 import { ITestScenarioSet } from './models';
 
 export default class TestScenarioSet implements ITestScenarioSet {
   db: lf.Database;
 
-  constructor(db: lf.Database) {
+  table: lf.schema.Table;
+
+  constructor(db: lf.Database, table: lf.schema.Table) {
     this.db = db;
+    this.table = table;
   }
 
   async get(): Promise<ISimpleTestScenario[] | Object[]> {
-    const tbl = await indexedDbHelper.getTable(this.db, TABLES.TEST_SCENARIOS);
-    return this.db.select().from(tbl).exec();
+    return this.db.select().from(this.table).exec();
   }
 
-  async delete(): Promise<void> {
-    const tbl = await indexedDbHelper.getTable(this.db, TABLES.TEST_SCENARIOS);
-    return indexedDbHelper.deleteTable(this.db, tbl);
+  async delete(): Promise<Object[]> {
+    const testScenarios = await this.get();
+    if (testScenarios.length > 0) {
+      return indexedDbHelper.deleteTable(this.db, this.table);
+    }
+    return [];
   }
 
   async add(data: ISimpleTestScenario | ISimpleTestScenario[]) {
-    const tbl = await indexedDbHelper.getTable(this.db, TABLES.TEST_SCENARIOS);
-    return indexedDbHelper.addData(this.db, tbl, data);
+    return indexedDbHelper.addData(this.db, this.table, data);
   }
 }

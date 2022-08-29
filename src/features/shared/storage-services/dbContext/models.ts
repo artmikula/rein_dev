@@ -2,7 +2,7 @@ import { ISimpleTestScenario, ITestCase } from 'types/models';
 
 interface ITestScenarioSet {
   get: () => Promise<ISimpleTestScenario[] | Object[]>;
-  delete: () => Promise<void>;
+  delete: () => Promise<Object[]>;
   add: (data: ISimpleTestScenario | ISimpleTestScenario[]) => Promise<void>;
 }
 
@@ -12,8 +12,8 @@ interface ITestCaseSet {
 }
 
 interface IDbContext {
-  testScenarios: ITestScenarioSet | null;
-  testCases: ITestCaseSet | null;
+  testScenarioSet: ITestScenarioSet | null;
+  testCaseSet: ITestCaseSet | null;
 }
 
 export type { ITestScenarioSet, ITestCaseSet, IDbContext };
