@@ -56,7 +56,7 @@ function TableTestScenarioAndCase(props) {
   const _handleCheckedAll = useCallback(
     async (checked) => {
       if (dbContext && dbContext.db) {
-        const { testScenarios: testScenariosSet, testCases: testCasesSet } = dbContext;
+        const { testScenarioSet, testCaseSet } = dbContext;
         const newRows = rows.slice();
         newRows.forEach((row) => {
           const _row = row;
@@ -71,8 +71,8 @@ function TableTestScenarioAndCase(props) {
         _getGroupByEffectNodes(filterRows ?? newRows);
         setRows(newRows);
 
-        await testScenariosSet.update('isSelected', checked);
-        await testCasesSet.update('isSelected', checked);
+        await testScenarioSet.update('isSelected', checked);
+        await testCaseSet.update('isSelected', checked);
       }
 
       /** TODO: remove this after finish implement indexedDb */
