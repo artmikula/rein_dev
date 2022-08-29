@@ -100,6 +100,12 @@ class TestScenarioAndCase extends Component {
     await this._getData();
   }
 
+  async componentDidUpdate() {
+    if (!this.initiatedData) {
+      await this._getData();
+    }
+  }
+
   componentWillUnmount() {
     eventBus.unsubscribe(this);
   }
@@ -126,7 +132,7 @@ class TestScenarioAndCase extends Component {
       if (!this.initiatedData && workLoaded) {
         const testScenarios = await testScenarioSet.get();
 
-        const promises = testScenarios.forEach(async (testScenario) => {
+        const promises = testScenarios.map(async (testScenario) => {
           const testCases = await testCaseSet.getByTestScenario(testScenario.id);
 
           testCases.forEach((testCase) => {
