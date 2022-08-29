@@ -13,10 +13,15 @@ export default class TestScenarioSet implements ITestScenarioSet {
     this.table = table;
   }
 
-  async get(): Promise<ISimpleTestScenario[] | Object[]> {
+  /** get all or get by filter */
+  async get(filter?: lf.Predicate): Promise<Object[]> {
+    if (filter) {
+      return this.db.select().from(this.table).where(filter).exec();
+    }
     return this.db.select().from(this.table).exec();
   }
 
+  /** delete all table */
   async delete(): Promise<Object[]> {
     const testScenarios = await this.get();
     if (testScenarios.length > 0) {
@@ -25,7 +30,14 @@ export default class TestScenarioSet implements ITestScenarioSet {
     return [];
   }
 
+  /** add all rows to table */
   async add(data: ISimpleTestScenario | ISimpleTestScenario[]) {
-    return indexedDbHelper.addData(this.db, this.table, data);
+    const query = await indexedDbHelper.addData(this.db, this.table);
+    if (Array.isArray(data)) {
+      return data.map((item) => {
+        return query.bind([this.table.createRow(item)]).exec();
+      });
+    }
+    return query.bind([this.table.createRow(data)]).exec();
   }
 }

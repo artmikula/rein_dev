@@ -13,12 +13,22 @@ export default class TestCaseSet implements ITestCaseSet {
     this.table = table;
   }
 
-  async getByTestScenario(testScenarioId: string): Promise<ITestCase[] | Object[]> {
-    const result = await this.db.select().from(this.table).where(this.table.testScenarioId.eq(testScenarioId)).exec();
-    return result;
+  /** get all or get by filter */
+  async get(filter?: lf.Predicate): Promise<Object[]> {
+    if (filter) {
+      return this.db.select().from(this.table).where(filter).exec();
+    }
+    return this.db.select().from(this.table).exec();
   }
 
+  /** add all rows to table */
   async add(data: ITestCase | ITestCase[]) {
-    return indexedDbHelper.addData(this.db, this.table, data);
+    const query = await indexedDbHelper.addData(this.db, this.table);
+    if (Array.isArray(data)) {
+      return data.map((item) => {
+        return query.bind([this.table.createRow(item)]).exec();
+      });
+    }
+    return query.bind([this.table.createRow(data)]).exec();
   }
 }

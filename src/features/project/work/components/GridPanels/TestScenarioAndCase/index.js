@@ -133,7 +133,7 @@ class TestScenarioAndCase extends Component {
         const testScenarios = await testScenarioSet.get();
 
         const promises = testScenarios.map(async (testScenario) => {
-          const testCases = await testCaseSet.getByTestScenario(testScenario.id);
+          const testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));
 
           testCases.forEach((testCase) => {
             const testDatas = testCase.testDatas.map((x) => {

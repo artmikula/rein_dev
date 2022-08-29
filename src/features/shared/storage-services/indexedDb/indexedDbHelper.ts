@@ -34,6 +34,7 @@ class IndexedDbHelper {
       .addColumn('results', lf.Type.STRING)
       .addColumn('testDatas', lf.Type.BOOLEAN)
       .addColumn('testScenarioId', lf.Type.STRING)
+      .addColumn('isSelected', lf.Type.BOOLEAN)
       .addPrimaryKey(['id'])
       .addForeignKey('fk_testScenarioId', {
         local: 'testScenarioId',
@@ -48,18 +49,11 @@ class IndexedDbHelper {
     db.close();
   }
 
-  async addData(db: lf.Database, table: lf.schema.Table, data: lf.Row[] | lf.Row) {
-    try {
-      if (Array.isArray(data)) {
-        const newRows = data.map((item) => table.createRow(item));
-        await db.insertOrReplace().into(table).values(newRows).exec();
-      } else {
-        const newRow = table.createRow(data);
-        await db.insertOrReplace().into(table).values([newRow]).exec();
-      }
-    } catch (error) {
-      console.log('err', error);
-    }
+  async addData(db: lf.Database, table: lf.schema.Table): Promise<lf.query.Insert> {
+    return db
+      .insertOrReplace()
+      .into(table)
+      .values([lf.bind(0)]);
   }
 
   async getTable(db: lf.Database, tableName: string): Promise<lf.schema.Table> {
