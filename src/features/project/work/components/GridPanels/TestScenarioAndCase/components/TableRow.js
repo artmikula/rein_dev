@@ -59,9 +59,9 @@ function TableRow(props) {
   const _handleTestScenarioChecked = useCallback(
     async (scenarioId, checked, selfUpdate = true) => {
       if (dbContext && dbContext.db) {
-        const { testScenarios: testScenariosSet, testCases: testCasesSet } = dbContext;
-        await testScenariosSet.update('isSelected', checked, testScenariosSet.table.id.eq(scenarioId));
-        await testCasesSet.update('isSelected', checked, testCasesSet.table.testScenarioId.eq(scenarioId));
+        const { testScenarioSet, testCaseSet } = dbContext;
+        await testScenarioSet.update('isSelected', checked, testScenarioSet.table.id.eq(scenarioId));
+        await testCaseSet.update('isSelected', checked, testCaseSet.table.testScenarioId.eq(scenarioId));
         if (selfUpdate) {
           const newRows = rows.slice();
           const tsRow = newRows.find((row) => row.id === scenarioId);
@@ -97,15 +97,15 @@ function TableRow(props) {
   const _handleTestCaseChecked = useCallback(
     async (scenarioId, caseId, checked) => {
       if (dbContext && dbContext.db) {
-        const { testScenarios: testScenariosSet, testCases: testCasesSet } = dbContext;
-        const filter = lf.op.and(testCasesSet.table.testScenarioId.eq(scenarioId), testCasesSet.table.id.eq(caseId));
-        await testCasesSet.update('isSelected', checked, filter);
-        const testCases = await testCasesSet.get(testCasesSet.table.testScenarioId.eq(scenarioId));
+        const { testScenarioSet, testCaseSet } = dbContext;
+        const filter = lf.op.and(testCaseSet.table.testScenarioId.eq(scenarioId), testCaseSet.table.id.eq(caseId));
+        await testCaseSet.update('isSelected', checked, filter);
+        const testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(scenarioId));
         if (testCases.length > 0) {
           const isCheckedAll = testCases.every((testCase) => testCase.isSelected);
-          await testScenariosSet.update('isSelected', isCheckedAll, testScenariosSet.table.id.eq(scenarioId));
+          await testScenarioSet.update('isSelected', isCheckedAll, testScenarioSet.table.id.eq(scenarioId));
         }
-        const testScenarios = await testScenariosSet.get(testScenariosSet.table.id.eq(scenarioId));
+        const testScenarios = await testScenarioSet.get(testScenarioSet.table.id.eq(scenarioId));
         const newRows = rows.slice();
         const tsRow = newRows.find((row) => row.id === scenarioId);
         if (tsRow) {
@@ -136,8 +136,8 @@ function TableRow(props) {
   const _handleCheckboxChange = useCallback(
     async (scenarioId, key, checked) => {
       if (dbContext && dbContext.db) {
-        const { testScenarios: testScenariosSet } = dbContext;
-        testScenariosSet.update(key, checked, testScenariosSet.table.id.eq(scenarioId));
+        const { testScenarioSet } = dbContext;
+        testScenarioSet.update(key, checked, testScenarioSet.table.id.eq(scenarioId));
         const newRows = rows.slice();
         const tsRow = newRows.find((row) => row.id === scenarioId);
         if (tsRow) {
