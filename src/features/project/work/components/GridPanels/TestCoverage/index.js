@@ -1,4 +1,3 @@
-// import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import { setTestCoverages } from 'features/project/work/slices/workSlice';
 import { COVERAGE_ASPECT } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
@@ -70,6 +69,7 @@ class TestCoverage extends Component {
 
   _calculate = async () => {
     const { graph, testDatas, dbContext } = this.props;
+    const coverageResult = {};
 
     /* TODO: remove this after finish implement indexedDb
     const testScenariosAndCases = testScenarioAnsCaseStorage.get();
@@ -110,15 +110,17 @@ class TestCoverage extends Component {
       await Promise.all(promises);
       testCoverage.initValue(graph.graphNodes, testCases, testScenarios, graph.graphLinks, testDatas);
 
-      const data = {};
       Object.keys(COVERAGE_ASPECT).forEach((key) => {
         const result = testCoverage.calculateCoverage(COVERAGE_ASPECT[key]);
-        data[COVERAGE_ASPECT[key]] = { actualPercent: toPercent(result), denominator: result.denominator };
+        if (result) {
+          coverageResult[COVERAGE_ASPECT[key]] = { actualPercent: toPercent(result), denominator: result.denominator };
+        } else {
+          coverageResult[COVERAGE_ASPECT[key]] = { actualPercent: 0, denominator: 0 };
+        }
       });
-      return data;
     }
 
-    return {};
+    return coverageResult;
   };
 
   _recalculate = async () => {
@@ -201,11 +203,11 @@ class TestCoverage extends Component {
               return (
                 <Range
                   key={x.key}
-                  value={value}
+                  value={value ?? 0}
                   onChange={(value) => this._handlePlanChange(x.key, value)}
                   className="test-coverage-item"
                   editable={isPlanning}
-                  kiloValue={kiloValue}
+                  kiloValue={kiloValue ?? 0}
                 />
               );
             })}
