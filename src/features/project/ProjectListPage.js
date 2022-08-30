@@ -166,7 +166,7 @@ class ProjectListPage extends Component {
     const data = await workService.listAsync(projectId, 1, 1);
 
     if (data?.items?.length > 0) {
-      await history.push(`/project/${projectId}/work/${data.items[0].id}`);
+      history.push(`/project/${projectId}/work/${data.items[0].id}`);
     }
   };
 

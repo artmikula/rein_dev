@@ -53,7 +53,6 @@ class TestScenarioAndCase extends Component {
   }
 
   async componentDidMount() {
-    const { dbContext } = this.props;
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, async (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this.setState({
@@ -61,14 +60,7 @@ class TestScenarioAndCase extends Component {
           filterOptions: structuredClone(defaultFilterOptions),
           filterRows: undefined,
         });
-        if (dbContext && dbContext.db) {
-          const { testScenarios: testScenariosSet } = dbContext;
-          const testScenarios = await testScenariosSet.get();
-          if (testScenarios.length > 0) {
-            await testScenariosSet.delete();
-          }
-        }
-        this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
+        await this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
         event.message.action !== domainEvents.ACTION.GRAPH_ALIGN
@@ -82,9 +74,9 @@ class TestScenarioAndCase extends Component {
       this._handleShortCutEvents(code);
     });
 
-    eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, (event) => {
+    eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, async (event) => {
       if (event.message.action === domainEvents.ACTION.UPDATE) {
-        this._calculateTestScenarioAndCase(domainEvents.ACTION.UPDATE);
+        await this._calculateTestScenarioAndCase(domainEvents.ACTION.UPDATE);
       }
     });
 
@@ -105,11 +97,13 @@ class TestScenarioAndCase extends Component {
         });
       }
     });
-    this._initData();
+    await this._getData();
   }
 
-  componentDidUpdate() {
-    this._initData();
+  async componentDidUpdate() {
+    if (!this.initiatedData) {
+      await this._getData();
+    }
   }
 
   componentWillUnmount() {
@@ -120,27 +114,26 @@ class TestScenarioAndCase extends Component {
     const { dbContext } = this.props;
     this._setColumnsAndRows([], [], []);
     this.setState({ isCheckAllTestScenarios: false, filterRows: undefined });
-    const { testScenarios: testScenariosSet } = dbContext;
-    const testScenarios = await testScenariosSet.get();
-    if (testScenarios.length > 0) {
-      await testScenariosSet.delete();
-    }
+
+    const { testScenarioSet } = dbContext;
+    await testScenarioSet.delete();
+
     /** TODO: remove this after finish implement indexedDb */
     testScenarioAnsCaseStorage.set([]);
   };
 
-  _initData = async () => {
+  _getData = async () => {
     const { graph, workLoaded, dbContext } = this.props;
     const testCasesRows = [];
 
     if (dbContext && dbContext.db) {
-      const { testScenarios: testScenariosSet, testCases: testCasesSet } = dbContext;
+      const { testScenarioSet, testCaseSet } = dbContext;
 
       if (!this.initiatedData && workLoaded) {
-        const testScenarios = await testScenariosSet.get();
+        const testScenarios = await testScenarioSet.get();
 
         const promises = testScenarios.map(async (testScenario) => {
-          const testCases = await testCasesSet.get(testCasesSet.table.testScenarioId.eq(testScenario.id));
+          const testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));
 
           testCases.forEach((testCase) => {
             const testDatas = testCase.testDatas.map((x) => {
@@ -160,9 +153,9 @@ class TestScenarioAndCase extends Component {
             });
           });
 
-          // eslint-disable-next-line no-param-reassign
-          testScenario.testCases = testCases;
-          return testScenario;
+          const _testScenario = testScenario;
+          _testScenario.testCases = testCases;
+          return _testScenario;
         });
 
         await Promise.all(promises);
@@ -179,7 +172,9 @@ class TestScenarioAndCase extends Component {
     let scenarioAndGraphNodes = null;
 
     if (dbContext && dbContext.db) {
-      const { testScenarios: testScenariosSet, testCases: testCasesSet } = dbContext;
+      const { testScenarioSet, testCaseSet } = dbContext;
+      await testScenarioSet.delete();
+
       if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
         scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(
           graph.graphLinks,
@@ -190,16 +185,16 @@ class TestScenarioAndCase extends Component {
         scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
       }
 
-      const testScenarioSet = scenarioAndGraphNodes.scenarios.map((testScenario) => {
+      const testScenarios = scenarioAndGraphNodes.scenarios.map((testScenario) => {
         const _testScenario = testScenario;
         _testScenario.workId = workId;
-        _testScenario.isSelected = false;
+        _testScenario.isSelected = Boolean(_testScenario.isSelected);
         _testScenario.isBaseScenario = Boolean(_testScenario.isBaseScenario);
         return _testScenario;
       });
-      await testScenariosSet.add(testScenarioSet);
+      await testScenarioSet.add(testScenarios);
 
-      const testScenarios = scenarioAndGraphNodes.scenarios.map((x) => {
+      const newTestScenarios = scenarioAndGraphNodes.scenarios.map((x) => {
         const scenario = {
           ...x,
           testAssertions: x.testAssertions.map((y) => {
@@ -221,10 +216,11 @@ class TestScenarioAndCase extends Component {
 
       const newGraphNodes = scenarioAndGraphNodes.graphNodes;
 
-      const testCases = testCaseHelper.updateTestCase(testCasesSet, testScenarios, testDatas, newGraphNodes);
+      const testCases = testCaseHelper.updateTestCase(testCaseSet, newTestScenarios, testDatas, newGraphNodes);
 
-      this._setColumnsAndRows(testCases, testScenarios, newGraphNodes);
+      this._setColumnsAndRows(testCases, newTestScenarios, newGraphNodes);
 
+      /** TODO: remove this after finish implement indexedDb */
       // const newTestScenariosAndCases = newTestScenarios.map((x) => {
       //   const scenario = {
       //     ...x,
