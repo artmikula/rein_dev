@@ -77,7 +77,7 @@ interface ITestDataDetail {
   trueDatas: string;
   falseDatas: string;
   nodeId: string;
-  strength: 1;
+  strength: number;
   createdDate: Date;
   lastModifiedDate: Date;
 }
