@@ -126,6 +126,46 @@ interface ITestCase {
   isSelected?: boolean;
 }
 
+interface ICauseEffect {
+  id: string;
+  node: string;
+  definition: string;
+  isMerged: boolean;
+  parent: any;
+  type: string;
+  definitionId: string;
+  workId: string;
+  orderIndex: number;
+  createdDate?: Date;
+  lastModifiedDate?: Date;
+}
+
+interface ITestCoverage {
+  [key: string]: {
+    actualPercent: number;
+    denominator: number;
+    planPercent?: number;
+  };
+}
+
+interface INodeConstraint {
+  graphNodeId: string;
+  isNotRelation: boolean;
+}
+
+interface IConstraint {
+  id: string;
+  positionX: number;
+  positionY: number;
+  nodes: INodeConstraint[];
+  isNotRelation: boolean;
+  type: string;
+  lineWidth: number;
+  edgeType: string;
+  lineColor: string;
+  label: string;
+}
+
 export class SimpleTestScenario implements ISimpleTestScenario {
   id: string;
 
@@ -155,6 +195,7 @@ export class SimpleTestScenario implements ISimpleTestScenario {
 
   isViolated: boolean | undefined;
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   constructor(target: any, isEffectAssertion: boolean, testAssertions: ITestAssertion[]) {
     this.id = uuid();
     this.key = target.id;
@@ -172,6 +213,7 @@ export class SimpleTestScenario implements ISimpleTestScenario {
     this.testResults = [];
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   invertedClone = (exceptId?: any) => {
     const testAssertions = this.testAssertions.map((x) => {
       const result = x.nodeId === exceptId ? x.result : !x.result;
@@ -195,4 +237,8 @@ export type {
   ITestDataDetail,
   ITestCase,
   ISimpleTestScenario,
+  ICauseEffect,
+  ITestCoverage,
+  IConstraint,
+  INodeConstraint,
 };

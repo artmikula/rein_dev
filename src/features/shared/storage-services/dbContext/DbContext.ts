@@ -18,7 +18,7 @@ export default class DbContext implements IDbContext {
     this.testCaseSet = null;
   }
 
-  async init(workId: string) {
+  async init(workId: string): Promise<void> {
     this.db = await indexedDbHelper.initIndexedDb(workId);
     if (this.db) {
       const tblTestScenario = await indexedDbHelper.getTable(this.db, TABLES.TEST_SCENARIOS);
@@ -28,7 +28,7 @@ export default class DbContext implements IDbContext {
     }
   }
 
-  close() {
+  close(): void {
     if (this.db) {
       indexedDbHelper.close(this.db);
       this.db = null;

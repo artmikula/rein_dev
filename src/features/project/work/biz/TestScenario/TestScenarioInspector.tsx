@@ -1,7 +1,7 @@
 /* eslint-disable no-bitwise */
 import { CONSTRAINT_TYPE, NODE_INSPECTION, RESULT_TYPE, TEST_SCENARIO_TYPE } from 'features/shared/constants';
 import Enumerable from 'linq';
-import { IGraphNode, ISimpleTestScenario } from 'types/models';
+import { IConstraint, IGraphNode, INodeConstraint, ISimpleTestScenario } from 'types/models';
 import constraintHelper from '../Constraint';
 
 class TestScenarioInspector {
@@ -9,7 +9,7 @@ class TestScenarioInspector {
     causeNodes: IGraphNode[],
     groupNodes: IGraphNode[],
     effectNodes: IGraphNode[],
-    constraints: any[],
+    constraints: IConstraint[],
     tmpScenarioList: ISimpleTestScenario[],
     showReducedScenariosAndCases: boolean
   ) {
@@ -67,7 +67,7 @@ class TestScenarioInspector {
   _inspectScenario(
     scenario: ISimpleTestScenario,
     inspectionDictionary: Map<string, any> = new Map(),
-    constraints: any[] = []
+    constraints: IConstraint[] = []
   ) {
     const { testAssertions, isViolated, targetGraphNodeId: resultGraphNodeId } = scenario;
 
@@ -86,11 +86,11 @@ class TestScenarioInspector {
     for (let i = 0; i < constraints.length; i++) {
       const validation = constraintHelper.validate(constraints[i], scenario);
       if (validation !== NODE_INSPECTION.None) {
-        const nodes = constraints[i].nodes.filter((x: any) =>
+        const nodes = constraints[i].nodes.filter((x: INodeConstraint) =>
           scenario.testAssertions.some((y) => x.graphNodeId === y.graphNodeId)
         );
 
-        nodes.forEach((item: any) => {
+        nodes.forEach((item: INodeConstraint) => {
           const newValidation = inspectionDictionary.get(item.graphNodeId) | validation;
           inspectionDictionary.set(item.graphNodeId, newValidation);
         });
@@ -108,7 +108,11 @@ class TestScenarioInspector {
     };
   }
 
-  _inspectEffectRelation(scenarios: ISimpleTestScenario[], originConstraints: any[], inspectionDictionary = new Map()) {
+  _inspectEffectRelation(
+    scenarios: ISimpleTestScenario[],
+    originConstraints: IConstraint[],
+    inspectionDictionary = new Map()
+  ) {
     // remove handle for effectToEffectLinks because currently we do not have this kind of links
 
     const constraints = originConstraints.filter((x) => x.type === CONSTRAINT_TYPE.MASK);

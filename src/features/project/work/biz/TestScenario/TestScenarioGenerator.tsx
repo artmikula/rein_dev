@@ -1,12 +1,17 @@
 /* eslint-disable no-bitwise */
 import { GRAPH_NODE_TYPE } from 'features/shared/constants';
-import { IGraphLink, ITestScenario, ITestAssertion, ISimpleTestScenario, SimpleTestScenario } from 'types/models';
+import {
+  IGraphLink,
+  ITestScenario,
+  ITestAssertion,
+  ISimpleTestScenario,
+  SimpleTestScenario,
+  IGraphNode,
+} from 'types/models';
 import FlattenScenarioProcess from './FlattenScenarioProcess';
 
 class TestScenarioGenerator {
-  graphNodes: any[] = [];
-
-  calculateScenarioDictionary(graphLinks: IGraphLink[], effectNodes: any[]) {
+  calculateScenarioDictionary(graphLinks: IGraphLink[], effectNodes: IGraphNode[]) {
     // original: calculateAssertionDictionary
     // Return: list of scenarios
     // Assertions: key, targetNodeId, targetType, isEffectAssertion, resultType, scenarioId, testAssertions
@@ -59,7 +64,7 @@ class TestScenarioGenerator {
   /* TODO: need check again, because there's no references */
   getExpressionString(scenario: ISimpleTestScenario) {
     return `${scenario.targetType}(${scenario.testAssertions.map(
-      (x: any) => `${x.nodeId}:${x.result === true ? 'T' : 'F'}`
+      (x: ITestAssertion) => `${x.nodeId}:${x.result === true ? 'T' : 'F'}`
     )}) = ${scenario.result ? '' : '!'}${scenario.targetNodeId}`;
   }
 

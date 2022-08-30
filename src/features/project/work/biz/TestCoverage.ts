@@ -298,8 +298,8 @@ class TestCoverage {
       testCase.testDatas.some((testData) => causesIds.some((causesId) => testData.graphNodeId === causesId))
     );
 
-    let checkedCasesCount: number = 0;
-    let casesCount: number = 0;
+    let checkedCasesCount = 0;
+    let casesCount = 0;
 
     testCasesContainsCauses.forEach((testCasesContainsCause) => {
       if (testCasesContainsCause.isSelected) {
@@ -326,8 +326,8 @@ class TestCoverage {
   }
 
   calculateCoverageByBaseScenario(): ITestCoverageResult {
-    let cases: number = 0.0;
-    let checkedCases: number = 0.0;
+    let cases = 0.0;
+    let checkedCases = 0.0;
 
     this.testCases.forEach((testCase) => {
       const testScenario: ITestScenario | undefined = this.testScenarios.find(
@@ -348,8 +348,8 @@ class TestCoverage {
   }
 
   calculateCoverageByValidScenario(): ITestCoverageResult {
-    let cases: number = 0.0;
-    let checkedCases: number = 0.0;
+    let cases = 0.0;
+    let checkedCases = 0.0;
 
     this.testCases.forEach((testCase) => {
       const testScenario: ITestScenario | undefined = this.testScenarios.find(
@@ -370,8 +370,8 @@ class TestCoverage {
   }
 
   calculateCoverageByInvalidScenario(): ITestCoverageResult {
-    let cases: number = 0.0;
-    let checkedCases: number = 0.0;
+    let cases = 0.0;
+    let checkedCases = 0.0;
 
     this.testCases.forEach((testCase) => {
       const testScenario: ITestScenario | undefined = this.testScenarios.find(
@@ -406,7 +406,7 @@ class TestCoverage {
   }
 
   _getCauseComplexities = () => {
-    let totalComplexities: number = 0.0;
+    let totalComplexities = 0.0;
     const causeComplexities = new Map();
 
     this.causeNodes.forEach((causeNode) => {
@@ -434,7 +434,7 @@ class TestCoverage {
   _findComplexCausesByWeightedAverage() {
     const { totalComplexities, causeComplexities } = this._getCauseComplexities();
 
-    let weightedAverage: number = 0.0;
+    let weightedAverage = 0.0;
     causeComplexities.forEach((value) => {
       weightedAverage += value * (value / totalComplexities);
     });
