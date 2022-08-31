@@ -43,7 +43,7 @@ export default class TestScenarioSet implements ITestScenarioSet {
 
   /** actions: checked/unchecked */
   async update(columnName: string, value: any, filter?: lf.Predicate): Promise<Object[]> {
-    const query = await indexedDbHelper.updateByFilter(this.db, this.table, columnName, filter);
+    const query = await indexedDbHelper.update(this.db, this.table, columnName, filter);
     return query.bind([value]).exec();
   }
 }
