@@ -13,9 +13,9 @@ export default class DbContext implements IDbContext {
   db: lf.Database | null;
 
   constructor() {
+    this.db = null;
     this.testScenarioSet = null;
     this.testCaseSet = null;
-    this.db = null;
   }
 
   async init(workId: string) {

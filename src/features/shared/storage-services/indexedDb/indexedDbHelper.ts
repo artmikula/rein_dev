@@ -64,6 +64,13 @@ class IndexedDbHelper {
   async deleteTable(db: lf.Database, table: lf.schema.Table): Promise<Object[]> {
     return db.delete().from(table).exec();
   }
+
+  update(db: lf.Database, table: lf.schema.Table, columnName: string, filter?: lf.Predicate): lf.query.Update {
+    if (filter) {
+      return db.update(table).set(table[columnName], lf.bind(0)).where(filter);
+    }
+    return db.update(table).set(table[columnName], lf.bind(0));
+  }
 }
 
 export default new IndexedDbHelper();

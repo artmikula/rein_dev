@@ -31,4 +31,10 @@ export default class TestCaseSet implements ITestCaseSet {
     }
     return query.bind([this.table.createRow(data)]).exec();
   }
+
+  /** actions: checked/unchecked */
+  async update(columnName: string, value: any, filter?: lf.Predicate): Promise<Object[]> {
+    const query = await indexedDbHelper.update(this.db, this.table, columnName, filter);
+    return query.bind([value]).exec();
+  }
 }

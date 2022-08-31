@@ -64,6 +64,7 @@ class TestCase {
                 tmp.push(clone);
               });
             }
+
             testCasesOfScenario = tmp;
           } else {
             const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
