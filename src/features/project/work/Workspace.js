@@ -120,7 +120,7 @@ class Workspace extends Component {
   };
 
   _getWorkData = (data) => {
-    const { testBasis, causeEffects, graphNodes, graphLinks, constraints, testCoverage, testDatas, ...others } = data;
+    const { testBasis, causeEffects, graphNodes, graphLinks, constraints, testCoverage, testDatas } = data;
 
     let _causeEffects = causeEffects ?? [];
     if (_causeEffects.some((x) => !x.orderIndex)) {
@@ -128,7 +128,6 @@ class Workspace extends Component {
     }
 
     const _data = {
-      ...others,
       testBasis: testBasis ?? {
         content: null,
       },
@@ -174,12 +173,9 @@ class Workspace extends Component {
       workData = this._getWorkData(result.data);
     }
 
-    setWork({ ...workData, loaded: true });
-  };
+    workData.loaded = true;
 
-  _onCloseAlert = () => {
-    localStorage.clear();
-    window.location.reload();
+    await setWork(workData);
   };
 
   _handleChangePanelLayout = (layouts, mode) => {
@@ -218,11 +214,11 @@ class Workspace extends Component {
     this._handleChangePanelLayout(layouts);
   };
 
-  _handleToggleModalForm = (projectId, workId) => {
+  _handleToggleModalForm = async (projectId, workId) => {
     this.setState({ formName: '' });
 
     if (projectId && workId) {
-      this._getWorkById(projectId, workId);
+      await this._getWorkById(projectId, workId);
     }
   };
 

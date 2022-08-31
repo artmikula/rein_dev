@@ -406,7 +406,7 @@ export const SORT_DEFAULT = {
   direction: SORT_DIRECTION.DESC,
 };
 
-export const TEST_CASE_LIMITATION = 100;
+export const TEST_CASE_LIMITATION = 200;
 
 export const TEST_BASIS_EVENT_TYPE = {
   DEFAULT: 'default',
@@ -436,7 +436,7 @@ export const PANELS_NAME = {
   TEST_DATA: 'Test Data',
 };
 
-export const UNDO_ACTIONS_STACKS = 200;
+export const UNDO_ACTIONS_STACKS = 300;
 
 export const TEST_BASIS_KEY_BINDING = {
   Z_KEY: 'z',
@@ -454,4 +454,10 @@ export const GRAPH_ACTIONS = {
   GENERATE: 'generate',
   ZOOM_IN: 'zoomIn',
   ZOOM_OUT: 'zoomOut',
+};
+
+export const GENERATE_STATUS = {
+  START: 'start',
+  COMPLETE: 'complete',
+  FAIL: 'fail',
 };

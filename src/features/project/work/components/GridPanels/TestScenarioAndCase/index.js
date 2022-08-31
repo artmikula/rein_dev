@@ -6,9 +6,10 @@ import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioM
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import reInCloudService from 'features/project/work/services/reInCloudService';
 import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
-import { setGraph } from 'features/project/work/slices/workSlice';
+import { setGraph, setGenerating } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
+  GENERATE_STATUS,
   REIN_SHORTCUT_CODE,
   RESULT_TYPE,
   TEST_CASE_METHOD,
@@ -161,13 +162,13 @@ class TestScenarioAndCase extends Component {
         await Promise.all(promises);
 
         this.initiatedData = true;
-        this._setColumnsAndRows(testCasesRows, testScenarios, graph.graphNodes);
+        this._setColumnsAndRows(testScenarios, testCasesRows, graph.graphNodes);
       }
     }
   };
 
   _calculateTestScenarioAndCase = async (domainAction) => {
-    const { graph, testDatas, setGraph, dbContext, match } = this.props;
+    const { graph, testDatas, setGraph, dbContext, match, setGenerating } = this.props;
     const { workId } = match.params;
     let scenarioAndGraphNodes = null;
 
@@ -176,16 +177,20 @@ class TestScenarioAndCase extends Component {
       await testScenarioSet.delete();
 
       if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
+        setGenerating(GENERATE_STATUS.START);
         scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(
           graph.graphLinks,
           graph.constraints,
           graph.graphNodes
         );
       } else {
+        setGenerating(GENERATE_STATUS.START);
         scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
       }
 
-      const testScenarios = scenarioAndGraphNodes.scenarios.map((testScenario) => {
+      const { scenarios, graphNodes } = scenarioAndGraphNodes;
+
+      const testScenarios = scenarios.map((testScenario) => {
         const _testScenario = testScenario;
         _testScenario.workId = workId;
         _testScenario.isSelected = Boolean(_testScenario.isSelected);
@@ -194,31 +199,14 @@ class TestScenarioAndCase extends Component {
       });
       await testScenarioSet.add(testScenarios);
 
-      const newTestScenarios = scenarioAndGraphNodes.scenarios.map((x) => {
-        const scenario = {
-          ...x,
-          testAssertions: x.testAssertions.map((y) => {
-            const graphNode = graph.graphNodes.find((x) => x.nodeId === y.graphNodeId);
-            return {
-              ...y,
-              result: y.result,
-              graphNodeId: y.graphNodeId,
-              graphNode,
-              workId,
-              testScenarioId: x.id,
-            };
-          }),
-          workId,
-        };
+      const newGraphNodes = graphNodes;
 
-        return scenario;
-      });
+      testCaseHelper.updateTestCase(testCaseSet, scenarios, testDatas, newGraphNodes);
 
-      const newGraphNodes = scenarioAndGraphNodes.graphNodes;
+      const _testScenarios = await testScenarioSet.get();
+      // const _testCases = await testCaseSet.get();
 
-      const testCases = testCaseHelper.updateTestCase(testCaseSet, newTestScenarios, testDatas, newGraphNodes);
-
-      this._setColumnsAndRows(testCases, newTestScenarios, newGraphNodes);
+      this._setColumnsAndRows(_testScenarios, [], newGraphNodes);
 
       /** TODO: remove this after finish implement indexedDb */
       // const newTestScenariosAndCases = newTestScenarios.map((x) => {
@@ -245,7 +233,7 @@ class TestScenarioAndCase extends Component {
     eventBus.publish(domainEvents.TEST_SCENARIO_DOMAINEVENT, message);
   };
 
-  _setColumnsAndRows = (testCases = [], scenarios = [], graphNodes = []) => {
+  _setColumnsAndRows = (scenarios = [], testCases = [], graphNodes = []) => {
     const columns = TestScenarioHelper.convertToColumns(graphNodes, Language);
     const rows = TestScenarioHelper.convertToRows(testCases, scenarios, columns, graphNodes);
 
@@ -482,6 +470,7 @@ TestScenarioAndCase.propTypes = {
   testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   workLoaded: PropTypes.bool.isRequired,
   setGraph: PropTypes.func.isRequired,
+  setGenerating: PropTypes.func.isRequired,
   dbContext: PropTypes.oneOfType([PropTypes.object]),
 };
 
@@ -500,6 +489,6 @@ const mapStateToProps = (state) => ({
   dbContext: state.work.dbContext,
 });
 
-const mapDispatchToProps = { setGraph };
+const mapDispatchToProps = { setGraph, setGenerating };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestScenarioAndCase));

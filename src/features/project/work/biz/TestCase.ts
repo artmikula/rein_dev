@@ -31,7 +31,7 @@ class TestCase {
             const tmp: ITestCase[] = [];
             const maxNumberOfTestCases =
               testCasesOfScenario.length < TEST_CASE_LIMITATION ? testCasesOfScenario.length : TEST_CASE_LIMITATION;
-            for (let k = 0; k < maxNumberOfTestCases; k++) {
+            for (let k = 0; k < testCasesOfScenario.length; k++) {
               const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
               testDataArray.forEach((data) => {
                 const clone: ITestCase = this._clone(testCasesOfScenario[k]);

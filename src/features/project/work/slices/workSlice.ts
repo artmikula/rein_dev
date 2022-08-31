@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { COVERAGE_ASPECT } from 'features/shared/constants';
+import { COVERAGE_ASPECT, GENERATE_STATUS } from 'features/shared/constants';
 import { IDbContext } from 'features/shared/storage-services/dbContext/models';
 import { cloneDeep } from 'lodash';
 import { ICauseEffect, ITestCoverage, ITestDataDetail } from 'types/models';
@@ -37,6 +37,7 @@ export const workSlice = createSlice({
     testCoverage: cloneDeep(defaultTestCoverageData),
     testDatas: [],
     dbContext: null,
+    generating: false,
   } as IWorkSlice,
   reducers: {
     setWorkName: (state, action: PayloadAction<string>) => {
@@ -44,23 +45,59 @@ export const workSlice = createSlice({
       _state.name = action.payload;
     },
     setWork: (state, action: PayloadAction<IWorkSlice>) => {
-      return { ...state, ...action.payload };
+      const { testBasis, causeEffects, graph, testCoverage, testDatas, loaded } = action.payload;
+      const _state = state;
+      _state.testBasis = testBasis ?? _state.testBasis;
+      _state.causeEffects = causeEffects ?? _state.causeEffects;
+      _state.graph = {
+        graphNodes: graph.graphNodes ?? _state.graph.graphNodes,
+        graphLinks: graph.graphLinks ?? _state.graph.graphLinks,
+        constraints: graph.constraints ?? _state.graph.constraints,
+      };
+      _state.testCoverage = testCoverage ?? _state.testCoverage;
+      _state.testDatas = testDatas ?? _state.testDatas;
+      _state.loaded = loaded ?? _state.loaded;
+
+      return _state;
     },
     setGeneratingReport: (state, action: PayloadAction<boolean>) => {
-      const generatingReport = action.payload;
-      return { ...state, generatingReport };
+      const _state = state;
+      _state.generatingReport = action.payload;
+      return _state;
     },
-    setTestBasis: (state, action: PayloadAction<string>) => ({
-      ...state,
-      testBasis: { content: action.payload },
-    }),
-    setCauseEffects: (state, action: PayloadAction<ICauseEffect[]>) => ({ ...state, causeEffects: action.payload }),
-    setGraph: (state, action: PayloadAction<IGraphState>) => ({ ...state, graph: action.payload }),
-    setTestCoverages: (state, action: PayloadAction<ITestCoverage>) => ({ ...state, testCoverage: action.payload }),
-    setTestDatas: (state, action: PayloadAction<ITestDataDetail[]>) => ({ ...state, testDatas: action.payload }),
+    setTestBasis: (state, action: PayloadAction<string>) => {
+      const _state = state;
+      _state.testBasis.content = action.payload;
+      return _state;
+    },
+    setCauseEffects: (state, action: PayloadAction<ICauseEffect[]>) => {
+      const _state = state;
+      _state.causeEffects = action.payload;
+      return _state;
+    },
+    setGraph: (state, action: PayloadAction<IGraphState>) => {
+      const _state = state;
+      _state.graph = action.payload;
+      return _state;
+    },
+    setTestCoverages: (state, action: PayloadAction<ITestCoverage>) => {
+      const _state = state;
+      _state.testCoverage = action.payload;
+      return _state;
+    },
+    setTestDatas: (state, action: PayloadAction<ITestDataDetail[]>) => {
+      const _state = state;
+      _state.testDatas = action.payload;
+      return _state;
+    },
     setDbContext: (state, action: PayloadAction<IDbContext>) => {
       const _state = state;
       _state.dbContext = action.payload;
+      return _state;
+    },
+    setGenerating: (state, action: PayloadAction<string>) => {
+      const _state = state;
+      _state.generating = action.payload === GENERATE_STATUS.START;
       return _state;
     },
   },
@@ -76,6 +113,7 @@ export const {
   setTestCoverages,
   setTestDatas,
   setDbContext,
+  setGenerating,
 } = workSlice.actions;
 
 export default workSlice.reducer;

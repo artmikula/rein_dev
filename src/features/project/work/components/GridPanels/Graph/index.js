@@ -5,10 +5,11 @@ import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import { setGraph } from 'features/project/work/slices/workSlice';
+import { setGraph, setGenerating } from 'features/project/work/slices/workSlice';
 import {
   ACTIONS_STATE_NAME,
   FILE_NAME,
+  GENERATE_STATUS,
   GRAPH_LINK_TYPE,
   GRAPH_NODE_TYPE,
   GRAPH_SHORTCUT,
@@ -80,16 +81,12 @@ class Graph extends Component {
   }
 
   componentDidMount() {
-    const { onGenerate, setActionHandler, subscribeUndoHandlers } = this.props;
+    const { setActionHandler, subscribeUndoHandlers } = this.props;
 
     const container = document.getElementById('graph_container_id');
     this.graphManager = new GraphManager(container, {
       onGraphChange: this._handleGraphChange,
       generate: async () => {
-        if (onGenerate) {
-          onGenerate();
-        }
-
         // add delay to show waiting message before run to Generate process
         function delay(milliseconds) {
           return new Promise((resolve) => {
@@ -117,8 +114,8 @@ class Graph extends Component {
     eventBus.subscribe(this, domainEvents.GRAPH_MENU_DOMAINEVENT, (event) => {
       this._handleShortCutEvents(event.message.code);
     });
-    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
-      this._handleTestScenarioAndCaseEvents(event.message);
+    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, async (event) => {
+      await this._handleTestScenarioAndCaseEvents(event.message);
     });
     eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
       this._handleWorkMenuEvents(event.message);
@@ -416,12 +413,14 @@ class Graph extends Component {
   };
 
   /* Events */
-  _handleTestScenarioAndCaseEvents = (message) => {
+  _handleTestScenarioAndCaseEvents = async (message) => {
+    const { setGenerating } = this.props;
     const { action, value } = message;
     switch (action) {
       case domainEvents.ACTION.ACCEPTGENERATE:
         this.graphManager.clear();
         this._drawGraph(this.graphManager, value, true);
+        await setGenerating(GENERATE_STATUS.COMPLETE);
         break;
       default:
         break;
@@ -577,7 +576,7 @@ Graph.propTypes = {
   }).isRequired,
   workLoaded: PropTypes.bool.isRequired,
   setGraph: PropTypes.func.isRequired,
-  onGenerate: PropTypes.func.isRequired,
+  setGenerating: PropTypes.func.isRequired,
   subscribeUndoHandlers: PropTypes.func.isRequired,
   unSubscribeUndoHandlers: PropTypes.func.isRequired,
   undoHandlers: PropTypes.oneOfType([PropTypes.array]).isRequired,
@@ -598,6 +597,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = {
   setGraph,
+  setGenerating,
   subscribeUndoHandlers,
   unSubscribeUndoHandlers,
   pushUndoStates,
