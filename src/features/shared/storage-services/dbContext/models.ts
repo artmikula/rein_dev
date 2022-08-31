@@ -3,6 +3,7 @@ import { ISimpleTestScenario, ITestCase } from 'types/models';
 
 interface IDbSet {
   get: (filter?: lf.Predicate) => Promise<Object[]>;
+  update: (columnName: string, value: any, filter: lf.Predicate) => Promise<Object[]>;
 }
 
 interface ITestScenarioSet extends IDbSet {

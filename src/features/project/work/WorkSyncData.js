@@ -31,7 +31,6 @@ class WorkSyncData extends Component {
     eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, this._handleEvent);
     eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, this._handleEvent);
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, this._handleEvent);
-    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, this._handleEvent);
     eventBus.subscribe(this, domainEvents.TESTBASIC_DOMAINEVENT, this._handleEvent);
     eventBus.subscribe(this, domainEvents.TEST_COVERAGE_DOMAINEVENT, this._handleEvent);
   }

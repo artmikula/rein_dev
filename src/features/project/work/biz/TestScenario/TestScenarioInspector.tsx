@@ -1,19 +1,19 @@
 /* eslint-disable no-bitwise */
 import { CONSTRAINT_TYPE, NODE_INSPECTION, RESULT_TYPE, TEST_SCENARIO_TYPE } from 'features/shared/constants';
 import Enumerable from 'linq';
-import { ISimpleTestScenario } from 'types/models';
+import { IConstraint, IGraphNode, INodeConstraint, ISimpleTestScenario } from 'types/models';
 import constraintHelper from '../Constraint';
 
 class TestScenarioInspector {
   runInspections(
-    causeNodes: any[],
-    groupNodes: any[],
-    effectNodes: any[],
-    constraints: any[],
-    tmpScenarioList: any[],
+    causeNodes: IGraphNode[],
+    groupNodes: IGraphNode[],
+    effectNodes: IGraphNode[],
+    constraints: IConstraint[],
+    tmpScenarioList: ISimpleTestScenario[],
     showReducedScenariosAndCases: boolean
   ) {
-    let inspectionDictionary: any = new Map();
+    let inspectionDictionary: Map<string, number> = new Map();
     const causeGroupInspection =
       NODE_INSPECTION.DisconnectedNode | NODE_INSPECTION.MissingIsRelation | NODE_INSPECTION.MissingNotRelation;
     const effectInspection = NODE_INSPECTION.DisconnectedNode;
@@ -34,7 +34,7 @@ class TestScenarioInspector {
       .orderBy((x) => x.expectedResults)
       .toArray();
 
-    let testScenarios = [];
+    let testScenarios: ISimpleTestScenario[] = [];
 
     for (let i = 0; i < orderedTestScenarios.length; i++) {
       // add condition in option ShowReducedScenariosAndCases
@@ -64,7 +64,11 @@ class TestScenarioInspector {
     };
   }
 
-  _inspectScenario(scenario: ISimpleTestScenario, constraints: any[], inspectionDictionary: any = new Map()) {
+  _inspectScenario(
+    scenario: ISimpleTestScenario,
+    inspectionDictionary: Map<string, any> = new Map(),
+    constraints: IConstraint[] = []
+  ) {
     const { testAssertions, isViolated, targetGraphNodeId: resultGraphNodeId } = scenario;
 
     let violated = isViolated;
@@ -82,11 +86,11 @@ class TestScenarioInspector {
     for (let i = 0; i < constraints.length; i++) {
       const validation = constraintHelper.validate(constraints[i], scenario);
       if (validation !== NODE_INSPECTION.None) {
-        const nodes = constraints[i].nodes.filter((x: any) =>
+        const nodes = constraints[i].nodes.filter((x: INodeConstraint) =>
           scenario.testAssertions.some((y) => x.graphNodeId === y.graphNodeId)
         );
 
-        nodes.forEach((item: any) => {
+        nodes.forEach((item: INodeConstraint) => {
           const newValidation = inspectionDictionary.get(item.graphNodeId) | validation;
           inspectionDictionary.set(item.graphNodeId, newValidation);
         });
@@ -104,7 +108,11 @@ class TestScenarioInspector {
     };
   }
 
-  _inspectEffectRelation(scenarios: ISimpleTestScenario[], originConstraints: any[], inspectionDictionary = new Map()) {
+  _inspectEffectRelation(
+    scenarios: ISimpleTestScenario[],
+    originConstraints: IConstraint[],
+    inspectionDictionary = new Map()
+  ) {
     // remove handle for effectToEffectLinks because currently we do not have this kind of links
 
     const constraints = originConstraints.filter((x) => x.type === CONSTRAINT_TYPE.MASK);

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { Table } from 'reactstrap';
+import { useSelector } from 'react-redux';
 
-import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import Header from './TableHeader';
 import TableRow from './TableRow';
 
@@ -10,6 +10,8 @@ function TableTestScenarioAndCase(props) {
   const { rows, columns, setRows, isCheckAllTestScenarios, filterRows } = props;
 
   const [groupByEffectNodes, setGroupByEffectNodes] = useState([]);
+
+  const { dbContext } = useSelector((state) => state.work);
 
   const _getGroupByEffectNodes = useCallback(
     (rows) => {
@@ -52,12 +54,34 @@ function TableTestScenarioAndCase(props) {
   }, [rows, filterRows]);
 
   const _handleCheckedAll = useCallback(
-    (checked) => {
-      testScenarioAnsCaseStorage.checkAllTestScenarios(checked);
-      const newRows = testScenarioAnsCaseStorage.checkAllTestScenarios(checked, rows);
-      _getGroupByEffectNodes(filterRows ?? newRows);
+    async (checked) => {
+      if (dbContext && dbContext.db) {
+        const { testScenarioSet, testCaseSet } = dbContext;
+        const newRows = rows.slice();
+        newRows.forEach((row) => {
+          const _row = row;
+          _row.isSelected = checked;
+          _row.testCases.forEach((tcRow) => {
+            const _tcRow = tcRow;
+            _tcRow.isSelected = checked;
+            return _tcRow;
+          });
+          return _row;
+        });
+        _getGroupByEffectNodes(filterRows ?? newRows);
+        setRows(newRows);
 
-      setRows(newRows);
+        await testScenarioSet.update('isSelected', checked);
+        await testCaseSet.update('isSelected', checked);
+      }
+
+      /** TODO: remove this after finish implement indexedDb */
+      // testScenarioAnsCaseStorage.checkAllTestScenarios(checked);
+      // const newRows = testScenarioAnsCaseStorage.checkAllTestScenarios(checked, rows);
+      // _getGroupByEffectNodes(filterRows ?? newRows);
+
+      // setRows(newRows);
+      /** end */
     },
     [rows, filterRows]
   );

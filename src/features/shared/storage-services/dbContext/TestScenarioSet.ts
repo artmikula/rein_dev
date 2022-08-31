@@ -31,7 +31,7 @@ export default class TestScenarioSet implements ITestScenarioSet {
   }
 
   /** add all rows to table */
-  async add(data: ISimpleTestScenario | ISimpleTestScenario[]) {
+  async add(data: ISimpleTestScenario | ISimpleTestScenario[]): Promise<Object[]> {
     const query = await indexedDbHelper.addData(this.db, this.table);
     if (Array.isArray(data)) {
       return data.map((item) => {
@@ -39,5 +39,11 @@ export default class TestScenarioSet implements ITestScenarioSet {
       });
     }
     return query.bind([this.table.createRow(data)]).exec();
+  }
+
+  /** actions: checked/unchecked */
+  async update(columnName: string, value: unknown, filter?: lf.Predicate): Promise<Object[]> {
+    const query = await indexedDbHelper.updateByFilter(this.db, this.table, columnName, filter);
+    return query.bind([value]).exec();
   }
 }

@@ -150,6 +150,7 @@ class Workspace extends Component {
     const result = await workService.getAsync(projectId, workId);
     let workData = {};
 
+    /* TODO: check this after finish implement indexedDb */
     testScenarioAnsCaseStorage.setId(workId);
 
     const context = new DbContext();

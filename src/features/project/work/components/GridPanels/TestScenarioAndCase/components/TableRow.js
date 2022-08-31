@@ -1,7 +1,8 @@
 import React, { Fragment, useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import lf from 'lovefield';
+import { useSelector } from 'react-redux';
 
-import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import Checkbox from './TableCheckbox';
 
 function TableRow(props) {
@@ -9,6 +10,8 @@ function TableRow(props) {
 
   const [expandId, setExpandId] = useState({});
   const [rowSpan, setRowSpan] = useState({});
+
+  const { dbContext } = useSelector((state) => state.work);
 
   useEffect(() => {
     // handle get row span by group
@@ -48,46 +51,136 @@ function TableRow(props) {
     [expandId]
   );
 
+  /**
+   * @param {string} scenarioId - selected scenario
+   * @param {boolean} checked - checkbox's value of selected scenario
+   * @param {boolean} selfUpdate - a flag to prevent updating state
+   */
   const _handleTestScenarioChecked = useCallback(
-    (scenarioId, checked) => {
-      testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked);
-      const newRows = testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked, rows);
-      updateGroupByEffectNodes(filterRows ?? newRows);
+    async (scenarioId, checked, selfUpdate = true) => {
+      if (dbContext && dbContext.db) {
+        const { testScenarioSet, testCaseSet } = dbContext;
+        await testScenarioSet.update('isSelected', checked, testScenarioSet.table.id.eq(scenarioId));
+        await testCaseSet.update('isSelected', checked, testCaseSet.table.testScenarioId.eq(scenarioId));
+        if (selfUpdate) {
+          const newRows = rows.slice();
+          const tsRow = newRows.find((row) => row.id === scenarioId);
+          if (tsRow) {
+            tsRow.isSelected = checked;
+            tsRow.testCases.forEach((testCaseRow) => {
+              const _testCaseRow = testCaseRow;
+              _testCaseRow.isSelected = checked;
+              return _testCaseRow;
+            });
+            updateGroupByEffectNodes(newRows);
+            updateRows(newRows);
+          }
+        }
+      }
 
-      updateRows(newRows);
+      /** TODO: remove this after finish implement indexedDb */
+      // testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked);
+      // const newRows = testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked, rows);
+      // updateGroupByEffectNodes(filterRows ?? newRows);
+
+      // updateRows(newRows);
+      /** end */
     },
     [rows, filterRows]
   );
 
+  /**
+   * @param {string} scenarioId - selected scenario
+   * @param {string} caseId - selected test case
+   * @param {boolean} checked - checkbox's value of selected test case
+   */
   const _handleTestCaseChecked = useCallback(
-    (scenarioId, caseId, checked) => {
-      testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked);
-      const newRows = testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked, rows);
-      updateGroupByEffectNodes(newRows);
+    async (scenarioId, caseId, checked) => {
+      if (dbContext && dbContext.db) {
+        const { testScenarioSet, testCaseSet } = dbContext;
+        const filter = lf.op.and(testCaseSet.table.testScenarioId.eq(scenarioId), testCaseSet.table.id.eq(caseId));
+        await testCaseSet.update('isSelected', checked, filter);
+        const testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(scenarioId));
+        if (testCases.length > 0) {
+          const isCheckedAll = testCases.every((testCase) => testCase.isSelected);
+          await testScenarioSet.update('isSelected', isCheckedAll, testScenarioSet.table.id.eq(scenarioId));
+        }
+        const testScenarios = await testScenarioSet.get(testScenarioSet.table.id.eq(scenarioId));
+        const newRows = rows.slice();
+        const tsRow = newRows.find((row) => row.id === scenarioId);
+        if (tsRow) {
+          tsRow.isSelected = testScenarios[0].isSelected;
+          const tcRow = tsRow?.testCases.find((testCaseRow) => testCaseRow.id === caseId);
+          tcRow.isSelected = checked;
+          updateGroupByEffectNodes(newRows);
+          updateRows(newRows);
+        }
+      }
 
-      updateRows(newRows);
+      /** TODO: remove this after finish implement indexedDb */
+      // testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked);
+      // const newRows = testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked, rows);
+      // updateGroupByEffectNodes(newRows);
+
+      // updateRows(newRows);
+      /** end */
     },
     [rows, filterRows]
   );
 
+  /**
+   * @param {string} scenarioId - selected test scenario
+   * @param {string} key - property in test scenario (isBaseScenario, isValid)
+   * @param {boolean} checked - checkbox's value of isBaseScenario, isValid
+   */
   const _handleCheckboxChange = useCallback(
-    (scenarioId, key, checked) => {
-      testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked);
-      const newRows = testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked, rows);
-      updateGroupByEffectNodes(filterRows ?? newRows);
+    async (scenarioId, key, checked) => {
+      if (dbContext && dbContext.db) {
+        const { testScenarioSet } = dbContext;
+        testScenarioSet.update(key, checked, testScenarioSet.table.id.eq(scenarioId));
+        const newRows = rows.slice();
+        const tsRow = newRows.find((row) => row.id === scenarioId);
+        if (tsRow) {
+          tsRow[key] = checked;
+          updateGroupByEffectNodes(filterRows ?? newRows);
+          updateRows(newRows);
+        }
+      }
+      /** TODO: remove this after finish implement indexedDb */
+      // testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked);
+      // const newRows = testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked, rows);
+      // updateGroupByEffectNodes(filterRows ?? newRows);
 
-      updateRows(newRows);
+      // updateRows(newRows);
+      /** end */
     },
     [rows, filterRows]
   );
 
+  /**
+   * @param {string} groupKey - row key is selected effect node
+   * @param {boolean} checked - checkbox's value of selected effect node
+   */
   const _handleCheckedByGroup = useCallback(
     (groupKey, checked) => {
       const checkedIndex = groupByEffectNodes.findIndex((groupRow) => groupRow.key === groupKey);
       if (checkedIndex > -1) {
-        groupByEffectNodes[checkedIndex].testScenarios.forEach((testScenario) =>
-          _handleTestScenarioChecked(testScenario.id, checked)
-        );
+        groupByEffectNodes[checkedIndex].testScenarios.forEach((testScenario) => {
+          const newRows = rows.slice();
+          const tsRow = newRows.find((row) => row.id === testScenario.id);
+          if (tsRow) {
+            tsRow.isSelected = checked;
+            tsRow.testCases.forEach((tcRow) => {
+              const _tcRow = tcRow;
+              _tcRow.isSelected = checked;
+              return _tcRow;
+            });
+            updateGroupByEffectNodes(filterRows ?? newRows);
+
+            updateRows(newRows);
+          }
+          _handleTestScenarioChecked(testScenario.id, checked, false);
+        });
       }
     },
     [groupByEffectNodes]
