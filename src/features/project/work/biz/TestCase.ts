@@ -1,27 +1,16 @@
 /* eslint-disable no-loop-func */
 import { CLASSIFY, RESULT_TYPE, TEST_CASE_LIMITATION } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
-import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario } from 'types/models';
+import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario, ITestDataDetail } from 'types/models';
 import { ITestCaseSet } from 'features/shared/storage-services/dbContext/models';
+import { ITestScenarioReport, ITestScenarioAndCaseRow, ITestCaseReport } from 'types/bizModels';
 import testDataService from './TestData';
-
-interface ITestDataList {
-  id: string;
-  workId: string;
-  nodeId: string;
-  trueDatas: string;
-  falseDatas: string;
-  strength: number;
-  type: string;
-  createdDate: Date;
-  lastModifiedDate: Date;
-}
 
 class TestCase {
   updateTestCase(
     testCaseSet: ITestCaseSet,
     testScenarios: ISimpleTestScenario[] = [],
-    testDataList: ITestDataList[] = [],
+    testDataList: ITestDataDetail[] = [],
     graphNodes: IGraphNode[] = []
   ) {
     const totalTCs: ITestCase[] = [];
@@ -126,17 +115,20 @@ class TestCase {
     return [''];
   }
 
-  generateReportData(data: any[] | any[] = []) {
-    const testCases: any[] = [];
-    const testScenarios: any[] = data.map((testScenario) => {
-      const testScenarioItem: any = {
+  generateReportData(data: ITestScenarioAndCaseRow[] = []): {
+    testScenarios: ITestScenarioReport[];
+    testCases: ITestCaseReport[];
+  } {
+    const testCases: ITestCaseReport[] = [];
+    const testScenarios: ITestScenarioReport[] = data.map((testScenario) => {
+      const testScenarioItem: ITestScenarioReport = {
         name: testScenario.Name,
         cause: 0,
         group: 0,
         bools: [],
         expectedResults: testScenario.results,
       };
-      const setValue = (key: string, type: string) => {
+      const setValue = (key: string, type: keyof ITestScenarioReport) => {
         const index: number = parseInt(key.substring(1), 10) - 1;
         testScenarioItem.bools[index] = {
           ...testScenarioItem?.bools[index],
@@ -155,15 +147,15 @@ class TestCase {
         }
       });
       // create test data
-      testScenario.testCases.forEach((testCase: any) => {
-        const testCaseItem: any = {
+      testScenario.testCases?.forEach((testCase) => {
+        const testCaseItem: ITestCaseReport = {
           name: testCase.Name,
           expectedResults: testScenario.results,
           definition: testCase.results,
           causes: [],
         };
-        Object.keys(testCase).forEach((key) => {
-          if (key[0] === CLASSIFY.CAUSE_PREFIX) {
+        Object.keys(testCase).forEach((key: keyof ITestCaseReport) => {
+          if (typeof key === 'string' && key[0] === CLASSIFY.CAUSE_PREFIX) {
             testCaseItem[key] = testCase[key];
           }
         });

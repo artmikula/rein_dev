@@ -56,6 +56,7 @@ class TestScenarioGenerator {
     return scenarioDictionary;
   }
 
+  /* TODO: need check again, because there's no references */
   getExpressionString(scenario: ISimpleTestScenario) {
     return `${scenario.targetType}(${scenario.testAssertions.map(
       (x: any) => `${x.nodeId}:${x.result === true ? 'T' : 'F'}`
@@ -95,6 +96,7 @@ class TestScenarioGenerator {
     return resultList;
   }
 
+  /* TODO: need check again, because there's no references */
   getAssertions(scenario: ISimpleTestScenario, expectedResult: boolean): ITestAssertion[] {
     if (!expectedResult) {
       // apply DeMorganLaw to invert assertions if expected result is FALSE
@@ -106,6 +108,7 @@ class TestScenarioGenerator {
     return scenario.testAssertions;
   }
 
+  /* TODO: need check again, because there's no references */
   clone(scenario: ITestScenario) {
     return {
       ...scenario,
@@ -126,8 +129,9 @@ class TestScenarioGenerator {
     return scenario.targetNodeId;
   }
 
+  /* TODO: need check again, because there's no references */
   combination(inputs = []) {
-    const combinations = []; //
+    const combinations: any[] = []; //
     const { length } = inputs;
     const k = 1 << length;
     for (let i = 0; i < k; i++) {

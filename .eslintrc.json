@@ -1,5 +1,5 @@
 {
-  "parser": "babel-eslint",
+  "parser": "@typescript-eslint/parser",
   "plugins": ["jest", "prettier"],
   "env": {
     "browser": true,
@@ -30,6 +30,12 @@
       "files": ["*.ts", "*.tsx"],
       "rules": {
         "no-undef": "error"
+      }
+    },
+    {
+      "files": ["*.js"],
+      "rules": {
+        "no-use-before-define": "off"
       }
     }
   ],
