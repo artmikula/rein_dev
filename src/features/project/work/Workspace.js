@@ -139,7 +139,7 @@ class Workspace extends Component {
       },
       testCoverage: testCoverage ?? cloneDeep(defaultTestCoverageData),
       testDatas: testDatas ?? [],
-      name: name,
+      name,
     };
 
     return _data;
