@@ -120,7 +120,7 @@ class Workspace extends Component {
   };
 
   _getWorkData = (data) => {
-    const { testBasis, causeEffects, graphNodes, graphLinks, constraints, testCoverage, testDatas } = data;
+    const { testBasis, causeEffects, graphNodes, graphLinks, constraints, testCoverage, testDatas, name } = data;
 
     let _causeEffects = causeEffects ?? [];
     if (_causeEffects.some((x) => !x.orderIndex)) {
@@ -139,6 +139,7 @@ class Workspace extends Component {
       },
       testCoverage: testCoverage ?? cloneDeep(defaultTestCoverageData),
       testDatas: testDatas ?? [],
+      name: name,
     };
 
     return _data;

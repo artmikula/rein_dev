@@ -40,12 +40,8 @@ export const workSlice = createSlice({
     generating: false,
   } as IWorkSlice,
   reducers: {
-    setWorkName: (state, action: PayloadAction<string>) => {
-      const _state = state;
-      _state.name = action.payload;
-    },
     setWork: (state, action: PayloadAction<IWorkSlice>) => {
-      const { testBasis, causeEffects, graph, testCoverage, testDatas, loaded } = action.payload;
+      const { testBasis, causeEffects, graph, testCoverage, testDatas, loaded, name } = action.payload;
       const _state = state;
       _state.testBasis = testBasis ?? _state.testBasis;
       _state.causeEffects = causeEffects ?? _state.causeEffects;
@@ -57,6 +53,7 @@ export const workSlice = createSlice({
       _state.testCoverage = testCoverage ?? _state.testCoverage;
       _state.testDatas = testDatas ?? _state.testDatas;
       _state.loaded = loaded ?? _state.loaded;
+      _state.name = name ?? '';
 
       return _state;
     },
@@ -104,7 +101,6 @@ export const workSlice = createSlice({
 });
 
 export const {
-  setWorkName,
   setWork,
   setGeneratingReport,
   setTestBasis,
