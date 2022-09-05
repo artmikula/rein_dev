@@ -1,5 +1,5 @@
 /* eslint-disable no-loop-func */
-import { CLASSIFY, RESULT_TYPE, TEST_CASE_LIMITATION } from 'features/shared/constants';
+import { CLASSIFY, GRAPH_NODE_TYPE, RESULT_TYPE } from 'features/shared/constants';
 import { v4 as uuid } from 'uuid';
 import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario, ITestDataDetail } from 'types/models';
 import { ITestCaseSet } from 'features/shared/storage-services/dbContext/models';
@@ -18,10 +18,13 @@ class TestCase {
       let testCasesOfScenario: ITestCase[] = [];
 
       if (!testScenarios[i].isViolated) {
-        const causeAssertions: ITestAssertion[] = testScenarios[i].testAssertions.filter((x) => x.graphNodeId);
+        const testAssertions: ITestAssertion[] = testScenarios[i].testAssertions.filter(
+          (testAssertion) => testAssertion.graphNodeId
+        );
 
-        for (let j = 0; j < causeAssertions.length; j++) {
-          const causeAssertion: ITestAssertion = causeAssertions[j];
+        for (let j = 0; j < testAssertions.length; j++) {
+          const causeAssertion: ITestAssertion = testAssertions[j];
+
           const { testDatas, type }: { testDatas: string; type: string } = testDataService.getTestData(
             testDataList,
             causeAssertion
@@ -29,24 +32,22 @@ class TestCase {
 
           if (testCasesOfScenario.length > 0) {
             const tmp: ITestCase[] = [];
-            const maxNumberOfTestCases =
-              testCasesOfScenario.length < TEST_CASE_LIMITATION ? testCasesOfScenario.length : TEST_CASE_LIMITATION;
             for (let k = 0; k < testCasesOfScenario.length; k++) {
               const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
               testDataArray.forEach((data) => {
                 const clone: ITestCase = this._clone(testCasesOfScenario[k]);
                 clone.id = uuid();
-                const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j]?.graphNodeId);
+                const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === testAssertions[j]?.graphNodeId);
                 if (testDataInCase) {
                   testDataInCase.data = data;
                 } else {
                   clone.testDatas.push({
-                    graphNodeId: causeAssertions[j]?.graphNodeId,
+                    graphNodeId: testAssertions[j]?.graphNodeId,
                     data,
-                    nodeId: causeAssertions[j]?.nodeId,
+                    nodeId: testAssertions[j]?.nodeId,
                   });
                 }
-                if (clone.testDatas.length === causeAssertions.length) {
+                if (clone.testDatas.length === testAssertions.length) {
                   clone.isSelected = false;
                   testCaseSet.add(clone);
                 }
@@ -62,7 +63,7 @@ class TestCase {
                 id: uuid(),
                 testScenarioId: testScenarios[i].id,
                 // testScenario: { ...testScenarios[i] },
-                testDatas: [{ graphNodeId: causeAssertions[j]?.graphNodeId, data, nodeId: causeAssertions[j]?.nodeId }],
+                testDatas: [{ graphNodeId: testAssertions[j]?.graphNodeId, data, nodeId: testAssertions[j]?.nodeId }],
                 results: [],
               };
               if (testScenarios[i].resultType === RESULT_TYPE.False) {

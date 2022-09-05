@@ -168,23 +168,22 @@ class TestScenarioAndCase extends Component {
   };
 
   _calculateTestScenarioAndCase = async (domainAction) => {
-    const { graph, testDatas, setGraph, dbContext, match, setGenerating } = this.props;
-    const { workId } = match.params;
-    let scenarioAndGraphNodes = null;
+    try {
+      const { graph, testDatas, setGraph, dbContext, match, setGenerating } = this.props;
+      const { workId } = match.params;
+      let scenarioAndGraphNodes = null;
+      setGenerating(GENERATE_STATUS.START);
 
-    if (dbContext && dbContext.db) {
       const { testScenarioSet, testCaseSet } = dbContext;
       await testScenarioSet.delete();
 
       if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
-        setGenerating(GENERATE_STATUS.START);
         scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(
           graph.graphLinks,
           graph.constraints,
           graph.graphNodes
         );
       } else {
-        setGenerating(GENERATE_STATUS.START);
         scenarioAndGraphNodes = MyersTechnique.buildTestScenario(graph.graphLinks, graph.constraints, graph.graphNodes);
       }
 
@@ -225,6 +224,8 @@ class TestScenarioAndCase extends Component {
         value: newGraphNodes,
         receivers: [domainEvents.DES.GRAPH, domainEvents.DES.SSMETRIC],
       });
+    } catch (error) {
+      setGenerating(GENERATE_STATUS.FAIL);
     }
   };
 
