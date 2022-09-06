@@ -14,20 +14,22 @@ class TestCase {
     graphNodes: IGraphNode[] = []
   ) {
     const totalTCs: ITestCase[] = [];
-    for (let i = 0; i < testScenarios.length; i++) {
+    for (let i = 0; i < 1; i++) {
       let testCasesOfScenario: ITestCase[] = [];
 
       if (!testScenarios[i].isViolated) {
-        const testAssertions: ITestAssertion[] = testScenarios[i].testAssertions.filter(
-          (testAssertion) => testAssertion.graphNodeId
+        const testAssertions: ITestAssertion[] = testScenarios[i].testAssertions.filter((testAssertion) =>
+          graphNodes.some(
+            (graphNode) => graphNode.id === testAssertion.graphNodeId && graphNode.type !== GRAPH_NODE_TYPE.GROUP
+          )
         );
 
-        for (let j = 0; j < testAssertions.length; j++) {
-          const causeAssertion: ITestAssertion = testAssertions[j];
+        for (let j = 0; j < 10; j++) {
+          const testAssertion: ITestAssertion = testAssertions[j];
 
           const { testDatas, type }: { testDatas: string; type: string } = testDataService.getTestData(
             testDataList,
-            causeAssertion
+            testAssertion
           );
 
           if (testCasesOfScenario.length > 0) {
@@ -35,7 +37,7 @@ class TestCase {
             for (let k = 0; k < testCasesOfScenario.length; k++) {
               const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
               testDataArray.forEach((data) => {
-                const clone: ITestCase = this._clone(testCasesOfScenario[k]);
+                const clone: ITestCase = structuredClone(testCasesOfScenario[k]);
                 clone.id = uuid();
                 const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === testAssertions[j]?.graphNodeId);
                 if (testDataInCase) {
@@ -47,7 +49,7 @@ class TestCase {
                     nodeId: testAssertions[j]?.nodeId,
                   });
                 }
-                if (clone.testDatas.length === testAssertions.length) {
+                if (clone.testDatas.length === 10) {
                   clone.isSelected = false;
                   testCaseSet.add(clone);
                 }
@@ -92,10 +94,6 @@ class TestCase {
     const graphNode = graphNodes.find((graphNode) => graphNode.id === graphNodeId);
 
     return graphNode ? graphNode.definition : '';
-  }
-
-  _clone(testCase: ITestCase) {
-    return { ...testCase, testDatas: [...testCase.testDatas], results: [...testCase.results] };
   }
 
   _splitTupple = (datas: string) => {
