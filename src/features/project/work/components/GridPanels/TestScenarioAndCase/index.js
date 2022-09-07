@@ -198,13 +198,13 @@ class TestScenarioAndCase extends Component {
       });
       await testScenarioSet.add(testScenarios);
 
-      const newGraphNodes = graphNodes;
-
-      testCaseHelper.updateTestCase(testCaseSet, scenarios, testDatas, newGraphNodes);
-
       const _testScenarios = await testScenarioSet.get();
 
-      this._setColumnsAndRows(_testScenarios, [], newGraphNodes);
+      await testCaseHelper.init(_testScenarios, graphNodes, testDatas);
+
+      const _testCases = await testCaseHelper.generateTestCases(testCaseSet);
+
+      await this._setColumnsAndRows(_testScenarios, _testCases, graphNodes);
 
       /** TODO: remove this after finish implement indexedDb */
       // const newTestScenariosAndCases = newTestScenarios.map((x) => {
@@ -217,7 +217,7 @@ class TestScenarioAndCase extends Component {
       // });
 
       // testScenarioAnsCaseStorage.set(newTestScenariosAndCases);
-      setGraph({ ...graph, graphNodes: newGraphNodes });
+      await setGraph({ ...graph, graphNodes });
 
       this._raiseEvent({
         action: domainAction,

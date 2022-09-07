@@ -153,10 +153,6 @@ class Workspace extends Component {
     /* TODO: check this after finish implement indexedDb */
     testScenarioAnsCaseStorage.setId(workId);
 
-    const context = new DbContext();
-    await context.init(workId);
-    setDbContext(context);
-
     if (result.error) {
       let { message } = result.error;
 
@@ -171,6 +167,10 @@ class Workspace extends Component {
         },
       });
     } else {
+      const dbName = `${result.data.name}-${workId}`;
+      const context = new DbContext();
+      await context.init(dbName);
+      setDbContext(context);
       workData = this._getWorkData(result.data);
     }
 

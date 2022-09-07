@@ -1,13 +1,7 @@
 /* eslint-disable no-bitwise */
 import { GRAPH_NODE_TYPE } from 'features/shared/constants';
-import {
-  IGraphLink,
-  ITestScenario,
-  ITestAssertion,
-  ISimpleTestScenario,
-  SimpleTestScenario,
-  IGraphNode,
-} from 'types/models';
+import { IGraphLink, ITestScenario, ITestAssertion, ISimpleTestScenario, IGraphNode } from 'types/models';
+import SimpleTestScenario from '../Helper/TestScenarioHelper';
 import FlattenScenarioProcess from './FlattenScenarioProcess';
 
 class TestScenarioGenerator {
