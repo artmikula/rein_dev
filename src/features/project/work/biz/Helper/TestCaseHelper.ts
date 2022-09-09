@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { ISimpleTestCase, ITestAssertion, ITestData } from 'types/models';
+import { ISimpleTestCase, ITestData } from 'types/models';
 
 interface IProps {
   testScenarioId: string;
