@@ -1,17 +1,20 @@
+/* eslint-disable no-continue */
+/* eslint-disable no-restricted-syntax */
+import cloneDeep from 'lodash.clonedeep';
 import { CLASSIFY, GRAPH_NODE_TYPE, RESULT_TYPE } from 'features/shared/constants';
 import {
   IGraphNode,
-  ITestAssertion,
   ITestCase,
   ISimpleTestScenario,
   ITestDataDetail,
   ITestData,
   ISimpleTestCase,
+  ITestAssertion,
 } from 'types/models';
 import { ITestCaseSet } from 'features/shared/storage-services/dbContext/models';
 import { ITestScenarioReport, ITestScenarioAndCaseRow, ITestCaseReport } from 'types/bizModels';
-import testDataService from './TestData';
 import SimpleTestCase from './Helper/TestCaseHelper';
+import testDataService from './TestData';
 
 interface ITestCaseHelper {
   testScenarios: ISimpleTestScenario[];
@@ -139,40 +142,53 @@ class TestCase implements ITestCaseHelper {
     testCaseSet: ITestCaseSet,
     testDataLength: number
   ) {
-    for (let i = 0; i < testAssertions.length; i++) {
+    for await (const testAssertion of testAssertions) {
       // console.log('testAssertions[i]', testAssertions[i]);
+      const i = testAssertions.findIndex((asssertion) => testAssertion.graphNodeId === asssertion.graphNodeId);
       const nextAssertions = testAssertions.slice(i + 1);
       const { testDatas, type }: { testDatas: string; type: string } = testDataService.getTestData(
         this.testData,
-        testAssertions[i]
+        testAssertion
       );
       const testData: string[] = this.convertTestDataToList(testDatas, type);
-      for (let j = 0; j < testData.length; j++) {
-        console.log('j', j, testData[j]);
+      for await (const data of testData) {
+        // console.log('data', data);
+        // console.log('testCase', testCase);
         const newTestData: ITestData = {
           graphNodeId: testAssertions[i].graphNodeId,
-          data: testData[j],
+          data,
           nodeId: testAssertions[i].nodeId ?? '',
         };
         const existData = testCase.testDatas.find(
-          (testData: ITestData) => testData.graphNodeId === testAssertions[i].graphNodeId
+          (value: ITestData) => value.graphNodeId === testAssertions[i].graphNodeId
         );
 
         if (!existData) {
           await testCase.addTestData(newTestData);
-          if (testCase.testDatas.length === testDataLength) {
-            console.log('testcase continue', testCase);
-            break;
+          if (nextAssertions.length === 0) {
+            // console.log('add to db 1');
+            testCaseSet.add(testCase);
+            continue;
+          } else {
+            await this.getTestCase(testCase, nextAssertions, testCaseSet, testDataLength);
           }
-          await this.getTestCase(testCase, nextAssertions, testCaseSet, testDataLength);
         }
-        console.log('testcase', testCase);
-        // set flag update to indexeddb
-        // if (nextAssertions.length === 0) {
-        //   // testCaseSet.add(testCase);
-        //   // console.log('testDatas1', testCase);
-        //   break;
-        // }
+        if (existData && !existData.data.includes(data)) {
+          // console.log('new test case');
+          const newTestCase = new SimpleTestCase({
+            testScenarioId: testCase.testScenarioId,
+            results: cloneDeep(testCase.results),
+            testDatas: cloneDeep(testCase.testDatas),
+          });
+          newTestCase.updateTestData(newTestData, testAssertion.graphNodeId);
+          if (nextAssertions.length === 0) {
+            // console.log('add to db 2');
+            testCaseSet.add(testCase);
+            continue;
+          } else {
+            await this.getTestCase(newTestCase, nextAssertions, testCaseSet, testDataLength);
+          }
+        }
       }
     }
   }
