@@ -65,7 +65,7 @@ class IndexedDbHelper {
     return db.delete().from(table).exec();
   }
 
-  updateByFilter(db: lf.Database, table: lf.schema.Table, columnName: string, filter?: lf.Predicate): lf.query.Update {
+  update(db: lf.Database, table: lf.schema.Table, columnName: string, filter?: lf.Predicate): lf.query.Update {
     if (filter) {
       return db.update(table).set(table[columnName], lf.bind(0)).where(filter);
     }

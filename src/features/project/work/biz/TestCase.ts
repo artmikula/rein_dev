@@ -236,7 +236,7 @@ class TestCase implements ITestCaseHelper {
           causes: [],
         };
         Object.keys(testCase).forEach((key: keyof ITestCaseReport) => {
-          if (key[0] === CLASSIFY.CAUSE_PREFIX) {
+          if (typeof key === 'string' && key[0] === CLASSIFY.CAUSE_PREFIX) {
             testCaseItem[key] = testCase[key];
           }
         });

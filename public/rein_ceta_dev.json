@@ -1,6 +1,6 @@
 {
   "realm": "reinceta",
-  "auth-server-url": "https://rein-ceta-portal.azurewebsites.net/auth/",
+  "auth-server-url": "https://rein-portal.thinkforbl.com/auth/",
   "ssl-required": "external",
   "resource": "rein_ceta_ui_local",
   "public-client": true,
