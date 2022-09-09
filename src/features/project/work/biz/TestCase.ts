@@ -5,8 +5,8 @@ import {
   ITestCase,
   ISimpleTestScenario,
   ITestDataDetail,
-  ISimpleTestCase,
   ITestData,
+  ISimpleTestCase,
 } from 'types/models';
 import { ITestCaseSet } from 'features/shared/storage-services/dbContext/models';
 import { ITestScenarioReport, ITestScenarioAndCaseRow, ITestCaseReport } from 'types/bizModels';
@@ -154,7 +154,9 @@ class TestCase implements ITestCaseHelper {
           data: testData[j],
           nodeId: testAssertions[i].nodeId ?? '',
         };
-        const existData = testCase.testDatas.find((testData) => testData.graphNodeId === testAssertions[i].graphNodeId);
+        const existData = testCase.testDatas.find(
+          (testData: ITestData) => testData.graphNodeId === testAssertions[i].graphNodeId
+        );
 
         if (!existData) {
           await testCase.addTestData(newTestData);
