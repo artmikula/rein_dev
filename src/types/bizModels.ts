@@ -10,7 +10,7 @@ interface ITestCaseRow {
   id: string;
   Name: string;
   isSelected: boolean;
-  results: string;
+  results?: string;
 }
 
 interface ITestScenarioAndCaseRow {
@@ -47,8 +47,8 @@ interface ITestScenarioReport {
 interface ITestCaseReport {
   [key: string]: any;
   name: string;
-  definition: string;
   causes: [];
+  definition?: string;
   expectedResults?: string;
 }
 

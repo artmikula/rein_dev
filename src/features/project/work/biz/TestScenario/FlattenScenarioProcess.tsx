@@ -9,7 +9,7 @@ export default class FlattenScenarioProcess {
 
   resultList: ISimpleTestScenario[] = [];
 
-  showReducedScenariosAndCases: boolean = false;
+  showReducedScenariosAndCases = false;
 
   flattenedFragmentsObj: any = {};
 
@@ -20,7 +20,7 @@ export default class FlattenScenarioProcess {
   constructor(
     testScenario: ISimpleTestScenario,
     scenarioDictionary: Map<string, ISimpleTestScenario>,
-    showReducedScenariosAndCases: boolean = false
+    showReducedScenariosAndCases = false
   ) {
     this.testScenario = testScenario;
     this.scenarioDictionary = scenarioDictionary;
@@ -28,7 +28,7 @@ export default class FlattenScenarioProcess {
     this.showReducedScenariosAndCases = showReducedScenariosAndCases;
   }
 
-  run() {
+  run(): ISimpleTestScenario[] {
     // defitions: _mergeScenarioFragments
     // assertions: C1:True, G1:True => can simplify by C1:True ~ C1 ; C1:False ~ !C1
     // fragment ~ assertion
@@ -56,7 +56,7 @@ export default class FlattenScenarioProcess {
     return this.resultList;
   }
 
-  flatFragment(scenario: ISimpleTestScenario) {
+  flatFragment(scenario: ISimpleTestScenario): void {
     if (scenario.targetType === OPERATOR_TYPE.AND) {
       this.flatAndFragment(scenario);
     } else {
@@ -64,7 +64,7 @@ export default class FlattenScenarioProcess {
     }
   }
 
-  flatAndFragment(scenario: ISimpleTestScenario) {
+  flatAndFragment(scenario: ISimpleTestScenario): void {
     this.resultList.push(scenario);
 
     scenario.testAssertions.forEach((assertion) => {
@@ -91,7 +91,7 @@ export default class FlattenScenarioProcess {
     });
   }
 
-  flatOrFragment(scenario: ISimpleTestScenario) {
+  flatOrFragment(scenario: ISimpleTestScenario): void {
     const combinations = TestScenarioHelper.combination(scenario.testAssertions.map((x) => x.nodeId));
 
     const groups = Enumerable.from(combinations).groupBy((x) => x.length);
@@ -123,7 +123,7 @@ export default class FlattenScenarioProcess {
     });
   }
 
-  removeScenarioFromResult(scenario: ISimpleTestScenario) {
+  removeScenarioFromResult(scenario: ISimpleTestScenario): void {
     const idx = this.resultList.indexOf(scenario);
     if (idx >= 0) {
       this.resultList.splice(idx, 1);
@@ -137,7 +137,7 @@ export default class FlattenScenarioProcess {
     return { ...scenario, testAssertions: assertions };
   }
 
-  findGroupScenario(fragment: ITestAssertion) {
+  findGroupScenario(fragment: ITestAssertion): ISimpleTestScenario | undefined {
     return this.baseScenarios.find((x) => x.targetNodeId === fragment.nodeId);
   }
 }

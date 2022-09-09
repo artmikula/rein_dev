@@ -1,4 +1,3 @@
-import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import { setTestCoverages } from 'features/project/work/slices/workSlice';
 import { COVERAGE_ASPECT } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
@@ -68,8 +67,11 @@ class TestCoverage extends Component {
     eventBus.publish(domainEvents.TEST_COVERAGE_DOMAINEVENT, message);
   };
 
-  _calculate = () => {
-    const { graph, testDatas } = this.props;
+  _calculate = async () => {
+    const { graph, testDatas, dbContext } = this.props;
+    const coverageResult = {};
+
+    /* TODO: remove this after finish implement indexedDb
     const testScenariosAndCases = testScenarioAnsCaseStorage.get();
 
     const testCases = [];
@@ -94,15 +96,40 @@ class TestCoverage extends Component {
     });
 
     return data;
+    */
+
+    if (dbContext && dbContext.db) {
+      const { testScenarioSet, testCaseSet } = dbContext;
+      const testScenarios = await testScenarioSet.get();
+      const testCases = await testCaseSet.get();
+      const promises = testScenarios.map(async (testScenario) => {
+        const _testScenario = testScenario;
+        _testScenario.testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));
+        return _testScenario;
+      });
+      await Promise.all(promises);
+      testCoverage.initValue(graph.graphNodes, testCases, testScenarios, graph.graphLinks, testDatas);
+
+      Object.keys(COVERAGE_ASPECT).forEach((key) => {
+        const result = testCoverage.calculateCoverage(COVERAGE_ASPECT[key]);
+        if (result) {
+          coverageResult[COVERAGE_ASPECT[key]] = { actualPercent: toPercent(result), denominator: result.denominator };
+        } else {
+          coverageResult[COVERAGE_ASPECT[key]] = { actualPercent: 0, denominator: 0 };
+        }
+      });
+    }
+
+    return coverageResult;
   };
 
-  _recalculate = () => {
-    const result = this._calculate();
+  _recalculate = async () => {
+    const result = await this._calculate();
     if (result) {
       const { data } = this.props;
 
       Object.keys(result).forEach((key) => {
-        result[key].planPercent = data[key].planPercent;
+        result[key].planPercent = data[key]?.planPercent;
       });
 
       this._setTestCoverages(result);
@@ -170,17 +197,17 @@ class TestCoverage extends Component {
         <div className="d-flex flex-column flex-grow-1 pr-3 scrollbar-sm overflow-auto">
           <div className="d-flex flex-grow-1">
             {this.testCoverageProperties.map((x) => {
-              const value = isPlanning ? data[x.key].planPercent : data[x.key].actualPercent;
-              const kiloValue = kiloFormat(data[x.key].denominator);
+              const value = isPlanning ? data[x.key]?.planPercent : data[x.key]?.actualPercent;
+              const kiloValue = kiloFormat(data[x.key]?.denominator);
 
               return (
                 <Range
                   key={x.key}
-                  value={value}
+                  value={value ?? 0}
                   onChange={(value) => this._handlePlanChange(x.key, value)}
                   className="test-coverage-item"
                   editable={isPlanning}
-                  kiloValue={kiloValue}
+                  kiloValue={kiloValue ?? 0}
                 />
               );
             })}
@@ -207,12 +234,18 @@ TestCoverage.propTypes = {
     graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
     constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
+  dbContext: PropTypes.oneOfType([PropTypes.object]),
+};
+
+TestCoverage.defaultProps = {
+  dbContext: null,
 };
 
 const mapStateToProps = (state) => ({
   data: state.work.testCoverage,
   graph: state.work.graph,
   testDatas: state.work.testDatas,
+  dbContext: state.work.dbContext,
 });
 const mapDispatchToProps = { setTestCoverages };
 

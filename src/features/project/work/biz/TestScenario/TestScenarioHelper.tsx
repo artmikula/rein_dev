@@ -2,7 +2,7 @@
 /* eslint-disable no-bitwise */
 import { GRAPH_NODE_TYPE, OPERATOR_TYPE, RESULT_TYPE, SCENARIO_PROPERTIES } from 'features/shared/constants';
 import Enumerable from 'linq';
-import { ITestScenarioAndCaseColumn, ITestScenarioAndCaseRow } from 'types/bizModels';
+import { ITestCaseRow, ITestScenarioAndCaseColumn, ITestScenarioAndCaseRow } from 'types/bizModels';
 import {
   IGraphLink,
   IGraphNode,
@@ -11,6 +11,7 @@ import {
   ITestResult,
   ISimpleTestScenario,
   ITestCase,
+  ITestData,
 } from 'types/models';
 import { v4 as uuid } from 'uuid';
 
@@ -19,6 +20,7 @@ interface IRow extends ISimpleTestScenario {
 }
 
 class TestScenarioHelper {
+  /* TODO: need check again, because there's no references */
   buildAssertionDictionary(graphLinks: IGraphLink[]) {
     // CalculateAssertionDictionary
     const assertionDictionary = new Map<string, ITestScenario>();
@@ -74,6 +76,7 @@ class TestScenarioHelper {
     return assertionDictionary;
   }
 
+  /* TODO: need check again, because there's no references */
   findBaseScenario(scenarios: ITestScenario[] = [], causeNodes: IGraphNode[] = []) {
     if (scenarios.length > 0) {
       const maxCount = Enumerable.from(scenarios).max(
@@ -95,6 +98,7 @@ class TestScenarioHelper {
     return scenarios;
   }
 
+  /* TODO: need check again, testScenario should not exist in testAssertion */
   invertedCloneWithExceptId(testScenario: ITestScenario, exceptId = null) {
     const cloneAssertions: ITestAssertion[] = [];
     const { testAssertions } = testScenario;
@@ -316,7 +320,7 @@ class TestScenarioHelper {
   }
 
   // TODO: - implement
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   validate(testScenario: any, otherScenario: any, trueAssertion: any) {
     return true;
   }
@@ -500,7 +504,7 @@ class TestScenarioHelper {
         } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
           testScenarioItem[column.key] = !!testScenario[column.key];
         } else {
-          const testAssertion = testScenario.testAssertions.find((x: any) => x.graphNodeId === column.key);
+          const testAssertion = testScenario.testAssertions.find((x: ITestAssertion) => x.graphNodeId === column.key);
           if (testAssertion) {
             testScenarioItem[column.key] = testAssertion.result ? 'T' : 'F';
           } else {
@@ -521,11 +525,12 @@ class TestScenarioHelper {
         }
       );
 
-      testScenarioItem.testCases = testScenario.testCases.map((testCase: any, testCaseIndex: number) => {
-        const testCaseItem: any = {};
-        testCaseItem.Name = `TC#${testScenarioIndex + 1}-${testCaseIndex + 1}`;
-        testCaseItem.isSelected = !!testCase.isSelected;
-        testCaseItem.id = testCase.id;
+      testScenarioItem.testCases = testScenario.testCases.map((testCase: ITestCase, testCaseIndex: number) => {
+        const testCaseItem: ITestCaseRow = {
+          id: testCase.id,
+          Name: `TC#${testScenarioIndex + 1}-${testCaseIndex + 1}`,
+          isSelected: !!testCase.isSelected,
+        };
 
         columns.forEach((column) => {
           if (column.key === 'results') {
@@ -533,7 +538,7 @@ class TestScenarioHelper {
           } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
             testCaseItem[column.key] = '';
           } else {
-            const testData = testCase.testDatas.find((x: any) => x.graphNodeId === column.key);
+            const testData = testCase.testDatas.find((x: ITestData) => x.graphNodeId === column.key);
             testCaseItem[column.key] = testData ? testData.data : '';
           }
         });

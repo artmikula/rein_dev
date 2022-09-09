@@ -104,7 +104,7 @@ class TestCase {
     return arr.map((x) => `[${x}]`);
   };
 
-  convertTestDataToList(datas: string = '', type: string = ''): string[] {
+  convertTestDataToList(datas = '', type = ''): string[] {
     if (datas) {
       if (type === 'Tupple') {
         return this._splitTupple(datas);
