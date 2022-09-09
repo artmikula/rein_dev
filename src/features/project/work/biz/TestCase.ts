@@ -6,6 +6,7 @@ import {
   ISimpleTestScenario,
   ITestDataDetail,
   ISimpleTestCase,
+  ITestData,
 } from 'types/models';
 import { ITestCaseSet } from 'features/shared/storage-services/dbContext/models';
 import { ITestScenarioReport, ITestScenarioAndCaseRow, ITestCaseReport } from 'types/bizModels';
@@ -16,6 +17,7 @@ interface ITestCaseHelper {
   testScenarios: ISimpleTestScenario[];
   graphNodes: IGraphNode[];
   testData: ITestDataDetail[];
+  testDataDraft: ITestDataDetail[];
 }
 
 interface IReportData {
@@ -30,16 +32,20 @@ class TestCase implements ITestCaseHelper {
 
   testData: ITestDataDetail[];
 
+  testDataDraft: ITestDataDetail[];
+
   constructor() {
     this.testScenarios = [];
     this.graphNodes = [];
     this.testData = [];
+    this.testDataDraft = [];
   }
 
   init(testScenarios: ISimpleTestScenario[], graphNodes: IGraphNode[], testData: ITestDataDetail[]) {
     this.testScenarios = testScenarios;
     this.graphNodes = graphNodes;
     this.testData = testData;
+    this.testDataDraft = testData;
   }
 
   generateTestCases(testCaseSet: ITestCaseSet) {
@@ -110,7 +116,64 @@ class TestCase implements ITestCaseHelper {
     return allTestCases;
   }
 
-  async getTestCase(testCase: ITestCase, testAssertion: ITestAssertion) {}
+  async createTestCases(testCaseSet: ITestCaseSet) {
+    for await (const testScenario of this.testScenarios) {
+      const results: string[] = [];
+      if (testScenario.resultType === RESULT_TYPE.False) {
+        results.push(`NOT(${this._getDescriptionOfGraphNode(this.graphNodes, testScenario.targetGraphNodeId)})`);
+      } else {
+        results.push(this._getDescriptionOfGraphNode(this.graphNodes, testScenario.targetGraphNodeId));
+      }
+      const testCase = new SimpleTestCase({
+        testScenarioId: testScenario.id,
+        results,
+      });
+      const testDataLength = testScenario.testAssertions.length;
+      await this.getTestCase(testCase, testScenario.testAssertions, testCaseSet, testDataLength);
+    }
+  }
+
+  async getTestCase(
+    testCase: ISimpleTestCase,
+    testAssertions: ITestAssertion[],
+    testCaseSet: ITestCaseSet,
+    testDataLength: number
+  ) {
+    for (let i = 0; i < testAssertions.length; i++) {
+      // console.log('testAssertions[i]', testAssertions[i]);
+      const nextAssertions = testAssertions.slice(i + 1);
+      const { testDatas, type }: { testDatas: string; type: string } = testDataService.getTestData(
+        this.testData,
+        testAssertions[i]
+      );
+      const testData: string[] = this.convertTestDataToList(testDatas, type);
+      for (let j = 0; j < testData.length; j++) {
+        console.log('j', j, testData[j]);
+        const newTestData: ITestData = {
+          graphNodeId: testAssertions[i].graphNodeId,
+          data: testData[j],
+          nodeId: testAssertions[i].nodeId ?? '',
+        };
+        const existData = testCase.testDatas.find((testData) => testData.graphNodeId === testAssertions[i].graphNodeId);
+
+        if (!existData) {
+          await testCase.addTestData(newTestData);
+          if (testCase.testDatas.length === testDataLength) {
+            console.log('testcase continue', testCase);
+            break;
+          }
+          await this.getTestCase(testCase, nextAssertions, testCaseSet, testDataLength);
+        }
+        console.log('testcase', testCase);
+        // set flag update to indexeddb
+        // if (nextAssertions.length === 0) {
+        //   // testCaseSet.add(testCase);
+        //   // console.log('testDatas1', testCase);
+        //   break;
+        // }
+      }
+    }
+  }
 
   _getDescriptionOfGraphNode(graphNodes: IGraphNode[], graphNodeId: string) {
     const graphNode = graphNodes.find((graphNode) => graphNode.id === graphNodeId);

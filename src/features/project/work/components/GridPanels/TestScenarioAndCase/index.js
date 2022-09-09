@@ -203,6 +203,7 @@ class TestScenarioAndCase extends Component {
       await testCaseHelper.init(_testScenarios, graphNodes, testDatas);
 
       const _testCases = await testCaseHelper.generateTestCases(testCaseSet);
+      await testCaseHelper.createTestCases(testCaseSet);
 
       await this._setColumnsAndRows(_testScenarios, _testCases, graphNodes);
 
@@ -221,7 +222,7 @@ class TestScenarioAndCase extends Component {
 
       this._raiseEvent({
         action: domainAction,
-        value: newGraphNodes,
+        value: graphNodes,
         receivers: [domainEvents.DES.GRAPH, domainEvents.DES.SSMETRIC],
       });
     } catch (error) {
