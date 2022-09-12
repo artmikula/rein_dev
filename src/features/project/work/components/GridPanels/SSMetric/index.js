@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import SSMetricHelper from 'features/project/work/biz/SSMetric';
 import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
+import { GENERATE_STATUS } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
 import { debounce } from 'lodash';
@@ -9,6 +10,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Label } from 'reactstrap';
+import { setGenerating } from 'features/project/work/slices/workSlice';
 import Language from '../../../../../shared/languages/Language';
 import CircleProgress from './CircleProgress';
 import RadarChart from './RadarChart';
@@ -126,7 +128,11 @@ class SSMertic extends Component {
   }
 
   componentDidMount() {
-    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, this._forceUpdate);
+    const { setGenerating } = this.props;
+    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, async () => {
+      await setGenerating(GENERATE_STATUS.COMPLETE);
+      this._forceUpdate();
+    });
   }
 
   componentWillUnmount() {
@@ -332,6 +338,7 @@ SSMertic.propTypes = {
     graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
     constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
+  setGenerating: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
@@ -340,4 +347,6 @@ const mapStateToProps = (state) => ({
   graph: state.work.graph,
 });
 
-export default connect(mapStateToProps)(withRouter(SSMertic));
+const mapDispatchToProps = { setGenerating };
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(SSMertic));
