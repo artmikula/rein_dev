@@ -20,7 +20,6 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
-import testCaseWorker from 'features/project/work/biz/worker/testCase.worker';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -175,7 +174,7 @@ class TestScenarioAndCase extends Component {
       const { graph, testDatas, setGraph, dbContext, match, setGenerating } = this.props;
       const { workId } = match.params;
 
-      this.worker = await new Worker(testCaseWorker);
+      this.worker = await new Worker('features/project/work/biz/worker/testCase.worker.js');
 
       let scenarioAndGraphNodes = null;
       setGenerating(GENERATE_STATUS.START);

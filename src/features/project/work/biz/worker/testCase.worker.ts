@@ -1,17 +1,17 @@
 /* eslint-disable no-restricted-syntax */
-/* eslint-disable no-restricted-syntax */
 import { RESULT_TYPE } from 'features/shared/constants';
 import { sortByString } from 'features/shared/lib/utils';
 import cloneDeep from 'lodash.clonedeep';
+import { ISimpleTestCase, ITestAssertion, ITestData } from 'types/models';
 import testDataService from '../TestData';
 import SimpleTestCase from '../Helper/TestCaseHelper';
 import TestCase from '../TestCase';
 
 export default class TestCaseWorker {
-  async createTestCases() {
+  async createTestCases(): Promise<void> {
     for await (const testScenario of TestCase.testScenarios) {
       const { testAssertions, resultType, targetGraphNodeId } = testScenario;
-      const results = [];
+      const results: string[] = [];
       if (resultType === RESULT_TYPE.False) {
         results.push(`NOT(${TestCase._getDescriptionOfGraphNode(TestCase.graphNodes, targetGraphNodeId)})`);
       } else {
@@ -25,20 +25,29 @@ export default class TestCaseWorker {
     }
   }
 
-  async getTestCase(testCase, testAssertions, testDataLength) {
+  async getTestCase(
+    testCase: ISimpleTestCase,
+    testAssertions: ITestAssertion[],
+    testDataLength: number
+  ): Promise<void> {
     for await (const testAssertion of testAssertions) {
       const index = testAssertions.findIndex((assertion) => testAssertion.graphNodeId === assertion.graphNodeId);
       const nextAssertions = testAssertions.slice(index + 1);
-      const { testDatas, type } = testDataService.getTestData(TestCase.testData, testAssertion);
-      const testData = TestCase.convertTestDataToList(testDatas, type);
+      const { testDatas, type }: { testDatas: string; type: string } = testDataService.getTestData(
+        TestCase.testData,
+        testAssertion
+      );
+      const testData: string[] = TestCase.convertTestDataToList(testDatas, type);
       for await (const data of testData) {
         const dataIndex = testData.indexOf(data);
-        const newTestData = {
+        const newTestData: ITestData = {
           graphNodeId: testAssertion.graphNodeId,
           data,
           nodeId: testAssertion.nodeId ?? '',
         };
-        const existData = testCase.testDatas.find((testData) => testData.graphNodeId === testAssertion.graphNodeId);
+        const existData = testCase.testDatas.find(
+          (testData: ITestData) => testData.graphNodeId === testAssertion.graphNodeId
+        );
 
         if (!existData) {
           await testCase.addTestData(newTestData);
