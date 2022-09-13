@@ -51,6 +51,8 @@ const en = {
   twosentencearenotsimilar: 'Two sentence are not similar',
   twosentencearesimilar: 'Two sentence are similar',
   similarity: 'Similarity',
+  testscenarioandcase: 'Test Scenario And Case',
+  testcasepagesize: 'Test case page size',
   /* End option modal */
   /* End Modal */
   /* Workspace */

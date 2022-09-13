@@ -32,6 +32,20 @@ export default class TestCaseSet implements ITestCaseSet {
     return query.bind([this.table.createRow(data)]).exec();
   }
 
+  async totalTestCases(testScenarioId?: string): Promise<number> {
+    let query: { [key: string]: any }[];
+    if (testScenarioId) {
+      query = await this.db
+        .select(lf.fn.count(this.table.id))
+        .from(this.table)
+        .where(this.table.testScenarioId.eq(testScenarioId))
+        .exec();
+    } else {
+      query = await this.db.select(lf.fn.count(this.table.id)).from(this.table).exec();
+    }
+    return query[0]['COUNT(id)'] as number;
+  }
+
   /** actions: checked/unchecked */
   async update(columnName: string, value: unknown, filter?: lf.Predicate): Promise<Object[]> {
     const query = await indexedDbHelper.update(this.db, this.table, columnName, filter);

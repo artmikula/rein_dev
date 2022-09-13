@@ -50,6 +50,7 @@ class TestScenarioAndCase extends Component {
       isCheckAllTestScenarios: false,
       filterRows: undefined,
       filterOptions: structuredClone(defaultFilterOptions),
+      isLoading: false,
     };
     this.worker = null;
     this.initiatedData = false;
@@ -115,8 +116,7 @@ class TestScenarioAndCase extends Component {
 
   _clearData = async () => {
     const { dbContext } = this.props;
-    this._setColumnsAndRows([], [], []);
-    this.setState({ isCheckAllTestScenarios: false, filterRows: undefined });
+    this.setState({ isCheckAllTestScenarios: false, filterRows: undefined, columns: [] });
 
     const { testScenarioSet } = dbContext;
     await testScenarioSet.delete();
@@ -164,7 +164,8 @@ class TestScenarioAndCase extends Component {
         await Promise.all(promises);
 
         this.initiatedData = true;
-        this._setColumnsAndRows(testScenarios, testCasesRows, graph.graphNodes);
+        const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
+        this.setState({ columns });
       }
     }
   };
@@ -173,7 +174,6 @@ class TestScenarioAndCase extends Component {
     try {
       const { graph, testDatas, setGraph, dbContext, match, setGenerating } = this.props;
       const { workId } = match.params;
-      let _testCases = [];
 
       this.worker = await new Worker(testCaseWorker);
 
@@ -215,15 +215,16 @@ class TestScenarioAndCase extends Component {
         try {
           await testCaseHelper.createTestCases();
           const result = await ev.data;
-          console.log('result', result);
           if (result) {
+            const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
             setGenerating(GENERATE_STATUS.COMPLETE);
-            _testCases = await testCaseSet.get();
-            await this._setColumnsAndRows(_testScenarios, _testCases, graphNodes);
+            this.setState({ isLoading: true, columns });
+            await this._getTestScenarioAndCase();
+            this.setState({ isLoading: false });
             this.worker.terminate();
           }
         } catch (error) {
-          console.log('cannot generate1', error);
+          console.log('cannot generate', error);
           setGenerating(GENERATE_STATUS.FAIL);
           this.worker.terminate();
         }
@@ -256,11 +257,16 @@ class TestScenarioAndCase extends Component {
     eventBus.publish(domainEvents.TEST_SCENARIO_DOMAINEVENT, message);
   };
 
-  _setColumnsAndRows = (scenarios = [], testCases = [], graphNodes = []) => {
-    const columns = TestScenarioHelper.convertToColumns(graphNodes, Language);
-    const rows = TestScenarioHelper.convertToRows(testCases, scenarios, columns, graphNodes);
-
-    this.setState({ rows, columns });
+  _getTestScenarioAndCase = async () => {
+    const { dbContext, graph } = this.props;
+    const { columns } = this.state;
+    if (dbContext && dbContext.db) {
+      const { testScenarioSet, testCaseSet } = dbContext;
+      const testScenarios = await testScenarioSet.get();
+      const testCases = await testCaseSet.get();
+      return TestScenarioHelper.convertToRows(testCases, testScenarios, columns, graph.graphNodes);
+    }
+    return [];
   };
 
   _handleShortCutEvents = (code) => {
@@ -288,19 +294,22 @@ class TestScenarioAndCase extends Component {
     }
   };
 
-  _handleWorkMenuEvents = (event) => {
+  _handleWorkMenuEvents = async (event) => {
     const { action } = event.message;
-    const { rows } = this.state;
     if (action === domainEvents.ACTION.REPORTWORK) {
-      const reportData = testCaseHelper.generateReportData(rows);
-      this._raiseEvent({
-        action: domainEvents.ACTION.REPORTWORK,
-        value: reportData,
-        receivers: [domainEvents.DES.WORKMENU],
-      });
+      const data = await this._getTestScenarioAndCase();
+      if (data.length > 0) {
+        const reportData = testCaseHelper.generateReportData(data);
+        this._raiseEvent({
+          action: domainEvents.ACTION.REPORTWORK,
+          value: reportData,
+          receivers: [domainEvents.DES.WORKMENU],
+        });
+      }
     }
   };
 
+  /** TODO: remove this after finish implement indexedDb */
   _setRows = (rows) => {
     this._raiseEvent({
       action: domainEvents.ACTION.UPDATE,
@@ -309,20 +318,13 @@ class TestScenarioAndCase extends Component {
     this.setState({ rows }, this._isCheckedAllTestScenarios);
   };
 
-  _isCheckedAllTestScenarios = () => {
-    const { rows } = this.state;
-    const isCheckAllTestScenarios = rows.every(
-      (row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected)
-    );
-    this.setState({ isCheckAllTestScenarios });
-  };
-
-  _createTestCasesFile = () => {
+  _createTestCasesFile = async () => {
     const { graph } = this.props;
-    const { columns, rows } = this.state;
+    const { columns } = this.state;
     const dataToConvert = [];
+    const testScenarioAndCase = await this._getTestScenarioAndCase();
 
-    rows.forEach((testScenario) => {
+    testScenarioAndCase.forEach((testScenario) => {
       testScenario.testCases.forEach((testCase) => {
         dataToConvert.push(this._createExportRowData(testCase, columns));
       });
@@ -394,12 +396,13 @@ class TestScenarioAndCase extends Component {
     return row;
   }
 
-  _exportData() {
+  async _exportData() {
     const { workName, graph, workId } = this.props;
-    const { columns, rows } = this.state;
+    const { columns } = this.state;
     const dataToConvert = [];
+    const testScenarioAndCase = await this._getTestScenarioAndCase();
 
-    rows.forEach((testScenario) => {
+    testScenarioAndCase.forEach((testScenario) => {
       dataToConvert.push(this._createExportRowData(testScenario, columns));
       testScenario.testCases.forEach((testCase) => {
         dataToConvert.push(this._createExportRowData(testCase, columns));
@@ -413,12 +416,13 @@ class TestScenarioAndCase extends Component {
     );
   }
 
-  _exportTestScenario() {
+  async _exportTestScenario() {
     const { workName, graph } = this.props;
-    const { columns, rows } = this.state;
+    const { columns } = this.state;
     const dataToConvert = [];
+    const testScenarioAndCase = await this._getTestScenarioAndCase();
 
-    rows.forEach((testScenario) => {
+    testScenarioAndCase.forEach((testScenario) => {
       dataToConvert.push(this._createExportRowData(testScenario, columns));
     });
     const csvFile = arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
@@ -459,19 +463,21 @@ class TestScenarioAndCase extends Component {
   }
 
   render() {
-    const { columns, rows, isCheckAllTestScenarios, filterRows, filterOptions } = this.state;
+    const { columns, isCheckAllTestScenarios, filterRows, filterOptions, isLoading } = this.state;
 
-    return (
+    return isLoading ? (
+      <div className="loading_text" />
+    ) : (
       <div>
         <FilterBar
-          rows={rows}
           filterOptions={filterOptions}
           resetFilter={this._clearFilterOptions}
           setFilterOptions={this._setFilterOptions}
           submitFilter={this._onChangeFilterOptions}
+          getData={this._getTestScenarioAndCase}
         />
         <TableTestScenarioAndCase
-          rows={rows}
+          getData={this._getTestScenarioAndCase}
           filterRows={filterRows}
           columns={columns}
           setRows={this._setRows}

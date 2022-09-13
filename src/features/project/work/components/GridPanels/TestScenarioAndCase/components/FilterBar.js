@@ -1,18 +1,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
+import { useSelector } from 'react-redux';
 import Language from 'features/shared/languages/Language';
 import { Button, Input, Label } from 'reactstrap';
 import { OPERATOR_TYPE, RESULT_TYPE } from 'features/shared/constants';
 import { sortByString } from 'features/shared/lib/utils';
 
 function FilterBar(props) {
-  const { resetFilter, setFilterOptions, submitFilter, rows, filterOptions } = props;
+  const { resetFilter, setFilterOptions, submitFilter, filterOptions, getData } = props;
+  const { generating } = useSelector((state) => state.work);
 
   const { causeNodes, resultType, sourceTargetType, isBaseScenario, isValid } = filterOptions;
 
-  const _getCauseNodes = React.useMemo(() => {
-    const _testAssertions = rows.map((row) => row.testAssertions).flat();
+  const _getCauseNodes = React.useMemo(async () => {
+    const _testScenarioAndCase = await getData();
+    const _testAssertions = _testScenarioAndCase.map((data) => data.testAssertions).flat();
     const _causeNodes = sortByString(
       _testAssertions
         .filter(
@@ -26,7 +29,7 @@ function FilterBar(props) {
       'label'
     );
     return _causeNodes;
-  }, [rows]);
+  }, [generating]);
 
   return (
     <div className="d-flex m-2">
@@ -125,11 +128,6 @@ FilterBar.propTypes = {
   resetFilter: PropTypes.func.isRequired,
   setFilterOptions: PropTypes.func.isRequired,
   submitFilter: PropTypes.func.isRequired,
-  rows: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
+  getData: PropTypes.func.isRequired,
 };
-
-FilterBar.defaultProps = {
-  rows: [],
-};
-
 export default FilterBar;
