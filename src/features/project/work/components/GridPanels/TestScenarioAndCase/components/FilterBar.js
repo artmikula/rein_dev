@@ -4,6 +4,7 @@ import Select from 'react-select';
 import Language from 'features/shared/languages/Language';
 import { Button, Input, Label } from 'reactstrap';
 import { OPERATOR_TYPE, RESULT_TYPE } from 'features/shared/constants';
+import { sortByString } from 'features/shared/lib/utils';
 
 function FilterBar(props) {
   const { resetFilter, setFilterOptions, submitFilter, rows, filterOptions } = props;
@@ -12,24 +13,18 @@ function FilterBar(props) {
 
   const _getCauseNodes = React.useMemo(() => {
     const _testAssertions = rows.map((row) => row.testAssertions).flat();
-    const _causeNodes = _testAssertions
-      .filter(
-        (testAssertion, index, array) =>
-          array.findIndex((arr) => arr?.graphNodeId === testAssertion?.graphNodeId) === index
-      )
-      .map((testAssertion) => ({
-        value: testAssertion?.graphNodeId ?? '',
-        label: `${testAssertion.nodeId}: ${testAssertion.definition}` ?? '',
-      }))
-      .sort((a, b) => {
-        if (a.label < b.label) {
-          return -1;
-        }
-        if (a.label > b.label) {
-          return 1;
-        }
-        return 0;
-      });
+    const _causeNodes = sortByString(
+      _testAssertions
+        .filter(
+          (testAssertion, index, array) =>
+            array.findIndex((arr) => arr?.graphNodeId === testAssertion?.graphNodeId) === index
+        )
+        .map((testAssertion) => ({
+          value: testAssertion?.graphNodeId ?? '',
+          label: `${testAssertion.nodeId}: ${testAssertion.definition}` ?? '',
+        })),
+      'label'
+    );
     return _causeNodes;
   }, [rows]);
 

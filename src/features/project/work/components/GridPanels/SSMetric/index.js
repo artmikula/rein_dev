@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import SSMetricHelper from 'features/project/work/biz/SSMetric';
 import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
-import { GENERATE_STATUS } from 'features/shared/constants';
+// import { GENERATE_STATUS } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
 import { debounce } from 'lodash';
@@ -128,9 +128,9 @@ class SSMertic extends Component {
   }
 
   componentDidMount() {
-    const { setGenerating } = this.props;
+    // const { setGenerating } = this.props;
     eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, async () => {
-      await setGenerating(GENERATE_STATUS.COMPLETE);
+      // await setGenerating(GENERATE_STATUS.COMPLETE);
       this._forceUpdate();
     });
   }
@@ -338,7 +338,7 @@ SSMertic.propTypes = {
     graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
     constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
-  setGenerating: PropTypes.func.isRequired,
+  // setGenerating: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({

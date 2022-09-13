@@ -20,6 +20,7 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
+import testCaseWorker from 'features/project/work/biz/worker/testCase.worker';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -50,6 +51,7 @@ class TestScenarioAndCase extends Component {
       filterRows: undefined,
       filterOptions: structuredClone(defaultFilterOptions),
     };
+    this.worker = null;
     this.initiatedData = false;
   }
 
@@ -171,6 +173,10 @@ class TestScenarioAndCase extends Component {
     try {
       const { graph, testDatas, setGraph, dbContext, match, setGenerating } = this.props;
       const { workId } = match.params;
+      let _testCases = [];
+
+      this.worker = await new Worker(testCaseWorker);
+
       let scenarioAndGraphNodes = null;
       setGenerating(GENERATE_STATUS.START);
 
@@ -200,12 +206,28 @@ class TestScenarioAndCase extends Component {
 
       const _testScenarios = await testScenarioSet.get();
 
-      await testCaseHelper.init(_testScenarios, graphNodes, testDatas);
+      await testCaseHelper.init(_testScenarios, graphNodes, testDatas, testCaseSet);
 
-      const _testCases = await testCaseHelper.generateTestCases(testCaseSet);
-      // const _testCases = await testCaseHelper.createTestCases(testCaseSet);
+      // const _testCases = await testCaseHelper.generateTestCases(testCaseSet);
 
-      await this._setColumnsAndRows(_testScenarios, _testCases, graphNodes);
+      this.worker.postMessage('Start');
+      this.worker.onmessage = async (ev) => {
+        try {
+          await testCaseHelper.createTestCases();
+          const result = await ev.data;
+          console.log('result', result);
+          if (result) {
+            setGenerating(GENERATE_STATUS.COMPLETE);
+            _testCases = await testCaseSet.get();
+            await this._setColumnsAndRows(_testScenarios, _testCases, graphNodes);
+            this.worker.terminate();
+          }
+        } catch (error) {
+          console.log('cannot generate1', error);
+          setGenerating(GENERATE_STATUS.FAIL);
+          this.worker.terminate();
+        }
+      };
 
       /** TODO: remove this after finish implement indexedDb */
       // const newTestScenariosAndCases = newTestScenarios.map((x) => {

@@ -2,11 +2,7 @@
   "compilerOptions": {
     "baseUrl": "src",
     "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["webworker", "dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
@@ -22,7 +18,5 @@
     "noEmit": true,
     "jsx": "react"
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

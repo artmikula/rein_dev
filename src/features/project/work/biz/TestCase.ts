@@ -12,6 +12,7 @@ import {
   ITestAssertion,
 } from 'types/models';
 import { ITestCaseSet } from 'features/shared/storage-services/dbContext/models';
+import { sortByString } from 'features/shared/lib/utils';
 import { ITestScenarioReport, ITestScenarioAndCaseRow, ITestCaseReport } from 'types/bizModels';
 import SimpleTestCase from './Helper/TestCaseHelper';
 import testDataService from './TestData';
@@ -37,18 +38,27 @@ class TestCase implements ITestCaseHelper {
 
   testDataDraft: ITestDataDetail[];
 
+  testCaseSet: ITestCaseSet | null;
+
   constructor() {
     this.testScenarios = [];
     this.graphNodes = [];
     this.testData = [];
     this.testDataDraft = [];
+    this.testCaseSet = null;
   }
 
-  init(testScenarios: ISimpleTestScenario[], graphNodes: IGraphNode[], testData: ITestDataDetail[]) {
+  init(
+    testScenarios: ISimpleTestScenario[],
+    graphNodes: IGraphNode[],
+    testData: ITestDataDetail[],
+    testCaseSet: ITestCaseSet
+  ) {
     this.testScenarios = testScenarios;
     this.graphNodes = graphNodes;
     this.testData = testData;
     this.testDataDraft = testData;
+    this.testCaseSet = testCaseSet;
   }
 
   generateTestCases(testCaseSet: ITestCaseSet) {
@@ -119,74 +129,72 @@ class TestCase implements ITestCaseHelper {
     return allTestCases;
   }
 
-  async createTestCases(testCaseSet: ITestCaseSet) {
+  async createTestCases() {
     for await (const testScenario of this.testScenarios) {
+      const { testAssertions, resultType, targetGraphNodeId } = testScenario;
       const results: string[] = [];
-      if (testScenario.resultType === RESULT_TYPE.False) {
-        results.push(`NOT(${this._getDescriptionOfGraphNode(this.graphNodes, testScenario.targetGraphNodeId)})`);
+      if (resultType === RESULT_TYPE.False) {
+        results.push(`NOT(${this._getDescriptionOfGraphNode(this.graphNodes, targetGraphNodeId)})`);
       } else {
-        results.push(this._getDescriptionOfGraphNode(this.graphNodes, testScenario.targetGraphNodeId));
+        results.push(this._getDescriptionOfGraphNode(this.graphNodes, targetGraphNodeId));
       }
       const testCase = new SimpleTestCase({
         testScenarioId: testScenario.id,
         results,
       });
-      const testDataLength = testScenario.testAssertions.length;
-      await this.getTestCase(testCase, testScenario.testAssertions, testCaseSet, testDataLength);
+      await this.getTestCase(testCase, testAssertions, testAssertions.length);
     }
   }
 
-  async getTestCase(
-    testCase: ISimpleTestCase,
-    testAssertions: ITestAssertion[],
-    testCaseSet: ITestCaseSet,
-    testDataLength: number
-  ) {
+  async getTestCase(testCase: ISimpleTestCase, testAssertions: ITestAssertion[], testDataLength: number) {
     for await (const testAssertion of testAssertions) {
-      // console.log('testAssertions[i]', testAssertions[i]);
-      const i = testAssertions.findIndex((asssertion) => testAssertion.graphNodeId === asssertion.graphNodeId);
-      const nextAssertions = testAssertions.slice(i + 1);
+      const index = testAssertions.findIndex((assertion) => testAssertion.graphNodeId === assertion.graphNodeId);
+      const nextAssertions = testAssertions.slice(index + 1);
       const { testDatas, type }: { testDatas: string; type: string } = testDataService.getTestData(
         this.testData,
         testAssertion
       );
       const testData: string[] = this.convertTestDataToList(testDatas, type);
       for await (const data of testData) {
-        // console.log('data', data);
-        // console.log('testCase', testCase);
+        const dataIndex = testData.indexOf(data);
         const newTestData: ITestData = {
-          graphNodeId: testAssertions[i].graphNodeId,
+          graphNodeId: testAssertion.graphNodeId,
           data,
-          nodeId: testAssertions[i].nodeId ?? '',
+          nodeId: testAssertion.nodeId ?? '',
         };
         const existData = testCase.testDatas.find(
-          (value: ITestData) => value.graphNodeId === testAssertions[i].graphNodeId
+          (testData: ITestData) => testData.graphNodeId === testAssertion.graphNodeId
         );
 
         if (!existData) {
           await testCase.addTestData(newTestData);
           if (nextAssertions.length === 0) {
-            // console.log('add to db 1');
-            testCaseSet.add(testCase);
+            this.testCaseSet?.add(testCase);
             continue;
           } else {
-            await this.getTestCase(testCase, nextAssertions, testCaseSet, testDataLength);
+            await this.getTestCase(testCase, nextAssertions, testDataLength);
           }
         }
-        if (existData && !existData.data.includes(data)) {
-          // console.log('new test case');
+        if (existData && !existData?.data.includes(data)) {
           const newTestCase = new SimpleTestCase({
             testScenarioId: testCase.testScenarioId,
             results: cloneDeep(testCase.results),
-            testDatas: cloneDeep(testCase.testDatas),
+            testDatas: sortByString(
+              testCase.testDatas.filter((testData) => testData.graphNodeId !== testAssertion.graphNodeId),
+              'nodeId'
+            ),
           });
           newTestCase.updateTestData(newTestData, testAssertion.graphNodeId);
-          if (nextAssertions.length === 0) {
-            // console.log('add to db 2');
-            testCaseSet.add(testCase);
-            continue;
+          if (newTestCase.testDatas.length === testDataLength) {
+            this.testCaseSet?.add(newTestCase);
+            if (nextAssertions.length > 0) {
+              await this.getTestCase(newTestCase, nextAssertions, testDataLength);
+            }
+            if (dataIndex === testData.length - 1 || nextAssertions.length === 0) {
+              return;
+            }
           } else {
-            await this.getTestCase(newTestCase, nextAssertions, testCaseSet, testDataLength);
+            await this.getTestCase(newTestCase, nextAssertions, testDataLength);
           }
         }
       }
