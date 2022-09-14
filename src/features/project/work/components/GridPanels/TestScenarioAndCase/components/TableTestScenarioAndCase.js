@@ -3,13 +3,16 @@ import PropTypes from 'prop-types';
 import { Table } from 'reactstrap';
 import { useSelector } from 'react-redux';
 
+import { sortByString } from 'features/shared/lib/utils';
+import { FILTER_TYPE, RESULT_TYPE } from 'features/shared/constants';
 import Header from './TableHeader';
 import TableRow from './TableRow';
 
 function TableTestScenarioAndCase(props) {
-  const { columns, setRows, isCheckAllTestScenarios, filterRows, getData } = props;
+  const { columns, filterOptions, getData } = props;
 
   const [groupByEffectNodes, setGroupByEffectNodes] = useState([]);
+  const [filterData, setFilterData] = useState(undefined);
 
   const { dbContext, generating } = useSelector((state) => state.work);
 
@@ -37,28 +40,84 @@ function TableTestScenarioAndCase(props) {
         return groups;
       });
       groups.forEach((group) => {
-        const isSelected = group.testScenarios.every((testScenario) => testScenario.isSelected);
-        // eslint-disable-next-line no-param-reassign
-        group.isSelected = isSelected;
+        const _group = group;
+        const isSelected = _group.testScenarios.every((testScenario) => testScenario.isSelected);
+        _group.isSelected = isSelected;
       });
-      groups.sort((a, b) => {
-        if (a.key < b.key) {
-          return -1;
-        }
-        if (a.key > b.key) {
-          return 1;
-        }
-        return 0;
-      });
+      sortByString(groups, 'key');
+      // groups.sort((a, b) => {
+      //   if (a.key < b.key) {
+      //     return -1;
+      //   }
+      //   if (a.key > b.key) {
+      //     return 1;
+      //   }
+      //   return 0;
+      // });
       setGroupByEffectNodes(groups);
     },
     [testScenarioAndCase]
   );
+  const _onChangeFilterOptions = () => {
+    const { causeNodes, sourceTargetType, resultType, isBaseScenario, isValid, type } = filterOptions;
+    let _resultType;
+    if (resultType !== RESULT_TYPE.All) {
+      _resultType = resultType === RESULT_TYPE.True;
+    } else {
+      _resultType = undefined;
+    }
+    const filterRows = testScenarioAndCase.filter((row) => {
+      const testAssertionFilter = row.testAssertions?.filter((testAssertion) =>
+        causeNodes?.some((causeNode) => causeNode?.value === testAssertion?.graphNodeId)
+      );
+      const isExist = causeNodes?.every((causeNode) =>
+        row.testAssertions?.some((testAssertion) => causeNode?.value === testAssertion?.graphNodeId)
+      );
+      const causeNodesResultType = testAssertionFilter.every((testAssertion) => testAssertion.result === _resultType);
+      if (typeof isExist !== 'undefined' && !isExist) {
+        return false;
+      }
+      if (typeof _resultType !== 'undefined' && !causeNodesResultType) {
+        return false;
+      }
+      if (typeof sourceTargetType !== 'undefined' && isExist && sourceTargetType !== row.sourceTargetType) {
+        return false;
+      }
+      if (
+        typeof sourceTargetType !== 'undefined' &&
+        typeof isExist === 'undefined' &&
+        sourceTargetType !== row.sourceTargetType
+      ) {
+        return false;
+      }
+      if (typeof isBaseScenario !== 'undefined' && isBaseScenario === true && isBaseScenario !== row.isBaseScenario) {
+        return false;
+      }
+      if (typeof isValid !== 'undefined' && isValid === true && isValid !== row.isValid) {
+        return false;
+      }
+      return true;
+    });
+    if (type === FILTER_TYPE.RESET) {
+      setFilterData(undefined);
+    }
+    if (type === FILTER_TYPE.SUBMIT) {
+      setFilterData(filterRows);
+    }
+  };
+
+  useEffect(() => {
+    if (filterOptions.type === FILTER_TYPE.SUBMIT) {
+      _onChangeFilterOptions();
+    }
+  }, [filterOptions.type]);
 
   useEffect(async () => {
-    testScenarioAndCase = await _getData;
-    _getGroupByEffectNodes(filterRows ?? testScenarioAndCase);
-  }, []);
+    if (!generating) {
+      testScenarioAndCase = await _getData;
+    }
+    _getGroupByEffectNodes(filterData ?? testScenarioAndCase);
+  }, [generating, filterData]);
 
   const _handleCheckedAll = useCallback(
     async (checked) => {
@@ -75,8 +134,7 @@ function TableTestScenarioAndCase(props) {
           });
           return _row;
         });
-        _getGroupByEffectNodes(filterRows ?? newRows);
-        setRows(newRows);
+        _getGroupByEffectNodes(filterData ?? newRows);
 
         await testScenarioSet.update('isSelected', checked);
         await testCaseSet.update('isSelected', checked);
@@ -90,32 +148,33 @@ function TableTestScenarioAndCase(props) {
       // setRows(newRows);
       /** end */
     },
-    [testScenarioAndCase, filterRows]
+    [testScenarioAndCase, filterData]
   );
 
   // TODO: fix this after done
-  // const _isCheckedAllTestScenarios = () => {
-  //   const { rows } = this.state;
-  //   const isCheckAllTestScenarios = rows.every(
-  //     (row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected)
-  //   );
-  //   this.setState({ isCheckAllTestScenarios });
-  // };
+  const _isCheckedAllTestScenarios = () => {
+    if (testScenarioAndCase.length > 0) {
+      const isCheckAll = testScenarioAndCase.every(
+        (row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected)
+      );
+      return isCheckAll;
+    }
+    return false;
+  };
 
   return (
     <Table bordered className="scenario-case-table">
       <Header
         rows={testScenarioAndCase}
-        filterRows={filterRows}
+        filterRows={filterData}
         onChangeCheckbox={(e) => _handleCheckedAll(e.target.checked)}
         columns={columns}
-        checked={isCheckAllTestScenarios}
+        checked={() => _isCheckedAllTestScenarios()}
       />
       <TableRow
         rows={testScenarioAndCase}
-        filterRows={filterRows}
+        filterRows={filterData}
         updateGroupByEffectNodes={_getGroupByEffectNodes}
-        updateRows={setRows}
         groupByEffectNodes={groupByEffectNodes}
         columns={columns}
       />
@@ -126,13 +185,14 @@ function TableTestScenarioAndCase(props) {
 TableTestScenarioAndCase.propTypes = {
   getData: PropTypes.func.isRequired,
   columns: PropTypes.oneOfType([PropTypes.array]).isRequired,
-  isCheckAllTestScenarios: PropTypes.bool.isRequired,
-  setRows: PropTypes.func.isRequired,
-  filterRows: PropTypes.oneOfType([PropTypes.array]),
-};
-
-TableTestScenarioAndCase.defaultProps = {
-  filterRows: undefined,
+  filterOptions: PropTypes.shape({
+    causeNodes: PropTypes.oneOfType([PropTypes.array]),
+    sourceTargetType: PropTypes.string,
+    resultType: PropTypes.string,
+    isBaseScenario: PropTypes.bool,
+    isValid: PropTypes.bool,
+    type: PropTypes.string,
+  }).isRequired,
 };
 
 export default TableTestScenarioAndCase;

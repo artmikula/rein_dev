@@ -462,3 +462,19 @@ export const GENERATE_STATUS = {
   COMPLETE: 'complete',
   FAIL: 'fail',
 };
+
+export const FILTER_TYPE = {
+  DEFAULT: 'default',
+  RESET: 'reset',
+  SUBMIT: 'submit',
+};
+
+export const FILTER_OPTIONS = {
+  CAUSE_NODES: 'causeNodes',
+  RESULTS: 'results',
+  RESULT_TYPE: 'resultType',
+  BASE_SCENARIO: 'isBaseScenario',
+  VALID: 'isValid',
+  SOURCE_TARGET_TYPE: 'sourceTargetType',
+  TYPE: 'type',
+};

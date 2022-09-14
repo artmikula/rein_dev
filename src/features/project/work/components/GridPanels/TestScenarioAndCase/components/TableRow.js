@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import Checkbox from './TableCheckbox';
 
 function TableRow(props) {
-  const { groupByEffectNodes, rows, filterRows, columns, updateGroupByEffectNodes, updateRows } = props;
+  const { groupByEffectNodes, rows, filterRows, columns, updateGroupByEffectNodes } = props;
 
   const [expandId, setExpandId] = useState({});
   const [rowSpan, setRowSpan] = useState({});
@@ -73,7 +73,6 @@ function TableRow(props) {
               return _testCaseRow;
             });
             updateGroupByEffectNodes(newRows);
-            updateRows(newRows);
           }
         }
       }
@@ -113,7 +112,6 @@ function TableRow(props) {
           const tcRow = tsRow?.testCases.find((testCaseRow) => testCaseRow.id === caseId);
           tcRow.isSelected = checked;
           updateGroupByEffectNodes(newRows);
-          updateRows(newRows);
         }
       }
 
@@ -143,7 +141,6 @@ function TableRow(props) {
         if (tsRow) {
           tsRow[key] = checked;
           updateGroupByEffectNodes(filterRows ?? newRows);
-          updateRows(newRows);
         }
       }
       /** TODO: remove this after finish implement indexedDb */
@@ -176,8 +173,6 @@ function TableRow(props) {
               return _tcRow;
             });
             updateGroupByEffectNodes(filterRows ?? newRows);
-
-            updateRows(newRows);
           }
           _handleTestScenarioChecked(testScenario.id, checked, false);
         });
@@ -324,7 +319,6 @@ TableRow.propTypes = {
   rows: PropTypes.oneOfType([PropTypes.array]).isRequired,
   columns: PropTypes.oneOfType([PropTypes.array]).isRequired,
   updateGroupByEffectNodes: PropTypes.func.isRequired,
-  updateRows: PropTypes.func.isRequired,
   filterRows: PropTypes.oneOfType([PropTypes.array]),
 };
 

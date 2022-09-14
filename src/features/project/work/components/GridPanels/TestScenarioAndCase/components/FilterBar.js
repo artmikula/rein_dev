@@ -4,31 +4,34 @@ import Select from 'react-select';
 import { useSelector } from 'react-redux';
 import Language from 'features/shared/languages/Language';
 import { Button, Input, Label } from 'reactstrap';
-import { OPERATOR_TYPE, RESULT_TYPE } from 'features/shared/constants';
+import { FILTER_OPTIONS, FILTER_TYPE, OPERATOR_TYPE, RESULT_TYPE } from 'features/shared/constants';
 import { sortByString } from 'features/shared/lib/utils';
 
 function FilterBar(props) {
-  const { resetFilter, setFilterOptions, submitFilter, filterOptions, getData } = props;
+  const { setFilterOptions, filterOptions, getData } = props;
   const { generating } = useSelector((state) => state.work);
 
   const { causeNodes, resultType, sourceTargetType, isBaseScenario, isValid } = filterOptions;
 
   const _getCauseNodes = React.useMemo(async () => {
-    const _testScenarioAndCase = await getData();
-    const _testAssertions = _testScenarioAndCase.map((data) => data.testAssertions).flat();
-    const _causeNodes = sortByString(
-      _testAssertions
-        .filter(
-          (testAssertion, index, array) =>
-            array.findIndex((arr) => arr?.graphNodeId === testAssertion?.graphNodeId) === index
-        )
-        .map((testAssertion) => ({
-          value: testAssertion?.graphNodeId ?? '',
-          label: `${testAssertion.nodeId}: ${testAssertion.definition}` ?? '',
-        })),
-      'label'
-    );
-    return _causeNodes;
+    if (!generating) {
+      const _testScenarioAndCase = await getData();
+      const _testAssertions = _testScenarioAndCase.map((data) => data.testAssertions).flat();
+      const _causeNodes = sortByString(
+        _testAssertions
+          .filter(
+            (testAssertion, index, array) =>
+              array.findIndex((arr) => arr?.graphNodeId === testAssertion?.graphNodeId) === index
+          )
+          .map((testAssertion) => ({
+            value: testAssertion?.graphNodeId ?? '',
+            label: `${testAssertion.nodeId}: ${testAssertion.definition}` ?? '',
+          })),
+        'label'
+      );
+      return _causeNodes;
+    }
+    return [];
   }, [generating]);
 
   return (
@@ -38,7 +41,7 @@ function FilterBar(props) {
           <Select
             isMulti
             value={causeNodes ?? null}
-            onChange={(values) => setFilterOptions({ causeNodes: values })}
+            onChange={(values) => setFilterOptions(FILTER_OPTIONS.CAUSE_NODES, values)}
             options={_getCauseNodes?.length > 0 ? _getCauseNodes : []}
             placeholder={Language.get('select')}
           />
@@ -51,7 +54,7 @@ function FilterBar(props) {
           className="ml-2"
           style={{ minWidth: 66, fontSize: 'inherit' }}
           disabled={causeNodes === null || causeNodes?.length === 0}
-          onChange={(e) => setFilterOptions({ resultType: e.target.value })}
+          onChange={(e) => setFilterOptions(FILTER_OPTIONS.RESULT_TYPE, e.target.value)}
         >
           <option value={RESULT_TYPE.All}>{RESULT_TYPE.All}</option>
           <option value={RESULT_TYPE.True}>{RESULT_TYPE.True}</option>
@@ -64,7 +67,7 @@ function FilterBar(props) {
             <input
               checked={sourceTargetType === OPERATOR_TYPE.AND}
               className="form-check-input"
-              onChange={(e) => setFilterOptions({ sourceTargetType: e.target.value })}
+              onChange={(e) => setFilterOptions(FILTER_OPTIONS.SOURCE_TARGET_TYPE, e.target.value)}
               type="radio"
               name="inlineRadioOptions"
               value={OPERATOR_TYPE.AND}
@@ -75,7 +78,7 @@ function FilterBar(props) {
             <input
               checked={sourceTargetType === OPERATOR_TYPE.OR}
               className="form-check-input"
-              onChange={(e) => setFilterOptions({ sourceTargetType: e.target.value })}
+              onChange={(e) => setFilterOptions(FILTER_OPTIONS.SOURCE_TARGET_TYPE, e.target.value)}
               type="radio"
               name="inlineRadioOptions"
               value={OPERATOR_TYPE.OR}
@@ -91,7 +94,7 @@ function FilterBar(props) {
               type="checkbox"
               checked={isBaseScenario ?? false}
               className="form-check-input"
-              onChange={(e) => setFilterOptions({ isBaseScenario: e.target.checked })}
+              onChange={(e) => setFilterOptions(FILTER_OPTIONS.BASE_SCENARIO, e.target.checked)}
             />
             <Label className="form-check-label">{Language.get('base')}</Label>
           </div>
@@ -100,17 +103,28 @@ function FilterBar(props) {
               type="checkbox"
               checked={isValid ?? false}
               className="form-check-input"
-              onChange={(e) => setFilterOptions({ isValid: e.target.checked })}
+              onChange={(e) => setFilterOptions(FILTER_OPTIONS.VALID, e.target.checked)}
             />
             <Label className="form-check-label">{Language.get('valid')}</Label>
           </div>
         </div>
       </div>
 
-      <Button color="primary" size="sm" className="filter-button" style={{ marginRight: 10 }} onClick={submitFilter}>
+      <Button
+        color="primary"
+        size="sm"
+        className="filter-button"
+        style={{ marginRight: 10 }}
+        onClick={() => setFilterOptions(FILTER_OPTIONS.TYPE, FILTER_TYPE.SUBMIT)}
+      >
         {Language.get('apply')}
       </Button>
-      <Button color="primary" size="sm" className="filter-button" onClick={resetFilter}>
+      <Button
+        color="primary"
+        size="sm"
+        className="filter-button"
+        onClick={() => setFilterOptions(FILTER_OPTIONS.TYPE, FILTER_TYPE.RESET)}
+      >
         Reset
       </Button>
     </div>
@@ -124,10 +138,9 @@ FilterBar.propTypes = {
     resultType: PropTypes.string,
     isBaseScenario: PropTypes.bool,
     isValid: PropTypes.bool,
+    type: PropTypes.string,
   }).isRequired,
-  resetFilter: PropTypes.func.isRequired,
   setFilterOptions: PropTypes.func.isRequired,
-  submitFilter: PropTypes.func.isRequired,
   getData: PropTypes.func.isRequired,
 };
 export default FilterBar;

@@ -57,12 +57,12 @@ const arrayToCsv = (data = [], graphNodes = []) => {
 
 const sortByString = (data, key) => {
   return data.sort((a, b) => {
-    const nameA = a[key].toUpperCase();
-    const nameB = b[key].toUpperCase();
-    if (nameA < nameB) {
+    const stringA = a[key].toUpperCase();
+    const stringB = b[key].toUpperCase();
+    if (stringA < stringB) {
       return -1;
     }
-    if (nameA > nameB) {
+    if (stringA > stringB) {
       return 1;
     }
     return 0;

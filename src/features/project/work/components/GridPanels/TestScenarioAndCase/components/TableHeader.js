@@ -4,6 +4,7 @@ import { Input } from 'reactstrap';
 
 import Language from 'features/shared/languages/Language';
 
+// TODO: refactor this
 function TableHeader(props) {
   const { filterRows, onChangeCheckbox, checked, rows, columns } = props;
   return (
@@ -33,7 +34,7 @@ function TableHeader(props) {
 
 TableHeader.propTypes = {
   onChangeCheckbox: PropTypes.func.isRequired,
-  checked: PropTypes.bool.isRequired,
+  checked: PropTypes.func.isRequired,
   rows: PropTypes.oneOfType([PropTypes.array]).isRequired,
   columns: PropTypes.oneOfType([PropTypes.array]).isRequired,
   filterRows: PropTypes.oneOfType([PropTypes.array]),
