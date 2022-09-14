@@ -291,7 +291,7 @@ class Workspace extends Component {
 
   render() {
     const { viewMode, isLockedPanel, gridPanelLayout, formName, openRenameWorkModal } = this.state;
-    const { workName, projectName } = this.props;
+    const { workName, projectName, generating } = this.props;
     const isSplitView = viewMode === VIEW_MODE.SPLIT;
     const menus = <MenuContainer />;
 
@@ -321,6 +321,17 @@ class Workspace extends Component {
           </span>
           <AlertGenerateReport />
           <span>
+            {generating && (
+              <>
+                <i
+                  className={`bi central bi-arrow-repeat ${generating ? 'spinner-border' : ''} generating-loader`}
+                  id="icon-generating"
+                />
+                <UncontrolledTooltip target="icon-generating">
+                  <small className="generating_text" />
+                </UncontrolledTooltip>
+              </>
+            )}
             <WorkSyncData />
             <Button
               color="link"
@@ -390,6 +401,7 @@ Workspace.propTypes = {
   loadedWork: PropTypes.bool.isRequired,
   setDbContext: PropTypes.func.isRequired,
   dbContext: PropTypes.oneOfType([PropTypes.object]),
+  generating: PropTypes.bool.isRequired,
 };
 
 Workspace.defaultProps = {
@@ -403,6 +415,7 @@ const mapStateToProps = (state) => ({
   workName: state.work.name,
   projectName: state.work.projectName,
   dbContext: state.work.dbContext,
+  generating: state.work.generating,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Workspace);

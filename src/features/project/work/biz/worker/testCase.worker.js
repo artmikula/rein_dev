@@ -1,5 +1,4 @@
 /* eslint-disable no-restricted-syntax */
-/* eslint-disable no-restricted-syntax */
 import { RESULT_TYPE } from 'features/shared/constants';
 import { sortByString } from 'features/shared/lib/utils';
 import cloneDeep from 'lodash.clonedeep';
