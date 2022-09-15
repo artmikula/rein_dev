@@ -22,6 +22,9 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+// import Worker from 'worker-loader';
+import worker from 'features/project/work/biz/worker/testCase.worker';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -96,6 +99,7 @@ class TestScenarioAndCase extends Component {
         });
       }
     });
+    this.worker = new Worker(worker, { type: 'module' });
   }
 
   componentWillUnmount() {
@@ -113,57 +117,10 @@ class TestScenarioAndCase extends Component {
     testScenarioAnsCaseStorage.set([]);
   };
 
-  _getData = async () => {
-    const { graph, workLoaded, dbContext } = this.props;
-    const testCasesRows = [];
-
-    if (dbContext && dbContext.db) {
-      const { testScenarioSet, testCaseSet } = dbContext;
-
-      if (!this.initiatedData && workLoaded) {
-        const testScenarios = await testScenarioSet.get();
-
-        const promises = testScenarios.map(async (testScenario) => {
-          const testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));
-
-          testCases.forEach((testCase) => {
-            const testDatas = testCase.testDatas.map((x) => {
-              const result = {
-                graphNodeId: x.graphNodeId,
-                data: x.data,
-              };
-
-              return result;
-            });
-
-            testCasesRows.push({
-              ...testCase,
-              testScenario: { ...testScenario },
-              testDatas,
-              results: testCase.results,
-            });
-          });
-
-          const _testScenario = testScenario;
-          _testScenario.testCases = testCases;
-          return _testScenario;
-        });
-
-        await Promise.all(promises);
-
-        this.initiatedData = true;
-        const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
-        this.setState({ columns });
-      }
-    }
-  };
-
   _calculateTestScenarioAndCase = async (domainAction) => {
     try {
       const { graph, testDatas, setGraph, dbContext, match, setGenerating } = this.props;
       const { workId } = match.params;
-
-      // this.worker = await new Worker('features/project/work/biz/worker/testCase.worker.js');
 
       let scenarioAndGraphNodes = null;
       setGenerating(GENERATE_STATUS.START);
@@ -196,8 +153,15 @@ class TestScenarioAndCase extends Component {
 
       await testCaseHelper.init(_testScenarios, graphNodes, testDatas, testCaseSet);
 
+      this.worker.postMessage({
+        testScenarios: JSON.stringify(_testScenarios),
+        graphNodes: JSON.stringify(graphNodes),
+        testDatas: JSON.stringify(testDatas),
+      });
+      this.worker.onmessage = (e) => console.log('post', e);
+
       // const _testCases = await testCaseHelper.generateTestCases(testCaseSet);
-      await testCaseHelper.createTestCases();
+      // await testCaseHelper.createTestCases();
       setGenerating(GENERATE_STATUS.COMPLETE);
 
       // this.worker.postMessage('Start');
@@ -435,7 +399,6 @@ TestScenarioAndCase.propTypes = {
     constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
   testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
-  workLoaded: PropTypes.bool.isRequired,
   setGraph: PropTypes.func.isRequired,
   setGenerating: PropTypes.func.isRequired,
   dbContext: PropTypes.oneOfType([PropTypes.object]),
@@ -452,7 +415,6 @@ const mapStateToProps = (state) => ({
   workName: state.work.name,
   graph: state.work.graph,
   testDatas: state.work.testDatas,
-  workLoaded: state.work.loaded,
   dbContext: state.work.dbContext,
 });
 
