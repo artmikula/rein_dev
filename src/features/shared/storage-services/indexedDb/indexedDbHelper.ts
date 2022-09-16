@@ -42,7 +42,11 @@ class IndexedDbHelper {
         action: lf.ConstraintAction.CASCADE,
       });
 
-    return schemaBuilder.connect();
+    return {
+      connection: schemaBuilder.connect(),
+      dbName,
+      dbVersion,
+    };
   }
 
   close(db: lf.Database) {

@@ -22,9 +22,8 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
-// eslint-disable-next-line import/no-webpack-loader-syntax
-// import Worker from 'worker-loader';
 import worker from 'features/project/work/biz/worker/testCase.worker';
+import { TABLES } from 'features/shared/storage-services/indexedDb/constants';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -152,8 +151,14 @@ class TestScenarioAndCase extends Component {
       const _testScenarios = await testScenarioSet.get();
 
       await testCaseHelper.init(_testScenarios, graphNodes, testDatas, testCaseSet);
+      const _dbInfo = {
+        name: dbContext.name,
+        version: dbContext.version,
+        table: TABLES.TEST_CASES,
+      };
 
       this.worker.postMessage({
+        dbInfo: JSON.stringify(_dbInfo),
         testScenarios: JSON.stringify(_testScenarios),
         graphNodes: JSON.stringify(graphNodes),
         testDatas: JSON.stringify(testDatas),
