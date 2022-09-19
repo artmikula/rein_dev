@@ -3,20 +3,6 @@
 /* eslint-disable no-restricted-syntax */
 
 const workercode = () => {
-  const _sortByString = (data, key) => {
-    return data.sort((a, b) => {
-      const stringA = a[key].toUpperCase();
-      const stringB = b[key].toUpperCase();
-      if (stringA < stringB) {
-        return -1;
-      }
-      if (stringA > stringB) {
-        return 1;
-      }
-      return 0;
-    });
-  };
-
   const convertTestDataToList = (datas = '', type = '') => {
     if (datas) {
       if (type === 'Tupple') {
@@ -65,7 +51,6 @@ const workercode = () => {
         if (!existData) {
           await testCase.testDatas.push(newTestData);
           if (nextAssertions.length === 0) {
-            // TestCase.testCaseSet?.add(testCase);
             indexedDb.add(testCase);
             continue;
           } else {
@@ -77,15 +62,23 @@ const workercode = () => {
             id: Math.random(),
             testScenarioId: testCase.testScenarioId,
             results: [...testCase.results],
-            testDatas: _sortByString(
-              testCase.testDatas.filter((testData) => testData.graphNodeId !== testAssertion.graphNodeId),
-              'nodeId'
-            ),
+            testDatas: testCase.testDatas
+              .filter((testData) => testData.graphNodeId !== testAssertion.graphNodeId)
+              .sort((a, b) => {
+                const nodeA = a.nodeId.toUpperCase();
+                const nodeB = b.nodeId.toUpperCase();
+                if (nodeA < nodeB) {
+                  return -1;
+                }
+                if (nodeA > nodeB) {
+                  return 1;
+                }
+                return 0;
+              }),
             isSelected: false,
           };
           updateTestData(newTestCase, newTestData, testAssertion.graphNodeId);
           if (newTestCase.testDatas.length === testDataLength) {
-            // TestCase.testCaseSet?.add(newTestCase);
             indexedDb.add(newTestCase);
             if (nextAssertions.length > 0) {
               await _getTestCase(newTestCase, nextAssertions, rawTestDatas, testDataLength, indexedDb);
@@ -135,6 +128,7 @@ const workercode = () => {
           await _getTestCase(testCase, testAssertions, _testDatas, testAssertions.length, indexedDb);
         }
       };
+      // close transaction
       await e.target.postMessage('done');
       // await e.target.close();
     },

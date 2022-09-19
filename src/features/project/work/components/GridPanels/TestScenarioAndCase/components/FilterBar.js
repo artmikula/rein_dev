@@ -15,8 +15,8 @@ function FilterBar(props) {
 
   const _getCauseNodes = React.useMemo(async () => {
     if (!generating) {
-      const _testScenarioAndCase = await getData();
-      const _testAssertions = _testScenarioAndCase.map((data) => data.testAssertions).flat();
+      const { rows } = await getData();
+      const _testAssertions = rows.map((data) => data.testAssertions).flat();
       const _causeNodes = sortByString(
         _testAssertions
           .filter(

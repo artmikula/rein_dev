@@ -9,14 +9,15 @@ import Header from './TableHeader';
 import TableRow from './TableRow';
 
 function TableTestScenarioAndCase(props) {
-  const { columns, filterOptions, getData } = props;
+  const { filterOptions, getData } = props;
 
   const [groupByEffectNodes, setGroupByEffectNodes] = useState([]);
   const [filterData, setFilterData] = useState(undefined);
 
   const { dbContext, generating } = useSelector((state) => state.work);
 
-  let testScenarioAndCase = [];
+  let testScenarioAndCaseRows = [];
+  let testScenarioAndCaseColumns = [];
 
   const _getData = React.useMemo(() => {
     return getData();
@@ -56,7 +57,7 @@ function TableTestScenarioAndCase(props) {
       // });
       setGroupByEffectNodes(groups);
     },
-    [testScenarioAndCase]
+    [testScenarioAndCaseRows]
   );
   const _onChangeFilterOptions = () => {
     const { causeNodes, sourceTargetType, resultType, isBaseScenario, isValid, type } = filterOptions;
@@ -66,7 +67,7 @@ function TableTestScenarioAndCase(props) {
     } else {
       _resultType = undefined;
     }
-    const filterRows = testScenarioAndCase.filter((row) => {
+    const filterRows = testScenarioAndCaseRows.filter((row) => {
       const testAssertionFilter = row.testAssertions?.filter((testAssertion) =>
         causeNodes?.some((causeNode) => causeNode?.value === testAssertion?.graphNodeId)
       );
@@ -114,16 +115,20 @@ function TableTestScenarioAndCase(props) {
 
   useEffect(async () => {
     if (!generating) {
-      testScenarioAndCase = await _getData;
+      const { rows, columns } = await _getData;
+      console.log('columns', columns);
+      testScenarioAndCaseRows = rows;
+      testScenarioAndCaseColumns = columns;
+      console.log('testScenarioAndCaseColumns', testScenarioAndCaseColumns);
     }
-    _getGroupByEffectNodes(filterData ?? testScenarioAndCase);
+    _getGroupByEffectNodes(filterData ?? testScenarioAndCaseRows);
   }, [generating, filterData]);
 
   const _handleCheckedAll = useCallback(
     async (checked) => {
       if (dbContext && dbContext.db) {
         const { testScenarioSet, testCaseSet } = dbContext;
-        const newRows = structuredClone(testScenarioAndCase);
+        const newRows = structuredClone(testScenarioAndCaseRows);
         newRows.forEach((row) => {
           const _row = row;
           _row.isSelected = checked;
@@ -148,13 +153,13 @@ function TableTestScenarioAndCase(props) {
       // setRows(newRows);
       /** end */
     },
-    [testScenarioAndCase, filterData]
+    [testScenarioAndCaseRows, filterData]
   );
 
   // TODO: fix this after done
   const _isCheckedAllTestScenarios = () => {
-    if (testScenarioAndCase.length > 0) {
-      const isCheckAll = testScenarioAndCase.every(
+    if (testScenarioAndCaseRows.length > 0) {
+      const isCheckAll = testScenarioAndCaseRows.every(
         (row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected)
       );
       return isCheckAll;
@@ -165,18 +170,18 @@ function TableTestScenarioAndCase(props) {
   return (
     <Table bordered className="scenario-case-table">
       <Header
-        rows={testScenarioAndCase}
+        rows={testScenarioAndCaseRows}
         filterRows={filterData}
         onChangeCheckbox={(e) => _handleCheckedAll(e.target.checked)}
-        columns={columns}
+        columns={testScenarioAndCaseColumns}
         checked={() => _isCheckedAllTestScenarios()}
       />
       <TableRow
-        rows={testScenarioAndCase}
+        rows={testScenarioAndCaseRows}
         filterRows={filterData}
         updateGroupByEffectNodes={_getGroupByEffectNodes}
         groupByEffectNodes={groupByEffectNodes}
-        columns={columns}
+        columns={testScenarioAndCaseColumns}
       />
     </Table>
   );
@@ -184,7 +189,6 @@ function TableTestScenarioAndCase(props) {
 
 TableTestScenarioAndCase.propTypes = {
   getData: PropTypes.func.isRequired,
-  columns: PropTypes.oneOfType([PropTypes.array]).isRequired,
   filterOptions: PropTypes.shape({
     causeNodes: PropTypes.oneOfType([PropTypes.array]),
     sourceTargetType: PropTypes.string,

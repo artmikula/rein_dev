@@ -151,21 +151,21 @@ class TestScenarioAndCase extends Component {
       const _testScenarios = await testScenarioSet.get();
 
       await testCaseHelper.init(_testScenarios, graphNodes, testDatas, testCaseSet);
-      const _dbInfo = {
-        name: dbContext.name,
-        version: dbContext.version,
-        table: TABLES.TEST_CASES,
-      };
+      // const _dbInfo = {
+      //   name: dbContext.name,
+      //   version: dbContext.version,
+      //   table: TABLES.TEST_CASES,
+      // };
 
-      this.worker.postMessage({
-        dbInfo: JSON.stringify(_dbInfo),
-        testScenarios: JSON.stringify(_testScenarios),
-        graphNodes: JSON.stringify(graphNodes),
-        testDatas: JSON.stringify(testDatas),
-      });
-      this.worker.onmessage = (e) => console.log('post', e);
+      // this.worker.postMessage({
+      //   dbInfo: JSON.stringify(_dbInfo),
+      //   testScenarios: JSON.stringify(_testScenarios),
+      //   graphNodes: JSON.stringify(graphNodes),
+      //   testDatas: JSON.stringify(testDatas),
+      // });
+      // this.worker.onmessage = (e) => console.log('post', e);
 
-      // const _testCases = await testCaseHelper.generateTestCases(testCaseSet);
+      await testCaseHelper.generateTestCases(testCaseSet);
       // await testCaseHelper.createTestCases();
       setGenerating(GENERATE_STATUS.COMPLETE);
 
@@ -217,15 +217,20 @@ class TestScenarioAndCase extends Component {
   };
 
   _getTestScenarioAndCase = async () => {
+    const { columns: columnsState } = this.state;
     const { dbContext, graph } = this.props;
     if (dbContext && dbContext.db) {
       const { testScenarioSet, testCaseSet } = dbContext;
       const testScenarios = await testScenarioSet.get();
       const testCases = await testCaseSet.get();
       const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
-      return TestScenarioHelper.convertToRows(testCases, testScenarios, columns, graph.graphNodes);
+      await this.setState({ columns });
+      return {
+        rows: TestScenarioHelper.convertToRows(testCases, testScenarios, columns, graph.graphNodes),
+        columns: columnsState,
+      };
     }
-    return [];
+    return { rows: [], columns: [] };
   };
 
   _handleShortCutEvents = (code) => {
