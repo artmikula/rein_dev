@@ -22,7 +22,7 @@ import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
-import worker from 'features/project/work/biz/worker/testCase.worker';
+import worker from 'features/shared/worker/generateTestCase.worker';
 import { TABLES } from 'features/shared/storage-services/indexedDb/constants';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
@@ -49,7 +49,6 @@ class TestScenarioAndCase extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      columns: [],
       filterOptions: structuredClone(defaultFilterOptions),
       isLoading: false,
     };
@@ -98,6 +97,7 @@ class TestScenarioAndCase extends Component {
         });
       }
     });
+    this._getTestScenarioAndCase();
     this.worker = new Worker(worker, { type: 'module' });
   }
 
@@ -107,7 +107,6 @@ class TestScenarioAndCase extends Component {
 
   _clearData = async () => {
     const { dbContext } = this.props;
-    this.setState({ columns: [] });
 
     const { testScenarioSet } = dbContext;
     await testScenarioSet.delete();
@@ -151,43 +150,25 @@ class TestScenarioAndCase extends Component {
       const _testScenarios = await testScenarioSet.get();
 
       await testCaseHelper.init(_testScenarios, graphNodes, testDatas, testCaseSet);
-      // const _dbInfo = {
-      //   name: dbContext.name,
-      //   version: dbContext.version,
-      //   table: TABLES.TEST_CASES,
-      // };
+      const _dbInfo = {
+        name: dbContext.name,
+        version: dbContext.version,
+        table: TABLES.TEST_CASES,
+      };
 
-      // this.worker.postMessage({
-      //   dbInfo: JSON.stringify(_dbInfo),
-      //   testScenarios: JSON.stringify(_testScenarios),
-      //   graphNodes: JSON.stringify(graphNodes),
-      //   testDatas: JSON.stringify(testDatas),
-      // });
-      // this.worker.onmessage = (e) => console.log('post', e);
+      this.worker.postMessage({
+        dbInfo: JSON.stringify(_dbInfo),
+        testScenarios: JSON.stringify(_testScenarios),
+        graphNodes: JSON.stringify(graphNodes),
+        testDatas: JSON.stringify(testDatas),
+      });
+      this.worker.onmessage = (e) => {
+        if (e.data === 'done') {
+          setGenerating(GENERATE_STATUS.COMPLETE);
+        }
+      };
 
-      await testCaseHelper.generateTestCases(testCaseSet);
       // await testCaseHelper.createTestCases();
-      setGenerating(GENERATE_STATUS.COMPLETE);
-
-      // this.worker.postMessage('Start');
-      // this.worker.onmessage = async (ev) => {
-      //   try {
-      //
-      //     const result = await ev.data;
-      //     if (result) {
-      //       const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
-      //       setGenerating(GENERATE_STATUS.COMPLETE);
-      //       this.setState({ isLoading: true, columns });
-      //       await this._getTestScenarioAndCase();
-      //       this.setState({ isLoading: false });
-      //       this.worker.terminate();
-      //     }
-      //   } catch (error) {
-      //     console.log('cannot generate', error);
-      //     setGenerating(GENERATE_STATUS.FAIL);
-      //     this.worker.terminate();
-      //   }
-      // };
 
       /** TODO: remove this after finish implement indexedDb */
       // const newTestScenariosAndCases = newTestScenarios.map((x) => {
@@ -217,20 +198,15 @@ class TestScenarioAndCase extends Component {
   };
 
   _getTestScenarioAndCase = async () => {
-    const { columns: columnsState } = this.state;
     const { dbContext, graph } = this.props;
     if (dbContext && dbContext.db) {
       const { testScenarioSet, testCaseSet } = dbContext;
       const testScenarios = await testScenarioSet.get();
       const testCases = await testCaseSet.get();
       const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
-      await this.setState({ columns });
-      return {
-        rows: TestScenarioHelper.convertToRows(testCases, testScenarios, columns, graph.graphNodes),
-        columns: columnsState,
-      };
+      return TestScenarioHelper.convertToRows(testCases, testScenarios, columns, graph.graphNodes);
     }
-    return { rows: [], columns: [] };
+    return [];
   };
 
   _handleShortCutEvents = (code) => {
@@ -379,7 +355,7 @@ class TestScenarioAndCase extends Component {
   }
 
   render() {
-    const { columns, filterOptions, isLoading } = this.state;
+    const { filterOptions, isLoading } = this.state;
 
     return isLoading ? (
       <div className="loading_text" />
@@ -390,11 +366,7 @@ class TestScenarioAndCase extends Component {
           setFilterOptions={this._setFilterOptions}
           getData={this._getTestScenarioAndCase}
         />
-        <TableTestScenarioAndCase
-          filterOptions={filterOptions}
-          getData={this._getTestScenarioAndCase}
-          columns={columns}
-        />
+        <TableTestScenarioAndCase filterOptions={filterOptions} />
       </div>
     );
   }

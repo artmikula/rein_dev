@@ -3,6 +3,12 @@
 /* eslint-disable no-restricted-syntax */
 
 const workercode = () => {
+  let testCaseId = 1000000;
+  const getTestCaseId = () => {
+    testCaseId++;
+    return `TC#-${testCaseId}`;
+  };
+
   const convertTestDataToList = (datas = '', type = '') => {
     if (datas) {
       if (type === 'Tupple') {
@@ -51,7 +57,7 @@ const workercode = () => {
         if (!existData) {
           await testCase.testDatas.push(newTestData);
           if (nextAssertions.length === 0) {
-            indexedDb.add(testCase);
+            indexedDb.add({ id: testCaseId, value: testCase });
             continue;
           } else {
             await _getTestCase(testCase, nextAssertions, rawTestDatas, testDataLength, indexedDb);
@@ -59,7 +65,7 @@ const workercode = () => {
         }
         if (existData && !existData?.data.includes(data)) {
           const newTestCase = {
-            id: Math.random(),
+            id: getTestCaseId(),
             testScenarioId: testCase.testScenarioId,
             results: [...testCase.results],
             testDatas: testCase.testDatas
@@ -79,7 +85,7 @@ const workercode = () => {
           };
           updateTestData(newTestCase, newTestData, testAssertion.graphNodeId);
           if (newTestCase.testDatas.length === testDataLength) {
-            indexedDb.add(newTestCase);
+            indexedDb.add({ id: testCaseId, value: newTestCase });
             if (nextAssertions.length > 0) {
               await _getTestCase(newTestCase, nextAssertions, rawTestDatas, testDataLength, indexedDb);
             }
@@ -119,7 +125,7 @@ const workercode = () => {
             results.push(nodeDefinition);
           }
           const testCase = {
-            id: Math.random(),
+            id: getTestCaseId(),
             testScenarioId: testScenario.id,
             results,
             testDatas: [],
@@ -130,7 +136,7 @@ const workercode = () => {
       };
       // close transaction
       await e.target.postMessage('done');
-      // await e.target.close();
+      await e.target.close();
     },
     false
   );

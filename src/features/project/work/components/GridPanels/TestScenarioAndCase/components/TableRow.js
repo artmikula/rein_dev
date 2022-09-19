@@ -13,6 +13,8 @@ function TableRow(props) {
 
   const { dbContext } = useSelector((state) => state.work);
 
+  console.log('groupByEffectNodes', groupByEffectNodes);
+
   useEffect(() => {
     // handle get row span by group
     const rowSpanByGroup = {};

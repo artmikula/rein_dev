@@ -14,9 +14,9 @@ export default class TestCaseSet implements ITestCaseSet {
   }
 
   /** get all or get by filter */
-  async get(filter?: lf.Predicate): Promise<Object[]> {
+  async get(filter?: lf.Predicate): Promise<Object[] | ITestCase[]> {
     if (filter) {
-      return this.db.select().from(this.table).where(filter).exec();
+      return this.db.select().from(this.table).limit(100).where(filter).exec();
     }
     return this.db.select().from(this.table).exec();
   }
