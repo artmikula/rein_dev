@@ -13,8 +13,6 @@ function TableRow(props) {
 
   const { dbContext } = useSelector((state) => state.work);
 
-  console.log('groupByEffectNodes', groupByEffectNodes);
-
   useEffect(() => {
     // handle get row span by group
     const rowSpanByGroup = {};
@@ -183,137 +181,140 @@ function TableRow(props) {
     [groupByEffectNodes]
   );
 
-  return (
-    <tbody>
-      {groupByEffectNodes.map((row, rowIndex) => (
-        <Fragment key={rowIndex}>
-          <tr key={`${rowIndex}-grouped-test-scenario`}>
-            <td className="treeview" rowSpan={rowSpan[row?.key]}>
-              <ul>
-                <li>
-                  <ul className="d-inline-flex">
-                    <a
-                      style={{ paddingTop: '2px' }}
-                      href="#collapse"
-                      className="text-dark"
-                      onClick={(e) => _toggleRow(e, row?.key)}
-                    >
-                      <i
-                        className={`mr-1 cursor-pointer ${
-                          expandId[row?.key] ? 'bi bi-dash-square-fill' : 'bi bi-plus-square-fill'
-                        }`}
+  if (groupByEffectNodes.length > 0) {
+    return (
+      <tbody>
+        {groupByEffectNodes.map((row, rowIndex) => (
+          <Fragment key={rowIndex}>
+            <tr key={`${rowIndex}-grouped-test-scenario`}>
+              <td className="treeview" rowSpan={rowSpan[row?.key]}>
+                <ul>
+                  <li>
+                    <ul className="d-inline-flex">
+                      <a
+                        style={{ paddingTop: '2px' }}
+                        href="#collapse"
+                        className="text-dark"
+                        onClick={(e) => _toggleRow(e, row?.key)}
+                      >
+                        <i
+                          className={`mr-1 cursor-pointer ${
+                            expandId[row?.key] ? 'bi bi-dash-square-fill' : 'bi bi-plus-square-fill'
+                          }`}
+                        />
+                      </a>
+                      <Checkbox
+                        checked={row?.isSelected ?? false}
+                        onChange={(e) => _handleCheckedByGroup(row?.key ?? '', e.target.checked)}
+                        labelRenderer={
+                          <span className="font-weight-500" style={{ lineHeight: '21px' }}>
+                            {row?.key}: {row?.definition}
+                          </span>
+                        }
                       />
-                    </a>
-                    <Checkbox
-                      checked={row?.isSelected ?? false}
-                      onChange={(e) => _handleCheckedByGroup(row?.key ?? '', e.target.checked)}
-                      labelRenderer={
-                        <span className="font-weight-500" style={{ lineHeight: '21px' }}>
-                          {row?.key}: {row?.definition}
-                        </span>
-                      }
-                    />
-                  </ul>
-                  <ul>
-                    {expandId[row?.key] &&
-                      row.testScenarios.map((testScenario) => (
-                        <li
-                          key={`${row.key}-${testScenario.id}`}
-                          className={testScenario.isViolated ? 'ommit-row' : ''}
-                        >
-                          <ul className="d-inline-flex">
-                            <a
-                              style={{
-                                paddingTop: '2px',
-                                visibility: testScenario.testCases.length === 0 ? 'hidden' : 'visible',
-                              }}
-                              href="#collapse"
-                              className="text-dark"
-                              onClick={(e) => _toggleRow(e, testScenario.id)}
-                            >
-                              <i
-                                className={`mr-1 cursor-pointer ${
-                                  expandId[testScenario.id] ? 'bi bi-dash-square-fill' : 'bi bi-plus-square-fill'
-                                }`}
+                    </ul>
+                    <ul>
+                      {expandId[row?.key] &&
+                        row.testScenarios.map((testScenario) => (
+                          <li
+                            key={`${row.key}-${testScenario.id}`}
+                            className={testScenario.isViolated ? 'ommit-row' : ''}
+                          >
+                            <ul className="d-inline-flex">
+                              <a
+                                style={{
+                                  paddingTop: '2px',
+                                  visibility: testScenario.testCases.length === 0 ? 'hidden' : 'visible',
+                                }}
+                                href="#collapse"
+                                className="text-dark"
+                                onClick={(e) => _toggleRow(e, testScenario.id)}
+                              >
+                                <i
+                                  className={`mr-1 cursor-pointer ${
+                                    expandId[testScenario.id] ? 'bi bi-dash-square-fill' : 'bi bi-plus-square-fill'
+                                  }`}
+                                />
+                              </a>
+                              <Checkbox
+                                checked={testScenario.isSelected ?? false}
+                                onChange={(e) => _handleTestScenarioChecked(testScenario.id, e.target.checked)}
+                                labelRenderer={
+                                  <span className="font-weight-500" style={{ lineHeight: '21px' }}>
+                                    {testScenario.Name}
+                                  </span>
+                                }
                               />
-                            </a>
-                            <Checkbox
-                              checked={testScenario.isSelected ?? false}
-                              onChange={(e) => _handleTestScenarioChecked(testScenario.id, e.target.checked)}
-                              labelRenderer={
-                                <span className="font-weight-500" style={{ lineHeight: '21px' }}>
-                                  {testScenario.Name}
-                                </span>
-                              }
-                            />
-                          </ul>
-                          <ul>
-                            {expandId[testScenario.id] &&
-                              testScenario.testCases.map((testCase, testIndex) => (
-                                <li key={`${testIndex}test-case-tree`}>
-                                  <Checkbox
-                                    checked={testCase.isSelected ?? false}
-                                    onChange={(e) =>
-                                      _handleTestCaseChecked(testScenario.id, testCase.id, e.target.checked)
-                                    }
-                                    labelRenderer={testCase.Name}
-                                  />
-                                </li>
-                              ))}
-                          </ul>
-                        </li>
-                      ))}
-                  </ul>
-                </li>
-              </ul>
-            </td>
-            {columns.map((_column, colIndex) => (
-              <td
-                key={`${colIndex}test-scenario-col`}
-                style={{
-                  visibility: 'collapse',
-                }}
-              >
-                <div style={{ height: 18 }} />
-              </td>
-            ))}
-          </tr>
-          {row.testScenarios.map(
-            (testScenario) =>
-              expandId[row?.key] && (
-                <Fragment key={`test-scenario-columns-${testScenario.id}`}>
-                  <tr className={testScenario.isViolated ? 'isViolated' : ''}>
-                    {columns.map((column, colIndex) => (
-                      <td key={`${colIndex}test-scenario-col`}>
-                        {typeof testScenario[column.key] === 'boolean' ? (
-                          <input
-                            type="checkbox"
-                            onChange={(e) => _handleCheckboxChange(testScenario.id, column.key, e.target.checked)}
-                            checked={testScenario[column.key]}
-                          />
-                        ) : (
-                          testScenario[column.key]
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                  {expandId[testScenario.id] &&
-                    testScenario.testCases.map((testCase, tcIndex) => (
-                      <tr key={`${tcIndex}test-case-row`}>
-                        {columns.map((column, colIndex) => (
-                          <td key={`${colIndex}test-case-col`} style={{ padding: '3px 8px' }}>
-                            {testCase[column.key]}
-                          </td>
+                            </ul>
+                            <ul>
+                              {expandId[testScenario.id] &&
+                                testScenario.testCases.map((testCase, testIndex) => (
+                                  <li key={`${testIndex}test-case-tree`}>
+                                    <Checkbox
+                                      checked={testCase.isSelected ?? false}
+                                      onChange={(e) =>
+                                        _handleTestCaseChecked(testScenario.id, testCase.id, e.target.checked)
+                                      }
+                                      labelRenderer={testCase.Name}
+                                    />
+                                  </li>
+                                ))}
+                            </ul>
+                          </li>
                         ))}
-                      </tr>
-                    ))}
-                </Fragment>
-              )
-          )}
-        </Fragment>
-      ))}
-    </tbody>
-  );
+                    </ul>
+                  </li>
+                </ul>
+              </td>
+              {columns.map((_column, colIndex) => (
+                <td
+                  key={`${colIndex}test-scenario-col`}
+                  style={{
+                    visibility: 'collapse',
+                  }}
+                >
+                  <div style={{ height: 18 }} />
+                </td>
+              ))}
+            </tr>
+            {row.testScenarios.map(
+              (testScenario) =>
+                expandId[row?.key] && (
+                  <Fragment key={`test-scenario-columns-${testScenario.id}`}>
+                    <tr className={testScenario.isViolated ? 'isViolated' : ''}>
+                      {columns.map((column, colIndex) => (
+                        <td key={`${colIndex}test-scenario-col`}>
+                          {typeof testScenario[column.key] === 'boolean' ? (
+                            <input
+                              type="checkbox"
+                              checked={testScenario[column.key]}
+                              onChange={(e) => _handleCheckboxChange(testScenario.id, column.key, e.target.checked)}
+                            />
+                          ) : (
+                            testScenario[column.key]
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                    {expandId[testScenario.id] &&
+                      testScenario.testCases.map((testCase, tcIndex) => (
+                        <tr key={`${tcIndex}test-case-row`}>
+                          {columns.map((column, colIndex) => (
+                            <td key={`${colIndex}test-case-col`} style={{ padding: '3px 8px' }}>
+                              {testCase[column.key]}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                  </Fragment>
+                )
+            )}
+          </Fragment>
+        ))}
+      </tbody>
+    );
+  }
+  return null;
 }
 
 TableRow.propTypes = {

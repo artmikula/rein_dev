@@ -6,17 +6,18 @@ import Language from 'features/shared/languages/Language';
 
 // TODO: refactor this
 function TableHeader(props) {
-  const { filterRows, onChangeCheckbox, checked, rows, columns } = props;
+  const { filterRows, onChangeCheckbox, rows, columns, isCheckAll } = props;
+
   return (
     <thead className="text-primary">
       <tr>
         <td style={{ position: 'relative', minWidth: 140 }}>
           {typeof filterRows !== 'undefined'
             ? filterRows.length > 0 && (
-                <Input type="checkbox" className="input-checkbox" onChange={onChangeCheckbox} checked={checked} />
+                <Input type="checkbox" className="input-checkbox" onChange={onChangeCheckbox} checked={isCheckAll} />
               )
             : rows.length > 0 && (
-                <Input type="checkbox" className="input-checkbox" onChange={onChangeCheckbox} checked={checked} />
+                <Input type="checkbox" className="input-checkbox" onChange={onChangeCheckbox} checked={isCheckAll} />
               )}
           <span className="font-weight-500" style={{ lineHeight: '21px' }}>
             {Language.get('name')}
@@ -34,7 +35,7 @@ function TableHeader(props) {
 
 TableHeader.propTypes = {
   onChangeCheckbox: PropTypes.func.isRequired,
-  checked: PropTypes.func.isRequired,
+  isCheckAll: PropTypes.bool.isRequired,
   rows: PropTypes.oneOfType([PropTypes.array]).isRequired,
   columns: PropTypes.oneOfType([PropTypes.array]).isRequired,
   filterRows: PropTypes.oneOfType([PropTypes.array]),

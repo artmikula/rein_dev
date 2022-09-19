@@ -165,6 +165,7 @@ class TestScenarioAndCase extends Component {
       this.worker.onmessage = (e) => {
         if (e.data === 'done') {
           setGenerating(GENERATE_STATUS.COMPLETE);
+          this.worker.terminate();
         }
       };
 

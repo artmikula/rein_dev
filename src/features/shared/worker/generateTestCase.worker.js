@@ -3,7 +3,7 @@
 /* eslint-disable no-restricted-syntax */
 
 const workercode = () => {
-  let testCaseId = 1000000;
+  let testCaseId = 100000;
   const getTestCaseId = () => {
     testCaseId++;
     return `TC#-${testCaseId}`;
@@ -134,9 +134,7 @@ const workercode = () => {
           await _getTestCase(testCase, testAssertions, _testDatas, testAssertions.length, indexedDb);
         }
       };
-      // close transaction
       await e.target.postMessage('done');
-      await e.target.close();
     },
     false
   );

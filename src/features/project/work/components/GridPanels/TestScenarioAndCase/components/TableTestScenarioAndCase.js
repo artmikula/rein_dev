@@ -17,6 +17,7 @@ function TableTestScenarioAndCase(props) {
   const [filterData, setFilterData] = useState(undefined);
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
+  const [isCheckAll, setIsCheckAll] = useState(false);
 
   const { dbContext, generating, graph } = useSelector((state) => state.work);
 
@@ -24,9 +25,7 @@ function TableTestScenarioAndCase(props) {
     if (dbContext && dbContext.db) {
       const { testScenarioSet, testCaseSet } = dbContext;
       const testScenarios = await testScenarioSet.get();
-      console.log('testScenarios', testScenarios);
       const testCases = await testCaseSet.get();
-      console.log('testCases', testCases);
       const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
       return {
         rows: TestScenarioHelper.convertToRows(testCases, testScenarios, columns, graph.graphNodes),
@@ -37,7 +36,7 @@ function TableTestScenarioAndCase(props) {
       rows: [],
       columns: [],
     };
-  }, [generating, dbContext, graph]);
+  }, [generating, dbContext, graph.graphNodes]);
 
   const _getGroupByEffectNodes = useCallback(
     (testScenarioAndCase) => {
@@ -62,15 +61,6 @@ function TableTestScenarioAndCase(props) {
         _group.isSelected = isSelected;
       });
       sortByString(groups, 'key');
-      // groups.sort((a, b) => {
-      //   if (a.key < b.key) {
-      //     return -1;
-      //   }
-      //   if (a.key > b.key) {
-      //     return 1;
-      //   }
-      //   return 0;
-      // });
       setGroupByEffectNodes(groups);
     },
     [rows]
@@ -123,29 +113,42 @@ function TableTestScenarioAndCase(props) {
     }
   };
 
+  // TODO: fix this after done
+  const _isCheckedAllTestScenarios = () => {
+    if (rows.length > 0) {
+      const isCheckAll = rows.every((row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected));
+      setIsCheckAll(isCheckAll);
+    }
+  };
+
   useEffect(() => {
     if (filterOptions.type === FILTER_TYPE.SUBMIT) {
       _onChangeFilterOptions();
     }
   }, [filterOptions.type]);
 
-  useEffect(() => {
-    console.log('groupByEffectNodes', groupByEffectNodes);
-  }, [groupByEffectNodes]);
-
   useEffect(async () => {
-    if (!generating) {
+    if (!generating && dbContext) {
       const { rows, columns } = await _getData;
+      console.log('rows', rows);
+      console.log('columns', columns);
       setColumns(columns);
       setRows(rows);
     } else {
       setColumns([]);
       setRows([]);
     }
-  }, [generating, dbContext, filterData]);
+  }, [generating, graph.graphNodes]);
+
+  useEffect(() => {
+    if (groupByEffectNodes.length > 0) {
+      _isCheckedAllTestScenarios();
+    }
+  }, [groupByEffectNodes]);
 
   useEffect(() => {
     _getGroupByEffectNodes(filterData ?? rows);
+    _isCheckedAllTestScenarios();
   }, [rows, filterData]);
 
   const _handleCheckedAll = useCallback(
@@ -163,6 +166,7 @@ function TableTestScenarioAndCase(props) {
           });
           return _row;
         });
+        setRows(newRows);
         _getGroupByEffectNodes(filterData ?? newRows);
 
         await testScenarioSet.update('isSelected', checked);
@@ -180,15 +184,6 @@ function TableTestScenarioAndCase(props) {
     [rows, filterData]
   );
 
-  // TODO: fix this after done
-  const _isCheckedAllTestScenarios = () => {
-    if (rows.length > 0) {
-      const isCheckAll = rows.every((row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected));
-      return isCheckAll;
-    }
-    return false;
-  };
-
   return (
     <Table bordered className="scenario-case-table">
       <Header
@@ -196,7 +191,7 @@ function TableTestScenarioAndCase(props) {
         filterRows={filterData}
         onChangeCheckbox={(e) => _handleCheckedAll(e.target.checked)}
         columns={columns}
-        checked={() => _isCheckedAllTestScenarios()}
+        isCheckAll={isCheckAll}
       />
       <TableRow
         rows={rows}

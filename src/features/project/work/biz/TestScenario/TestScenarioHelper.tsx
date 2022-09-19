@@ -485,7 +485,6 @@ class TestScenarioHelper {
       testCases: testCases.filter((e) => e.testScenarioId === scenario.id),
       isSelected: !testCases.filter((e) => e.testScenarioId === scenario.id).some((x) => !x.isSelected),
     }));
-    console.log('scenarios', scenarios);
 
     const testScenarios: ITestScenarioAndCaseRow[] = rows.map((testScenario, testScenarioIndex: number) => {
       const testScenarioItem: ITestScenarioAndCaseRow = {
