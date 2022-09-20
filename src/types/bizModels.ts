@@ -11,6 +11,7 @@ interface ITestCaseRow {
   Name: string;
   isSelected: boolean;
   results?: string;
+  isLastRow?: boolean;
 }
 
 interface ITestScenarioAndCaseRow {
@@ -27,6 +28,8 @@ interface ITestScenarioAndCaseRow {
   testCases?: ITestCaseRow[];
   isViolated?: boolean;
   sourceTargetType?: string;
+  totalPage: number;
+  page: number;
 }
 
 interface ITestScenarioAndCaseColumn {

@@ -17,6 +17,8 @@ import { v4 as uuid } from 'uuid';
 
 interface IRow extends ISimpleTestScenario {
   testCases: ITestCase[];
+  totalPage: number;
+  page: number;
 }
 
 class TestScenarioHelper {
@@ -475,16 +477,23 @@ class TestScenarioHelper {
   }
 
   convertToRows(
-    testCases: ITestCase[] = [],
+    testCaseData: any[] = [],
     scenarios: ISimpleTestScenario[] = [],
     columns: ITestScenarioAndCaseColumn[] = [],
     graphNodes: IGraphNode[] = []
   ) {
-    const rows: IRow[] = scenarios.map((scenario) => ({
-      ...scenario,
-      testCases: testCases.filter((e) => e.testScenarioId === scenario.id),
-      isSelected: !testCases.filter((e) => e.testScenarioId === scenario.id).some((x) => !x.isSelected),
-    }));
+    const rows: IRow[] = scenarios.map((scenario) => {
+      const data = testCaseData.find((data) => data.id === scenario.id);
+      return {
+        ...scenario,
+        testCases: data.testCases,
+        isSelected: !data.testCases
+          .filter((testCase: ITestCase) => testCase.testScenarioId === scenario.id)
+          .some((testCase: ITestCase) => !testCase.isSelected),
+        totalPage: Math.ceil(data.total / data.testCases.length),
+        page: data.page,
+      };
+    });
 
     const testScenarios: ITestScenarioAndCaseRow[] = rows.map((testScenario, testScenarioIndex: number) => {
       const testScenarioItem: ITestScenarioAndCaseRow = {
@@ -496,6 +505,8 @@ class TestScenarioHelper {
         resultType: testScenario.resultType ?? RESULT_TYPE.True,
         effectDefinition:
           graphNodes.find((graphNode) => graphNode.nodeId === testScenario.expectedResults)?.definition ?? '',
+        totalPage: testScenario.totalPage,
+        page: testScenario.page,
       };
 
       columns.forEach((column) => {
@@ -545,6 +556,15 @@ class TestScenarioHelper {
 
         return testCaseItem;
       });
+
+      if (testScenario.page < testScenario.totalPage) {
+        testScenarioItem.testCases.push({
+          id: '',
+          Name: '',
+          isSelected: false,
+          isLastPage: testScenario.page < testScenario.totalPage,
+        });
+      }
 
       return testScenarioItem;
     });

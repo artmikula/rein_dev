@@ -3,19 +3,16 @@ import PropTypes from 'prop-types';
 import { Table } from 'reactstrap';
 import { useSelector } from 'react-redux';
 
-import { sortByString } from 'features/shared/lib/utils';
+import appConfig from 'features/shared/lib/appConfig';
 import { FILTER_TYPE, GENERATE_STATUS, RESULT_TYPE } from 'features/shared/constants';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import Language from 'features/shared/languages/Language';
 import Header from './TableHeader';
 import TableRow from './TableRow';
 
-const PAGE_SIZE = 100;
-
 function TableTestScenarioAndCase(props) {
   const { filterOptions } = props;
 
-  const [groupByEffectNodes, setGroupByEffectNodes] = useState([]);
   const [filterData, setFilterData] = useState(undefined);
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
@@ -23,27 +20,34 @@ function TableTestScenarioAndCase(props) {
 
   const { dbContext, generating, graph } = useSelector((state) => state.work);
 
+  const { testScenarioAndCase: config } = appConfig;
+
   const _getData = async () => {
     if (dbContext && dbContext.db) {
       try {
         const { testScenarioSet, testCaseSet } = dbContext;
         const testScenarios = await testScenarioSet.get();
+
         const promises = testScenarios.map(async (testScenario) => {
-          const _testScenario = testScenario;
+          const _testScenario = {};
+          _testScenario.id = testScenario.id;
           _testScenario.testCases = await testCaseSet.db
             .select()
             .from(testCaseSet.table)
-            .limit(PAGE_SIZE)
+            .limit(config.testCasePageSize)
+            .skip(0)
             .where(testCaseSet.table.testScenarioId.eq(testScenario.id))
             .exec();
 
-          return _testScenario.testCases;
+          _testScenario.total = await testCaseSet.totalTestCases(testScenario.id);
+          _testScenario.page = 0;
+          return _testScenario;
         });
 
-        const testCases = await Promise.all(promises);
+        const data = await Promise.all(promises);
         const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
         return {
-          rows: TestScenarioHelper.convertToRows(testCases.flat(), testScenarios, columns, graph.graphNodes),
+          rows: TestScenarioHelper.convertToRows(data, testScenarios, columns, graph.graphNodes),
           columns,
         };
       } catch (error) {
@@ -55,36 +59,6 @@ function TableTestScenarioAndCase(props) {
       columns: [],
     };
   };
-
-  const _getGroupByEffectNodes = useCallback(
-    (testScenarioAndCase) => {
-      const groups = [];
-      if (testScenarioAndCase.length > 0) {
-        testScenarioAndCase.forEach((row) => {
-          const isExists = groups.findIndex((group) => group?.key === row.results);
-          if (isExists === -1) {
-            groups.push({
-              key: row.results,
-              definition: row.effectDefinition,
-              isSelected: false,
-              testScenarios: [{ ...row, testCases: structuredClone(row.testCases) }],
-            });
-          } else {
-            groups[isExists].testScenarios?.push({ ...row, testCases: row.testCases.slice() });
-          }
-          return groups;
-        });
-        groups.forEach((group) => {
-          const _group = group;
-          const isSelected = _group.testScenarios.every((testScenario) => testScenario.isSelected);
-          _group.isSelected = isSelected;
-        });
-      }
-      sortByString(groups, 'key');
-      setGroupByEffectNodes(groups);
-    },
-    [rows]
-  );
 
   const _onChangeFilterOptions = () => {
     const { causeNodes, sourceTargetType, resultType, isBaseScenario, isValid, type } = filterOptions;
@@ -134,10 +108,12 @@ function TableTestScenarioAndCase(props) {
     }
   };
 
-  // TODO: fix this after done
-  const _isCheckedAllTestScenarios = () => {
-    if (rows.length > 0) {
-      const isCheckAll = rows.every((row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected));
+  const _isCheckedAllTestScenarios = (newRows = undefined) => {
+    const _newRows = newRows ?? rows;
+    if (_newRows.length > 0) {
+      const isCheckAll = _newRows.every(
+        (row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected)
+      );
       setIsCheckAll(isCheckAll);
     }
   };
@@ -159,18 +135,7 @@ function TableTestScenarioAndCase(props) {
     }
   }, [generating, graph.graphNodes, dbContext]);
 
-  // useEffect(() => {
-  //   console.log('rows', rows);
-  // }, [rows]);
-
-  useEffect(() => {
-    if (groupByEffectNodes.length > 0) {
-      _isCheckedAllTestScenarios();
-    }
-  }, [groupByEffectNodes]);
-
   useEffect(async () => {
-    await _getGroupByEffectNodes(filterData ?? rows);
     await _isCheckedAllTestScenarios();
   }, [rows, filterData]);
 
@@ -190,19 +155,10 @@ function TableTestScenarioAndCase(props) {
           return _row;
         });
         setRows(newRows);
-        _getGroupByEffectNodes(filterData ?? newRows);
 
         await testScenarioSet.update('isSelected', checked);
         await testCaseSet.update('isSelected', checked);
       }
-
-      /** TODO: remove this after finish implement indexedDb */
-      // testScenarioAnsCaseStorage.checkAllTestScenarios(checked);
-      // const newRows = testScenarioAnsCaseStorage.checkAllTestScenarios(checked, rows);
-      // _getGroupByEffectNodes(filterRows ?? newRows);
-
-      // setRows(newRows);
-      /** end */
     },
     [rows, filterData]
   );
@@ -216,13 +172,7 @@ function TableTestScenarioAndCase(props) {
         columns={columns}
         isCheckAll={isCheckAll}
       />
-      <TableRow
-        rows={rows}
-        filterRows={filterData}
-        updateGroupByEffectNodes={_getGroupByEffectNodes}
-        groupByEffectNodes={groupByEffectNodes}
-        columns={columns}
-      />
+      <TableRow rows={rows} filterRows={filterData} columns={columns} isCheckAll={_isCheckedAllTestScenarios} />
     </Table>
   );
 }
