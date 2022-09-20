@@ -1,12 +1,13 @@
 /* eslint-disable max-lines */
 import Download from 'downloadjs';
+import { Button } from 'reactstrap';
 import testCaseHelper from 'features/project/work/biz/TestCase';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import reInCloudService from 'features/project/work/services/reInCloudService';
 import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
-import { setGraph, setGenerating } from 'features/project/work/slices/workSlice';
+import { setGraph, setGenerating, setDbContext } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
   FILTER_TYPE,
@@ -50,7 +51,6 @@ class TestScenarioAndCase extends Component {
     super(props);
     this.state = {
       filterOptions: structuredClone(defaultFilterOptions),
-      isLoading: false,
     };
     this.worker = null;
     this.initiatedData = false;
@@ -103,6 +103,7 @@ class TestScenarioAndCase extends Component {
 
   componentWillUnmount() {
     eventBus.unsubscribe(this);
+    this.worker.terminate();
   }
 
   _clearData = async () => {
@@ -125,6 +126,14 @@ class TestScenarioAndCase extends Component {
 
       const { testScenarioSet, testCaseSet } = dbContext;
       await testScenarioSet.delete();
+      await testCaseSet.delete();
+
+      // const testScenarioData = await testScenarioSet.get();
+      // if (testScenarioData.length > 0) {
+      //   console.log(1, dbContext);
+      //   await dbContext.reInitIndexedDb();
+      //   console.log(2, dbContext);
+      // }
 
       if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
         scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(
@@ -162,10 +171,14 @@ class TestScenarioAndCase extends Component {
         graphNodes: JSON.stringify(graphNodes),
         testDatas: JSON.stringify(testDatas),
       });
-      this.worker.onmessage = (e) => {
-        if (e.data === 'done') {
-          setGenerating(GENERATE_STATUS.COMPLETE);
-          this.worker.terminate();
+      this.worker.onmessage = async (e) => {
+        setGenerating(e.data);
+        if (e.data === GENERATE_STATUS.COMPLETE) {
+          // setTimeout(() => {
+          //   this.worker.terminate();
+          // }, 5000);
+        } else if (e.data === GENERATE_STATUS.FAIL) {
+          alert('Something wrong during generation. Please reload page and run again!');
         }
       };
 
@@ -356,10 +369,23 @@ class TestScenarioAndCase extends Component {
   }
 
   render() {
-    const { filterOptions, isLoading } = this.state;
+    const { filterOptions } = this.state;
+    const { generating } = this.props;
 
-    return isLoading ? (
-      <div className="loading_text" />
+    return generating === GENERATE_STATUS.COMPLETE ? (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '1.5rem',
+        }}
+      >
+        <p>Test Scenario has been generated successfully. Please reload page to see changes</p>
+        <Button size="sm" onClick={() => window.location.reload()}>
+          Reload
+        </Button>
+      </div>
     ) : (
       <div>
         <FilterBar
@@ -385,6 +411,7 @@ TestScenarioAndCase.propTypes = {
   setGraph: PropTypes.func.isRequired,
   setGenerating: PropTypes.func.isRequired,
   dbContext: PropTypes.oneOfType([PropTypes.object]),
+  generating: PropTypes.string.isRequired,
 };
 
 TestScenarioAndCase.defaultProps = {
@@ -399,8 +426,9 @@ const mapStateToProps = (state) => ({
   graph: state.work.graph,
   testDatas: state.work.testDatas,
   dbContext: state.work.dbContext,
+  generating: state.work.generating,
 });
 
-const mapDispatchToProps = { setGraph, setGenerating };
+const mapDispatchToProps = { setGraph, setGenerating, setDbContext };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestScenarioAndCase));

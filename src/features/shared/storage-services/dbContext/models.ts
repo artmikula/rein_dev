@@ -7,13 +7,13 @@ interface IDbSet {
 }
 
 interface ITestScenarioSet extends IDbSet {
-  delete: () => Promise<Object[]>;
   add: (data: ISimpleTestScenario | ISimpleTestScenario[]) => Promise<Object[]>;
 }
 
 interface ITestCaseSet extends IDbSet {
   table: lf.schema.Table;
   add: (data: ITestCase | ITestCase[]) => Promise<Object[]>;
+  delete: () => Promise<Object[]>;
 }
 
 interface IDbContext {

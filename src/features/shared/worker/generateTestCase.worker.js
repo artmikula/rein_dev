@@ -40,6 +40,7 @@ const workercode = () => {
   };
 
   const _getTestCase = async (testCase, testAssertions, rawTestDatas, testDataLength, indexedDb) => {
+    // console.log('testCaseId', testCaseId);
     for await (const testAssertion of testAssertions) {
       const index = testAssertions.findIndex((assertion) => testAssertion.graphNodeId === assertion.graphNodeId);
       const nextAssertions = testAssertions.slice(index + 1);
@@ -57,7 +58,9 @@ const workercode = () => {
         if (!existData) {
           await testCase.testDatas.push(newTestData);
           if (nextAssertions.length === 0) {
-            indexedDb.add({ id: testCaseId, value: testCase });
+            if (testCaseId <= 200001) {
+              await indexedDb.add({ id: testCaseId, value: testCase });
+            }
             continue;
           } else {
             await _getTestCase(testCase, nextAssertions, rawTestDatas, testDataLength, indexedDb);
@@ -85,7 +88,16 @@ const workercode = () => {
           };
           updateTestData(newTestCase, newTestData, testAssertion.graphNodeId);
           if (newTestCase.testDatas.length === testDataLength) {
-            indexedDb.add({ id: testCaseId, value: newTestCase });
+            if (testCaseId <= 200001) {
+              await indexedDb.add({ id: testCaseId, value: newTestCase });
+            }
+            // const countReq = await indexedDb.count();
+            // // eslint-disable-next-line no-loop-func
+            // countReq.onsuccess = ({ target }) => {
+            //   if (target.result <= 100000) {
+            //     indexedDb.add({ id: testCaseId, value: newTestCase });
+            //   }
+            // };
             if (nextAssertions.length > 0) {
               await _getTestCase(newTestCase, nextAssertions, rawTestDatas, testDataLength, indexedDb);
             }
@@ -133,14 +145,19 @@ const workercode = () => {
           };
           await _getTestCase(testCase, testAssertions, _testDatas, testAssertions.length, indexedDb);
         }
+        // const data = await indexedDb.getAll();
+        // console.log('data', data);
+        // await transaction.commit();
+        // await db.close();
       };
-      await e.target.postMessage('done');
+      await e.target.postMessage('complete');
     },
     false
   );
+
   self.addEventListener('messageerror', function (e) {
-    console.log('error', e);
-    self.terminate();
+    e.target.postMessage('fail');
+    self.close();
   });
 };
 

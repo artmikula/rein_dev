@@ -458,6 +458,7 @@ export const GRAPH_ACTIONS = {
 };
 
 export const GENERATE_STATUS = {
+  INITIAL: 'initial',
   START: 'start',
   COMPLETE: 'complete',
   FAIL: 'fail',

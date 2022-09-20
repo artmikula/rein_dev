@@ -56,17 +56,20 @@ const arrayToCsv = (data = [], graphNodes = []) => {
 };
 
 const sortByString = (data, key) => {
-  return data.sort((a, b) => {
-    const stringA = a[key].toUpperCase();
-    const stringB = b[key].toUpperCase();
-    if (stringA < stringB) {
-      return -1;
-    }
-    if (stringA > stringB) {
-      return 1;
-    }
-    return 0;
-  });
+  if (Array.isArray(data)) {
+    return data.sort((a, b) => {
+      const stringA = a[key].toUpperCase();
+      const stringB = b[key].toUpperCase();
+      if (stringA < stringB) {
+        return -1;
+      }
+      if (stringA > stringB) {
+        return 1;
+      }
+      return 0;
+    });
+  }
+  return [];
 };
 
 export { toLocalTime as default, arrayToCsv, sortByString };

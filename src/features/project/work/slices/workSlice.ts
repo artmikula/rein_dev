@@ -37,7 +37,7 @@ export const workSlice = createSlice({
     testCoverage: cloneDeep(defaultTestCoverageData),
     testDatas: [],
     dbContext: null,
-    generating: false,
+    generating: GENERATE_STATUS.INITIAL,
   } as IWorkSlice,
   reducers: {
     setWork: (state, action: PayloadAction<IWorkSlice>) => {
@@ -94,7 +94,7 @@ export const workSlice = createSlice({
     },
     setGenerating: (state, action: PayloadAction<string>) => {
       const _state = state;
-      _state.generating = action.payload === GENERATE_STATUS.START;
+      _state.generating = action.payload;
       return _state;
     },
   },

@@ -7,6 +7,7 @@ import {
   CLASSIFY,
   DEFAULT_LAYOUTS,
   DEFAULT_LAYOUTS_SINGLE,
+  GENERATE_STATUS,
   STRING,
   VIEW_MODE,
   WORK_FORM_NAME,
@@ -321,7 +322,7 @@ class Workspace extends Component {
           </span>
           <AlertGenerateReport />
           <span>
-            {generating && (
+            {generating === GENERATE_STATUS.START && (
               <>
                 <i
                   className={`bi central bi-arrow-repeat ${generating ? 'spinner-border' : ''} generating-loader`}
@@ -401,7 +402,7 @@ Workspace.propTypes = {
   loadedWork: PropTypes.bool.isRequired,
   setDbContext: PropTypes.func.isRequired,
   dbContext: PropTypes.oneOfType([PropTypes.object]),
-  generating: PropTypes.bool.isRequired,
+  generating: PropTypes.string.isRequired,
 };
 
 Workspace.defaultProps = {
