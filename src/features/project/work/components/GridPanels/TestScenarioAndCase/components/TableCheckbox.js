@@ -5,23 +5,10 @@ import { FormGroup, Input, Label } from 'reactstrap';
 function TableCheckbox(props) {
   const { checked, onChange, labelRenderer } = props;
 
-  const [isChecked, setIsChecked] = React.useState(false);
-  React.useEffect(() => {
-    setIsChecked(checked);
-  }, [checked]);
-
   return (
     <FormGroup check>
       <Label check>
-        <Input
-          type="checkbox"
-          className="mt-1"
-          onChange={(e) => {
-            setIsChecked(e.target.checked);
-            onChange(e.target.checked);
-          }}
-          checked={isChecked}
-        />
+        <Input type="checkbox" className="mt-1" onChange={onChange} checked={checked} />
         {labelRenderer}
       </Label>
     </FormGroup>

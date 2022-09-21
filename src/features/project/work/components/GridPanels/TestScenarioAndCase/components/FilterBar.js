@@ -4,32 +4,40 @@ import Select from 'react-select';
 import { useSelector } from 'react-redux';
 import Language from 'features/shared/languages/Language';
 import { Button, Input, Label } from 'reactstrap';
-import { FILTER_OPTIONS, FILTER_TYPE, OPERATOR_TYPE, RESULT_TYPE } from 'features/shared/constants';
+import { FILTER_OPTIONS, FILTER_TYPE, GENERATE_STATUS, OPERATOR_TYPE, RESULT_TYPE } from 'features/shared/constants';
 import { sortByString } from 'features/shared/lib/utils';
 
 function FilterBar(props) {
-  const { setFilterOptions, filterOptions, getData } = props;
-  const { generating } = useSelector((state) => state.work);
+  const { setFilterOptions, filterOptions, onSubmit } = props;
 
-  const { causeNodes, resultType, sourceTargetType, isBaseScenario, isValid } = filterOptions;
+  const { generating, dbContext, graph } = useSelector((state) => state.work);
 
-  const _getCauseNodes = React.useMemo(async () => {
-    if (!generating) {
-      const rows = await getData();
-      const _testAssertions = rows.map((data) => data.testAssertions).flat();
-      const _causeNodes = sortByString(
-        _testAssertions
-          .filter(
-            (testAssertion, index, array) =>
-              array.findIndex((arr) => arr?.graphNodeId === testAssertion?.graphNodeId) === index
-          )
-          .map((testAssertion) => ({
+  const { causeNodes: nodesProp, resultType, sourceTargetType, isBaseScenario, isValid } = filterOptions;
+
+  const [causeNodes, setCauseNodes] = React.useState([]);
+
+  React.useEffect(async () => {
+    if ((generating === GENERATE_STATUS.COMPLETE || generating === GENERATE_STATUS.INITIAL) && dbContext) {
+      const { testScenarioSet } = dbContext;
+      const testScenarios = await testScenarioSet.get();
+      const testAssertions = testScenarios.map((testScenario) => testScenario.testAssertions).flat();
+      const causeNodes = testAssertions
+        .filter(
+          (testAssertion, index, array) =>
+            array.findIndex((arr) => arr?.graphNodeId === testAssertion?.graphNodeId) === index &&
+            testAssertion.nodeId.startsWith('C')
+        )
+        .map((testAssertion) => {
+          const definition =
+            graph.graphNodes.find((graphNode) => graphNode.nodeId === testAssertion.nodeId)?.definition ?? '';
+          return {
             value: testAssertion?.graphNodeId ?? '',
-            label: `${testAssertion.nodeId}: ${testAssertion.definition}` ?? '',
-          })),
-        'label'
-      );
-      return _causeNodes;
+            label: `${testAssertion.nodeId}: ${definition}` ?? '',
+          };
+        });
+
+      const result = sortByString(causeNodes, 'label');
+      setCauseNodes(result);
     }
     return [];
   }, [generating]);
@@ -40,9 +48,9 @@ function FilterBar(props) {
         <div className="auto-complete">
           <Select
             isMulti
-            value={causeNodes ?? null}
+            value={nodesProp ?? null}
             onChange={(values) => setFilterOptions(FILTER_OPTIONS.CAUSE_NODES, values)}
-            options={_getCauseNodes?.length > 0 ? _getCauseNodes : []}
+            options={causeNodes}
             placeholder={Language.get('select')}
           />
         </div>
@@ -53,7 +61,7 @@ function FilterBar(props) {
           bsSize="sm"
           className="ml-2"
           style={{ minWidth: 66, fontSize: 'inherit' }}
-          disabled={causeNodes === null || causeNodes?.length === 0}
+          disabled={nodesProp === null || nodesProp?.length === 0}
           onChange={(e) => setFilterOptions(FILTER_OPTIONS.RESULT_TYPE, e.target.value)}
         >
           <option value={RESULT_TYPE.All}>{RESULT_TYPE.All}</option>
@@ -115,7 +123,7 @@ function FilterBar(props) {
         size="sm"
         className="filter-button"
         style={{ marginRight: 10 }}
-        onClick={() => setFilterOptions(FILTER_OPTIONS.TYPE, FILTER_TYPE.SUBMIT)}
+        onClick={() => onSubmit(FILTER_TYPE.SUBMIT)}
       >
         {Language.get('apply')}
       </Button>
@@ -123,7 +131,10 @@ function FilterBar(props) {
         color="primary"
         size="sm"
         className="filter-button"
-        onClick={() => setFilterOptions(FILTER_OPTIONS.TYPE, FILTER_TYPE.RESET)}
+        onClick={() => {
+          setFilterOptions(FILTER_OPTIONS.TYPE, FILTER_TYPE.RESET);
+          onSubmit(FILTER_TYPE.RESET);
+        }}
       >
         Reset
       </Button>
@@ -141,6 +152,6 @@ FilterBar.propTypes = {
     type: PropTypes.string,
   }).isRequired,
   setFilterOptions: PropTypes.func.isRequired,
-  getData: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
 };
 export default FilterBar;

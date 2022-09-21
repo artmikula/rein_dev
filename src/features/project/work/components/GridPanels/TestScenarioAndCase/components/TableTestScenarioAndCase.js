@@ -7,13 +7,13 @@ import appConfig from 'features/shared/lib/appConfig';
 import { FILTER_TYPE, GENERATE_STATUS, RESULT_TYPE } from 'features/shared/constants';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import Language from 'features/shared/languages/Language';
+import { sortByString } from 'features/shared/lib/utils';
 import Header from './TableHeader';
 import TableRow from './TableRow';
 
 function TableTestScenarioAndCase(props) {
-  const { filterOptions } = props;
+  const { filterOptions, filterSubmitType, submitFilter } = props;
 
-  const [filterData, setFilterData] = useState(undefined);
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
   const [isCheckAll, setIsCheckAll] = useState(false);
@@ -22,12 +22,12 @@ function TableTestScenarioAndCase(props) {
 
   const { testCasePageSize } = appConfig.testScenarioAndCase;
 
-  const _getData = async () => {
+  const _getData = async (defaultData = undefined) => {
     if (dbContext && dbContext.db) {
       try {
         const { testScenarioSet, testCaseSet } = dbContext;
         const page = 0;
-        const testScenarios = await testScenarioSet.get();
+        const testScenarios = defaultData ?? (await testScenarioSet.get());
 
         const promises = testScenarios.map(async (testScenario) => {
           const _testScenario = {};
@@ -59,75 +59,112 @@ function TableTestScenarioAndCase(props) {
     };
   };
 
-  const _onChangeFilterOptions = () => {
-    const { causeNodes, sourceTargetType, resultType, isBaseScenario, isValid, type } = filterOptions;
-    let _resultType;
-    if (resultType !== RESULT_TYPE.All) {
-      _resultType = resultType === RESULT_TYPE.True;
-    } else {
-      _resultType = undefined;
-    }
-    const filterRows = rows.filter((row) => {
-      const testAssertionFilter = row.testAssertions?.filter((testAssertion) =>
-        causeNodes?.some((causeNode) => causeNode?.value === testAssertion?.graphNodeId)
-      );
-      const isExist = causeNodes?.every((causeNode) =>
-        row.testAssertions?.some((testAssertion) => causeNode?.value === testAssertion?.graphNodeId)
-      );
-      const causeNodesResultType = testAssertionFilter.every((testAssertion) => testAssertion.result === _resultType);
-      if (typeof isExist !== 'undefined' && !isExist) {
-        return false;
+  const _getGroupByEffectNodes = useCallback(
+    (rows) => {
+      const groups = [];
+      if (rows.length > 0) {
+        rows.forEach((row) => {
+          const isExists = groups.findIndex((group) => group?.key === row.results);
+          if (isExists === -1) {
+            groups.push({
+              key: row.results,
+              definition: row.effectDefinition,
+              isSelected: false,
+              testScenarios: [{ ...row, testCases: structuredClone(row.testCases) }],
+            });
+          } else {
+            groups[isExists].testScenarios?.push({ ...row, testCases: row.testCases.slice() });
+          }
+          return groups;
+        });
+        groups.forEach((group) => {
+          const _group = group;
+          const isSelected = _group.testScenarios.every((testScenario) => testScenario.isSelected);
+          _group.isSelected = isSelected;
+        });
       }
-      if (typeof _resultType !== 'undefined' && !causeNodesResultType) {
-        return false;
+      sortByString(groups, 'key');
+      return groups;
+    },
+    [rows]
+  );
+
+  const _onChangeFilterOptions = async () => {
+    if (dbContext && dbContext.db) {
+      const { causeNodes, sourceTargetType, resultType, isBaseScenario, isValid } = filterOptions;
+      const { testScenarioSet } = dbContext;
+
+      let _resultType;
+      if (resultType !== RESULT_TYPE.All) {
+        _resultType = resultType === RESULT_TYPE.True;
+      } else {
+        _resultType = undefined;
       }
-      if (typeof sourceTargetType !== 'undefined' && isExist && sourceTargetType !== row.sourceTargetType) {
-        return false;
-      }
-      if (
-        typeof sourceTargetType !== 'undefined' &&
-        typeof isExist === 'undefined' &&
-        sourceTargetType !== row.sourceTargetType
-      ) {
-        return false;
-      }
-      if (typeof isBaseScenario !== 'undefined' && isBaseScenario === true && isBaseScenario !== row.isBaseScenario) {
-        return false;
-      }
-      if (typeof isValid !== 'undefined' && isValid === true && isValid !== row.isValid) {
-        return false;
-      }
-      return true;
-    });
-    if (type === FILTER_TYPE.RESET) {
-      setFilterData(undefined);
-    }
-    if (type === FILTER_TYPE.SUBMIT) {
-      setFilterData(filterRows);
+
+      const testScenarios = await testScenarioSet.get();
+
+      const filterRows = testScenarios.filter((row) => {
+        const testAssertionFilter = row.testAssertions?.filter((testAssertion) =>
+          causeNodes?.some((causeNode) => causeNode?.value === testAssertion?.graphNodeId)
+        );
+        const isExist = causeNodes?.every((causeNode) =>
+          row.testAssertions?.some((testAssertion) => causeNode?.value === testAssertion?.graphNodeId)
+        );
+        const causeNodesResultType = testAssertionFilter.every((testAssertion) => testAssertion.result === _resultType);
+        if (typeof isExist !== 'undefined' && !isExist) {
+          return false;
+        }
+        if (typeof _resultType !== 'undefined' && !causeNodesResultType) {
+          return false;
+        }
+        if (typeof sourceTargetType !== 'undefined' && isExist && sourceTargetType !== row.sourceTargetType) {
+          return false;
+        }
+        if (
+          typeof sourceTargetType !== 'undefined' &&
+          typeof isExist === 'undefined' &&
+          sourceTargetType !== row.sourceTargetType
+        ) {
+          return false;
+        }
+        if (typeof isBaseScenario !== 'undefined' && isBaseScenario === true && isBaseScenario !== row.isBaseScenario) {
+          return false;
+        }
+        if (typeof isValid !== 'undefined' && isValid === true && isValid !== row.isValid) {
+          return false;
+        }
+        return true;
+      });
+
+      const { rows } = await _getData(filterSubmitType === FILTER_TYPE.SUBMIT ? filterRows : undefined);
+      const groupRows = _getGroupByEffectNodes(rows);
+      setRows(groupRows);
     }
   };
 
   const _isCheckedAllTestScenarios = (newRows = undefined) => {
     const _newRows = newRows ?? rows;
-    if (Array.isArray(_newRows) && _newRows.length > 0) {
-      const isCheckAll = _newRows.every(
-        (row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected)
+    const isCheckAll = _newRows.every((row) => {
+      return row.testScenarios.every(
+        (testScenario) => testScenario.isSelected || testScenario.testCases.every((testCase) => testCase.isSelected)
       );
-      setIsCheckAll(isCheckAll);
-    }
+    });
+    setIsCheckAll(isCheckAll);
   };
 
-  useEffect(() => {
-    if (filterOptions.type === FILTER_TYPE.SUBMIT) {
-      _onChangeFilterOptions();
+  useEffect(async () => {
+    if (filterSubmitType !== FILTER_TYPE.DEFAULT) {
+      await _onChangeFilterOptions();
+      submitFilter(FILTER_TYPE.DEFAULT);
     }
-  }, [filterOptions.type]);
+  }, [filterSubmitType, filterOptions]);
 
   useEffect(async () => {
     if (generating === GENERATE_STATUS.INITIAL || generating === GENERATE_STATUS.COMPLETE) {
       const { rows, columns } = await _getData();
+      const groupRows = _getGroupByEffectNodes(rows);
       setColumns(columns);
-      setRows(rows);
+      setRows(groupRows);
     } else {
       setColumns([]);
       setRows([]);
@@ -136,7 +173,13 @@ function TableTestScenarioAndCase(props) {
 
   useEffect(async () => {
     await _isCheckedAllTestScenarios();
-  }, [rows, filterData]);
+  }, [rows]);
+
+  const _updateRows = (rowIndex, newRow) => {
+    const _rows = structuredClone(rows);
+    _rows[rowIndex] = newRow;
+    setRows(_rows);
+  };
 
   const _handleCheckedAll = useCallback(
     async (checked) => {
@@ -146,12 +189,16 @@ function TableTestScenarioAndCase(props) {
         newRows.forEach((row) => {
           const _row = row;
           _row.isSelected = checked;
-          _row.testCases.forEach((tcRow) => {
-            const _tcRow = tcRow;
-            _tcRow.isSelected = checked;
-            return _tcRow;
+          _row.testScenarios.forEach((testScenario) => {
+            const _testScenario = testScenario;
+            _testScenario.isSelected = checked;
+            _testScenario.testCases.forEach((testCase) => {
+              const _testCase = testCase;
+              _testCase.isSelected = checked;
+              return _testCase;
+            });
+            return _testScenario;
           });
-          return _row;
         });
         setRows(newRows);
 
@@ -159,19 +206,71 @@ function TableTestScenarioAndCase(props) {
         await testCaseSet.update('isSelected', checked);
       }
     },
-    [rows, filterData]
+    [rows]
   );
+
+  const _getTestCases = async (rowKey, testScenarioId) => {
+    if (dbContext && dbContext.db) {
+      const { testCaseSet } = dbContext;
+      const newRows = structuredClone(rows);
+      const currentRow = newRows.find((row) => row.key === rowKey);
+      if (currentRow) {
+        const tsRow = currentRow.testScenarios.find((testScenario) => testScenario.id === testScenarioId);
+        if (tsRow) {
+          if (tsRow.page === tsRow.totalPage - 1) {
+            return;
+          }
+          tsRow.page += 1;
+          const nextTestCases = await testCaseSet.getWithPaging(
+            testCasePageSize,
+            testCasePageSize * tsRow.page,
+            testCaseSet.table.testScenarioId.eq(testScenarioId)
+          );
+          if (nextTestCases.length > 0) {
+            const testCaseName = tsRow.testCases[0].Name.split('-');
+            nextTestCases.forEach((testCase) => {
+              const newTestCase = {
+                id: testCase.id,
+                Name: `${testCaseName[0]}-${tsRow.testCases.length}`,
+                isSelected: Boolean(testCase.isSelected),
+              };
+              columns.forEach((column) => {
+                if (column.key === 'results') {
+                  newTestCase[column.key] = testCase[column.key].join(', ');
+                } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
+                  newTestCase[column.key] = '';
+                } else {
+                  const testData = testCase.testDatas.find((x) => x.graphNodeId === column.key);
+                  newTestCase[column.key] = testData ? testData.data : '';
+                }
+              });
+              tsRow.testCases.splice(tsRow.testCases.length - 1, 0, newTestCase);
+            });
+            if (tsRow.page === tsRow.totalPage - 1) {
+              tsRow.testCases.splice(-1, 1);
+            }
+            setRows(newRows);
+          }
+        }
+      }
+    }
+  };
 
   return (
     <Table bordered className="scenario-case-table">
       <Header
         rows={rows}
-        filterRows={filterData}
         onChangeCheckbox={(e) => _handleCheckedAll(e.target.checked)}
         columns={columns}
         isCheckAll={isCheckAll}
       />
-      <TableRow rows={rows} filterRows={filterData} columns={columns} isCheckAll={_isCheckedAllTestScenarios} />
+      <TableRow
+        rows={rows}
+        columns={columns}
+        onRowsChange={_updateRows}
+        onLoadMore={_getTestCases}
+        isFilter={filterSubmitType}
+      />
     </Table>
   );
 }
@@ -185,6 +284,8 @@ TableTestScenarioAndCase.propTypes = {
     isValid: PropTypes.bool,
     type: PropTypes.string,
   }).isRequired,
+  filterSubmitType: PropTypes.string.isRequired,
+  submitFilter: PropTypes.func.isRequired,
 };
 
 export default TableTestScenarioAndCase;

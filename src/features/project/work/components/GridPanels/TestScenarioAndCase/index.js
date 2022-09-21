@@ -6,7 +6,6 @@ import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScena
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import reInCloudService from 'features/project/work/services/reInCloudService';
-import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
 import { setGraph, setGenerating, setDbContext } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
@@ -43,7 +42,6 @@ const defaultFilterOptions = {
   [FILTER_OPTIONS.BASE_SCENARIO]: undefined,
   [FILTER_OPTIONS.VALID]: undefined,
   [FILTER_OPTIONS.SOURCE_TARGET_TYPE]: undefined,
-  [FILTER_OPTIONS.TYPE]: FILTER_TYPE.DEFAULT,
 };
 
 class TestScenarioAndCase extends Component {
@@ -51,12 +49,14 @@ class TestScenarioAndCase extends Component {
     super(props);
     this.state = {
       filterOptions: structuredClone(defaultFilterOptions),
+      filterSubmitType: '',
     };
     this.worker = null;
     this.initiatedData = false;
   }
 
   async componentDidMount() {
+    const { setGenerating } = this.props;
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, async (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
         this.setState({ filterOptions: structuredClone(defaultFilterOptions) });
@@ -97,13 +97,23 @@ class TestScenarioAndCase extends Component {
         });
       }
     });
-    this._getTestScenarioAndCase();
     this.worker = new Worker(worker, { type: 'module' });
+    this.interval = setInterval(() => {
+      this.worker.onmessage = async (e) => {
+        setGenerating(e.data);
+        if (e.data === GENERATE_STATUS.COMPLETE) {
+          // TODO: finish generated
+        } else if (e.data === GENERATE_STATUS.FAIL) {
+          alert('Something wrong during generation. Please reload page and run again!');
+        }
+      };
+    }, 5000);
   }
 
   componentWillUnmount() {
     eventBus.unsubscribe(this);
     this.worker.terminate();
+    clearInterval(this.interval);
   }
 
   _clearData = async () => {
@@ -111,9 +121,6 @@ class TestScenarioAndCase extends Component {
 
     const { testScenarioSet } = dbContext;
     await testScenarioSet.delete();
-
-    /** TODO: remove this after finish implement indexedDb */
-    testScenarioAnsCaseStorage.set([]);
   };
 
   _calculateTestScenarioAndCase = async (domainAction) => {
@@ -127,13 +134,6 @@ class TestScenarioAndCase extends Component {
       const { testScenarioSet, testCaseSet } = dbContext;
       await testScenarioSet.delete();
       await testCaseSet.delete();
-
-      // const testScenarioData = await testScenarioSet.get();
-      // if (testScenarioData.length > 0) {
-      //   console.log(1, dbContext);
-      //   await dbContext.reInitIndexedDb();
-      //   console.log(2, dbContext);
-      // }
 
       if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
         scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(
@@ -171,30 +171,7 @@ class TestScenarioAndCase extends Component {
         graphNodes: JSON.stringify(graphNodes),
         testDatas: JSON.stringify(testDatas),
       });
-      this.worker.onmessage = async (e) => {
-        setGenerating(e.data);
-        if (e.data === GENERATE_STATUS.COMPLETE) {
-          // setTimeout(() => {
-          //   this.worker.terminate();
-          // }, 5000);
-        } else if (e.data === GENERATE_STATUS.FAIL) {
-          alert('Something wrong during generation. Please reload page and run again!');
-        }
-      };
 
-      // await testCaseHelper.createTestCases();
-
-      /** TODO: remove this after finish implement indexedDb */
-      // const newTestScenariosAndCases = newTestScenarios.map((x) => {
-      //   const scenario = {
-      //     ...x,
-      //     testCases: testCases.filter((e) => e.testScenarioId === x.id).map((y) => y),
-      //   };
-
-      //   return scenario;
-      // });
-
-      // testScenarioAnsCaseStorage.set(newTestScenariosAndCases);
       await setGraph({ ...graph, graphNodes });
 
       this._raiseEvent({
@@ -263,15 +240,6 @@ class TestScenarioAndCase extends Component {
     }
   };
 
-  /** TODO: remove this after finish implement indexedDb */
-  // _setRows = (rows) => {
-  //   this._raiseEvent({
-  //     action: domainEvents.ACTION.UPDATE,
-  //   });
-
-  //   this.setState({ rows }, this._isCheckedAllTestScenarios);
-  // };
-
   _createTestCasesFile = async () => {
     const { graph } = this.props;
     const { columns } = this.state;
@@ -287,11 +255,15 @@ class TestScenarioAndCase extends Component {
   };
 
   _setFilterOptions = (key, value) => {
-    if (key === 'type' && value === FILTER_TYPE.RESET) {
-      this.setState({ filterOptions: { ...defaultFilterOptions, type: 'reset' } });
+    if (key === FILTER_OPTIONS.TYPE && value === FILTER_TYPE.RESET) {
+      this.setState({ filterOptions: structuredClone(defaultFilterOptions) });
     } else {
       this.setState((prevState) => ({ filterOptions: { ...prevState.filterOptions, [key]: value } }));
     }
+  };
+
+  _handleFilterTestScenario = (filterSubmitType) => {
+    this.setState({ filterSubmitType });
   };
 
   _createExportRowData(item, columns) {
@@ -369,7 +341,7 @@ class TestScenarioAndCase extends Component {
   }
 
   render() {
-    const { filterOptions } = this.state;
+    const { filterOptions, filterSubmitType } = this.state;
     const { generating } = this.props;
 
     return generating === GENERATE_STATUS.COMPLETE ? (
@@ -391,9 +363,13 @@ class TestScenarioAndCase extends Component {
         <FilterBar
           filterOptions={filterOptions}
           setFilterOptions={this._setFilterOptions}
-          getData={this._getTestScenarioAndCase}
+          onSubmit={this._handleFilterTestScenario}
         />
-        <TableTestScenarioAndCase filterOptions={filterOptions} />
+        <TableTestScenarioAndCase
+          filterOptions={filterOptions}
+          filterSubmitType={filterSubmitType}
+          submitFilter={this._handleFilterTestScenario}
+        />
       </div>
     );
   }

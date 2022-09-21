@@ -5,60 +5,20 @@ import lf from 'lovefield';
 import { useSelector } from 'react-redux';
 import { Button } from 'reactstrap';
 
-import appConfig from 'features/shared/lib/appConfig';
-import { sortByString } from 'features/shared/lib/utils';
 import Checkbox from './TableCheckbox';
-import RowItem from './RowItem';
 
 function TableRow(props) {
-  const { rows, filterRows, columns, isCheckAll } = props;
+  const { rows, onLoadMore, columns, onRowsChange, isFilter } = props;
 
   const [expandId, setExpandId] = useState({});
   const [rowSpan, setRowSpan] = useState({});
-  const [testScenarioAndCase, setTestScenarioAndCase] = useState([]);
 
   const { dbContext } = useSelector((state) => state.work);
-
-  const { testCasePageSize } = appConfig.testScenarioAndCase;
-
-  const _getGroupByEffectNodes = useCallback(
-    (testScenarioAndCase) => {
-      const groups = [];
-      if (testScenarioAndCase.length > 0) {
-        testScenarioAndCase.forEach((row) => {
-          const isExists = groups.findIndex((group) => group?.key === row.results);
-          if (isExists === -1) {
-            groups.push({
-              key: row.results,
-              definition: row.effectDefinition,
-              isSelected: false,
-              testScenarios: [{ ...row, testCases: structuredClone(row.testCases) }],
-            });
-          } else {
-            groups[isExists].testScenarios?.push({ ...row, testCases: row.testCases.slice() });
-          }
-          return groups;
-        });
-        groups.forEach((group) => {
-          const _group = group;
-          const isSelected = _group.testScenarios.every((testScenario) => testScenario.isSelected);
-          _group.isSelected = isSelected;
-        });
-      }
-      sortByString(groups, 'key');
-      setTestScenarioAndCase(groups);
-    },
-    [rows, filterRows]
-  );
-
-  useEffect(() => {
-    console.log('testScenarioAndCase', testScenarioAndCase);
-  }, [testScenarioAndCase]);
 
   useEffect(() => {
     // handle get row span by group
     const rowSpanByGroup = {};
-    testScenarioAndCase.forEach((groupRow) => {
+    rows.forEach((groupRow) => {
       if (expandId[groupRow?.key]) {
         groupRow?.testScenarios?.forEach((testScenario) => {
           if (expandId[testScenario.id]) {
@@ -79,19 +39,11 @@ function TableRow(props) {
       }
     });
     setRowSpan(rowSpanByGroup);
-  }, [expandId, testScenarioAndCase]);
+  }, [expandId, rows]);
 
   useEffect(() => {
     setExpandId({});
-  }, [filterRows]);
-
-  useEffect(() => {
-    if (typeof filterRows !== 'undefined' && filterRows.length > 0) {
-      _getGroupByEffectNodes(filterRows);
-    } else {
-      _getGroupByEffectNodes(rows);
-    }
-  }, [rows, filterRows]);
+  }, [isFilter]);
 
   const _toggleRow = useCallback(
     (e, id) => {
@@ -107,37 +59,34 @@ function TableRow(props) {
    * @param {boolean} selfUpdate - a flag to prevent updating state
    */
   const _handleTestScenarioChecked = useCallback(
-    async (rowKey, scenarioId, checked) => {
+    async (rowKey, scenarioId, checked, selfUpdate = true) => {
       if (dbContext && dbContext.db) {
-        const { testCaseSet } = dbContext;
-        // await testScenarioSet.update('isSelected', checked, testScenarioSet.table.id.eq(scenarioId));
-        // await testCaseSet.update('isSelected', checked, testCaseSet.table.testScenarioId.eq(scenarioId));
-
-        const clone = structuredClone(testScenarioAndCase);
-        const newRows = clone.find((row) => row.key === rowKey);
-        if (newRows) {
-          const testScenarioRow = newRows.testScenarios.find((testScenario) => testScenario.id === scenarioId);
-          if (testScenarioRow) {
-            testScenarioRow.isSelected = checked;
-            testScenarioRow.testCases.forEach((testCase) => {
-              const _testCase = testCase;
-              _testCase.isSelected = checked;
-            });
-            const promises = testScenarioRow.testCases.map(async (testCase) => {
-              return testCaseSet.update(
-                'isSelected',
-                checked,
-                lf.op.and(testCaseSet.table.testScenarioId.eq(scenarioId), testCaseSet.table.id.eq(testCase.id))
+        const { testScenarioSet, testCaseSet } = dbContext;
+        await testScenarioSet.update('isSelected', checked, testScenarioSet.table.id.eq(scenarioId));
+        await testCaseSet.update('isSelected', checked, testCaseSet.table.testScenarioId.eq(scenarioId));
+        if (selfUpdate) {
+          const newRows = structuredClone(rows);
+          const currentRowIndex = newRows.findIndex((row) => row.key === rowKey);
+          if (currentRowIndex > -1) {
+            const currentRow = newRows[currentRowIndex];
+            const tsRow = currentRow.testScenarios.find((testScenario) => testScenario.id === scenarioId);
+            if (tsRow) {
+              tsRow.isSelected = checked;
+              tsRow.testCases.forEach((testCaseRow) => {
+                const _testCaseRow = testCaseRow;
+                _testCaseRow.isSelected = checked;
+              });
+              currentRow.isSelected = currentRow.testScenarios.every(
+                (testScenario) =>
+                  testScenario.isSelected || testScenario.testCases.every((testCase) => testCase.isSelected)
               );
-            });
-            await Promise.all(promises);
-            isCheckAll(newRows.testScenarios);
+              onRowsChange(currentRowIndex, currentRow);
+            }
           }
         }
-        setTestScenarioAndCase(clone);
       }
     },
-    [rows, filterRows]
+    [rows]
   );
 
   /**
@@ -148,39 +97,32 @@ function TableRow(props) {
   const _handleTestCaseChecked = useCallback(
     async (rowKey, scenarioId, caseId, checked) => {
       if (dbContext && dbContext.db) {
-        const { testCaseSet } = dbContext;
-
-        // update state
-        const clone = structuredClone(testScenarioAndCase);
-        const newRows = clone.find((row) => row.key === rowKey);
-        if (newRows) {
-          const testScenarioRow = newRows.testScenarios.find((testScenario) => testScenario.id === scenarioId);
-          if (testScenarioRow) {
-            const testCaseRow = testScenarioRow.testCases.find((testCase) => testCase.id === caseId);
-            console.log('testcaserow', testCaseRow);
-            if (testCaseRow) {
-              testCaseRow.isSelected = checked;
+        const { testScenarioSet, testCaseSet } = dbContext;
+        const filter = lf.op.and(testCaseSet.table.testScenarioId.eq(scenarioId), testCaseSet.table.id.eq(caseId));
+        await testCaseSet.update('isSelected', checked, filter);
+        const testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(scenarioId));
+        if (testCases.length > 0) {
+          const isCheckedAll = testCases.every((testCase) => testCase.isSelected);
+          await testScenarioSet.update('isSelected', isCheckedAll, testScenarioSet.table.id.eq(scenarioId));
+        }
+        const newRows = structuredClone(rows);
+        const currentRowIndex = newRows.findIndex((row) => row.key === rowKey);
+        if (currentRowIndex > -1) {
+          const currentRow = newRows[currentRowIndex];
+          const tsRow = currentRow.testScenarios.find((testScenario) => testScenario.id === scenarioId);
+          if (tsRow) {
+            const tcRow = tsRow.testCases.find((testCase) => testCase.id === caseId);
+            if (tcRow) {
+              tcRow.isSelected = checked;
             }
-            const allTestScenarioChecked = testScenarioRow.testCases.every((testCase) => testCase.isSelected);
-            testScenarioRow.isSelected = allTestScenarioChecked;
-            isCheckAll(newRows.testScenarios);
-
-            // update to indexedDb
-            const filter = lf.op.and(testCaseSet.table.testScenarioId.eq(scenarioId), testCaseSet.table.id.eq(caseId));
-            await testCaseSet.update('isSelected', checked, filter);
-
-            // TODO: move check isCheckedAllTS to sync data like worksyncdata component
-            // const testCases = await testCaseSet.get();
-            // if (testCases.length > 0) {
-            //   const isCheckedAll = testCases.every((testCase) => testCase.isSelected);
-            //   await testScenarioSet.update('isSelected', isCheckedAll, testScenarioSet.table.id.eq(scenarioId));
-            // }
+            tsRow.isSelected = tsRow.testCases.every((testCase) => testCase.isSelected);
           }
-          setTestScenarioAndCase(clone);
+          currentRow.isSelected = currentRow.testScenarios.every((testScenario) => testScenario.isSelected);
+          onRowsChange(currentRowIndex, currentRow);
         }
       }
     },
-    [rows, filterRows]
+    [rows]
   );
 
   /**
@@ -194,20 +136,20 @@ function TableRow(props) {
         // update to indexedDb
         const { testScenarioSet } = dbContext;
         testScenarioSet.update(key, checked, testScenarioSet.table.id.eq(scenarioId));
-
         // update to state
-        const clone = structuredClone(testScenarioAndCase);
-        const newRows = clone.find((row) => row.key === rowKey);
-        if (newRows) {
-          const testScenarioRow = newRows.testScenarios.find((testScenario) => testScenario.id === scenarioId);
-          if (testScenarioRow) {
-            testScenarioRow[key] = checked;
+        const newRows = structuredClone(rows);
+        const currentRowIndex = newRows.findIndex((row) => row.key === rowKey);
+        if (currentRowIndex > -1) {
+          const currentRow = newRows[currentRowIndex];
+          const tsRow = currentRow.testScenarios.find((testScenario) => testScenario.id === scenarioId);
+          if (tsRow) {
+            tsRow[key] = checked;
           }
+          onRowsChange(currentRowIndex, currentRow);
         }
-        setTestScenarioAndCase(clone);
       }
     },
-    [rows, filterRows]
+    [rows]
   );
 
   /**
@@ -216,96 +158,59 @@ function TableRow(props) {
    */
   const _handleCheckedByGroup = useCallback(
     (rowKey, checked) => {
-      const { testCaseSet } = dbContext;
-      const clone = structuredClone(testScenarioAndCase);
-      const newRows = clone.find((row) => row.key === rowKey);
-      if (newRows) {
-        newRows.isSelected = checked;
-        newRows.testScenarios.forEach((testScenario) => {
+      const newRows = structuredClone(rows);
+      const currentRowIndex = newRows.findIndex((row) => row.key === rowKey);
+      if (currentRowIndex > -1) {
+        const currentRow = newRows[currentRowIndex];
+        currentRow.isSelected = checked;
+        currentRow.testScenarios.forEach((testScenario) => {
+          _handleTestScenarioChecked(rowKey, testScenario.id, checked, false);
           const _testScenario = testScenario;
           _testScenario.isSelected = checked;
           _testScenario.testCases.forEach((testCase) => {
             const _testCase = testCase;
             _testCase.isSelected = checked;
+            return _testCase;
           });
-
-          // _handleTestScenarioChecked(testScenario.id, checked, false);
+          return _testScenario;
         });
-        isCheckAll(newRows.testScenarios);
-        newRows.testScenarios.map((testScenario) => {
-          return testScenario.testCases.map(async (testCase) => {
-            const promises = testCaseSet.update(
-              'isSelected',
-              checked,
-              lf.op.and(testCaseSet.table.testScenarioId.eq(testScenario.id), testCaseSet.table.id.eq(testCase.id))
-            );
-            await Promise.all(promises);
-          });
-        });
-        setTestScenarioAndCase(clone);
+        onRowsChange(currentRowIndex, currentRow);
       }
+      // const clone = structuredClone(testScenarioAndCase);
+      // const newRows = clone.find((row) => row.key === rowKey);
+      // if (newRows) {
+      //   newRows.isSelected = checked;
+      //   newRows.testScenarios.forEach((testScenario) => {
+      //     const _testScenario = testScenario;
+      //     _testScenario.isSelected = checked;
+      //     _testScenario.testCases.forEach((testCase) => {
+      //       const _testCase = testCase;
+      //       _testCase.isSelected = checked;
+      //     });
+
+      //     // _handleTestScenarioChecked(testScenario.id, checked, false);
+      //   });
+      //   isCheckAll(newRows.testScenarios);
+      //   newRows.testScenarios.map((testScenario) => {
+      //     return testScenario.testCases.map(async (testCase) => {
+      //       const promises = testCaseSet.update(
+      //         'isSelected',
+      //         checked,
+      //         lf.op.and(testCaseSet.table.testScenarioId.eq(testScenario.id), testCaseSet.table.id.eq(testCase.id))
+      //       );
+      //       await Promise.all(promises);
+      //     });
+      //   });
+      //   setTestScenarioAndCase(clone);
+      // }
     },
-    [testScenarioAndCase]
+    [rows]
   );
 
-  const _getTestCases = async (rowKey, testScenarioId) => {
-    if (dbContext && dbContext.db) {
-      const { testCaseSet } = dbContext;
-      const testScenarioAndCaseClone = structuredClone(testScenarioAndCase);
-      const index = testScenarioAndCaseClone.findIndex((row) => row.key === rowKey);
-      if (index > -1) {
-        const testScenarioIndex = testScenarioAndCaseClone[index].testScenarios.findIndex(
-          (testScenario) => testScenario.id === testScenarioId
-        );
-        if (testScenarioIndex > -1) {
-          const currentTestScenarioAndCase = testScenarioAndCaseClone[index].testScenarios[testScenarioIndex];
-          if (currentTestScenarioAndCase.page === currentTestScenarioAndCase.totalPage - 1) {
-            return;
-          }
-          currentTestScenarioAndCase.page += 1;
-          const nextTestCases = await testCaseSet.getWithPaging(
-            testCasePageSize,
-            testCasePageSize * currentTestScenarioAndCase.page,
-            testCaseSet.table.testScenarioId.eq(testScenarioId)
-          );
-          if (nextTestCases.length > 0) {
-            const testCaseName = currentTestScenarioAndCase.testCases[0].Name.split('-');
-            nextTestCases.forEach((testCase) => {
-              const newTestCase = {
-                id: testCase.id,
-                Name: `${testCaseName[0]}-${currentTestScenarioAndCase.testCases.length}`,
-                isSelected: Boolean(testCase.isSelected),
-              };
-              columns.forEach((column) => {
-                if (column.key === 'results') {
-                  newTestCase[column.key] = testCase[column.key].join(', ');
-                } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
-                  newTestCase[column.key] = '';
-                } else {
-                  const testData = testCase.testDatas.find((x) => x.graphNodeId === column.key);
-                  newTestCase[column.key] = testData ? testData.data : '';
-                }
-              });
-              currentTestScenarioAndCase.testCases.splice(
-                currentTestScenarioAndCase.testCases.length - 1,
-                0,
-                newTestCase
-              );
-            });
-            if (currentTestScenarioAndCase.page === currentTestScenarioAndCase.totalPage - 1) {
-              currentTestScenarioAndCase.testCases.splice(-1, 1);
-            }
-            setTestScenarioAndCase(testScenarioAndCaseClone);
-          }
-        }
-      }
-    }
-  };
-
-  if (testScenarioAndCase.length > 0) {
+  if (rows.length > 0) {
     return (
       <tbody>
-        {testScenarioAndCase.map((row, rowIndex) => (
+        {rows.map((row, rowIndex) => (
           <Fragment key={rowIndex}>
             <tr key={`${rowIndex}-grouped-test-scenario`}>
               <td className="treeview" rowSpan={rowSpan[row?.key]}>
@@ -396,7 +301,7 @@ function TableRow(props) {
                                             color="link"
                                             size="sm"
                                             style={{ fontSize: 13, margin: 0, padding: 0 }}
-                                            onClick={() => _getTestCases(row?.key, testScenario.id)}
+                                            onClick={() => onLoadMore(row?.key, testScenario.id)}
                                           >
                                             <i className="bi bi-plus-square-dotted" />
                                             <span style={{ marginLeft: 8 }}>Load more</span>
@@ -491,10 +396,9 @@ function TableRow(props) {
 TableRow.propTypes = {
   rows: PropTypes.oneOfType([PropTypes.array]).isRequired,
   columns: PropTypes.oneOfType([PropTypes.array]).isRequired,
-  filterRows: PropTypes.oneOfType([PropTypes.array]),
-  isCheckAll: PropTypes.func.isRequired,
+  onLoadMore: PropTypes.func.isRequired,
+  onRowsChange: PropTypes.func.isRequired,
+  isFilter: PropTypes.string.isRequired,
 };
-
-TableRow.defaultProps = { filterRows: undefined };
 
 export default TableRow;
