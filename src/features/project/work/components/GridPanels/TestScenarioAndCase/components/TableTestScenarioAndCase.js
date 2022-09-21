@@ -20,27 +20,26 @@ function TableTestScenarioAndCase(props) {
 
   const { dbContext, generating, graph } = useSelector((state) => state.work);
 
-  const { testScenarioAndCase: config } = appConfig;
+  const { testCasePageSize } = appConfig.testScenarioAndCase;
 
   const _getData = async () => {
     if (dbContext && dbContext.db) {
       try {
         const { testScenarioSet, testCaseSet } = dbContext;
+        const page = 0;
         const testScenarios = await testScenarioSet.get();
 
         const promises = testScenarios.map(async (testScenario) => {
           const _testScenario = {};
           _testScenario.id = testScenario.id;
-          _testScenario.testCases = await testCaseSet.db
-            .select()
-            .from(testCaseSet.table)
-            .limit(config.testCasePageSize)
-            .skip(0)
-            .where(testCaseSet.table.testScenarioId.eq(testScenario.id))
-            .exec();
+          _testScenario.testCases = await testCaseSet.getWithPaging(
+            testCasePageSize,
+            page,
+            testCaseSet.table.testScenarioId.eq(testScenario.id)
+          );
 
           _testScenario.total = await testCaseSet.totalTestCases(testScenario.id);
-          _testScenario.page = 0;
+          _testScenario.page = page;
           return _testScenario;
         });
 
@@ -110,7 +109,7 @@ function TableTestScenarioAndCase(props) {
 
   const _isCheckedAllTestScenarios = (newRows = undefined) => {
     const _newRows = newRows ?? rows;
-    if (_newRows.length > 0) {
+    if (Array.isArray(_newRows) && _newRows.length > 0) {
       const isCheckAll = _newRows.every(
         (row) => row.isSelected || row.testCases.every((testCase) => testCase.isSelected)
       );

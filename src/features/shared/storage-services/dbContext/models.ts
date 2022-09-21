@@ -14,6 +14,7 @@ interface ITestCaseSet extends IDbSet {
   table: lf.schema.Table;
   add: (data: ITestCase | ITestCase[]) => Promise<Object[]>;
   delete: () => Promise<Object[]>;
+  getWithPaging(limit: number, skip: number, filter?: lf.Predicate): Promise<Object[] | ITestCase[]>;
 }
 
 interface IDbContext {

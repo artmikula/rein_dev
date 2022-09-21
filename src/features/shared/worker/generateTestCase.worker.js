@@ -9,10 +9,17 @@ const workercode = () => {
     return `TC#-${testCaseId}`;
   };
 
-  const convertTestDataToList = (datas = '', type = '') => {
+  const _splitTupple = (datas) => {
+    let _data = datas.trim();
+    _data = _data.substring(1, _data.length - 1);
+    const arr = _data.split('],[');
+    return arr.map((x) => `[${x}]`);
+  };
+
+  const _convertTestDataToList = (datas = '', type = '') => {
     if (datas) {
       if (type === 'Tupple') {
-        return this._splitTupple(datas);
+        return _splitTupple(datas);
       }
 
       return datas.split(',');
@@ -20,7 +27,7 @@ const workercode = () => {
     return [''];
   };
 
-  const getTestData = (testDatas, assertion) => {
+  const _getTestData = (testDatas, assertion) => {
     const testData = testDatas.find((x) => x.nodeId === assertion.nodeId);
     if (testData) {
       return { testDatas: assertion.result ? testData.trueDatas : testData.falseDatas, type: testData.type };
@@ -29,7 +36,7 @@ const workercode = () => {
     return { testDatas: '', type: 'String' };
   };
 
-  const updateTestData = (newTestCase, testData, graphNodeId) => {
+  const _updateTestData = (newTestCase, testData, graphNodeId) => {
     const index = newTestCase.testDatas.findIndex((testData) => testData.graphNodeId === graphNodeId);
     if (index > -1) {
       const _newTestCase = newTestCase;
@@ -44,8 +51,8 @@ const workercode = () => {
     for await (const testAssertion of testAssertions) {
       const index = testAssertions.findIndex((assertion) => testAssertion.graphNodeId === assertion.graphNodeId);
       const nextAssertions = testAssertions.slice(index + 1);
-      const { testDatas, type } = getTestData(rawTestDatas, testAssertion);
-      const testData = convertTestDataToList(testDatas, type);
+      const { testDatas, type } = _getTestData(rawTestDatas, testAssertion);
+      const testData = _convertTestDataToList(testDatas, type);
       for await (const data of testData) {
         const dataIndex = testData.indexOf(data);
         const newTestData = {
@@ -86,7 +93,7 @@ const workercode = () => {
               }),
             isSelected: false,
           };
-          updateTestData(newTestCase, newTestData, testAssertion.graphNodeId);
+          _updateTestData(newTestCase, newTestData, testAssertion.graphNodeId);
           if (newTestCase.testDatas.length === testDataLength) {
             if (testCaseId <= 200001) {
               await indexedDb.add({ id: testCaseId, value: newTestCase });
@@ -145,10 +152,6 @@ const workercode = () => {
           };
           await _getTestCase(testCase, testAssertions, _testDatas, testAssertions.length, indexedDb);
         }
-        // const data = await indexedDb.getAll();
-        // console.log('data', data);
-        // await transaction.commit();
-        // await db.close();
       };
       await e.target.postMessage('complete');
     },

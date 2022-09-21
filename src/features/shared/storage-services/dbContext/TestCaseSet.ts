@@ -21,6 +21,13 @@ export default class TestCaseSet implements ITestCaseSet {
     return this.db.select().from(this.table).exec();
   }
 
+  async getWithPaging(limit = 0, skip = 0, filter?: lf.Predicate): Promise<Object[] | ITestCase[]> {
+    if (filter) {
+      return this.db.select().from(this.table).limit(limit).skip(skip).where(filter).exec();
+    }
+    return this.db.select().from(this.table).limit(skip).skip(limit).exec();
+  }
+
   async delete(): Promise<Object[]> {
     const testCases = await this.get();
     if (testCases.length > 0) {
