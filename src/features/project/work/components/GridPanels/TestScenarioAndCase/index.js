@@ -51,13 +51,13 @@ class TestScenarioAndCase extends Component {
       filterSubmitType: '',
       webWorker: null,
       workerInterval: null,
+      maxTestCase: 0,
     };
     this.initiatedData = false;
-    this.maxTestCase = 100000;
   }
 
   async componentDidMount() {
-    const { setGenerating, dbContext } = this.props;
+    const { setGenerating } = this.props;
     const initWorker = new Worker(worker, { type: 'module' });
     if (initWorker) {
       const interval = setInterval(() => {
@@ -112,8 +112,8 @@ class TestScenarioAndCase extends Component {
     });
   }
 
-  componentDidUpdate(prevProps) {
-    const { generating } = this.props;
+  async componentDidUpdate(prevProps) {
+    const { generating, dbContext } = this.props;
     const { workerInterval } = this.state;
     if (generating === GENERATE_STATUS.COMPLETE) {
       clearInterval(workerInterval);
@@ -124,6 +124,28 @@ class TestScenarioAndCase extends Component {
           onClose: () => window.location.reload(),
         });
       }
+    }
+    if (
+      (prevProps.dbContext === null && dbContext && dbContext.db) ||
+      (generating === GENERATE_STATUS.COMPLETE && prevProps.generating === GENERATE_STATUS.START)
+    ) {
+      const indexedDb = window.indexedDB;
+      const request = indexedDb.open(dbContext.name, dbContext.version);
+      request.onsuccess = async (e) => {
+        const db = e.target.result;
+        const transaction = await db.transaction([TABLES.TEST_CASES], 'readonly');
+        const objectStore = await transaction.objectStore(TABLES.TEST_CASES);
+        const keys = await objectStore.getAllKeys();
+        keys.onsuccess = async () => {
+          const maxTestCase = keys.result[keys.result.length - 1];
+          if (typeof maxTestCase === 'number') {
+            this.setState({ maxTestCase });
+          }
+        };
+        transaction.oncomplete = function () {
+          db.close();
+        };
+      };
     }
   }
 
@@ -145,15 +167,15 @@ class TestScenarioAndCase extends Component {
   _calculateTestScenarioAndCase = async (domainAction) => {
     try {
       const { graph, testDatas, setGraph, dbContext, match, setGenerating } = this.props;
-      const { webWorker } = this.state;
+      const { webWorker, maxTestCase } = this.state;
       const { workId } = match.params;
 
       const { testScenarioSet, testCaseSet } = dbContext;
+      await testScenarioSet.delete();
+      await testCaseSet.delete();
 
       let scenarioAndGraphNodes = null;
 
-      await testScenarioSet.delete();
-      await testCaseSet.delete();
       setGenerating(GENERATE_STATUS.START);
 
       if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
@@ -184,30 +206,13 @@ class TestScenarioAndCase extends Component {
         table: TABLES.TEST_CASES,
       };
 
-      const indexedDb = window.indexedDB;
-      const request = indexedDb.open(dbContext.name, dbContext.version);
-      request.onsuccess = async function (e) {
-        const db = e.target.result;
-        const transaction = await db.transaction([TABLES.TEST_SCENARIOS], 'readonly');
-        const objectStore = await transaction.objectStore(TABLES.TEST_SCENARIOS);
-        const keys = await objectStore.getAllKeys();
-        keys.onsuccess = async function () {
-          this.maxTestCase = await keys.result[keys.result.length - 1];
-        };
-        transaction.oncomplete = function () {
-          db.close();
-        };
-      };
-
       webWorker.postMessage({
         dbInfo: JSON.stringify(_dbInfo),
         testScenarios: JSON.stringify(testScenarios),
         graphNodes: JSON.stringify(graphNodes),
         testDatas: JSON.stringify(testDatas),
-        lastKey: this.maxTestCase,
+        lastKey: maxTestCase,
       });
-
-      console.log('lastt', this.maxTestCase);
 
       await setGraph({ ...graph, graphNodes });
 

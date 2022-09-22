@@ -23,11 +23,7 @@ export default class TestScenarioSet implements ITestScenarioSet {
 
   /** delete all table */
   async delete(): Promise<Object[]> {
-    const testScenarios = await this.get();
-    if (testScenarios.length > 0) {
-      return indexedDbHelper.deleteTable(this.db, this.table);
-    }
-    return [];
+    return indexedDbHelper.deleteTable(this.db, this.table);
   }
 
   /** add all rows to table */

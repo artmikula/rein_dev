@@ -29,11 +29,7 @@ export default class TestCaseSet implements ITestCaseSet {
   }
 
   async delete(): Promise<Object[]> {
-    const testCases = await this.get();
-    if (testCases.length > 0) {
-      return indexedDbHelper.deleteTable(this.db, this.table);
-    }
-    return [];
+    return indexedDbHelper.deleteTable(this.db, this.table);
   }
 
   /** add all rows to table */

@@ -3,7 +3,7 @@
 /* eslint-disable no-restricted-syntax */
 
 const workercode = () => {
-  let testCaseId = 100000;
+  let testCaseId = 10000;
   const getTestCaseId = () => {
     testCaseId++;
     return `TC#-${testCaseId}`;
@@ -131,12 +131,13 @@ const workercode = () => {
     const _dbInfo = JSON.parse(dbInfo);
     const indexedDb = e.target.indexedDB;
     const request = await indexedDb.open(_dbInfo.name, _dbInfo.version);
-    const maxTestCaseNumber = 100000;
-    testCaseId = lastKey;
+    const maxTestCaseNumber = 10000;
+    const _lastKey = lastKey === 0 ? testCaseId : lastKey + 200 + _testScenarios.length;
+    testCaseId = _lastKey;
     request.onsuccess = async function ({ target }) {
       const db = target.result;
-      const tcTransaction = await db.transaction([_dbInfo.table], 'readwrite');
-      const tcObjectStore = await tcTransaction.objectStore(_dbInfo.table);
+      const transaction = await db.transaction([_dbInfo.table], 'readwrite');
+      const objectStore = await transaction.objectStore(_dbInfo.table);
       for await (const testScenario of _testScenarios) {
         const { testAssertions, resultType, targetGraphNodeId } = testScenario;
         const results = [];
@@ -154,9 +155,9 @@ const workercode = () => {
           testDatas: [],
           isSelected: false,
         };
-        const maxTestCase = lastKey + maxTestCaseNumber;
+        const maxTestCase = testCaseId + maxTestCaseNumber;
 
-        await _insertTestCase(testCase, testAssertions, _testDatas, testAssertions.length, tcObjectStore, maxTestCase);
+        await _insertTestCase(testCase, testAssertions, _testDatas, testAssertions.length, objectStore, maxTestCase);
       }
       e.target.postMessage('complete');
     };
