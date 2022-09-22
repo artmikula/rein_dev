@@ -35,7 +35,13 @@ export default function alert(content, options = {}) {
   };
 
   render(
-    <Alert {...options} id={alertId} content={content} onClose={_handleClose} />,
+    <Alert
+      {...options}
+      id={alertId}
+      content={content}
+      onClose={_handleClose}
+      onCloseDialog={() => _close(alertId, containerId)}
+    />,
     document.getElementById(containerId)
   );
 

@@ -38,15 +38,9 @@ export default class DbContext implements IDbContext {
     }
   }
 
-  async reInitIndexedDb(): Promise<void> {
-    this.db?.delete();
-    const { connection } = await indexedDbHelper.initIndexedDb(this.name);
-    this.db = await connection;
-  }
-
-  close(): void {
+  async close(): Promise<void> {
     if (this.db) {
-      indexedDbHelper.close(this.db);
+      await indexedDbHelper.close(this.db);
       this.db = null;
       this.testScenarioSet = null;
       this.testCaseSet = null;

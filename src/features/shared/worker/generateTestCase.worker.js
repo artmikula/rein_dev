@@ -46,117 +46,121 @@ const workercode = () => {
     }
   };
 
-  const _getTestCase = async (testCase, testAssertions, rawTestDatas, testDataLength, indexedDb) => {
-    // console.log('testCaseId', testCaseId);
-    for await (const testAssertion of testAssertions) {
-      const index = testAssertions.findIndex((assertion) => testAssertion.graphNodeId === assertion.graphNodeId);
-      const nextAssertions = testAssertions.slice(index + 1);
-      const { testDatas, type } = _getTestData(rawTestDatas, testAssertion);
-      const testData = _convertTestDataToList(testDatas, type);
-      for await (const data of testData) {
-        const dataIndex = testData.indexOf(data);
-        const newTestData = {
-          graphNodeId: testAssertion.graphNodeId,
-          data,
-          nodeId: testAssertion.nodeId ?? '',
-        };
-        const existData = testCase.testDatas.find((testData) => testData.graphNodeId === testAssertion.graphNodeId);
-
-        if (!existData) {
-          await testCase.testDatas.push(newTestData);
-          if (nextAssertions.length === 0) {
-            if (testCaseId <= 200001) {
-              await indexedDb.add({ id: testCaseId, value: testCase });
-            }
-            continue;
-          } else {
-            await _getTestCase(testCase, nextAssertions, rawTestDatas, testDataLength, indexedDb);
-          }
-        }
-        if (existData && !existData?.data.includes(data)) {
-          const newTestCase = {
-            id: getTestCaseId(),
-            testScenarioId: testCase.testScenarioId,
-            results: [...testCase.results],
-            testDatas: testCase.testDatas
-              .filter((testData) => testData.graphNodeId !== testAssertion.graphNodeId)
-              .sort((a, b) => {
-                const nodeA = a.nodeId.toUpperCase();
-                const nodeB = b.nodeId.toUpperCase();
-                if (nodeA < nodeB) {
-                  return -1;
-                }
-                if (nodeA > nodeB) {
-                  return 1;
-                }
-                return 0;
-              }),
-            isSelected: false,
+  const _insertTestCase = async (testCase, testAssertions, rawTestDatas, testDataLength, testCaseSet, maxTestCase) => {
+    if (testCaseId <= maxTestCase) {
+      for await (const testAssertion of testAssertions) {
+        const index = testAssertions.findIndex((assertion) => testAssertion.graphNodeId === assertion.graphNodeId);
+        const nextAssertions = testAssertions.slice(index + 1);
+        const { testDatas, type } = _getTestData(rawTestDatas, testAssertion);
+        const testData = _convertTestDataToList(testDatas, type);
+        for await (const data of testData) {
+          const dataIndex = testData.indexOf(data);
+          const newTestData = {
+            graphNodeId: testAssertion.graphNodeId,
+            data,
+            nodeId: testAssertion.nodeId ?? '',
           };
-          _updateTestData(newTestCase, newTestData, testAssertion.graphNodeId);
-          if (newTestCase.testDatas.length === testDataLength) {
-            if (testCaseId <= 200001) {
-              await indexedDb.add({ id: testCaseId, value: newTestCase });
+          const existData = testCase.testDatas.find((testData) => testData.graphNodeId === testAssertion.graphNodeId);
+
+          if (!existData) {
+            await testCase.testDatas.push(newTestData);
+            if (nextAssertions.length === 0 && testCaseId <= maxTestCase) {
+              await testCaseSet.add({ id: testCaseId, value: testCase });
+              continue;
+            } else {
+              await _insertTestCase(testCase, nextAssertions, rawTestDatas, testDataLength, testCaseSet, maxTestCase);
             }
-            // const countReq = await indexedDb.count();
-            // // eslint-disable-next-line no-loop-func
-            // countReq.onsuccess = ({ target }) => {
-            //   if (target.result <= 100000) {
-            //     indexedDb.add({ id: testCaseId, value: newTestCase });
-            //   }
-            // };
-            if (nextAssertions.length > 0) {
-              await _getTestCase(newTestCase, nextAssertions, rawTestDatas, testDataLength, indexedDb);
+          }
+          if (existData && !existData?.data.includes(data)) {
+            const newTestCase = {
+              id: getTestCaseId(),
+              testScenarioId: testCase.testScenarioId,
+              results: [...testCase.results],
+              testDatas: testCase.testDatas
+                .filter((testData) => testData.graphNodeId !== testAssertion.graphNodeId)
+                .sort((a, b) => {
+                  const nodeA = a.nodeId.toUpperCase();
+                  const nodeB = b.nodeId.toUpperCase();
+                  if (nodeA < nodeB) {
+                    return -1;
+                  }
+                  if (nodeA > nodeB) {
+                    return 1;
+                  }
+                  return 0;
+                }),
+              isSelected: false,
+            };
+            _updateTestData(newTestCase, newTestData, testAssertion.graphNodeId);
+            if (newTestCase.testDatas.length === testDataLength && testCaseId <= maxTestCase) {
+              await testCaseSet.add({ id: testCaseId, value: newTestCase });
+              if (nextAssertions.length > 0) {
+                await _insertTestCase(
+                  newTestCase,
+                  nextAssertions,
+                  rawTestDatas,
+                  testDataLength,
+                  testCaseSet,
+                  maxTestCase
+                );
+              }
+              if (dataIndex === testData.length - 1 || nextAssertions.length === 0) {
+                return;
+              }
+            } else {
+              await _insertTestCase(
+                newTestCase,
+                nextAssertions,
+                rawTestDatas,
+                testDataLength,
+                testCaseSet,
+                maxTestCase
+              );
             }
-            if (dataIndex === testData.length - 1 || nextAssertions.length === 0) {
-              return;
-            }
-          } else {
-            await _getTestCase(newTestCase, nextAssertions, rawTestDatas, testDataLength, indexedDb);
           }
         }
       }
     }
   };
 
-  self.addEventListener(
-    'message',
-    async function (e) {
-      const { testScenarios, graphNodes, testDatas, dbInfo } = e.data;
-      const _testScenarios = JSON.parse(testScenarios);
-      const _graphNodes = JSON.parse(graphNodes);
-      const _testDatas = JSON.parse(testDatas);
-      const _dbInfo = JSON.parse(dbInfo);
-      const indexedDb = e.target.indexedDB;
-      const request = await indexedDb.open(_dbInfo.name, _dbInfo.version);
-      request.onsuccess = async function ({ target }) {
-        const db = target.result;
-        const transaction = await db.transaction([_dbInfo.table], 'readwrite');
-        const indexedDb = await transaction.objectStore(_dbInfo.table);
-        for await (const testScenario of _testScenarios) {
-          const { testAssertions, resultType, targetGraphNodeId } = testScenario;
-          const results = [];
-          const graphNode = _graphNodes.find((graphNode) => graphNode.id === targetGraphNodeId);
-          const nodeDefinition = graphNode ? graphNode.definition : '';
-          if (resultType === 'False') {
-            results.push(`NOT(${nodeDefinition})`);
-          } else {
-            results.push(nodeDefinition);
-          }
-          const testCase = {
-            id: getTestCaseId(),
-            testScenarioId: testScenario.id,
-            results,
-            testDatas: [],
-            isSelected: false,
-          };
-          await _getTestCase(testCase, testAssertions, _testDatas, testAssertions.length, indexedDb);
+  self.addEventListener('message', async function (e) {
+    const { testScenarios, graphNodes, testDatas, dbInfo, lastKey } = e.data;
+    const _testScenarios = JSON.parse(testScenarios);
+    const _graphNodes = JSON.parse(graphNodes);
+    const _testDatas = JSON.parse(testDatas);
+    const _dbInfo = JSON.parse(dbInfo);
+    const indexedDb = e.target.indexedDB;
+    const request = await indexedDb.open(_dbInfo.name, _dbInfo.version);
+    const maxTestCaseNumber = 100000;
+    testCaseId = lastKey;
+    request.onsuccess = async function ({ target }) {
+      const db = target.result;
+      const tcTransaction = await db.transaction([_dbInfo.table], 'readwrite');
+      const tcObjectStore = await tcTransaction.objectStore(_dbInfo.table);
+      for await (const testScenario of _testScenarios) {
+        const { testAssertions, resultType, targetGraphNodeId } = testScenario;
+        const results = [];
+        const graphNode = _graphNodes.find((graphNode) => graphNode.id === targetGraphNodeId);
+        const nodeDefinition = graphNode ? graphNode.definition : '';
+        if (resultType === 'False') {
+          results.push(`NOT(${nodeDefinition})`);
+        } else {
+          results.push(nodeDefinition);
         }
-      };
-      await e.target.postMessage('complete');
-    },
-    false
-  );
+        const testCase = {
+          id: getTestCaseId(),
+          testScenarioId: testScenario.id,
+          results,
+          testDatas: [],
+          isSelected: false,
+        };
+        const maxTestCase = lastKey + maxTestCaseNumber;
+
+        await _insertTestCase(testCase, testAssertions, _testDatas, testAssertions.length, tcObjectStore, maxTestCase);
+      }
+      e.target.postMessage('complete');
+    };
+  });
 
   self.addEventListener('messageerror', function (e) {
     e.target.postMessage('fail');

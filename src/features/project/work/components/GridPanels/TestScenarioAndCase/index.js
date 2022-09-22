@@ -1,12 +1,11 @@
 /* eslint-disable max-lines */
 import Download from 'downloadjs';
-import { Button } from 'reactstrap';
 import testCaseHelper from 'features/project/work/biz/TestCase';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import reInCloudService from 'features/project/work/services/reInCloudService';
-import { setGraph, setGenerating, setDbContext } from 'features/project/work/slices/workSlice';
+import { setGraph, setGenerating } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
   FILTER_TYPE,
@@ -50,16 +49,30 @@ class TestScenarioAndCase extends Component {
     this.state = {
       filterOptions: structuredClone(defaultFilterOptions),
       filterSubmitType: '',
+      webWorker: null,
+      workerInterval: null,
     };
-    this.worker = null;
     this.initiatedData = false;
+    this.maxTestCase = 100000;
   }
 
   async componentDidMount() {
-    const { setGenerating } = this.props;
+    const { setGenerating, dbContext } = this.props;
+    const initWorker = new Worker(worker, { type: 'module' });
+    if (initWorker) {
+      const interval = setInterval(() => {
+        initWorker.onmessage = async (e) => {
+          if (e.data === GENERATE_STATUS.COMPLETE) {
+            setGenerating(e.data);
+          }
+        };
+      }, 5000);
+      this.setState({ webWorker: initWorker, workerInterval: interval });
+    }
+
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, async (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
-        this.setState({ filterOptions: structuredClone(defaultFilterOptions) });
+        this.setState({ filterOptions: structuredClone(defaultFilterOptions), filterSubmitType: '' });
         await this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
@@ -97,23 +110,29 @@ class TestScenarioAndCase extends Component {
         });
       }
     });
-    this.worker = new Worker(worker, { type: 'module' });
-    this.interval = setInterval(() => {
-      this.worker.onmessage = async (e) => {
-        setGenerating(e.data);
-        if (e.data === GENERATE_STATUS.COMPLETE) {
-          // TODO: finish generated
-        } else if (e.data === GENERATE_STATUS.FAIL) {
-          alert('Something wrong during generation. Please reload page and run again!');
-        }
-      };
-    }, 5000);
+  }
+
+  componentDidUpdate(prevProps) {
+    const { generating } = this.props;
+    const { workerInterval } = this.state;
+    if (generating === GENERATE_STATUS.COMPLETE) {
+      clearInterval(workerInterval);
+      if (prevProps.generating === GENERATE_STATUS.START) {
+        alert('Test Scenario has been generated successfully. Reload page to see changes', {
+          info: true,
+          closeText: 'Close',
+          onClose: () => window.location.reload(),
+        });
+      }
+    }
   }
 
   componentWillUnmount() {
+    const { workerInterval } = this.state;
+    const { webWorker } = this.state;
     eventBus.unsubscribe(this);
-    this.worker.terminate();
-    clearInterval(this.interval);
+    webWorker.terminate();
+    clearInterval(workerInterval);
   }
 
   _clearData = async () => {
@@ -126,14 +145,16 @@ class TestScenarioAndCase extends Component {
   _calculateTestScenarioAndCase = async (domainAction) => {
     try {
       const { graph, testDatas, setGraph, dbContext, match, setGenerating } = this.props;
+      const { webWorker } = this.state;
       const { workId } = match.params;
 
-      let scenarioAndGraphNodes = null;
-      setGenerating(GENERATE_STATUS.START);
-
       const { testScenarioSet, testCaseSet } = dbContext;
+
+      let scenarioAndGraphNodes = null;
+
       await testScenarioSet.delete();
       await testCaseSet.delete();
+      setGenerating(GENERATE_STATUS.START);
 
       if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
         scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(
@@ -147,30 +168,46 @@ class TestScenarioAndCase extends Component {
 
       const { scenarios, graphNodes } = scenarioAndGraphNodes;
 
-      const testScenarios = scenarios.map((testScenario) => {
+      const testScenarios = scenarios.map((testScenario, index) => {
         const _testScenario = testScenario;
         _testScenario.workId = workId;
+        _testScenario.tsIndex = index;
         _testScenario.isSelected = Boolean(_testScenario.isSelected);
         _testScenario.isBaseScenario = Boolean(_testScenario.isBaseScenario);
         return _testScenario;
       });
       await testScenarioSet.add(testScenarios);
 
-      const _testScenarios = await testScenarioSet.get();
-
-      await testCaseHelper.init(_testScenarios, graphNodes, testDatas, testCaseSet);
       const _dbInfo = {
         name: dbContext.name,
         version: dbContext.version,
         table: TABLES.TEST_CASES,
       };
 
-      this.worker.postMessage({
+      const indexedDb = window.indexedDB;
+      const request = indexedDb.open(dbContext.name, dbContext.version);
+      request.onsuccess = async function (e) {
+        const db = e.target.result;
+        const transaction = await db.transaction([TABLES.TEST_SCENARIOS], 'readonly');
+        const objectStore = await transaction.objectStore(TABLES.TEST_SCENARIOS);
+        const keys = await objectStore.getAllKeys();
+        keys.onsuccess = async function () {
+          this.maxTestCase = await keys.result[keys.result.length - 1];
+        };
+        transaction.oncomplete = function () {
+          db.close();
+        };
+      };
+
+      webWorker.postMessage({
         dbInfo: JSON.stringify(_dbInfo),
-        testScenarios: JSON.stringify(_testScenarios),
+        testScenarios: JSON.stringify(testScenarios),
         graphNodes: JSON.stringify(graphNodes),
         testDatas: JSON.stringify(testDatas),
+        lastKey: this.maxTestCase,
       });
+
+      console.log('lastt', this.maxTestCase);
 
       await setGraph({ ...graph, graphNodes });
 
@@ -342,23 +379,8 @@ class TestScenarioAndCase extends Component {
 
   render() {
     const { filterOptions, filterSubmitType } = this.state;
-    const { generating } = this.props;
 
-    return generating === GENERATE_STATUS.COMPLETE ? (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          padding: '1.5rem',
-        }}
-      >
-        <p>Test Scenario has been generated successfully. Please reload page to see changes</p>
-        <Button size="sm" onClick={() => window.location.reload()}>
-          Reload
-        </Button>
-      </div>
-    ) : (
+    return (
       <div>
         <FilterBar
           filterOptions={filterOptions}
@@ -388,6 +410,7 @@ TestScenarioAndCase.propTypes = {
   setGenerating: PropTypes.func.isRequired,
   dbContext: PropTypes.oneOfType([PropTypes.object]),
   generating: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
 };
 
 TestScenarioAndCase.defaultProps = {
@@ -403,8 +426,9 @@ const mapStateToProps = (state) => ({
   testDatas: state.work.testDatas,
   dbContext: state.work.dbContext,
   generating: state.work.generating,
+  name: state.work.name,
 });
 
-const mapDispatchToProps = { setGraph, setGenerating, setDbContext };
+const mapDispatchToProps = { setGraph, setGenerating };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestScenarioAndCase));

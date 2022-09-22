@@ -55,7 +55,7 @@ class IndexedDbHelper {
 
   async addData(db: lf.Database, table: lf.schema.Table): Promise<lf.query.Insert> {
     return db
-      .insertOrReplace()
+      .insert()
       .into(table)
       .values([lf.bind(0)]);
   }
