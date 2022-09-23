@@ -5,7 +5,7 @@ import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import { setGraph, setGenerating } from 'features/project/work/slices/workSlice';
+import { setGraph } from 'features/project/work/slices/workSlice';
 import {
   ACTIONS_STATE_NAME,
   FILE_NAME,
@@ -414,13 +414,11 @@ class Graph extends Component {
 
   /* Events */
   _handleTestScenarioAndCaseEvents = async (message) => {
-    // const { setGenerating } = this.props;
     const { action, value } = message;
     switch (action) {
       case domainEvents.ACTION.ACCEPTGENERATE:
         this.graphManager.clear();
         this._drawGraph(this.graphManager, value, true);
-        // await setGenerating(GENERATE_STATUS.COMPLETE);
         break;
       default:
         break;
@@ -576,7 +574,6 @@ Graph.propTypes = {
   }).isRequired,
   workLoaded: PropTypes.bool.isRequired,
   setGraph: PropTypes.func.isRequired,
-  // setGenerating: PropTypes.func.isRequired,
   subscribeUndoHandlers: PropTypes.func.isRequired,
   unSubscribeUndoHandlers: PropTypes.func.isRequired,
   undoHandlers: PropTypes.oneOfType([PropTypes.array]).isRequired,
@@ -597,7 +594,6 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = {
   setGraph,
-  setGenerating,
   subscribeUndoHandlers,
   unSubscribeUndoHandlers,
   pushUndoStates,

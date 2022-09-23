@@ -118,9 +118,10 @@ class TestScenarioAndCase extends Component {
     if (generating === GENERATE_STATUS.COMPLETE) {
       clearInterval(workerInterval);
       if (prevProps.generating === GENERATE_STATUS.START) {
-        alert('Test Scenario has been generated successfully. Reload page to see changes', {
+        alert(Language.get('testscenarioreload'), {
           info: true,
-          closeText: 'Close',
+          actionText: Language.get('reload'),
+          closeText: Language.get('cancel'),
           onClose: () => window.location.reload(),
         });
       }

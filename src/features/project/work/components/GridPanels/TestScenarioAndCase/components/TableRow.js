@@ -176,33 +176,6 @@ function TableRow(props) {
         });
         onRowsChange(currentRowIndex, currentRow);
       }
-      // const clone = structuredClone(testScenarioAndCase);
-      // const newRows = clone.find((row) => row.key === rowKey);
-      // if (newRows) {
-      //   newRows.isSelected = checked;
-      //   newRows.testScenarios.forEach((testScenario) => {
-      //     const _testScenario = testScenario;
-      //     _testScenario.isSelected = checked;
-      //     _testScenario.testCases.forEach((testCase) => {
-      //       const _testCase = testCase;
-      //       _testCase.isSelected = checked;
-      //     });
-
-      //     // _handleTestScenarioChecked(testScenario.id, checked, false);
-      //   });
-      //   isCheckAll(newRows.testScenarios);
-      //   newRows.testScenarios.map((testScenario) => {
-      //     return testScenario.testCases.map(async (testCase) => {
-      //       const promises = testCaseSet.update(
-      //         'isSelected',
-      //         checked,
-      //         lf.op.and(testCaseSet.table.testScenarioId.eq(testScenario.id), testCaseSet.table.id.eq(testCase.id))
-      //       );
-      //       await Promise.all(promises);
-      //     });
-      //   });
-      //   setTestScenarioAndCase(clone);
-      // }
     },
     [rows]
   );
@@ -375,13 +348,6 @@ function TableRow(props) {
                             )}
                         </tr>
                       ))}
-                    {/* {expandId[testScenario.id] && testScenario.page < testScenario.totalPage && (
-                      // <tr>
-                      <Button size="sm" style={{ width: '300px' }}>
-                        Load more
-                      </Button>
-                      // </tr>
-                    )} */}
                   </Fragment>
                 )
             )}
