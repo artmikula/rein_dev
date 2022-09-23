@@ -198,27 +198,16 @@ export class SimpleTestScenario implements ISimpleTestScenario {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   constructor(target: any, isEffectAssertion: boolean, testAssertions: ITestAssertion[]) {
     this.id = uuid();
-
     this.key = target.id;
-
     this.targetNodeId = target.nodeId;
-
     this.targetGraphNodeId = target.id;
-
     this.targetType = target.targetType;
-
     this.sourceTargetType = target.targetType;
-
     this.isEffectAssertion = isEffectAssertion;
-
     this.testAssertions = testAssertions;
-
     this.isFeasible = true;
-
     this.result = true;
-
     this.resultType = RESULT_TYPE.True;
-
     this.testResults = [];
   }
 
@@ -226,13 +215,11 @@ export class SimpleTestScenario implements ISimpleTestScenario {
   invertedClone = (exceptId?: any) => {
     const testAssertions = this.testAssertions.map((x) => {
       const result = x.nodeId === exceptId ? x.result : !x.result;
-
       return { ...x, result, testScenarioId: this.id };
     });
 
     return {
       ...this,
-
       testAssertions,
     };
   };
