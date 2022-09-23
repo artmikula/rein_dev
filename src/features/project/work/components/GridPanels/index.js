@@ -228,7 +228,7 @@ class GridPanels extends Component {
   };
 
   render() {
-    const { isLockedPanel, layouts, onLayoutChange } = this.props;
+    const { isLockedPanel, layouts, onLayoutChange, loadedWork } = this.props;
     const { wrapperHeight, panelWidth, panelHeight, isTestDataChanged } = this.state;
     const { gridCols, panelMargin, togglePanelWidth } = GRID_PANEL_SIZE;
 
@@ -272,14 +272,14 @@ class GridPanels extends Component {
             </div>
           ))}
         </GridLayout>
-        {/* TODO: remove this after finish implement indexedDb */}
-        {/* {generating && (
-          <div className="overlay" id="overlayDiv">
+
+        {!loadedWork && (
+          <div className="overlay">
             <div className="overlay__inner">
-              <div className="overlay__content">Processing...</div>
+              <div className="overlay_loading_text" />
             </div>
           </div>
-        )} */}
+        )}
       </div>
     );
   }
@@ -291,8 +291,9 @@ GridPanels.propTypes = {
   isLockedPanel: PropTypes.bool.isRequired,
   onLayoutChange: PropTypes.func.isRequired,
   layouts: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+  loadedWork: PropTypes.bool.isRequired,
 };
 
-const mapStateToProps = (state) => ({ testDatas: state.work.testDatas });
+const mapStateToProps = (state) => ({ testDatas: state.work.testDatas, loadedWork: state.work.loaded });
 
 export default connect(mapStateToProps)(GridPanels);

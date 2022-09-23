@@ -150,11 +150,14 @@ class TestScenarioAndCase extends Component {
   }
 
   componentWillUnmount() {
-    const { workerInterval } = this.state;
-    const { webWorker } = this.state;
+    const { workerInterval, webWorker } = this.state;
     eventBus.unsubscribe(this);
-    webWorker.terminate();
-    clearInterval(workerInterval);
+    if (webWorker) {
+      webWorker.terminate();
+    }
+    if (workerInterval) {
+      clearInterval(workerInterval);
+    }
   }
 
   _clearData = async () => {
@@ -170,13 +173,13 @@ class TestScenarioAndCase extends Component {
       const { webWorker, maxTestCase } = this.state;
       const { workId } = match.params;
 
+      setGenerating(GENERATE_STATUS.START);
+
       const { testScenarioSet, testCaseSet } = dbContext;
       await testScenarioSet.delete();
       await testCaseSet.delete();
 
       let scenarioAndGraphNodes = null;
-
-      setGenerating(GENERATE_STATUS.START);
 
       if (appConfig.general.testCaseMethod === TEST_CASE_METHOD.MUMCUT) {
         scenarioAndGraphNodes = DNFLogicCoverage.buildTestScenario(

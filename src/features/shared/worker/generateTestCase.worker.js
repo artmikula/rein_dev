@@ -131,13 +131,14 @@ const workercode = () => {
     const _dbInfo = JSON.parse(dbInfo);
     const indexedDb = e.target.indexedDB;
     const request = await indexedDb.open(_dbInfo.name, _dbInfo.version);
-    const maxTestCaseNumber = 10000;
-    const _lastKey = lastKey === 0 ? testCaseId : lastKey + 200 + _testScenarios.length;
+    const maxTestCaseNumber = 100000;
+    const _lastKey = lastKey === 0 ? testCaseId : lastKey + 5000 + _testScenarios.length;
     testCaseId = _lastKey;
     request.onsuccess = async function ({ target }) {
       const db = target.result;
       const transaction = await db.transaction([_dbInfo.table], 'readwrite');
       const objectStore = await transaction.objectStore(_dbInfo.table);
+      await objectStore.clear();
       for await (const testScenario of _testScenarios) {
         const { testAssertions, resultType, targetGraphNodeId } = testScenario;
         const results = [];
