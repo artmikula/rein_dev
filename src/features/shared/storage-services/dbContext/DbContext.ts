@@ -12,14 +12,24 @@ export default class DbContext implements IDbContext {
 
   db: lf.Database | null;
 
+  name: string;
+
+  version: number;
+
   constructor() {
     this.db = null;
+    this.name = '';
+    this.version = 0;
     this.testScenarioSet = null;
     this.testCaseSet = null;
   }
 
   async init(workId: string): Promise<void> {
-    this.db = await indexedDbHelper.initIndexedDb(workId);
+    const initDb = await indexedDbHelper.initIndexedDb(workId);
+    const { connection, dbName, dbVersion } = initDb;
+    this.db = await connection;
+    this.name = dbName;
+    this.version = dbVersion;
     if (this.db) {
       const tblTestScenario = await indexedDbHelper.getTable(this.db, TABLES.TEST_SCENARIOS);
       const tblTestCase = await indexedDbHelper.getTable(this.db, TABLES.TEST_CASES);
@@ -28,9 +38,9 @@ export default class DbContext implements IDbContext {
     }
   }
 
-  close(): void {
+  async close(): Promise<void> {
     if (this.db) {
-      indexedDbHelper.close(this.db);
+      await indexedDbHelper.close(this.db);
       this.db = null;
       this.testScenarioSet = null;
       this.testCaseSet = null;

@@ -2,7 +2,14 @@ import { COMPLEX_LOGICAL, TEST_CASE_METHOD } from '../constants';
 
 /**
  * @type {{
- *  version: string, deviceId: string, general: any, graph: any, similarity: any, testCoverage: any, testData: any
+ *  version: string,
+ *  deviceId: string,
+ *  general: any,
+ *  graph: any,
+ *  testScenarioAndCase: any,
+ *  similarity: any,
+ *  testCoverage: any,
+ *  testData: any
  * }}
  */
 
@@ -21,6 +28,9 @@ export const defaultOption = {
     isRelationColor: '#98C9EA',
     notRelationColor: '#965196',
     lineWidth: 1,
+  },
+  testScenarioAndCase: {
+    testCasePageSize: 100,
   },
   similarity: { enable: true, rate: 70 },
   testCoverage: { complexLogical: COMPLEX_LOGICAL.Average, threshold: 1 },

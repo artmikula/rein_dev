@@ -55,4 +55,21 @@ const arrayToCsv = (data = [], graphNodes = []) => {
   return new Blob([result], { type: 'text/csv;charset=UTF-8' });
 };
 
-export { toLocalTime as default, arrayToCsv };
+const sortByString = (data, key) => {
+  if (Array.isArray(data)) {
+    return data.sort((a, b) => {
+      const stringA = a[key].toUpperCase();
+      const stringB = b[key].toUpperCase();
+      if (stringA < stringB) {
+        return -1;
+      }
+      if (stringA > stringB) {
+        return 1;
+      }
+      return 0;
+    });
+  }
+  return [];
+};
+
+export { toLocalTime as default, arrayToCsv, sortByString };

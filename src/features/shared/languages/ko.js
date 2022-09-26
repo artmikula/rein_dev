@@ -50,6 +50,8 @@ const ko = {
   twosentencearenotsimilar: '두 문장은 비슷하지 않습니다',
   twosentencearesimilar: '두 문장이 비슷하다',
   similarity: '유사성',
+  testscenarioandcase: '테스트 시나리오 및 사례',
+  testcasepagesize: '테스트 케이스 페이지 크기',
   /* End option modal */
   /* End Modal */
   /* Workspace */
@@ -154,6 +156,8 @@ const ko = {
   apply: '대다',
   name: '이름',
   expectedresults: '예상 결과',
+  testscenarioreload: '테스트 시나리오가 성공적으로 생성되었습니다. 새 데이터를 얻으려면 새로고침하세요.',
+  reload: '재장전',
   /* End Test scenario/case */
   /* Test data */
   type: '유형',

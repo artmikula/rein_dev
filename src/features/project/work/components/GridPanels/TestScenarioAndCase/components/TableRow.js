@@ -1,12 +1,14 @@
+/* eslint-disable max-lines */
 import React, { Fragment, useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import lf from 'lovefield';
 import { useSelector } from 'react-redux';
+import { Button } from 'reactstrap';
 
 import Checkbox from './TableCheckbox';
 
 function TableRow(props) {
-  const { groupByEffectNodes, rows, filterRows, columns, updateGroupByEffectNodes, updateRows } = props;
+  const { rows, onLoadMore, columns, onRowsChange, isFilter } = props;
 
   const [expandId, setExpandId] = useState({});
   const [rowSpan, setRowSpan] = useState({});
@@ -16,7 +18,7 @@ function TableRow(props) {
   useEffect(() => {
     // handle get row span by group
     const rowSpanByGroup = {};
-    groupByEffectNodes.forEach((groupRow) => {
+    rows.forEach((groupRow) => {
       if (expandId[groupRow?.key]) {
         groupRow?.testScenarios?.forEach((testScenario) => {
           if (expandId[testScenario.id]) {
@@ -37,11 +39,11 @@ function TableRow(props) {
       }
     });
     setRowSpan(rowSpanByGroup);
-  }, [expandId, groupByEffectNodes]);
+  }, [expandId, rows]);
 
   useEffect(() => {
     setExpandId({});
-  }, [filterRows]);
+  }, [isFilter]);
 
   const _toggleRow = useCallback(
     (e, id) => {
@@ -57,36 +59,34 @@ function TableRow(props) {
    * @param {boolean} selfUpdate - a flag to prevent updating state
    */
   const _handleTestScenarioChecked = useCallback(
-    async (scenarioId, checked, selfUpdate = true) => {
+    async (rowKey, scenarioId, checked, selfUpdate = true) => {
       if (dbContext && dbContext.db) {
         const { testScenarioSet, testCaseSet } = dbContext;
         await testScenarioSet.update('isSelected', checked, testScenarioSet.table.id.eq(scenarioId));
         await testCaseSet.update('isSelected', checked, testCaseSet.table.testScenarioId.eq(scenarioId));
         if (selfUpdate) {
-          const newRows = rows.slice();
-          const tsRow = newRows.find((row) => row.id === scenarioId);
-          if (tsRow) {
-            tsRow.isSelected = checked;
-            tsRow.testCases.forEach((testCaseRow) => {
-              const _testCaseRow = testCaseRow;
-              _testCaseRow.isSelected = checked;
-              return _testCaseRow;
-            });
-            updateGroupByEffectNodes(newRows);
-            updateRows(newRows);
+          const newRows = structuredClone(rows);
+          const currentRowIndex = newRows.findIndex((row) => row.key === rowKey);
+          if (currentRowIndex > -1) {
+            const currentRow = newRows[currentRowIndex];
+            const tsRow = currentRow.testScenarios.find((testScenario) => testScenario.id === scenarioId);
+            if (tsRow) {
+              tsRow.isSelected = checked;
+              tsRow.testCases.forEach((testCaseRow) => {
+                const _testCaseRow = testCaseRow;
+                _testCaseRow.isSelected = checked;
+              });
+              currentRow.isSelected = currentRow.testScenarios.every(
+                (testScenario) =>
+                  testScenario.isSelected || testScenario.testCases.every((testCase) => testCase.isSelected)
+              );
+              onRowsChange(currentRowIndex, currentRow);
+            }
           }
         }
       }
-
-      /** TODO: remove this after finish implement indexedDb */
-      // testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked);
-      // const newRows = testScenarioAnsCaseStorage.checkTestScenario(scenarioId, checked, rows);
-      // updateGroupByEffectNodes(filterRows ?? newRows);
-
-      // updateRows(newRows);
-      /** end */
     },
-    [rows, filterRows]
+    [rows]
   );
 
   /**
@@ -95,7 +95,7 @@ function TableRow(props) {
    * @param {boolean} checked - checkbox's value of selected test case
    */
   const _handleTestCaseChecked = useCallback(
-    async (scenarioId, caseId, checked) => {
+    async (rowKey, scenarioId, caseId, checked) => {
       if (dbContext && dbContext.db) {
         const { testScenarioSet, testCaseSet } = dbContext;
         const filter = lf.op.and(testCaseSet.table.testScenarioId.eq(scenarioId), testCaseSet.table.id.eq(caseId));
@@ -105,27 +105,24 @@ function TableRow(props) {
           const isCheckedAll = testCases.every((testCase) => testCase.isSelected);
           await testScenarioSet.update('isSelected', isCheckedAll, testScenarioSet.table.id.eq(scenarioId));
         }
-        const testScenarios = await testScenarioSet.get(testScenarioSet.table.id.eq(scenarioId));
-        const newRows = rows.slice();
-        const tsRow = newRows.find((row) => row.id === scenarioId);
-        if (tsRow) {
-          tsRow.isSelected = testScenarios[0].isSelected;
-          const tcRow = tsRow?.testCases.find((testCaseRow) => testCaseRow.id === caseId);
-          tcRow.isSelected = checked;
-          updateGroupByEffectNodes(newRows);
-          updateRows(newRows);
+        const newRows = structuredClone(rows);
+        const currentRowIndex = newRows.findIndex((row) => row.key === rowKey);
+        if (currentRowIndex > -1) {
+          const currentRow = newRows[currentRowIndex];
+          const tsRow = currentRow.testScenarios.find((testScenario) => testScenario.id === scenarioId);
+          if (tsRow) {
+            const tcRow = tsRow.testCases.find((testCase) => testCase.id === caseId);
+            if (tcRow) {
+              tcRow.isSelected = checked;
+            }
+            tsRow.isSelected = tsRow.testCases.every((testCase) => testCase.isSelected);
+          }
+          currentRow.isSelected = currentRow.testScenarios.every((testScenario) => testScenario.isSelected);
+          onRowsChange(currentRowIndex, currentRow);
         }
       }
-
-      /** TODO: remove this after finish implement indexedDb */
-      // testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked);
-      // const newRows = testScenarioAnsCaseStorage.checkTestCase(scenarioId, caseId, checked, rows);
-      // updateGroupByEffectNodes(newRows);
-
-      // updateRows(newRows);
-      /** end */
     },
-    [rows, filterRows]
+    [rows]
   );
 
   /**
@@ -134,27 +131,25 @@ function TableRow(props) {
    * @param {boolean} checked - checkbox's value of isBaseScenario, isValid
    */
   const _handleCheckboxChange = useCallback(
-    async (scenarioId, key, checked) => {
+    async (rowKey, scenarioId, key, checked) => {
       if (dbContext && dbContext.db) {
+        // update to indexedDb
         const { testScenarioSet } = dbContext;
         testScenarioSet.update(key, checked, testScenarioSet.table.id.eq(scenarioId));
-        const newRows = rows.slice();
-        const tsRow = newRows.find((row) => row.id === scenarioId);
-        if (tsRow) {
-          tsRow[key] = checked;
-          updateGroupByEffectNodes(filterRows ?? newRows);
-          updateRows(newRows);
+        // update to state
+        const newRows = structuredClone(rows);
+        const currentRowIndex = newRows.findIndex((row) => row.key === rowKey);
+        if (currentRowIndex > -1) {
+          const currentRow = newRows[currentRowIndex];
+          const tsRow = currentRow.testScenarios.find((testScenario) => testScenario.id === scenarioId);
+          if (tsRow) {
+            tsRow[key] = checked;
+          }
+          onRowsChange(currentRowIndex, currentRow);
         }
       }
-      /** TODO: remove this after finish implement indexedDb */
-      // testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked);
-      // const newRows = testScenarioAnsCaseStorage.changeTestScenario(scenarioId, key, checked, rows);
-      // updateGroupByEffectNodes(filterRows ?? newRows);
-
-      // updateRows(newRows);
-      /** end */
     },
-    [rows, filterRows]
+    [rows]
   );
 
   /**
@@ -162,172 +157,214 @@ function TableRow(props) {
    * @param {boolean} checked - checkbox's value of selected effect node
    */
   const _handleCheckedByGroup = useCallback(
-    (groupKey, checked) => {
-      const checkedIndex = groupByEffectNodes.findIndex((groupRow) => groupRow.key === groupKey);
-      if (checkedIndex > -1) {
-        groupByEffectNodes[checkedIndex].testScenarios.forEach((testScenario) => {
-          const newRows = rows.slice();
-          const tsRow = newRows.find((row) => row.id === testScenario.id);
-          if (tsRow) {
-            tsRow.isSelected = checked;
-            tsRow.testCases.forEach((tcRow) => {
-              const _tcRow = tcRow;
-              _tcRow.isSelected = checked;
-              return _tcRow;
-            });
-            updateGroupByEffectNodes(filterRows ?? newRows);
-
-            updateRows(newRows);
-          }
-          _handleTestScenarioChecked(testScenario.id, checked, false);
+    (rowKey, checked) => {
+      const newRows = structuredClone(rows);
+      const currentRowIndex = newRows.findIndex((row) => row.key === rowKey);
+      if (currentRowIndex > -1) {
+        const currentRow = newRows[currentRowIndex];
+        currentRow.isSelected = checked;
+        currentRow.testScenarios.forEach((testScenario) => {
+          _handleTestScenarioChecked(rowKey, testScenario.id, checked, false);
+          const _testScenario = testScenario;
+          _testScenario.isSelected = checked;
+          _testScenario.testCases.forEach((testCase) => {
+            const _testCase = testCase;
+            _testCase.isSelected = checked;
+            return _testCase;
+          });
+          return _testScenario;
         });
+        onRowsChange(currentRowIndex, currentRow);
       }
     },
-    [groupByEffectNodes]
+    [rows]
   );
 
-  return (
-    <tbody>
-      {groupByEffectNodes.map((row, rowIndex) => (
-        <Fragment key={rowIndex}>
-          <tr key={`${rowIndex}-grouped-test-scenario`}>
-            <td className="treeview" rowSpan={rowSpan[row?.key]}>
-              <ul>
-                <li>
-                  <ul className="d-inline-flex">
-                    <a
-                      style={{ paddingTop: '2px' }}
-                      href="#collapse"
-                      className="text-dark"
-                      onClick={(e) => _toggleRow(e, row?.key)}
-                    >
-                      <i
-                        className={`mr-1 cursor-pointer ${
-                          expandId[row?.key] ? 'bi bi-dash-square-fill' : 'bi bi-plus-square-fill'
-                        }`}
+  if (rows.length > 0) {
+    return (
+      <tbody>
+        {rows.map((row, rowIndex) => (
+          <Fragment key={rowIndex}>
+            <tr key={`${rowIndex}-grouped-test-scenario`}>
+              <td className="treeview" rowSpan={rowSpan[row?.key]}>
+                <ul>
+                  <li>
+                    <ul className="d-inline-flex">
+                      <a
+                        style={{ paddingTop: '2px' }}
+                        href="#collapse"
+                        className="text-dark"
+                        onClick={(e) => _toggleRow(e, row?.key)}
+                      >
+                        <i
+                          className={`mr-1 cursor-pointer ${
+                            expandId[row?.key] ? 'bi bi-dash-square-fill' : 'bi bi-plus-square-fill'
+                          }`}
+                        />
+                      </a>
+                      <Checkbox
+                        checked={row?.isSelected ?? false}
+                        onChange={(e) => _handleCheckedByGroup(row?.key ?? '', e.target.checked)}
+                        labelRenderer={
+                          <span className="font-weight-500" style={{ lineHeight: '21px' }}>
+                            {row?.key}: {row?.definition}
+                          </span>
+                        }
                       />
-                    </a>
-                    <Checkbox
-                      checked={row?.isSelected ?? false}
-                      onChange={(e) => _handleCheckedByGroup(row?.key ?? '', e.target.checked)}
-                      labelRenderer={
-                        <span className="font-weight-500" style={{ lineHeight: '21px' }}>
-                          {row?.key}: {row?.definition}
-                        </span>
-                      }
-                    />
-                  </ul>
-                  <ul>
-                    {expandId[row?.key] &&
-                      row.testScenarios.map((testScenario) => (
-                        <li
-                          key={`${row.key}-${testScenario.id}`}
-                          className={testScenario.isViolated ? 'ommit-row' : ''}
-                        >
-                          <ul className="d-inline-flex">
-                            <a
-                              style={{
-                                paddingTop: '2px',
-                                visibility: testScenario.testCases.length === 0 ? 'hidden' : 'visible',
-                              }}
-                              href="#collapse"
-                              className="text-dark"
-                              onClick={(e) => _toggleRow(e, testScenario.id)}
-                            >
-                              <i
-                                className={`mr-1 cursor-pointer ${
-                                  expandId[testScenario.id] ? 'bi bi-dash-square-fill' : 'bi bi-plus-square-fill'
-                                }`}
+                    </ul>
+                    <ul>
+                      {expandId[row?.key] &&
+                        row.testScenarios.map((testScenario) => (
+                          <li
+                            key={`${row.key}-${testScenario.id}`}
+                            className={testScenario.isViolated ? 'ommit-row' : ''}
+                          >
+                            <ul className="d-inline-flex">
+                              <a
+                                style={{
+                                  paddingTop: '2px',
+                                  visibility: testScenario.testCases.length === 0 ? 'hidden' : 'visible',
+                                }}
+                                href="#collapse"
+                                className="text-dark"
+                                onClick={(e) => _toggleRow(e, testScenario.id)}
+                              >
+                                <i
+                                  className={`mr-1 cursor-pointer ${
+                                    expandId[testScenario.id] ? 'bi bi-dash-square-fill' : 'bi bi-plus-square-fill'
+                                  }`}
+                                />
+                              </a>
+                              <Checkbox
+                                checked={testScenario.isSelected ?? false}
+                                onChange={(e) =>
+                                  _handleTestScenarioChecked(row?.key, testScenario.id, e.target.checked)
+                                }
+                                labelRenderer={
+                                  <span className="font-weight-500" style={{ lineHeight: '21px' }}>
+                                    {testScenario.Name}
+                                  </span>
+                                }
                               />
-                            </a>
-                            <Checkbox
-                              checked={testScenario.isSelected ?? false}
-                              onChange={(e) => _handleTestScenarioChecked(testScenario.id, e.target.checked)}
-                              labelRenderer={
-                                <span className="font-weight-500" style={{ lineHeight: '21px' }}>
-                                  {testScenario.Name}
-                                </span>
+                            </ul>
+                            <ul>
+                              {expandId[testScenario.id] &&
+                                testScenario.testCases.map((testCase, testCaseIndex) => (
+                                  <Fragment key={`${testCaseIndex}test-case-tree`}>
+                                    {testCaseIndex < testScenario.testCases.length - 1 && (
+                                      <li>
+                                        <Checkbox
+                                          checked={testCase.isSelected ?? false}
+                                          onChange={(e) =>
+                                            _handleTestCaseChecked(
+                                              row?.key,
+                                              testScenario.id,
+                                              testCase.id,
+                                              e.target.checked
+                                            )
+                                          }
+                                          labelRenderer={testCase.Name}
+                                        />
+                                      </li>
+                                    )}
+                                    {testCaseIndex === testScenario.testCases.length - 1 &&
+                                      testScenario.page < testScenario.totalPage - 1 && (
+                                        <li>
+                                          <Button
+                                            color="link"
+                                            size="sm"
+                                            style={{ fontSize: 13, margin: 0, padding: 0 }}
+                                            onClick={() => onLoadMore(row?.key, testScenario.id)}
+                                          >
+                                            <i className="bi bi-plus-square-dotted" />
+                                            <span style={{ marginLeft: 8 }}>Load more</span>
+                                          </Button>
+                                        </li>
+                                      )}
+                                  </Fragment>
+                                ))}
+                            </ul>
+                          </li>
+                        ))}
+                    </ul>
+                  </li>
+                </ul>
+              </td>
+              {columns.map((_column, colIndex) => (
+                <td
+                  key={`${colIndex}test-scenario-col`}
+                  style={{
+                    visibility: 'collapse',
+                  }}
+                >
+                  <div style={{ height: 18 }} />
+                </td>
+              ))}
+            </tr>
+            {row.testScenarios.map(
+              (testScenario) =>
+                expandId[row?.key] && (
+                  <Fragment key={`test-scenario-columns-${testScenario.id}`}>
+                    <tr className={testScenario.isViolated ? 'isViolated' : ''}>
+                      {columns.map((column, colIndex) => (
+                        <td key={`${colIndex}test-scenario-col`}>
+                          {typeof testScenario[column.key] === 'boolean' ? (
+                            <input
+                              type="checkbox"
+                              checked={testScenario[column.key]}
+                              onChange={(e) =>
+                                _handleCheckboxChange(row?.key, testScenario.id, column.key, e.target.checked)
                               }
                             />
-                          </ul>
-                          <ul>
-                            {expandId[testScenario.id] &&
-                              testScenario.testCases.map((testCase, testIndex) => (
-                                <li key={`${testIndex}test-case-tree`}>
-                                  <Checkbox
-                                    checked={testCase.isSelected ?? false}
-                                    onChange={(e) =>
-                                      _handleTestCaseChecked(testScenario.id, testCase.id, e.target.checked)
-                                    }
-                                    labelRenderer={testCase.Name}
-                                  />
-                                </li>
-                              ))}
-                          </ul>
-                        </li>
+                          ) : (
+                            testScenario[column.key]
+                          )}
+                        </td>
                       ))}
-                  </ul>
-                </li>
-              </ul>
-            </td>
-            {columns.map((_column, colIndex) => (
-              <td
-                key={`${colIndex}test-scenario-col`}
-                style={{
-                  visibility: 'collapse',
-                }}
-              >
-                <div style={{ height: 18 }} />
-              </td>
-            ))}
-          </tr>
-          {row.testScenarios.map(
-            (testScenario) =>
-              expandId[row?.key] && (
-                <Fragment key={`test-scenario-columns-${testScenario.id}`}>
-                  <tr className={testScenario.isViolated ? 'isViolated' : ''}>
-                    {columns.map((column, colIndex) => (
-                      <td key={`${colIndex}test-scenario-col`}>
-                        {typeof testScenario[column.key] === 'boolean' ? (
-                          <input
-                            type="checkbox"
-                            onChange={(e) => _handleCheckboxChange(testScenario.id, column.key, e.target.checked)}
-                            checked={testScenario[column.key]}
-                          />
-                        ) : (
-                          testScenario[column.key]
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                  {expandId[testScenario.id] &&
-                    testScenario.testCases.map((testCase, tcIndex) => (
-                      <tr key={`${tcIndex}test-case-row`}>
-                        {columns.map((column, colIndex) => (
-                          <td key={`${colIndex}test-case-col`} style={{ padding: '3px 8px' }}>
-                            {testCase[column.key]}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                </Fragment>
-              )
-          )}
-        </Fragment>
-      ))}
-    </tbody>
-  );
+                    </tr>
+                    {expandId[testScenario.id] &&
+                      testScenario.testCases.map((testCase, tcIndex) => (
+                        <tr
+                          key={`${tcIndex}test-case-row`}
+                          style={
+                            tcIndex === testScenario.testCases.length - 1 &&
+                            testScenario.page < testScenario.totalPage - 1
+                              ? { height: 20 }
+                              : {}
+                          }
+                        >
+                          {tcIndex < testScenario.testCases.length - 1 &&
+                            columns.map(
+                              (column, colIndex) =>
+                                tcIndex !== testScenario.testCases.length - 1 && (
+                                  <td key={`${colIndex}test-case-col`} style={{ padding: '3px 8px' }}>
+                                    {testCase[column.key]}
+                                  </td>
+                                )
+                            )}
+                          {tcIndex === testScenario.testCases.length - 1 &&
+                            testScenario.page < testScenario.totalPage - 1 && (
+                              <td colSpan={columns.length} style={{ height: 32 }} />
+                            )}
+                        </tr>
+                      ))}
+                  </Fragment>
+                )
+            )}
+          </Fragment>
+        ))}
+      </tbody>
+    );
+  }
+  return null;
 }
 
 TableRow.propTypes = {
-  groupByEffectNodes: PropTypes.oneOfType([PropTypes.array]).isRequired,
   rows: PropTypes.oneOfType([PropTypes.array]).isRequired,
   columns: PropTypes.oneOfType([PropTypes.array]).isRequired,
-  updateGroupByEffectNodes: PropTypes.func.isRequired,
-  updateRows: PropTypes.func.isRequired,
-  filterRows: PropTypes.oneOfType([PropTypes.array]),
+  onLoadMore: PropTypes.func.isRequired,
+  onRowsChange: PropTypes.func.isRequired,
+  isFilter: PropTypes.string.isRequired,
 };
-
-TableRow.defaultProps = { filterRows: undefined };
 
 export default TableRow;

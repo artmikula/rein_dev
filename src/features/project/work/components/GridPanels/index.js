@@ -54,9 +54,7 @@ class GridPanels extends Component {
     },
     {
       title: Language.get('causeandeffectgraph'),
-      children: (
-        <Graph setActionHandler={this.setGraphActionHandler} onGenerate={() => this.setState({ loading: true })} />
-      ),
+      children: <Graph setActionHandler={this.setGraphActionHandler} />,
       renderTitle: (title) => {
         return (
           <div className="flex-title">
@@ -102,7 +100,6 @@ class GridPanels extends Component {
       panelWidth: 0,
       panelHeight: 0,
       isTestDataChanged: false,
-      loading: false,
     };
   }
 
@@ -120,11 +117,11 @@ class GridPanels extends Component {
     this._initLayoutSize();
     window.addEventListener(EVENT_LISTENER_LIST.RESIZE, this._onChangeLayoutSize);
 
-    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
-      if (event.message.action === domainEvents.ACTION.ACCEPTGENERATE) {
-        this.setState({ loading: false });
-      }
-    });
+    // eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
+    //   if (event.message.action === domainEvents.ACTION.ACCEPTGENERATE) {
+    //     this.setState({ loading: false });
+    //   }
+    // });
   }
 
   componentWillUnmount() {
@@ -231,8 +228,8 @@ class GridPanels extends Component {
   };
 
   render() {
-    const { isLockedPanel, layouts, onLayoutChange } = this.props;
-    const { wrapperHeight, panelWidth, panelHeight, isTestDataChanged, loading } = this.state;
+    const { isLockedPanel, layouts, onLayoutChange, loadedWork } = this.props;
+    const { wrapperHeight, panelWidth, panelHeight, isTestDataChanged } = this.state;
     const { gridCols, panelMargin, togglePanelWidth } = GRID_PANEL_SIZE;
 
     return (
@@ -275,10 +272,11 @@ class GridPanels extends Component {
             </div>
           ))}
         </GridLayout>
-        {loading && (
-          <div className="overlay" id="overlayDiv">
+
+        {!loadedWork && (
+          <div className="overlay">
             <div className="overlay__inner">
-              <div className="overlay__content">Processing...</div>
+              <div className="overlay_loading_text" />
             </div>
           </div>
         )}
@@ -293,8 +291,9 @@ GridPanels.propTypes = {
   isLockedPanel: PropTypes.bool.isRequired,
   onLayoutChange: PropTypes.func.isRequired,
   layouts: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+  loadedWork: PropTypes.bool.isRequired,
 };
 
-const mapStateToProps = (state) => ({ testDatas: state.work.testDatas });
+const mapStateToProps = (state) => ({ testDatas: state.work.testDatas, loadedWork: state.work.loaded });
 
 export default connect(mapStateToProps)(GridPanels);

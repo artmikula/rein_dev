@@ -77,7 +77,7 @@
   position: absolute;
 }
 
-.overlay__content {
+.overlay_loading_text {
   left: 50%;
   position: absolute;
   top: 50%;
@@ -85,6 +85,33 @@
   font-size: 24px;
   font-weight: 500;
   color: #fff;
+  &::after {
+    content: 'Loading';
+    animation: overlay-text 3s infinite;
+  }
+}
+
+.overlay-loader {
+  border: none !important;
+  display: inline-flex !important;
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+}
+
+@keyframes overlay-text {
+  0% {
+    content: 'Loading';
+  }
+  25% {
+    content: 'Loading.';
+  }
+  50% {
+    content: 'Loading..';
+  }
+  75% {
+    content: 'Loading...';
+  }
 }
 
 @keyframes spin {

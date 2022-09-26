@@ -9,6 +9,7 @@ import { setGraph } from 'features/project/work/slices/workSlice';
 import {
   ACTIONS_STATE_NAME,
   FILE_NAME,
+  // GENERATE_STATUS,
   GRAPH_LINK_TYPE,
   GRAPH_NODE_TYPE,
   GRAPH_SHORTCUT,
@@ -80,16 +81,12 @@ class Graph extends Component {
   }
 
   componentDidMount() {
-    const { onGenerate, setActionHandler, subscribeUndoHandlers } = this.props;
+    const { setActionHandler, subscribeUndoHandlers } = this.props;
 
     const container = document.getElementById('graph_container_id');
     this.graphManager = new GraphManager(container, {
       onGraphChange: this._handleGraphChange,
       generate: async () => {
-        if (onGenerate) {
-          onGenerate();
-        }
-
         // add delay to show waiting message before run to Generate process
         function delay(milliseconds) {
           return new Promise((resolve) => {
@@ -117,8 +114,8 @@ class Graph extends Component {
     eventBus.subscribe(this, domainEvents.GRAPH_MENU_DOMAINEVENT, (event) => {
       this._handleShortCutEvents(event.message.code);
     });
-    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
-      this._handleTestScenarioAndCaseEvents(event.message);
+    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, async (event) => {
+      await this._handleTestScenarioAndCaseEvents(event.message);
     });
     eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
       this._handleWorkMenuEvents(event.message);
@@ -416,7 +413,7 @@ class Graph extends Component {
   };
 
   /* Events */
-  _handleTestScenarioAndCaseEvents = (message) => {
+  _handleTestScenarioAndCaseEvents = async (message) => {
     const { action, value } = message;
     switch (action) {
       case domainEvents.ACTION.ACCEPTGENERATE:
@@ -577,7 +574,6 @@ Graph.propTypes = {
   }).isRequired,
   workLoaded: PropTypes.bool.isRequired,
   setGraph: PropTypes.func.isRequired,
-  onGenerate: PropTypes.func.isRequired,
   subscribeUndoHandlers: PropTypes.func.isRequired,
   unSubscribeUndoHandlers: PropTypes.func.isRequired,
   undoHandlers: PropTypes.oneOfType([PropTypes.array]).isRequired,

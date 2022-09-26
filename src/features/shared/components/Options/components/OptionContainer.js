@@ -3,6 +3,7 @@ import Language from 'features/shared/languages/Language';
 import React, { forwardRef, useState } from 'react';
 import General from '../General';
 import Graph from '../Graph';
+import TestScenarioAndCase from '../TestScenarioAndCase';
 import SentenceSimilarityCheck from '../SentenceSimilarityCheck';
 import '../style.scss';
 import TestCoverage from '../TestCoverage';
@@ -12,6 +13,11 @@ import Option from './Option';
 const options = [
   { type: OPTION_TYPE.GENERAL, text: Language.get('general'), component: General },
   { type: OPTION_TYPE.GRAPH, text: Language.get('graph'), component: Graph },
+  {
+    type: OPTION_TYPE.TEST_SCENARIO_AND_CASE,
+    text: Language.get('testscenarioandcase'),
+    component: TestScenarioAndCase,
+  },
   { type: OPTION_TYPE.TEST_DATA, text: Language.get('testdata'), component: TestData },
   {
     type: OPTION_TYPE.SENTENCE_SIMILARITY,

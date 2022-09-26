@@ -1,102 +1,12 @@
-/* eslint-disable no-loop-func */
-import { CLASSIFY, RESULT_TYPE, TEST_CASE_LIMITATION } from 'features/shared/constants';
-import { v4 as uuid } from 'uuid';
-import { IGraphNode, ITestAssertion, ITestCase, ISimpleTestScenario, ITestDataDetail } from 'types/models';
-import { ITestCaseSet } from 'features/shared/storage-services/dbContext/models';
+import { CLASSIFY } from 'features/shared/constants';
 import { ITestScenarioReport, ITestScenarioAndCaseRow, ITestCaseReport } from 'types/bizModels';
-import testDataService from './TestData';
+
+interface IReportData {
+  testScenarios: ITestScenarioReport[];
+  testCases: ITestCaseReport[];
+}
 
 class TestCase {
-  updateTestCase(
-    testCaseSet: ITestCaseSet,
-    testScenarios: ISimpleTestScenario[] = [],
-    testDataList: ITestDataDetail[] = [],
-    graphNodes: IGraphNode[] = []
-  ) {
-    const totalTCs: ITestCase[] = [];
-    for (let i = 0; i < testScenarios.length; i++) {
-      let testCasesOfScenario: ITestCase[] = [];
-
-      if (!testScenarios[i].isViolated) {
-        const causeAssertions: ITestAssertion[] = testScenarios[i].testAssertions.filter((x) => x.graphNodeId);
-
-        for (let j = 0; j < causeAssertions.length; j++) {
-          const causeAssertion: ITestAssertion = causeAssertions[j];
-          const { testDatas, type }: { testDatas: string; type: string } = testDataService.getTestData(
-            testDataList,
-            causeAssertion
-          );
-
-          if (testCasesOfScenario.length > 0) {
-            const tmp: ITestCase[] = [];
-            const maxNumberOfTestCases =
-              testCasesOfScenario.length < TEST_CASE_LIMITATION ? testCasesOfScenario.length : TEST_CASE_LIMITATION;
-            for (let k = 0; k < maxNumberOfTestCases; k++) {
-              const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
-              testDataArray.forEach((data) => {
-                const clone: ITestCase = this._clone(testCasesOfScenario[k]);
-                clone.id = uuid();
-                const testDataInCase = clone.testDatas.find((x) => x.graphNodeId === causeAssertions[j]?.graphNodeId);
-                if (testDataInCase) {
-                  testDataInCase.data = data;
-                } else {
-                  clone.testDatas.push({
-                    graphNodeId: causeAssertions[j]?.graphNodeId,
-                    data,
-                    nodeId: causeAssertions[j]?.nodeId,
-                  });
-                }
-                if (clone.testDatas.length === causeAssertions.length) {
-                  clone.isSelected = false;
-                  testCaseSet.add(clone);
-                }
-                tmp.push(clone);
-              });
-            }
-
-            testCasesOfScenario = tmp;
-          } else {
-            const testDataArray: string[] = this.convertTestDataToList(testDatas, type);
-            testDataArray.forEach((data) => {
-              const newCase: ITestCase = {
-                id: uuid(),
-                testScenarioId: testScenarios[i].id,
-                // testScenario: { ...testScenarios[i] },
-                testDatas: [{ graphNodeId: causeAssertions[j]?.graphNodeId, data, nodeId: causeAssertions[j]?.nodeId }],
-                results: [],
-              };
-              if (testScenarios[i].resultType === RESULT_TYPE.False) {
-                newCase.results.push(
-                  `NOT(${this._getDescriptionOfGraphNode(graphNodes, testScenarios[i].targetGraphNodeId)})`
-                );
-              } else {
-                newCase.results.push(this._getDescriptionOfGraphNode(graphNodes, testScenarios[i].targetGraphNodeId));
-              }
-              testCasesOfScenario.push(newCase);
-            });
-          }
-        }
-      }
-
-      testCasesOfScenario.forEach((tc) => {
-        totalTCs.push(tc);
-      });
-      // totalTCs.push(testCasesOfScenario);
-    }
-
-    return totalTCs;
-  }
-
-  _getDescriptionOfGraphNode(graphNodes: IGraphNode[], graphNodeId: string) {
-    const graphNode = graphNodes.find((graphNode) => graphNode.id === graphNodeId);
-
-    return graphNode ? graphNode.definition : '';
-  }
-
-  _clone(testCase: ITestCase) {
-    return { ...testCase, testDatas: [...testCase.testDatas], results: [...testCase.results] };
-  }
-
   _splitTupple = (datas: string) => {
     let _data = datas.trim();
     _data = _data.substring(1, _data.length - 1);
@@ -115,10 +25,7 @@ class TestCase {
     return [''];
   }
 
-  generateReportData(data: ITestScenarioAndCaseRow[] = []): {
-    testScenarios: ITestScenarioReport[];
-    testCases: ITestCaseReport[];
-  } {
+  generateReportData(data: ITestScenarioAndCaseRow[] = []): IReportData {
     const testCases: ITestCaseReport[] = [];
     const testScenarios: ITestScenarioReport[] = data.map((testScenario) => {
       const testScenarioItem: ITestScenarioReport = {

@@ -42,7 +42,11 @@ class IndexedDbHelper {
         action: lf.ConstraintAction.CASCADE,
       });
 
-    return schemaBuilder.connect();
+    return {
+      connection: schemaBuilder.connect(),
+      dbName,
+      dbVersion,
+    };
   }
 
   close(db: lf.Database) {
@@ -51,7 +55,7 @@ class IndexedDbHelper {
 
   async addData(db: lf.Database, table: lf.schema.Table): Promise<lf.query.Insert> {
     return db
-      .insertOrReplace()
+      .insert()
       .into(table)
       .values([lf.bind(0)]);
   }

@@ -342,6 +342,7 @@ export const FILE_NAME = {
 export const OPTION_TYPE = {
   GENERAL: 'GENERAL',
   GRAPH: 'GRAPH',
+  TEST_SCENARIO_AND_CASE: 'TEST_SCENARIO_AND_CASE',
   TEST_DATA: 'TEST_DATA',
   SENTENCE_SIMILARITY: 'SENTENCE_SIMILARITY',
   TEST_COVERAGE: 'TEST_COVERAGE',
@@ -406,8 +407,6 @@ export const SORT_DEFAULT = {
   direction: SORT_DIRECTION.DESC,
 };
 
-export const TEST_CASE_LIMITATION = 100;
-
 export const TEST_BASIS_EVENT_TYPE = {
   DEFAULT: 'default',
   CUT: 'cut',
@@ -454,4 +453,27 @@ export const GRAPH_ACTIONS = {
   GENERATE: 'generate',
   ZOOM_IN: 'zoomIn',
   ZOOM_OUT: 'zoomOut',
+};
+
+export const GENERATE_STATUS = {
+  INITIAL: 'initial',
+  START: 'start',
+  COMPLETE: 'complete',
+  FAIL: 'fail',
+};
+
+export const FILTER_TYPE = {
+  DEFAULT: 'default',
+  RESET: 'reset',
+  SUBMIT: 'submit',
+};
+
+export const FILTER_OPTIONS = {
+  CAUSE_NODES: 'causeNodes',
+  RESULTS: 'results',
+  RESULT_TYPE: 'resultType',
+  BASE_SCENARIO: 'isBaseScenario',
+  VALID: 'isValid',
+  SOURCE_TARGET_TYPE: 'sourceTargetType',
+  TYPE: 'type',
 };

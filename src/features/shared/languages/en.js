@@ -51,6 +51,8 @@ const en = {
   twosentencearenotsimilar: 'Two sentence are not similar',
   twosentencearesimilar: 'Two sentence are similar',
   similarity: 'Similarity',
+  testscenarioandcase: 'Test Scenario And Case',
+  testcasepagesize: 'Test case page size',
   /* End option modal */
   /* End Modal */
   /* Workspace */
@@ -155,6 +157,8 @@ const en = {
   apply: 'Apply',
   name: 'Name',
   expectedresults: 'Expected Results',
+  testscenarioreload: 'Test Scenario has been generated successfully. Reload to get new data',
+  reload: 'Reload',
   /* End Test scenario/case */
   /* Test data */
   type: 'Type',

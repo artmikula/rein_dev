@@ -9,7 +9,8 @@
     "@fortawesome/react-fontawesome": "^0.1.14",
     "@nivo/core": "^0.69.0",
     "@nivo/radar": "^0.69.0",
-    "@react-pdf/renderer": "^2.0.15",
+    "@react-pdf/font": "2.2.0",
+    "@react-pdf/renderer": "2.0.15",
     "@reduxjs/toolkit": "^1.5.0",
     "@types/jest": "^27.0.3",
     "@types/node": "^16.11.9",
@@ -67,8 +68,8 @@
     "@testing-library/user-event": "^12.2.2",
     "@types/cytoscape": "^3.14.15",
     "@types/cytoscape-edgehandles": "^3.6.0",
+    "@types/lodash.clonedeep": "^4.5.7",
     "@types/lovefield": "^2.1.4",
-    "@typescript-eslint/eslint-plugin": "^5.36.0",
     "@typescript-eslint/parser": "^5.36.0",
     "ajv": "^6.9.1",
     "babel-eslint": "^10.1.0",
@@ -96,6 +97,9 @@
       "react-app/jest",
       "prettier"
     ]
+  },
+  "resolutions": {
+    "@react-pdf/font": "2.2.0"
   },
   "scripts": {
     "start": "react-app-rewired start",

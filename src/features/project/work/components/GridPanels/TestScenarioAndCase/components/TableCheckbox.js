@@ -4,6 +4,7 @@ import { FormGroup, Input, Label } from 'reactstrap';
 
 function TableCheckbox(props) {
   const { checked, onChange, labelRenderer } = props;
+
   return (
     <FormGroup check>
       <Label check>

@@ -7,6 +7,7 @@ import {
   CLASSIFY,
   DEFAULT_LAYOUTS,
   DEFAULT_LAYOUTS_SINGLE,
+  GENERATE_STATUS,
   STRING,
   VIEW_MODE,
   WORK_FORM_NAME,
@@ -120,7 +121,7 @@ class Workspace extends Component {
   };
 
   _getWorkData = (data) => {
-    const { testBasis, causeEffects, graphNodes, graphLinks, constraints, testCoverage, testDatas, ...others } = data;
+    const { testBasis, causeEffects, graphNodes, graphLinks, constraints, testCoverage, testDatas, name } = data;
 
     let _causeEffects = causeEffects ?? [];
     if (_causeEffects.some((x) => !x.orderIndex)) {
@@ -128,7 +129,6 @@ class Workspace extends Component {
     }
 
     const _data = {
-      ...others,
       testBasis: testBasis ?? {
         content: null,
       },
@@ -140,6 +140,7 @@ class Workspace extends Component {
       },
       testCoverage: testCoverage ?? cloneDeep(defaultTestCoverageData),
       testDatas: testDatas ?? [],
+      name,
     };
 
     return _data;
@@ -152,10 +153,6 @@ class Workspace extends Component {
 
     /* TODO: check this after finish implement indexedDb */
     testScenarioAnsCaseStorage.setId(workId);
-
-    const context = new DbContext();
-    await context.init(workId);
-    setDbContext(context);
 
     if (result.error) {
       let { message } = result.error;
@@ -171,15 +168,16 @@ class Workspace extends Component {
         },
       });
     } else {
+      const dbName = `${result.data.name}-${workId}`;
+      const context = new DbContext();
+      await context.init(dbName);
+      setDbContext(context);
       workData = this._getWorkData(result.data);
     }
 
-    setWork({ ...workData, loaded: true });
-  };
+    workData.loaded = true;
 
-  _onCloseAlert = () => {
-    localStorage.clear();
-    window.location.reload();
+    await setWork(workData);
   };
 
   _handleChangePanelLayout = (layouts, mode) => {
@@ -218,11 +216,11 @@ class Workspace extends Component {
     this._handleChangePanelLayout(layouts);
   };
 
-  _handleToggleModalForm = (projectId, workId) => {
+  _handleToggleModalForm = async (projectId, workId) => {
     this.setState({ formName: '' });
 
     if (projectId && workId) {
-      this._getWorkById(projectId, workId);
+      await this._getWorkById(projectId, workId);
     }
   };
 
@@ -294,7 +292,7 @@ class Workspace extends Component {
 
   render() {
     const { viewMode, isLockedPanel, gridPanelLayout, formName, openRenameWorkModal } = this.state;
-    const { workName, projectName } = this.props;
+    const { workName, projectName, generating } = this.props;
     const isSplitView = viewMode === VIEW_MODE.SPLIT;
     const menus = <MenuContainer />;
 
@@ -324,6 +322,17 @@ class Workspace extends Component {
           </span>
           <AlertGenerateReport />
           <span>
+            {generating === GENERATE_STATUS.START && (
+              <>
+                <i
+                  className={`bi central bi-arrow-repeat ${generating ? 'spinner-border' : ''} generating-loader`}
+                  id="icon-generating"
+                />
+                <UncontrolledTooltip target="icon-generating">
+                  <small className="generating_text" />
+                </UncontrolledTooltip>
+              </>
+            )}
             <WorkSyncData />
             <Button
               color="link"
@@ -393,6 +402,7 @@ Workspace.propTypes = {
   loadedWork: PropTypes.bool.isRequired,
   setDbContext: PropTypes.func.isRequired,
   dbContext: PropTypes.oneOfType([PropTypes.object]),
+  generating: PropTypes.string.isRequired,
 };
 
 Workspace.defaultProps = {
@@ -406,6 +416,7 @@ const mapStateToProps = (state) => ({
   workName: state.work.name,
   projectName: state.work.projectName,
   dbContext: state.work.dbContext,
+  generating: state.work.generating,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Workspace);

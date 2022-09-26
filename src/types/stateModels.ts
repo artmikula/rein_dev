@@ -21,6 +21,7 @@ interface IWorkSlice {
   testCoverage: ITestCoverage;
   testDatas: ITestDataDetail[];
   dbContext: IDbContext | null;
+  generating: string;
 }
 
 export type { IGraphState, IWorkSlice };

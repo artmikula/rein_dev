@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import SSMetricHelper from 'features/project/work/biz/SSMetric';
 import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
+// import { GENERATE_STATUS } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
 import { debounce } from 'lodash';
@@ -126,7 +127,9 @@ class SSMertic extends Component {
   }
 
   componentDidMount() {
-    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, this._forceUpdate);
+    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, async () => {
+      this._forceUpdate();
+    });
   }
 
   componentWillUnmount() {

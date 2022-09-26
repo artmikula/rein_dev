@@ -4,7 +4,19 @@ import { Button, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import Language from '../../languages/Language';
 import './style.scss';
 
-export default function Alert({ id, title, content, iconClassName, actionText, onClose, error, warning, info }) {
+export default function Alert({
+  id,
+  title,
+  content,
+  iconClassName,
+  actionText,
+  onClose,
+  error,
+  warning,
+  info,
+  onCloseDialog,
+  closeText,
+}) {
   let _iconClassName = iconClassName;
   if (!_iconClassName) {
     _iconClassName = 'bi bi-exclamation-octagon';
@@ -37,6 +49,11 @@ export default function Alert({ id, title, content, iconClassName, actionText, o
         <Button color="primary" className="px-4" onClick={onClose} outline size="sm">
           {Language.get(actionText)}
         </Button>
+        {closeText && (
+          <Button color="primary" className="px-4" onClick={onCloseDialog} outline size="sm">
+            {Language.get(closeText)}
+          </Button>
+        )}
       </ModalFooter>
     </Modal>
   );
@@ -49,6 +66,7 @@ Alert.defaultProps = {
   error: false,
   warning: false,
   info: true,
+  closeText: undefined,
 };
 
 Alert.propTypes = {
@@ -61,4 +79,6 @@ Alert.propTypes = {
   error: PropTypes.bool,
   warning: PropTypes.bool,
   info: PropTypes.bool,
+  onCloseDialog: PropTypes.func.isRequired,
+  closeText: PropTypes.string,
 };

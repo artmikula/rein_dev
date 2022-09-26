@@ -1,4 +1,4 @@
-import { uuid } from 'features/project/work/components/GridPanels/Graph/lib/cytoscapejs/util';
+import { v4 as uuid } from 'uuid';
 import { RESULT_TYPE } from 'features/shared/constants';
 
 interface IGraphNode {
@@ -203,10 +203,8 @@ export class SimpleTestScenario implements ISimpleTestScenario {
     this.targetGraphNodeId = target.id;
     this.targetType = target.targetType;
     this.sourceTargetType = target.targetType;
-
     this.isEffectAssertion = isEffectAssertion;
     this.testAssertions = testAssertions;
-
     this.isFeasible = true;
     this.result = true;
     this.resultType = RESULT_TYPE.True;
