@@ -128,6 +128,10 @@ class TestCoverage extends Component {
     if (result) {
       const { data } = this.props;
 
+      if (!data) {
+        return;
+      }
+
       Object.keys(result).forEach((key) => {
         result[key].planPercent = data[key]?.planPercent;
       });

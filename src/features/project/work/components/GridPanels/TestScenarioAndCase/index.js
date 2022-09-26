@@ -5,7 +5,7 @@ import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScena
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
 import reInCloudService from 'features/project/work/services/reInCloudService';
-import { setGraph, setGenerating } from 'features/project/work/slices/workSlice';
+import { setGraph, setGenerating, setDbContext } from 'features/project/work/slices/workSlice';
 import {
   FILE_NAME,
   FILTER_TYPE,
@@ -22,6 +22,7 @@ import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import { arrayToCsv } from 'features/shared/lib/utils';
 import worker from 'features/shared/worker/generateTestCase.worker';
+import DbContext from 'features/shared/storage-services/dbContext/DbContext';
 import { TABLES } from 'features/shared/storage-services/indexedDb/constants';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
@@ -113,17 +114,15 @@ class TestScenarioAndCase extends Component {
   }
 
   async componentDidUpdate(prevProps) {
-    const { generating, dbContext } = this.props;
+    const { generating, dbContext, setDbContext } = this.props;
     const { workerInterval } = this.state;
     if (generating === GENERATE_STATUS.COMPLETE) {
       clearInterval(workerInterval);
       if (prevProps.generating === GENERATE_STATUS.START) {
-        alert(Language.get('testscenarioreload'), {
-          info: true,
-          actionText: Language.get('reload'),
-          closeText: Language.get('cancel'),
-          onClose: () => window.location.reload(),
-        });
+        // need recreate the dbcontext to load new IndexedDb data from worker
+        const newContext = new DbContext();
+        await newContext.init(dbContext.name);
+        setDbContext(newContext);
       }
     }
     if (
@@ -420,6 +419,7 @@ TestScenarioAndCase.propTypes = {
   dbContext: PropTypes.oneOfType([PropTypes.object]),
   generating: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
+  setDbContext: PropTypes.func.isRequired,
 };
 
 TestScenarioAndCase.defaultProps = {
@@ -438,6 +438,6 @@ const mapStateToProps = (state) => ({
   name: state.work.name,
 });
 
-const mapDispatchToProps = { setGraph, setGenerating };
+const mapDispatchToProps = { setGraph, setGenerating, setDbContext };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestScenarioAndCase));
