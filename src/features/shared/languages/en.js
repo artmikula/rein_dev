@@ -136,6 +136,7 @@ const en = {
   arclevel: 'Arc Level',
   abridgedpercentage: 'Abridged Percentage',
   duplication: 'Duplication',
+  errorcalculate: 'Error calculate SSMetric!',
   /* End SS metric */
   /* Test coverage */
   planning: 'Planning',
