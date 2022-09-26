@@ -460,6 +460,8 @@ export const GENERATE_STATUS = {
   START: 'start',
   COMPLETE: 'complete',
   FAIL: 'fail',
+  SUCCESS: 'success',
+  RESET: 'reset',
 };
 
 export const FILTER_TYPE = {

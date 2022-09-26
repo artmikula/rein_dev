@@ -127,7 +127,7 @@ class TestDataTable extends Component {
 
     const newTestDatas = TestData.update(testDatas, item, index);
 
-    this._setTestDatas(newTestDatas, true);
+    this._setTestDatas(newTestDatas);
   };
 
   _onTrueFalseDataChange = (nodeId, valueType, value) => {

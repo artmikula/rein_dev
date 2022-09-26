@@ -251,7 +251,20 @@ function TableRow(props) {
                               {expandId[testScenario.id] &&
                                 testScenario.testCases.map((testCase, testCaseIndex) => (
                                   <Fragment key={`${testCaseIndex}test-case-tree`}>
-                                    {testCaseIndex < testScenario.testCases.length - 1 && (
+                                    {testCaseIndex === testScenario.testCases.length - 1 &&
+                                    testScenario.page < testScenario.totalPage - 1 ? (
+                                      <li>
+                                        <Button
+                                          color="link"
+                                          size="sm"
+                                          style={{ fontSize: 13, margin: 0, padding: 0 }}
+                                          onClick={() => onLoadMore(row?.key, testScenario.id)}
+                                        >
+                                          <i className="bi bi-plus-square-dotted" />
+                                          <span style={{ marginLeft: 8 }}>Load more</span>
+                                        </Button>
+                                      </li>
+                                    ) : (
                                       <li>
                                         <Checkbox
                                           checked={testCase.isSelected ?? false}
@@ -267,7 +280,7 @@ function TableRow(props) {
                                         />
                                       </li>
                                     )}
-                                    {testCaseIndex === testScenario.testCases.length - 1 &&
+                                    {/* {testCaseIndex === testScenario.testCases.length - 1 &&
                                       testScenario.page < testScenario.totalPage - 1 && (
                                         <li>
                                           <Button
@@ -280,7 +293,7 @@ function TableRow(props) {
                                             <span style={{ marginLeft: 8 }}>Load more</span>
                                           </Button>
                                         </li>
-                                      )}
+                                      )} */}
                                   </Fragment>
                                 ))}
                             </ul>
@@ -333,7 +346,10 @@ function TableRow(props) {
                               : {}
                           }
                         >
-                          {tcIndex < testScenario.testCases.length - 1 &&
+                          {tcIndex === testScenario.testCases.length - 1 &&
+                          testScenario.page < testScenario.totalPage - 1 ? (
+                            <td colSpan={columns.length} style={{ height: 32 }} />
+                          ) : (
                             columns.map(
                               (column, colIndex) =>
                                 tcIndex !== testScenario.testCases.length - 1 && (
@@ -341,11 +357,12 @@ function TableRow(props) {
                                     {testCase[column.key]}
                                   </td>
                                 )
-                            )}
-                          {tcIndex === testScenario.testCases.length - 1 &&
+                            )
+                          )}
+                          {/* {tcIndex === testScenario.testCases.length - 1 &&
                             testScenario.page < testScenario.totalPage - 1 && (
                               <td colSpan={columns.length} style={{ height: 32 }} />
-                            )}
+                            )} */}
                         </tr>
                       ))}
                   </Fragment>

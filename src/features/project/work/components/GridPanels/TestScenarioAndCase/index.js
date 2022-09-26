@@ -63,7 +63,7 @@ class TestScenarioAndCase extends Component {
     if (initWorker) {
       const interval = setInterval(() => {
         initWorker.onmessage = async (e) => {
-          if (e.data === GENERATE_STATUS.COMPLETE) {
+          if (e.data === GENERATE_STATUS.SUCCESS) {
             setGenerating(e.data);
           }
         };
@@ -73,13 +73,14 @@ class TestScenarioAndCase extends Component {
 
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, async (event) => {
       if (event.message.action === domainEvents.ACTION.GENERATE) {
+        setGenerating(GENERATE_STATUS.START);
         this.setState({ filterOptions: structuredClone(defaultFilterOptions), filterSubmitType: '' });
         await this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
       } else if (
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
         event.message.action !== domainEvents.ACTION.GRAPH_ALIGN
       ) {
-        this._clearData();
+        setGenerating(GENERATE_STATUS.RESET);
       }
     });
 
@@ -160,20 +161,11 @@ class TestScenarioAndCase extends Component {
     }
   }
 
-  _clearData = async () => {
-    const { dbContext } = this.props;
-
-    const { testScenarioSet } = dbContext;
-    await testScenarioSet.delete();
-  };
-
   _calculateTestScenarioAndCase = async (domainAction) => {
     try {
-      const { graph, testDatas, setGraph, dbContext, match, setGenerating } = this.props;
+      const { graph, testDatas, setGraph, dbContext, match } = this.props;
       const { webWorker, maxTestCase } = this.state;
       const { workId } = match.params;
-
-      setGenerating(GENERATE_STATUS.START);
 
       const { testScenarioSet, testCaseSet } = dbContext;
       await testScenarioSet.delete();
@@ -399,6 +391,7 @@ class TestScenarioAndCase extends Component {
           filterOptions={filterOptions}
           filterSubmitType={filterSubmitType}
           submitFilter={this._handleFilterTestScenario}
+          raiseEvent={this._raiseEvent}
         />
       </div>
     );

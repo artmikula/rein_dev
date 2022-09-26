@@ -160,7 +160,7 @@ const workercode = () => {
 
         await _insertTestCase(testCase, testAssertions, _testDatas, testAssertions.length, objectStore, maxTestCase);
       }
-      e.target.postMessage('complete');
+      e.target.postMessage('success');
     };
   });
 

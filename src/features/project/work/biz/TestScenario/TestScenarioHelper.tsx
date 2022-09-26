@@ -557,7 +557,7 @@ class TestScenarioHelper {
         return testCaseItem;
       });
 
-      if (testScenario.page < testScenario.totalPage) {
+      if (testScenario.page < testScenario.totalPage - 1) {
         testScenarioItem.testCases.push({
           id: '',
           Name: '',

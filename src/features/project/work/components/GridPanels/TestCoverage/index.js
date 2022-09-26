@@ -1,6 +1,7 @@
 import { setTestCoverages } from 'features/project/work/slices/workSlice';
 import { COVERAGE_ASPECT } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
+import appConfig from 'features/shared/lib/appConfig';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import cloneDeep from 'lodash.clonedeep';
@@ -34,6 +35,8 @@ class TestCoverage extends Component {
     super(props);
     this.state = { isPlanning: false };
     this.oldData = {};
+    this.testScenarios = [];
+    this.testCases = [];
   }
 
   componentDidMount() {
@@ -67,48 +70,52 @@ class TestCoverage extends Component {
     eventBus.publish(domainEvents.TEST_COVERAGE_DOMAINEVENT, message);
   };
 
-  _calculate = async () => {
+  _calculate = async (isLoadMore, testScenariosPaging) => {
     const { graph, testDatas, dbContext } = this.props;
     const coverageResult = {};
-
-    /* TODO: remove this after finish implement indexedDb
-    const testScenariosAndCases = testScenarioAnsCaseStorage.get();
-
-    const testCases = [];
-    testScenariosAndCases.forEach((testScenario) => {
-      testScenario.testCases.forEach((testCase) =>
-        testCases.push({
-          ...testCase,
-          testScenario: { ...testScenario },
-          testDatas: testCase.testDatas,
-          results: testCase.results,
-        })
-      );
-    });
-
-    testCoverage.initValue(graph.graphNodes, testCases, testScenariosAndCases, graph.graphLinks, testDatas);
-
-    const data = {};
-
-    Object.keys(COVERAGE_ASPECT).forEach((key) => {
-      const result = testCoverage.calculateCoverage(COVERAGE_ASPECT[key]);
-      data[COVERAGE_ASPECT[key]] = { actualPercent: toPercent(result), denominator: result.denominator };
-    });
-
-    return data;
-    */
+    const { testCasePageSize } = appConfig.testScenarioAndCase;
+    let allTestCases = structuredClone(this.testCases);
 
     if (dbContext && dbContext.db) {
       const { testScenarioSet, testCaseSet } = dbContext;
-      const testScenarios = await testScenarioSet.get();
-      const testCases = await testCaseSet.get();
-      const promises = testScenarios.map(async (testScenario) => {
-        const _testScenario = testScenario;
-        _testScenario.testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));
-        return _testScenario;
-      });
-      await Promise.all(promises);
-      testCoverage.initValue(graph.graphNodes, testCases, testScenarios, graph.graphLinks, testDatas);
+      this.testScenarios = await testScenarioSet.get();
+
+      if (!isLoadMore) {
+        // eslint-disable-next-line no-restricted-syntax
+        for await (const paging of testScenariosPaging) {
+          const testScenario = this.testScenarios.find((testScenario) => testScenario.id === paging.testScenarioId);
+          const _testCases = await testCaseSet.getWithPaging(
+            testCasePageSize,
+            paging.page,
+            testCaseSet.table.testScenarioId.eq(paging.testScenarioId)
+          );
+
+          if (_testCases.length > 0) {
+            testScenario.page = paging.page;
+            testScenario.totalPage = paging.totalPage;
+            const testCases = allTestCases.concat(_testCases);
+            allTestCases = testCases;
+          }
+        }
+      } else {
+        const testScenario = this.testScenarios.find(
+          (testScenario) => testScenario.id === testScenariosPaging.testScenarioId
+        );
+        if (testScenario.page < testScenariosPaging.totalPage - 1 && testScenario.page < testScenariosPaging.page) {
+          const _testCases = await testCaseSet.getWithPaging(
+            testCasePageSize,
+            testCasePageSize * testScenariosPaging.page,
+            testCaseSet.table.testScenarioId.eq(testScenariosPaging.testScenarioId)
+          );
+          console.log('testcases', _testCases);
+          const testCases = allTestCases.concat(_testCases);
+          allTestCases = testCases;
+        }
+      }
+
+      this.testCases = allTestCases;
+
+      testCoverage.initValue(graph.graphNodes, this.testCases, this.testScenarios, graph.graphLinks, testDatas);
 
       Object.keys(COVERAGE_ASPECT).forEach((key) => {
         const result = testCoverage.calculateCoverage(COVERAGE_ASPECT[key]);
@@ -123,20 +130,17 @@ class TestCoverage extends Component {
     return coverageResult;
   };
 
-  _recalculate = async () => {
-    const result = await this._calculate();
-    if (result) {
+  _recalculate = (result) => {
+    console.log('result', result);
+    const _result = result;
+    if (_result) {
       const { data } = this.props;
 
-      if (!data) {
-        return;
-      }
-
-      Object.keys(result).forEach((key) => {
-        result[key].planPercent = data[key]?.planPercent;
+      Object.keys(_result).forEach((key) => {
+        _result[key].planPercent = data[key]?.planPercent;
       });
 
-      this._setTestCoverages(result);
+      this._setTestCoverages(_result);
     }
   };
 
@@ -164,10 +168,15 @@ class TestCoverage extends Component {
     this.setState({ isPlanning: !isPlanning });
   };
 
-  _handleEvents = (message) => {
+  _handleEvents = async (message) => {
     const { isPlanning } = this.state;
-    if (message.action === domainEvents.ACTION.ACCEPTGENERATE && !isPlanning) {
-      this._recalculate();
+
+    const { action, receivers, value } = message;
+    if (receivers.includes(domainEvents.DES.TESTCOVERAGE) && !isPlanning) {
+      const result = await this._calculate(action === domainEvents.ACTION.LOAD_MORE, value);
+      if (result) {
+        this._recalculate(result);
+      }
     }
   };
 
