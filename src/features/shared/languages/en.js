@@ -158,7 +158,7 @@ const en = {
   name: 'Name',
   expectedresults: 'Expected Results',
   testscenarioreload: 'Test Scenario has been generated successfully. Reload to get new data',
-  reload: 'reload',
+  reload: 'Reload',
   /* End Test scenario/case */
   /* Test data */
   type: 'Type',
