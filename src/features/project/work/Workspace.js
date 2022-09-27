@@ -322,7 +322,7 @@ class Workspace extends Component {
           </span>
           <AlertGenerateReport />
           <span>
-            {generating === GENERATE_STATUS.START && generating === GENERATE_STATUS.SUCCESS && (
+            {(generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS) && (
               <>
                 <i
                   className={`bi central bi-arrow-repeat ${generating ? 'spinner-border' : ''} generating-loader`}

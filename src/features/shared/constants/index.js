@@ -462,6 +462,8 @@ export const GENERATE_STATUS = {
   FAIL: 'fail',
   SUCCESS: 'success',
   RESET: 'reset',
+  REQUEST_CANCEL: 'request cancel',
+  CANCELLED: 'cancelled',
 };
 
 export const FILTER_TYPE = {

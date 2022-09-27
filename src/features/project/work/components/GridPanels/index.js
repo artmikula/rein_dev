@@ -1,5 +1,12 @@
 import { connect } from 'react-redux';
-import { EVENT_LISTENER_LIST, GRAPH_ACTIONS, GRID_PANEL_SIZE, LAYOUT, VIEW_MODE } from 'features/shared/constants';
+import {
+  EVENT_LISTENER_LIST,
+  GENERATE_STATUS,
+  GRAPH_ACTIONS,
+  GRID_PANEL_SIZE,
+  LAYOUT,
+  VIEW_MODE,
+} from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -8,6 +15,7 @@ import 'react-grid-layout/css/styles.css';
 import { Button } from 'reactstrap';
 import eventBus from 'features/shared/lib/eventBus';
 import domainEvents from 'features/shared/domainEvents';
+import { setModifyWhileGenerated, setGenerating } from 'features/project/work/slices/workSlice';
 import CauseEffectTable from './CauseEffectTable';
 import Graph from './Graph';
 import GridPanelItem from './GridPanelItem';
@@ -227,8 +235,16 @@ class GridPanels extends Component {
     onLayoutChange(newLayouts);
   };
 
+  _handleWhileGenerated(type) {
+    const { setModifyWhileGenerated, setGenerating } = this.props;
+    setModifyWhileGenerated(false);
+    if (type === GENERATE_STATUS.REQUEST_CANCEL) {
+      setGenerating(type);
+    }
+  }
+
   render() {
-    const { isLockedPanel, layouts, onLayoutChange, loadedWork } = this.props;
+    const { isLockedPanel, layouts, onLayoutChange, loadedWork, modifyWhileGenerated } = this.props;
     const { wrapperHeight, panelWidth, panelHeight, isTestDataChanged } = this.state;
     const { gridCols, panelMargin, togglePanelWidth } = GRID_PANEL_SIZE;
 
@@ -280,6 +296,12 @@ class GridPanels extends Component {
             </div>
           </div>
         )}
+        {modifyWhileGenerated &&
+          alert(Language.get('cancelgenerateprocess'), {
+            closeText: 'cancel',
+            onClose: () => this._handleWhileGenerated(GENERATE_STATUS.REQUEST_CANCEL),
+            onCancel: () => this._handleWhileGenerated('continue'),
+          })}
       </div>
     );
   }
@@ -292,8 +314,17 @@ GridPanels.propTypes = {
   onLayoutChange: PropTypes.func.isRequired,
   layouts: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   loadedWork: PropTypes.bool.isRequired,
+  modifyWhileGenerated: PropTypes.bool.isRequired,
+  setModifyWhileGenerated: PropTypes.func.isRequired,
+  setGenerating: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => ({ testDatas: state.work.testDatas, loadedWork: state.work.loaded });
+const mapStateToProps = (state) => ({
+  testDatas: state.work.testDatas,
+  loadedWork: state.work.loaded,
+  modifyWhileGenerated: state.work.modifyWhileGenerated,
+});
 
-export default connect(mapStateToProps)(GridPanels);
+const mapDispatchToProps = { setModifyWhileGenerated, setGenerating };
+
+export default connect(mapStateToProps, mapDispatchToProps)(GridPanels);

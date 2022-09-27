@@ -156,8 +156,6 @@ const ko = {
   apply: '대다',
   name: '이름',
   expectedresults: '예상 결과',
-  testscenarioreload: '테스트 시나리오가 성공적으로 생성되었습니다. 새 데이터를 얻으려면 새로고침하세요.',
-  reload: '재장전',
   /* End Test scenario/case */
   /* Test data */
   type: '유형',

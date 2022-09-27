@@ -5,11 +5,11 @@ import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import { setGraph } from 'features/project/work/slices/workSlice';
+import { setGraph, setModifyWhileGenerated } from 'features/project/work/slices/workSlice';
 import {
   ACTIONS_STATE_NAME,
   FILE_NAME,
-  // GENERATE_STATUS,
+  GENERATE_STATUS,
   GRAPH_LINK_TYPE,
   GRAPH_NODE_TYPE,
   GRAPH_SHORTCUT,
@@ -153,6 +153,10 @@ class Graph extends Component {
   }
 
   _raiseEvent = (message) => {
+    const { generating, setModifyWhileGenerated } = this.props;
+    if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS) {
+      setModifyWhileGenerated(true);
+    }
     eventBus.publish(domainEvents.GRAPH_DOMAINEVENT, message);
   };
 
@@ -581,6 +585,8 @@ Graph.propTypes = {
   redoStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
   pushUndoStates: PropTypes.func.isRequired,
   clearRedoStates: PropTypes.func.isRequired,
+  generating: PropTypes.string.isRequired,
+  setModifyWhileGenerated: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
@@ -590,6 +596,7 @@ const mapStateToProps = (state) => ({
   undoHandlers: state.undoHandlers.handlers,
   undoStates: state.undoHandlers.undoStates,
   redoStates: state.undoHandlers.redoStates,
+  generating: state.work.generating,
 });
 
 const mapDispatchToProps = {
@@ -601,6 +608,7 @@ const mapDispatchToProps = {
   pushRedoStates,
   popRedoStates,
   clearRedoStates,
+  setModifyWhileGenerated,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Graph));

@@ -22,6 +22,7 @@ interface IWorkSlice {
   testDatas: ITestDataDetail[];
   dbContext: IDbContext | null;
   generating: string;
+  modifyWhileGenerated: boolean;
 }
 
 export type { IGraphState, IWorkSlice };

@@ -10,6 +10,7 @@ import { FILTER_TYPE, GENERATE_STATUS, RESULT_TYPE } from 'features/shared/const
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import Language from 'features/shared/languages/Language';
 import { sortByString } from 'features/shared/lib/utils';
+import { setGenerating } from 'features/project/work/slices/workSlice';
 import Header from './TableHeader';
 import TableRow from './TableRow';
 
@@ -21,7 +22,7 @@ function TableTestScenarioAndCase(props) {
   const [isCheckAll, setIsCheckAll] = useState(false);
 
   const { dbContext, generating, graph } = useSelector((state) => state.work);
-  // const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
   const { testCasePageSize } = appConfig.testScenarioAndCase;
 
@@ -163,7 +164,11 @@ function TableTestScenarioAndCase(props) {
   }, [filterSubmitType, filterOptions]);
 
   useEffect(async () => {
-    if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.RESET) {
+    if (
+      generating === GENERATE_STATUS.START ||
+      generating === GENERATE_STATUS.RESET ||
+      generating === GENERATE_STATUS.CANCELLED
+    ) {
       setColumns([]);
       setRows([]);
     } else if (generating === GENERATE_STATUS.INITIAL) {
@@ -178,7 +183,7 @@ function TableTestScenarioAndCase(props) {
       const groupRows = _getGroupByEffectNodes(rows);
       setColumns(columns);
       setRows(groupRows);
-    } else if (generating === GENERATE_STATUS.COMPLETE) {
+    } else if (generating === GENERATE_STATUS.SUCCESS) {
       setTimeout(async () => {
         const { rows, columns } = await _getDataFirstTime();
         const groupRows = _getGroupByEffectNodes(rows);
@@ -191,7 +196,8 @@ function TableTestScenarioAndCase(props) {
         }
         setColumns(columns);
         setRows(groupRows);
-      }, 500);
+        dispatch(setGenerating(GENERATE_STATUS.COMPLETE));
+      }, 700);
     } else {
       setColumns([]);
       setRows([]);
@@ -199,14 +205,7 @@ function TableTestScenarioAndCase(props) {
   }, [generating, graph.graphNodes, dbContext]);
 
   useEffect(async () => {
-    if (generating === GENERATE_STATUS.INITIAL) {
-      await _isCheckedAllTestScenarios();
-    }
-    if (generating === GENERATE_STATUS.INITIAL) {
-      setTimeout(async () => {
-        await _isCheckedAllTestScenarios();
-      }, 500);
-    }
+    await _isCheckedAllTestScenarios();
   }, [rows]);
 
   const _updateRows = (rowIndex, newRow) => {

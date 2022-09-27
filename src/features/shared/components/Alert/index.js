@@ -34,14 +34,15 @@ export default function alert(content, options = {}) {
     _close(alertId, containerId);
   };
 
+  const _handleCancel = (e) => {
+    if (typeof options.onCancel === 'function') {
+      options.onCancel(e);
+    }
+    _close(alertId, containerId);
+  };
+
   render(
-    <Alert
-      {...options}
-      id={alertId}
-      content={content}
-      onClose={_handleClose}
-      onCloseDialog={() => _close(alertId, containerId)}
-    />,
+    <Alert {...options} id={alertId} content={content} onClose={_handleClose} onCloseDialog={_handleCancel} />,
     document.getElementById(containerId)
   );
 

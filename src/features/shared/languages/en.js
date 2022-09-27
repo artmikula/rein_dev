@@ -157,8 +157,6 @@ const en = {
   apply: 'Apply',
   name: 'Name',
   expectedresults: 'Expected Results',
-  testscenarioreload: 'Test Scenario has been generated successfully. Reload to get new data',
-  reload: 'Reload',
   /* End Test scenario/case */
   /* Test data */
   type: 'Type',
@@ -238,6 +236,10 @@ const en = {
   exitednodealert: 'newNode has been exited!',
   cannotaccessproject: 'You are not granted to access this project.',
   workquotaexceed: 'Your browser storage is full, click ‘OK’ to clear cache.',
+  /* Grid panel */
+  cancelgenerateprocess:
+    'Test scenarios are generating...Click ‘OK’ will stop the process and clear all current Test scenarios and cases',
+  /* End Grid panel */
 };
 
 export default en;

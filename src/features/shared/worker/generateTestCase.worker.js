@@ -148,6 +148,10 @@ const workercode = () => {
   };
 
   self.addEventListener('message', async function (e) {
+    if (e.data === 'request cancel') {
+      e.target.postMessage('cancelled');
+      return;
+    }
     const { testScenarios, graphNodes, testDatas, dbInfo, lastKey } = e.data;
     const _testScenarios = JSON.parse(testScenarios);
     const _graphNodes = JSON.parse(graphNodes);
@@ -184,7 +188,7 @@ const workercode = () => {
 
         await _insertTestCase(testCase, testAssertions, _testDatas, testAssertions.length, objectStore, maxTestCase);
       }
-      e.target.postMessage('complete');
+      e.target.postMessage('success');
     };
   });
 

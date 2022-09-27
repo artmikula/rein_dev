@@ -58,12 +58,15 @@ class TestScenarioAndCase extends Component {
   }
 
   async componentDidMount() {
-    const { setGenerating } = this.props;
+    const { generating, setGenerating } = this.props;
     const initWorker = new Worker(worker, { type: 'module' });
     if (initWorker) {
       const interval = setInterval(() => {
         initWorker.onmessage = async (e) => {
           if (e.data === GENERATE_STATUS.SUCCESS) {
+            setGenerating(e.data);
+          }
+          if (e.data === GENERATE_STATUS.CANCELLED) {
             setGenerating(e.data);
           }
         };
@@ -80,7 +83,9 @@ class TestScenarioAndCase extends Component {
         event.message.action !== domainEvents.ACTION.REPORTWORK &&
         event.message.action !== domainEvents.ACTION.GRAPH_ALIGN
       ) {
-        setGenerating(GENERATE_STATUS.RESET);
+        if (generating !== GENERATE_STATUS.START || generating !== GENERATE_STATUS.SUCCESS) {
+          setGenerating(GENERATE_STATUS.RESET);
+        }
       }
     });
 
@@ -115,10 +120,11 @@ class TestScenarioAndCase extends Component {
   }
 
   async componentDidUpdate(prevProps) {
+    const { webWorker } = this.state;
     const { generating, dbContext, setDbContext } = this.props;
-    // const { workerInterval } = this.state;
-    if (generating === GENERATE_STATUS.COMPLETE) {
-      // clearInterval(workerInterval);
+    if (generating === GENERATE_STATUS.REQUEST_CANCEL) {
+      webWorker.postMessage(generating);
+    } else if (generating === GENERATE_STATUS.SUCCESS) {
       if (prevProps.generating === GENERATE_STATUS.START) {
         // need recreate the dbcontext to load new IndexedDb data from worker
         const newContext = new DbContext();
@@ -128,7 +134,7 @@ class TestScenarioAndCase extends Component {
     }
     if (
       (prevProps.dbContext === null && dbContext && dbContext.db) ||
-      (generating === GENERATE_STATUS.COMPLETE && prevProps.generating === GENERATE_STATUS.START)
+      (generating === GENERATE_STATUS.SUCCESS && prevProps.generating === GENERATE_STATUS.START)
     ) {
       const indexedDb = window.indexedDB;
       const request = indexedDb.open(dbContext.name, dbContext.version);
