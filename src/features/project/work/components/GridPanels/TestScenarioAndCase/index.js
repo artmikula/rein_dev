@@ -116,9 +116,9 @@ class TestScenarioAndCase extends Component {
 
   async componentDidUpdate(prevProps) {
     const { generating, dbContext, setDbContext } = this.props;
-    const { workerInterval } = this.state;
+    // const { workerInterval } = this.state;
     if (generating === GENERATE_STATUS.COMPLETE) {
-      clearInterval(workerInterval);
+      // clearInterval(workerInterval);
       if (prevProps.generating === GENERATE_STATUS.START) {
         // need recreate the dbcontext to load new IndexedDb data from worker
         const newContext = new DbContext();

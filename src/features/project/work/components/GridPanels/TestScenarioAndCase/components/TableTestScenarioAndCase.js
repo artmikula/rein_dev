@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { Table } from 'reactstrap';
@@ -13,14 +14,14 @@ import Header from './TableHeader';
 import TableRow from './TableRow';
 
 function TableTestScenarioAndCase(props) {
-  const { filterOptions, filterSubmitType, submitFilter, raiseEvent, isClear } = props;
+  const { filterOptions, filterSubmitType, submitFilter, raiseEvent } = props;
 
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
   const [isCheckAll, setIsCheckAll] = useState(false);
 
   const { dbContext, generating, graph } = useSelector((state) => state.work);
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   const { testCasePageSize } = appConfig.testScenarioAndCase;
 
@@ -165,9 +166,8 @@ function TableTestScenarioAndCase(props) {
     if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.RESET) {
       setColumns([]);
       setRows([]);
-    } else if (generating === GENERATE_STATUS.INITIAL || generating === GENERATE_STATUS.COMPLETE) {
+    } else if (generating === GENERATE_STATUS.INITIAL) {
       const { rows, columns } = await _getDataFirstTime();
-      const groupRows = _getGroupByEffectNodes(rows);
       if (rows.length > 0) {
         const eventData = rows.map(({ id, page, totalPage }) => ({ testScenarioId: id, page, totalPage }));
         raiseEvent({
@@ -175,8 +175,23 @@ function TableTestScenarioAndCase(props) {
           receivers: [domainEvents.DES.TESTCOVERAGE],
         });
       }
+      const groupRows = _getGroupByEffectNodes(rows);
       setColumns(columns);
       setRows(groupRows);
+    } else if (generating === GENERATE_STATUS.COMPLETE) {
+      setTimeout(async () => {
+        const { rows, columns } = await _getDataFirstTime();
+        const groupRows = _getGroupByEffectNodes(rows);
+        if (rows.length > 0) {
+          const eventData = rows.map(({ id, page, totalPage }) => ({ testScenarioId: id, page, totalPage }));
+          raiseEvent({
+            value: eventData,
+            receivers: [domainEvents.DES.TESTCOVERAGE],
+          });
+        }
+        setColumns(columns);
+        setRows(groupRows);
+      }, 500);
     } else {
       setColumns([]);
       setRows([]);
@@ -184,17 +199,15 @@ function TableTestScenarioAndCase(props) {
   }, [generating, graph.graphNodes, dbContext]);
 
   useEffect(async () => {
-    if (!isClear) {
+    if (generating === GENERATE_STATUS.INITIAL) {
       await _isCheckedAllTestScenarios();
     }
-  }, [rows, isClear]);
-
-  useEffect(async () => {
-    if (isClear) {
-      setColumns([]);
-      setRows([]);
+    if (generating === GENERATE_STATUS.INITIAL) {
+      setTimeout(async () => {
+        await _isCheckedAllTestScenarios();
+      }, 500);
     }
-  }, [isClear]);
+  }, [rows]);
 
   const _updateRows = (rowIndex, newRow) => {
     const _rows = structuredClone(rows);
@@ -317,7 +330,6 @@ TableTestScenarioAndCase.propTypes = {
   filterSubmitType: PropTypes.string.isRequired,
   submitFilter: PropTypes.func.isRequired,
   raiseEvent: PropTypes.func.isRequired,
-  isClear: PropTypes.bool.isRequired,
 };
 
 export default TableTestScenarioAndCase;
