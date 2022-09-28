@@ -1,6 +1,5 @@
 /* eslint-disable max-lines */
 import Download from 'downloadjs';
-import testCaseHelper from 'features/project/work/biz/TestCase';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import MyersTechnique from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/MyersTechnique';
 import DNFLogicCoverage from 'features/project/work/biz/TestScenario/TestScenarioMethodGenerate/DNFLogicCoverage';
@@ -51,7 +50,6 @@ class TestScenarioAndCase extends Component {
       filterOptions: structuredClone(defaultFilterOptions),
       filterSubmitType: '',
       webWorker: null,
-      workerInterval: null,
       maxTestCase: 0,
     };
     this.initiatedData = false;
@@ -61,17 +59,15 @@ class TestScenarioAndCase extends Component {
     const { generating, setGenerating } = this.props;
     const initWorker = new Worker(worker, { type: 'module' });
     if (initWorker) {
-      const interval = setInterval(() => {
-        initWorker.onmessage = async (e) => {
-          if (e.data === GENERATE_STATUS.SUCCESS) {
-            setGenerating(e.data);
-          }
-          if (e.data === GENERATE_STATUS.CANCELLED) {
-            setGenerating(e.data);
-          }
-        };
-      }, 5000);
-      this.setState({ webWorker: initWorker, workerInterval: interval });
+      initWorker.onmessage = async (e) => {
+        if (e.data === GENERATE_STATUS.SUCCESS) {
+          setGenerating(e.data);
+        }
+        if (e.data === GENERATE_STATUS.CANCELLED) {
+          setGenerating(e.data);
+        }
+      };
+      this.setState({ webWorker: initWorker });
     }
 
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, async (event) => {
@@ -120,13 +116,11 @@ class TestScenarioAndCase extends Component {
     const { generating, dbContext, setDbContext } = this.props;
     if (generating === GENERATE_STATUS.REQUEST_CANCEL) {
       webWorker.postMessage(generating);
-    } else if (generating === GENERATE_STATUS.SUCCESS) {
-      if (prevProps.generating === GENERATE_STATUS.START) {
-        // need recreate the dbcontext to load new IndexedDb data from worker
-        const newContext = new DbContext();
-        await newContext.init(dbContext.name);
-        setDbContext(newContext);
-      }
+    } else if (prevProps.generating === GENERATE_STATUS.START && generating === GENERATE_STATUS.SUCCESS) {
+      // need recreate the dbcontext to load new IndexedDb data from worker
+      const newContext = new DbContext();
+      await newContext.init(dbContext.name);
+      setDbContext(newContext);
     }
     if (
       (prevProps.dbContext === null && dbContext && dbContext.db) ||
@@ -153,13 +147,10 @@ class TestScenarioAndCase extends Component {
   }
 
   componentWillUnmount() {
-    const { workerInterval, webWorker } = this.state;
+    const { webWorker } = this.state;
     eventBus.unsubscribe(this);
     if (webWorker) {
       webWorker.terminate();
-    }
-    if (workerInterval) {
-      clearInterval(workerInterval);
     }
   }
 
@@ -231,12 +222,19 @@ class TestScenarioAndCase extends Component {
     const { dbContext, graph } = this.props;
     if (dbContext && dbContext.db) {
       const { testScenarioSet, testCaseSet } = dbContext;
-      const testScenarios = await testScenarioSet.get();
-      const testCases = await testCaseSet.get();
       const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
-      return TestScenarioHelper.convertToRows(testCases, testScenarios, columns, graph.graphNodes);
+      const testScenarios = await testScenarioSet.get();
+      const promises = testScenarios.map(async (testScenario) => {
+        const _testScenario = testScenario;
+        _testScenario.testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));
+        return _testScenario;
+      });
+
+      const testScenariosAndCases = await Promise.all(promises);
+      const rows = TestScenarioHelper.convertToRows(testScenariosAndCases, testScenarios, columns, graph.graphNodes);
+      return { rows, columns };
     }
-    return [];
+    return { rows: [], columns: [] };
   };
 
   _handleShortCutEvents = (code) => {
@@ -266,12 +264,11 @@ class TestScenarioAndCase extends Component {
 
   _createTestCasesFile = async () => {
     const { graph } = this.props;
-    const { columns } = this.state;
     const dataToConvert = [];
-    const testScenarioAndCase = await this._getTestScenarioAndCase();
+    const { rows, columns } = await this._getTestScenarioAndCase();
 
-    testScenarioAndCase.forEach((testScenario) => {
-      testScenario.testCases.forEach((testCase) => {
+    rows.forEach((row) => {
+      row.testCases.forEach((testCase) => {
         dataToConvert.push(this._createExportRowData(testCase, columns));
       });
     });
@@ -299,14 +296,14 @@ class TestScenarioAndCase extends Component {
   }
 
   async _exportData() {
-    const { workName, graph, workId } = this.props;
-    const { columns } = this.state;
+    const { workName, graph, match } = this.props;
+    const { workId } = match.params;
     const dataToConvert = [];
-    const testScenarioAndCase = await this._getTestScenarioAndCase();
+    const { rows, columns } = await this._getTestScenarioAndCase();
 
-    testScenarioAndCase.forEach((testScenario) => {
-      dataToConvert.push(this._createExportRowData(testScenario, columns));
-      testScenario.testCases.forEach((testCase) => {
+    rows.forEach((row) => {
+      dataToConvert.push(this._createExportRowData(row, columns));
+      row.testCases.forEach((testCase) => {
         dataToConvert.push(this._createExportRowData(testCase, columns));
       });
     });
@@ -320,12 +317,11 @@ class TestScenarioAndCase extends Component {
 
   async _exportTestScenario() {
     const { workName, graph } = this.props;
-    const { columns } = this.state;
     const dataToConvert = [];
-    const testScenarioAndCase = await this._getTestScenarioAndCase();
+    const { rows, columns } = await this._getTestScenarioAndCase();
 
-    testScenarioAndCase.forEach((testScenario) => {
-      dataToConvert.push(this._createExportRowData(testScenario, columns));
+    rows.forEach((row) => {
+      dataToConvert.push(this._createExportRowData(row, columns));
     });
     const csvFile = arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
     Download(csvFile, FILE_NAME.EXPORT_TEST_SCENARIO.replace('workname', workName), 'text/csv;charset=utf-8');
@@ -386,7 +382,6 @@ class TestScenarioAndCase extends Component {
 }
 
 TestScenarioAndCase.propTypes = {
-  workId: PropTypes.string,
   workName: PropTypes.string,
   graph: PropTypes.shape({
     graphNodes: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
@@ -403,13 +398,11 @@ TestScenarioAndCase.propTypes = {
 };
 
 TestScenarioAndCase.defaultProps = {
-  workId: undefined,
   workName: undefined,
   dbContext: null,
 };
 
 const mapStateToProps = (state) => ({
-  workId: state.work.id,
   workName: state.work.name,
   graph: state.work.graph,
   testDatas: state.work.testDatas,

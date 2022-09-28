@@ -41,7 +41,7 @@ export const workSlice = createSlice({
     modifyWhileGenerated: false,
   } as IWorkSlice,
   reducers: {
-    setWork: (state, action: PayloadAction<IWorkSlice>) => {
+    setWork: (state: IWorkSlice, action: PayloadAction<IWorkSlice>) => {
       const { testBasis, causeEffects, graph, testCoverage, testDatas, loaded, name } = action.payload;
       const _state: IWorkSlice = state;
       _state.testBasis = testBasis ?? _state.testBasis;
@@ -58,47 +58,47 @@ export const workSlice = createSlice({
 
       return _state;
     },
-    setGeneratingReport: (state, action: PayloadAction<boolean>) => {
+    setGeneratingReport: (state: IWorkSlice, action: PayloadAction<boolean>) => {
       const _state = state;
       _state.generatingReport = action.payload;
       return _state;
     },
-    setTestBasis: (state, action: PayloadAction<string>) => {
+    setTestBasis: (state: IWorkSlice, action: PayloadAction<string>) => {
       const _state = state;
       _state.testBasis.content = action.payload;
       return _state;
     },
-    setCauseEffects: (state, action: PayloadAction<ICauseEffect[]>) => {
+    setCauseEffects: (state: IWorkSlice, action: PayloadAction<ICauseEffect[]>) => {
       const _state = state;
       _state.causeEffects = action.payload;
       return _state;
     },
-    setGraph: (state, action: PayloadAction<IGraphState>) => {
+    setGraph: (state: IWorkSlice, action: PayloadAction<IGraphState>) => {
       const _state = state;
       _state.graph = action.payload;
       return _state;
     },
-    setTestCoverages: (state, action: PayloadAction<ITestCoverage>) => {
+    setTestCoverages: (state: IWorkSlice, action: PayloadAction<ITestCoverage>) => {
       const _state = state;
       _state.testCoverage = action.payload;
       return _state;
     },
-    setTestDatas: (state, action: PayloadAction<ITestDataDetail[]>) => {
+    setTestDatas: (state: IWorkSlice, action: PayloadAction<ITestDataDetail[]>) => {
       const _state = state;
       _state.testDatas = action.payload;
       return _state;
     },
-    setDbContext: (state, action: PayloadAction<IDbContext>) => {
+    setDbContext: (state: IWorkSlice, action: PayloadAction<IDbContext>) => {
       const _state = state;
       _state.dbContext = action.payload;
       return _state;
     },
-    setGenerating: (state, action: PayloadAction<string>) => {
+    setGenerating: (state: IWorkSlice, action: PayloadAction<string>) => {
       const _state = state;
       _state.generating = action.payload;
       return _state;
     },
-    setModifyWhileGenerated: (state, action: PayloadAction<boolean>) => {
+    setModifyWhileGenerated: (state: IWorkSlice, action: PayloadAction<boolean>) => {
       const _state = state;
       _state.modifyWhileGenerated = action.payload;
       return _state;

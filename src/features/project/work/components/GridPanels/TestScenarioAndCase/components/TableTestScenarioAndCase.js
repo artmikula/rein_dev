@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { Table } from 'reactstrap';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import appConfig from 'features/shared/lib/appConfig';
 import domainEvents from 'features/shared/domainEvents';
@@ -10,7 +10,6 @@ import { FILTER_TYPE, GENERATE_STATUS, RESULT_TYPE } from 'features/shared/const
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import Language from 'features/shared/languages/Language';
 import { sortByString } from 'features/shared/lib/utils';
-import { setGenerating } from 'features/project/work/slices/workSlice';
 import Header from './TableHeader';
 import TableRow from './TableRow';
 
@@ -22,7 +21,6 @@ function TableTestScenarioAndCase(props) {
   const [isCheckAll, setIsCheckAll] = useState(false);
 
   const { dbContext, generating, graph } = useSelector((state) => state.work);
-  const dispatch = useDispatch();
 
   const { testCasePageSize } = appConfig.testScenarioAndCase;
 
@@ -173,30 +171,25 @@ function TableTestScenarioAndCase(props) {
       setRows([]);
     } else if (generating === GENERATE_STATUS.INITIAL) {
       const { rows, columns } = await _getDataFirstTime();
-      if (rows.length > 0) {
+      const groupRows = _getGroupByEffectNodes(rows);
+      setColumns(columns);
+      setRows(groupRows);
+      const eventData = rows.map(({ id, page, totalPage }) => ({ testScenarioId: id, page, totalPage }));
+      raiseEvent({
+        value: eventData,
+        receivers: [domainEvents.DES.TESTCOVERAGE],
+      });
+    } else if (generating === GENERATE_STATUS.SUCCESS) {
+      setTimeout(async () => {
+        const { rows, columns } = await _getDataFirstTime();
+        const groupRows = _getGroupByEffectNodes(rows);
+        setColumns(columns);
+        setRows(groupRows);
         const eventData = rows.map(({ id, page, totalPage }) => ({ testScenarioId: id, page, totalPage }));
         raiseEvent({
           value: eventData,
           receivers: [domainEvents.DES.TESTCOVERAGE],
         });
-      }
-      const groupRows = _getGroupByEffectNodes(rows);
-      setColumns(columns);
-      setRows(groupRows);
-    } else if (generating === GENERATE_STATUS.SUCCESS) {
-      setTimeout(async () => {
-        const { rows, columns } = await _getDataFirstTime();
-        const groupRows = _getGroupByEffectNodes(rows);
-        if (rows.length > 0) {
-          const eventData = rows.map(({ id, page, totalPage }) => ({ testScenarioId: id, page, totalPage }));
-          raiseEvent({
-            value: eventData,
-            receivers: [domainEvents.DES.TESTCOVERAGE],
-          });
-        }
-        setColumns(columns);
-        setRows(groupRows);
-        dispatch(setGenerating(GENERATE_STATUS.COMPLETE));
       }, 700);
     } else {
       setColumns([]);

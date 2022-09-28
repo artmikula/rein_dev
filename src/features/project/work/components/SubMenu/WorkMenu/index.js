@@ -89,9 +89,13 @@ class WorkMenu extends Component {
       testCase.causes = reportData.causes.map((cause) => ({ ...cause, type: testCase[cause.node] }));
     });
 
-    const blob = await pdf(ReportDocument(reportData)).toBlob();
-    Download(blob, FILE_NAME.REPORT_WORK.replace('workname', workName));
-    setGeneratingReport(false);
+    try {
+      const blob = await pdf(ReportDocument(reportData)).toBlob();
+      Download(blob, FILE_NAME.REPORT_WORK.replace('workname', workName));
+      setGeneratingReport(false);
+    } catch (error) {
+      setGeneratingReport(false);
+    }
   };
 
   _handleReportEvent = async (event) => {
@@ -103,11 +107,12 @@ class WorkMenu extends Component {
         return;
       }
       if (receivers && receivers.includes(domainEvents.DES.WORKMENU) && action === domainEvents.ACTION.REPORTWORK) {
+        const causeEffectsReport = CauseEffect.generateReportData(causeEffects);
         const reportData = {
           testData: testDatas,
           testCoverage: TestCoverage.generateReportData(testCoverage),
-          causeEffect: CauseEffect.generateReportData(causeEffects),
-          graph: value,
+          ...causeEffectsReport,
+          ...value,
         };
         const { testScenarioSet, testCaseSet } = dbContext;
         const testScenarios = await testScenarioSet.get();
@@ -119,13 +124,15 @@ class WorkMenu extends Component {
         });
 
         const testScenariosAndCases = await Promise.all(promises);
-        const dataRows = await TestScenarioHelper.convertToRows(
+        const dataRows = TestScenarioHelper.convertToRows(
           testScenariosAndCases,
           testScenarios,
           dataColumns,
           graph.graphNodes
         );
-        reportData.testScenariosAndCases = TestCase.generateReportData(dataRows);
+        const { testScenarios: testScenariosReport, testCases } = TestCase.generateReportData(dataRows);
+        reportData.testScenarios = testScenariosReport;
+        reportData.testCases = testCases;
         this._handleReportWork(reportData);
       }
     } catch (error) {

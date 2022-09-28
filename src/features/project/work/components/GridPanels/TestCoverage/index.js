@@ -1,5 +1,5 @@
-import { setTestCoverages } from 'features/project/work/slices/workSlice';
-import { COVERAGE_ASPECT } from 'features/shared/constants';
+import { defaultTestCoverageData, setTestCoverages, setGenerating } from 'features/project/work/slices/workSlice';
+import { COVERAGE_ASPECT, GENERATE_STATUS } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import appConfig from 'features/shared/lib/appConfig';
 import Language from 'features/shared/languages/Language';
@@ -43,6 +43,21 @@ class TestCoverage extends Component {
     eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
       this._handleEvents(event.message);
     });
+  }
+
+  componentDidUpdate(prevProps) {
+    const { generating } = this.props;
+    if (
+      (prevProps.generating === GENERATE_STATUS.INITIAL && generating === GENERATE_STATUS.START) ||
+      ((prevProps.generating === GENERATE_STATUS.COMPLETE ||
+        prevProps.generating === GENERATE_STATUS.FAIL ||
+        prevProps.generating === GENERATE_STATUS.CANCELLED) &&
+        generating === GENERATE_STATUS.START)
+    ) {
+      this._setTestCoverages(structuredClone(defaultTestCoverageData));
+      this.testScenarios = [];
+      this.testCases = [];
+    }
   }
 
   componentWillUnmount() {
@@ -103,7 +118,6 @@ class TestCoverage extends Component {
             testCasePageSize * testScenariosPaging.page,
             testCaseSet.table.testScenarioId.eq(testScenariosPaging.testScenarioId)
           );
-          console.log('testcases', _testCases);
           const testCases = allTestCases.concat(_testCases);
           allTestCases = testCases;
         }
@@ -127,7 +141,6 @@ class TestCoverage extends Component {
   };
 
   _recalculate = (result) => {
-    console.log('result', result);
     const _result = result;
     if (_result) {
       const { data } = this.props;
@@ -165,14 +178,22 @@ class TestCoverage extends Component {
   };
 
   _handleEvents = async (message) => {
-    const { isPlanning } = this.state;
+    try {
+      const { isPlanning } = this.state;
+      const { generating, setGenerating } = this.props;
 
-    const { action, receivers, value } = message;
-    if (receivers.includes(domainEvents.DES.TESTCOVERAGE) && !isPlanning) {
-      const result = await this._calculate(action === domainEvents.ACTION.LOAD_MORE, value);
-      if (result) {
-        this._recalculate(result);
+      const { action, receivers, value } = message;
+      if (receivers.includes(domainEvents.DES.TESTCOVERAGE) && !isPlanning && generating === GENERATE_STATUS.SUCCESS) {
+        const result = await this._calculate(action === domainEvents.ACTION.LOAD_MORE, value);
+        if (result) {
+          this._recalculate(result);
+          if (generating === GENERATE_STATUS.SUCCESS) {
+            setGenerating(GENERATE_STATUS.COMPLETE);
+          }
+        }
       }
+    } catch (error) {
+      setGenerating(GENERATE_STATUS.FAIL);
     }
   };
 
@@ -230,7 +251,9 @@ TestCoverage.propTypes = {
     graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
     constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
+  generating: PropTypes.string.isRequired,
   dbContext: PropTypes.oneOfType([PropTypes.object]),
+  setGenerating: PropTypes.func.isRequired,
 };
 
 TestCoverage.defaultProps = {
@@ -242,7 +265,8 @@ const mapStateToProps = (state) => ({
   graph: state.work.graph,
   testDatas: state.work.testDatas,
   dbContext: state.work.dbContext,
+  generating: state.work.generating,
 });
-const mapDispatchToProps = { setTestCoverages };
+const mapDispatchToProps = { setTestCoverages, setGenerating };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TestCoverage));
