@@ -43,10 +43,6 @@ class TestCoverage extends Component {
     eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
       this._handleEvents(event.message);
     });
-
-    eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
-      this._handleWorkMenuEvents(event);
-    });
   }
 
   componentWillUnmount() {
@@ -177,19 +173,6 @@ class TestCoverage extends Component {
       if (result) {
         this._recalculate(result);
       }
-    }
-  };
-
-  _handleWorkMenuEvents = (event) => {
-    const { action } = event.message;
-    const { data } = this.props;
-
-    if (action === domainEvents.ACTION.REPORTWORK) {
-      this._raiseEvent({
-        action: domainEvents.ACTION.REPORTWORK,
-        value: { testCoverage: testCoverage.generateReportData(data) },
-        receivers: [domainEvents.DES.WORKMENU],
-      });
     }
   };
 

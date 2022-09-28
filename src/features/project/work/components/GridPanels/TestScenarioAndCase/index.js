@@ -100,10 +100,6 @@ class TestScenarioAndCase extends Component {
       }
     });
 
-    eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
-      this._handleWorkMenuEvents(event);
-    });
-
     eventBus.subscribe(this, domainEvents.REIN_MENU_DOMAINEVENT, (event) => {
       const { code } = event.message;
       this._handleShortCutEvents(code);
@@ -265,21 +261,6 @@ class TestScenarioAndCase extends Component {
         break;
       default:
         break;
-    }
-  };
-
-  _handleWorkMenuEvents = async (event) => {
-    const { action } = event.message;
-    if (action === domainEvents.ACTION.REPORTWORK) {
-      const data = await this._getTestScenarioAndCase();
-      if (data.length > 0) {
-        const reportData = testCaseHelper.generateReportData(data);
-        this._raiseEvent({
-          action: domainEvents.ACTION.REPORTWORK,
-          value: reportData,
-          receivers: [domainEvents.DES.WORKMENU],
-        });
-      }
     }
   };
 

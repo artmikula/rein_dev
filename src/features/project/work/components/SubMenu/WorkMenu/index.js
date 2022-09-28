@@ -1,5 +1,9 @@
 import { pdf } from '@react-pdf/renderer';
 import Download from 'downloadjs';
+import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
+import TestCase from 'features/project/work/biz/TestCase';
+import TestCoverage from 'features/project/work/biz/TestCoverage';
+import CauseEffect from 'features/project/work/biz/CauseEffect';
 import CreateForm from 'features/project/work/components/CreateForm';
 import ImportForm from 'features/project/work/components/ImportForm';
 import workService from 'features/project/work/services/workService';
@@ -31,24 +35,11 @@ class WorkMenu extends Component {
       createFormOpen: false,
       importFormOpen: false,
     };
-    this.reportWorkData = { numCollectedData: 5 };
   }
 
   componentDidMount() {
     this._getRecentWorks();
-    eventBus.subscribe(this, domainEvents.CAUSEEFFECT_DOMAINEVENT, (event) => {
-      this._handleReportEvent(event);
-    });
     eventBus.subscribe(this, domainEvents.GRAPH_DOMAINEVENT, (event) => {
-      this._handleReportEvent(event);
-    });
-    eventBus.subscribe(this, domainEvents.TEST_COVERAGE_DOMAINEVENT, (event) => {
-      this._handleReportEvent(event);
-    });
-    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
-      this._handleReportEvent(event);
-    });
-    eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, (event) => {
       this._handleReportEvent(event);
     });
   }
@@ -104,14 +95,42 @@ class WorkMenu extends Component {
   };
 
   _handleReportEvent = async (event) => {
-    const { action, value, receivers } = event.message;
-    if (receivers && receivers.includes(domainEvents.DES.WORKMENU) && action === domainEvents.ACTION.REPORTWORK) {
-      this.reportWorkData = { ...this.reportWorkData, ...value };
-      this.reportWorkData.numCollectedData -= 1;
-      if (this.reportWorkData.numCollectedData === 0) {
-        this._handleReportWork(this.reportWorkData);
-        this.reportWorkData = { numCollectedData: 5 };
+    try {
+      const { dbContext, testDatas, testCoverage, causeEffects, graph } = this.props;
+      const { action, value, receivers } = event.message;
+      if (!dbContext || !dbContext.db) {
+        alert('Cannot access to database. Please reload and try again', { error: true });
+        return;
       }
+      if (receivers && receivers.includes(domainEvents.DES.WORKMENU) && action === domainEvents.ACTION.REPORTWORK) {
+        const reportData = {
+          testData: testDatas,
+          testCoverage: TestCoverage.generateReportData(testCoverage),
+          causeEffect: CauseEffect.generateReportData(causeEffects),
+          graph: value,
+        };
+        const { testScenarioSet, testCaseSet } = dbContext;
+        const testScenarios = await testScenarioSet.get();
+        const dataColumns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
+        const promises = testScenarios.map(async (testScenario) => {
+          const _testScenario = testScenario;
+          _testScenario.testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));
+          return _testScenario;
+        });
+
+        const testScenariosAndCases = await Promise.all(promises);
+        const dataRows = await TestScenarioHelper.convertToRows(
+          testScenariosAndCases,
+          testScenarios,
+          dataColumns,
+          graph.graphNodes
+        );
+        reportData.testScenariosAndCases = TestCase.generateReportData(dataRows);
+        this._handleReportWork(reportData);
+      }
+    } catch (error) {
+      console.log('err', error);
+      alert('Cannot get report data!', { error: true });
     }
   };
 
@@ -241,12 +260,30 @@ WorkMenu.propTypes = {
   projectName: PropTypes.string.isRequired,
   workVersion: PropTypes.string.isRequired,
   setGeneratingReport: PropTypes.func.isRequired,
+  graph: PropTypes.shape({
+    graphNodes: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+    constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+  }).isRequired,
+  testDatas: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+  testCoverage: PropTypes.oneOfType([PropTypes.object]).isRequired,
+  causeEffects: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+  dbContext: PropTypes.oneOfType([PropTypes.object]),
+};
+
+WorkMenu.defaultProps = {
+  dbContext: null,
 };
 
 const mapStateToProps = (state) => ({
   workName: state.work.name,
   projectName: state.work.projectName,
   workVersion: state.work.version,
+  graph: state.work.graph,
+  dbContext: state.work.dbContext,
+  testDatas: state.work.testDatas,
+  testCoverage: state.work.testCoverage,
+  causeEffects: state.work.causeEffects,
 });
 const mapDispatchToProps = { setGeneratingReport };
 

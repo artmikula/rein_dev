@@ -490,32 +490,32 @@ class TestScenarioHelper {
         isSelected: !data.testCases
           .filter((testCase: ITestCase) => testCase.testScenarioId === scenario.id)
           .some((testCase: ITestCase) => !testCase.isSelected),
-        totalPage: Math.ceil(data.total / data.testCases.length),
-        page: data.page,
+        totalPage: Math.ceil(data.total / data.testCases.length) ?? 0,
+        page: data.page ?? 0,
       };
     });
 
     const testScenarios: ITestScenarioAndCaseRow[] = rows.map((testScenario, testScenarioIndex: number) => {
       const testScenarioItem: ITestScenarioAndCaseRow = {
-        Name: `TS#${testScenarioIndex + 1}(${testScenario.scenarioType})`,
-        isSelected: !!testScenario.isSelected,
+        Name: `TS#${testScenarioIndex + 1}(${testScenario?.scenarioType})`,
+        isSelected: !!testScenario?.isSelected,
         id: testScenario.id,
-        isViolated: testScenario.isViolated,
-        sourceTargetType: testScenario.sourceTargetType,
-        resultType: testScenario.resultType ?? RESULT_TYPE.True,
+        isViolated: testScenario?.isViolated,
+        sourceTargetType: testScenario?.sourceTargetType,
+        resultType: testScenario?.resultType ?? RESULT_TYPE.True,
         effectDefinition:
-          graphNodes.find((graphNode) => graphNode.nodeId === testScenario.expectedResults)?.definition ?? '',
-        totalPage: testScenario.totalPage,
-        page: testScenario.page,
+          graphNodes.find((graphNode) => graphNode.nodeId === testScenario?.expectedResults)?.definition ?? '',
+        totalPage: testScenario?.totalPage,
+        page: testScenario?.page,
       };
 
       columns.forEach((column) => {
         if (column.key === 'results') {
-          testScenarioItem[column.key] = testScenario.expectedResults;
+          testScenarioItem[column.key] = testScenario?.expectedResults;
         } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
           testScenarioItem[column.key] = !!testScenario[column.key];
         } else {
-          const testAssertion = testScenario.testAssertions.find((x: ITestAssertion) => x.graphNodeId === column.key);
+          const testAssertion = testScenario?.testAssertions.find((x: ITestAssertion) => x.graphNodeId === column.key);
           if (testAssertion) {
             testScenarioItem[column.key] = testAssertion.result ? 'T' : 'F';
           } else {
@@ -524,7 +524,7 @@ class TestScenarioHelper {
         }
       });
 
-      testScenarioItem.testAssertions = testScenario.testAssertions.map(
+      testScenarioItem.testAssertions = testScenario?.testAssertions.map(
         ({ graphNodeId, result }: { graphNodeId: string; result: boolean }) => {
           const causeNode = graphNodes.find((graphNode) => graphNode.id === graphNodeId);
           return {
@@ -536,11 +536,11 @@ class TestScenarioHelper {
         }
       );
 
-      testScenarioItem.testCases = testScenario.testCases.map((testCase: ITestCase, testCaseIndex: number) => {
+      testScenarioItem.testCases = testScenario?.testCases.map((testCase: ITestCase, testCaseIndex: number) => {
         const testCaseItem: ITestCaseRow = {
-          id: testCase.id,
+          id: testCase?.id,
           Name: `TC#${testScenarioIndex + 1}-${testCaseIndex + 1}`,
-          isSelected: !!testCase.isSelected,
+          isSelected: !!testCase?.isSelected,
         };
 
         columns.forEach((column) => {
@@ -549,7 +549,7 @@ class TestScenarioHelper {
           } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
             testCaseItem[column.key] = '';
           } else {
-            const testData = testCase.testDatas.find((x: ITestData) => x.graphNodeId === column.key);
+            const testData = testCase?.testDatas.find((x: ITestData) => x.graphNodeId === column.key);
             testCaseItem[column.key] = testData ? testData.data : '';
           }
         });

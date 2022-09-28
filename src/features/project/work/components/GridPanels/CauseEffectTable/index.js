@@ -198,16 +198,6 @@ class CauseEffectTable extends Component {
     this._raiseEvent({ action: domainEvents.ACTION.UPDATE, value: newItem });
   };
 
-  _handleWorkMenuEvent = () => {
-    const { listData } = this.props;
-    const value = CauseEffect.generateReportData(listData);
-    this._raiseEvent({
-      action: domainEvents.ACTION.REPORTWORK,
-      value,
-      receivers: [domainEvents.DES.WORKMENU],
-    });
-  };
-
   _handleCutEvent = (eventData) => {
     const { listData: causeEffects } = this.props;
     const cutData = causeEffects.filter((causeEffect) => eventData.some((item) => item === causeEffect.definitionId));
@@ -255,27 +245,10 @@ class CauseEffectTable extends Component {
         case domainEvents.ACTION.ACCEPTDELETE:
           this._handleAcceptDeleteEvent(value, storeActions);
           break;
-        case domainEvents.ACTION.REPORTWORK:
-          this._handleWorkMenuEvent();
-          break;
         default:
           break;
       }
     }
-  };
-
-  _handleInsertCauses = (data) => {
-    const { setCauseEffects } = this.props;
-    let { listData } = this.props;
-    const causes = [];
-    data.forEach((item) => {
-      const cause = CauseEffect.generateCauseEffectItem(listData, item);
-      causes.push(cause);
-      listData = [...listData, cause];
-    });
-
-    setCauseEffects(listData);
-    this._raiseEvent({ action: domainEvents.ACTION.ADD, value: causes });
   };
 
   _handleAcceptDeleteEvent = (items, storeActions = false) => {

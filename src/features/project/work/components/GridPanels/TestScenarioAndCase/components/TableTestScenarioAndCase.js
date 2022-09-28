@@ -50,8 +50,8 @@ function TableTestScenarioAndCase(props) {
         const data = await Promise.all(promises);
         const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
         return {
-          rows: TestScenarioHelper.convertToRows(data, testScenarios, columns, graph.graphNodes),
-          columns,
+          rows: TestScenarioHelper.convertToRows(data, testScenarios, columns, graph.graphNodes) ?? [],
+          columns: columns ?? [],
         };
       } catch (error) {
         console.log('get data error', error);
