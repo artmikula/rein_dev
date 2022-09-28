@@ -477,3 +477,21 @@ export const FILTER_OPTIONS = {
   SOURCE_TARGET_TYPE: 'sourceTargetType',
   TYPE: 'type',
 };
+
+export const METRIC_KEYS = {
+  INCLUSIVE: 'inclusive',
+  ONLY_ONE: 'onlyOne',
+  REQUIRE: 'require',
+  MASK: 'mask',
+  EXCLUSIVE: 'exclusive',
+  EFFERENT: 'efferent',
+  AFFERENT: 'afferent',
+  COMPLEXITY: 'complexity',
+  PERCENT_AND: 'percentAnd',
+  PERCENT_OR: 'percentOr',
+  BREVITY: 'brevity',
+  SAME_SOUND_AMBIGUITY: 'sameSoundAmbiguity',
+  SAME_MEANING_AMBIGUITY: 'sameMeaningAmbiguity',
+  ORPHAN_NODE: 'orphanNode',
+  ARC_LEVEL: 'arcLevel',
+};
