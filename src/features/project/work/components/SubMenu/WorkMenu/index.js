@@ -57,7 +57,7 @@ class WorkMenu extends Component {
     });
   };
 
-  _handleReportWork = (data) => {
+  _handleReportWork = async (data) => {
     const { setGeneratingReport } = this.props;
     setGeneratingReport(true);
     // PDF generating block UI rendering -> delay 1s to render loading
@@ -65,35 +65,38 @@ class WorkMenu extends Component {
   };
 
   _generateReport = async (data) => {
-    const { workName, projectName, workVersion, setGeneratingReport } = this.props;
-    const reportData = {
-      projectName,
-      workName,
-      functionName: workName,
-      version: workVersion,
-      reporter: '',
-      reviewer: '',
-      approver: '',
-      causes: [],
-      effects: [],
-      inspections: [],
-      testCoverage: [],
-      testData: [],
-      testCases: [],
-      testScenarios: [],
-      ...data,
-    };
-    reportData.workName = workName;
-    reportData.testCases.forEach((e) => {
-      const testCase = e;
-      testCase.causes = reportData.causes.map((cause) => ({ ...cause, type: testCase[cause.node] }));
-    });
-
     try {
-      const blob = await pdf(ReportDocument(reportData)).toBlob();
-      Download(blob, FILE_NAME.REPORT_WORK.replace('workname', workName));
+      const { workName, projectName, workVersion, setGeneratingReport } = this.props;
+      const reportData = {
+        projectName,
+        workName,
+        functionName: workName,
+        version: workVersion,
+        reporter: '',
+        reviewer: '',
+        approver: '',
+        causes: [],
+        effects: [],
+        inspections: [],
+        testCoverage: [],
+        testData: [],
+        testCases: [],
+        testScenarios: [],
+        ...data,
+      };
+      reportData.workName = workName;
+      reportData.testCases.forEach((e) => {
+        const testCase = e;
+        testCase.causes = reportData.causes.map((cause) => ({ ...cause, type: testCase[cause.node] }));
+      });
+
+      const pdfTemplate = await pdf(ReportDocument(reportData));
+      const blob = await pdfTemplate.toBlob();
+
+      await Download(blob, FILE_NAME.REPORT_WORK.replace('workname', workName));
       setGeneratingReport(false);
     } catch (error) {
+      alert('Fail to create a report!');
       setGeneratingReport(false);
     }
   };
@@ -108,16 +111,10 @@ class WorkMenu extends Component {
       }
       if (receivers && receivers.includes(domainEvents.DES.WORKMENU) && action === domainEvents.ACTION.REPORTWORK) {
         const causeEffectsReport = CauseEffect.generateReportData(causeEffects);
-        const reportData = {
-          testData: testDatas,
-          testCoverage: TestCoverage.generateReportData(testCoverage),
-          ...causeEffectsReport,
-          ...value,
-        };
         const { testScenarioSet, testCaseSet } = dbContext;
-        const testScenarios = await testScenarioSet.get();
+        const _testScenarios = await testScenarioSet.get();
         const dataColumns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
-        const promises = testScenarios.map(async (testScenario) => {
+        const promises = _testScenarios.map(async (testScenario) => {
           const _testScenario = testScenario;
           _testScenario.testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));
           return _testScenario;
@@ -126,14 +123,20 @@ class WorkMenu extends Component {
         const testScenariosAndCases = await Promise.all(promises);
         const dataRows = TestScenarioHelper.convertToRows(
           testScenariosAndCases,
-          testScenarios,
+          _testScenarios,
           dataColumns,
           graph.graphNodes
         );
-        const { testScenarios: testScenariosReport, testCases } = TestCase.generateReportData(dataRows);
-        reportData.testScenarios = testScenariosReport;
-        reportData.testCases = testCases;
-        this._handleReportWork(reportData);
+        const { testScenarios, testCases } = await TestCase.generateReportData(dataRows);
+        const reportData = {
+          testData: testDatas,
+          testCoverage: TestCoverage.generateReportData(testCoverage),
+          ...causeEffectsReport,
+          ...value,
+          testScenarios,
+          testCases: testCases.slice(0, 200),
+        };
+        await this._handleReportWork(reportData);
       }
     } catch (error) {
       console.log('err', error);
