@@ -5,7 +5,7 @@ import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import { setGraph, setModifyWhileGenerated } from 'features/project/work/slices/workSlice';
+import { setGraph, setModifyWhileGenerated, setGenerating } from 'features/project/work/slices/workSlice';
 import {
   ACTIONS_STATE_NAME,
   FILE_NAME,
@@ -153,9 +153,17 @@ class Graph extends Component {
   }
 
   _raiseEvent = (message) => {
+    const { setGenerating } = this.props;
+    console.log('mess', message);
     const { generating, setModifyWhileGenerated } = this.props;
-    if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS) {
+    if (
+      message.action !== domainEvents.ACTION.GRAPH_ALIGN &&
+      (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS)
+    ) {
+      this.graphManager.updateBlockState(true);
       setModifyWhileGenerated(true);
+    } else if (generating !== GENERATE_STATUS.START || generating !== GENERATE_STATUS.SUCCESS) {
+      setGenerating(GENERATE_STATUS.RESET);
     }
     eventBus.publish(domainEvents.GRAPH_DOMAINEVENT, message);
   };
@@ -587,6 +595,7 @@ Graph.propTypes = {
   clearRedoStates: PropTypes.func.isRequired,
   generating: PropTypes.string.isRequired,
   setModifyWhileGenerated: PropTypes.func.isRequired,
+  setGenerating: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
@@ -609,6 +618,7 @@ const mapDispatchToProps = {
   popRedoStates,
   clearRedoStates,
   setModifyWhileGenerated,
+  setGenerating,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Graph));

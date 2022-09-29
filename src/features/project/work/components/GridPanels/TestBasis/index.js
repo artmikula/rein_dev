@@ -32,6 +32,7 @@ import {
   ACTIONS_STATE_NAME,
   TEST_BASIS_KEY_COMMAND,
   TEST_BASIS_KEY_BINDING,
+  GENERATE_STATUS,
 } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import eventBus from 'features/shared/lib/eventBus';
@@ -467,8 +468,10 @@ class TestBasis extends Component {
   /* End Undo/Redo Action */
 
   render() {
+    const { generating } = this.props;
     const { editorState, isOpenClassifyPopover } = this.state;
     const visibleSelectionRect = getVisibleSelectionRect(window);
+    const isBlocked = generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS;
 
     return (
       <div className="h-100 p-4">
@@ -480,6 +483,7 @@ class TestBasis extends Component {
         <Editor
           placeholder="Type test basis here ..."
           spellCheck
+          readOnly={isBlocked}
           editorState={editorState}
           handleKeyCommand={this._handleKeyCommand}
           onChange={this._handleChange}
@@ -487,7 +491,7 @@ class TestBasis extends Component {
           keyBindingFn={this._keyBindingFn}
         />
         <ClassifyPopover
-          isOpen={isOpenClassifyPopover}
+          isOpen={isBlocked ? false : isOpenClassifyPopover}
           visibleSelectionRect={visibleSelectionRect}
           onClickItem={this._classifyText}
         />
@@ -512,6 +516,7 @@ TestBasis.propTypes = {
   clearRedoStates: PropTypes.func.isRequired,
   subscribeUndoHandlers: PropTypes.func.isRequired,
   unSubscribeUndoHandlers: PropTypes.func.isRequired,
+  generating: PropTypes.string.isRequired,
 };
 
 TestBasis.defaultProps = {
@@ -522,6 +527,7 @@ TestBasis.defaultProps = {
 const mapStateToProps = (state) => ({
   testBasis: state.work.testBasis,
   workLoaded: state.work.loaded,
+  generating: state.work.generating,
   undoHandlers: state.undoHandlers.handlers,
   undoStates: state.undoHandlers.undoStates,
   redoStates: state.undoHandlers.redoStates,

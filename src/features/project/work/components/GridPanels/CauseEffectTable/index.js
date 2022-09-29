@@ -13,7 +13,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Table } from 'reactstrap';
 import { v4 as uuidv4 } from 'uuid';
-import { ACTIONS_STATE_NAME, PANELS_NAME } from 'features/shared/constants';
+import { ACTIONS_STATE_NAME, GENERATE_STATUS, PANELS_NAME } from 'features/shared/constants';
 import AbbreviateConfirmContent from './components/AbbreviateConfirmContent';
 import CauseEffectRow from './components/CauseEffectRow';
 import './style.scss';
@@ -83,7 +83,10 @@ class CauseEffectTable extends Component {
 
   /* Handle events */
   _handleAddEvent = (data, confirmedAbbreviate = undefined) => {
-    const { setCauseEffects, listData } = this.props;
+    const { setCauseEffects, listData, generating } = this.props;
+    if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS) {
+      return;
+    }
     const result = [];
     let causeEffects = listData.slice();
     this.needConfirm = false;
@@ -120,6 +123,10 @@ class CauseEffectTable extends Component {
   };
 
   _handleDeleteAction = (item) => {
+    const { generating } = this.props;
+    if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS) {
+      return;
+    }
     const removeList = this._delete(item);
 
     if (removeList) {
@@ -184,6 +191,11 @@ class CauseEffectTable extends Component {
   _handleUpdateEvent = (value) => {
     const { listData, setCauseEffects } = this.props;
     const { definitionId, definition } = value;
+
+    const isBlocked = this._blockModifyWhileGenerating();
+    if (isBlocked) {
+      return;
+    }
     const index = listData.findIndex((e) => e.definitionId === definitionId);
 
     if (index < 0) {
@@ -287,6 +299,11 @@ class CauseEffectTable extends Component {
   _handleMerge = (mergeId, parentId) => {
     const { listData, setCauseEffects } = this.props;
 
+    const isBlocked = this._blockModifyWhileGenerating();
+    if (isBlocked) {
+      return;
+    }
+
     const mergeItem = listData.find((x) => x.id === mergeId);
     const parentItem = listData.find((x) => x.id === parentId);
 
@@ -329,6 +346,11 @@ class CauseEffectTable extends Component {
     const { listData, setCauseEffects } = this.props;
     const index = listData.findIndex((x) => x.id === id);
 
+    const isBlocked = this._blockModifyWhileGenerating();
+    if (isBlocked) {
+      return;
+    }
+
     if (index !== -1 && listData[index].isMerged) {
       const newItem = { ...listData[index], isMerged: false };
       const newListData = [...listData];
@@ -346,6 +368,11 @@ class CauseEffectTable extends Component {
 
   handleEditNode = (id, newNode) => {
     const { listData, setCauseEffects } = this.props;
+
+    const isBlocked = this._blockModifyWhileGenerating();
+    if (isBlocked) {
+      return;
+    }
 
     if (listData.find((x) => x.node === newNode)) {
       const alertContent = Language.get('exitednodealert').replace(/newNode/g, newNode);
@@ -381,8 +408,11 @@ class CauseEffectTable extends Component {
 
   /* Undo/Redo Actions */
   _updateUndoState = (newState) => {
-    const { listData } = this.props;
-    return ActionsHelper.updateUndoState(newState, ACTIONS_STATE_NAME.CAUSEEFFECT_TABLE, listData);
+    const { listData, generating } = this.props;
+    if (generating !== GENERATE_STATUS.START || generating !== GENERATE_STATUS.SUCCESS) {
+      return ActionsHelper.updateUndoState(newState, ACTIONS_STATE_NAME.CAUSEEFFECT_TABLE, listData);
+    }
+    return null;
   };
 
   _handleUpdateActions = (currentState) => {
@@ -391,6 +421,14 @@ class CauseEffectTable extends Component {
     setCauseEffects(currentCauseEffectTable);
   };
   /* End Undo/Redo Actions */
+
+  _blockModifyWhileGenerating() {
+    const { generating } = this.props;
+    if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS) {
+      return true;
+    }
+    return false;
+  }
 
   render() {
     const { listData } = this.props;
@@ -416,6 +454,7 @@ class CauseEffectTable extends Component {
               onUnabridge={this.handleUnabridge}
               onEditNode={this.handleEditNode}
               onReorder={this.handleReorder}
+              isBlocked={this._blockModifyWhileGenerating}
             />
           ))}
         </tbody>
@@ -429,10 +468,12 @@ CauseEffectTable.propTypes = {
   listData: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   subscribeUndoHandlers: PropTypes.func.isRequired,
   unSubscribeUndoHandlers: PropTypes.func.isRequired,
+  generating: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   listData: state.work.causeEffects,
+  generating: state.work.generating,
 });
 const mapDispatchToProps = { setCauseEffects, subscribeUndoHandlers, unSubscribeUndoHandlers };
 

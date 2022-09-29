@@ -56,7 +56,7 @@ class TestScenarioAndCase extends Component {
   }
 
   async componentDidMount() {
-    const { generating, setGenerating } = this.props;
+    const { setGenerating } = this.props;
     const initWorker = new Worker(worker, { type: 'module' });
     if (initWorker) {
       initWorker.onmessage = async (e) => {
@@ -75,13 +75,6 @@ class TestScenarioAndCase extends Component {
         setGenerating(GENERATE_STATUS.START);
         this.setState({ filterOptions: structuredClone(defaultFilterOptions), filterSubmitType: '' });
         await this._calculateTestScenarioAndCase(domainEvents.ACTION.ACCEPTGENERATE);
-      } else if (
-        event.message.action !== domainEvents.ACTION.REPORTWORK &&
-        event.message.action !== domainEvents.ACTION.GRAPH_ALIGN
-      ) {
-        if (generating !== GENERATE_STATUS.START || generating !== GENERATE_STATUS.SUCCESS) {
-          setGenerating(GENERATE_STATUS.RESET);
-        }
       }
     });
 
@@ -114,7 +107,7 @@ class TestScenarioAndCase extends Component {
   async componentDidUpdate(prevProps) {
     const { webWorker } = this.state;
     const { generating, dbContext, setDbContext } = this.props;
-    if (generating === GENERATE_STATUS.REQUEST_CANCEL) {
+    if (prevProps.generating === GENERATE_STATUS.START && generating === GENERATE_STATUS.REQUEST_CANCEL) {
       webWorker.postMessage(generating);
     } else if (prevProps.generating === GENERATE_STATUS.START && generating === GENERATE_STATUS.SUCCESS) {
       // need recreate the dbcontext to load new IndexedDb data from worker

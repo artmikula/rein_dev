@@ -203,17 +203,24 @@ class TestCoverage extends Component {
 
   render() {
     const { isPlanning } = this.state;
-    const { data } = this.props;
+    const { data, generating } = this.props;
+
+    const isGenerated = generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS;
 
     return (
       <div className="d-flex test-coverage-container pt-3 text-muted">
         <div className="d-flex flex-column align-items-center px-3">
-          <RefreshButton className="my-2" enable={!isPlanning} onClick={this._recalculate} />
+          <RefreshButton className="my-2" enable={!isPlanning} onClick={this._recalculate} isGenerated={isGenerated} />
           <div className="border-top my-1 divider" />
-          <PlanButton className="my-2" enable={isPlanning} onClick={this._handlePlan} />
+          <PlanButton className="my-2" enable={isPlanning} onClick={this._handlePlan} isGenerated={isGenerated} />
           <p className="mb-0 text-uppercase">{Language.get('planning')}</p>
           <div className="border-top mt-2 mb-1 divider" />
-          <RevertButton className="my-2" enable={this.isPlanDataChanging()} onClick={this._handleRevert} />
+          <RevertButton
+            className="my-2"
+            enable={this.isPlanDataChanging()}
+            onClick={this._handleRevert}
+            isGenerated={isGenerated}
+          />
         </div>
         <div className="d-flex flex-column flex-grow-1 pr-3 scrollbar-sm overflow-auto">
           <div className="d-flex flex-grow-1">

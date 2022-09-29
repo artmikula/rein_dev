@@ -52,6 +52,7 @@ class GraphManager {
     this.graph.on('dragfreeon', onDragFreeOn);
     this.storeActions = () => storeActionsWhenDelete();
     this._panSpeed = GRAPH_CONFIGS.AUTO_PAN_SPEED;
+    this.isBlocked = false;
   }
 
   _init = (container) => {
@@ -97,6 +98,10 @@ class GraphManager {
     this.graph.on('tapstart', this._onTapStart);
     this.graph.on('tapdrag', this._onTapDrag);
     this.graph.on('tapend', this._onTapEnd);
+  };
+
+  updateBlockState = (isBlocked) => {
+    this.isBlocked = isBlocked;
   };
 
   changeNodeId = (oldNodeId, newNodeId) => {

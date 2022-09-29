@@ -350,19 +350,12 @@ function TableRow(props) {
                           testScenario.page < testScenario.totalPage - 1 ? (
                             <td colSpan={columns.length} style={{ height: 32 }} />
                           ) : (
-                            columns.map(
-                              (column, colIndex) =>
-                                tcIndex !== testScenario.testCases.length - 1 && (
-                                  <td key={`${colIndex}test-case-col`} style={{ padding: '3px 8px' }}>
-                                    {testCase[column.key]}
-                                  </td>
-                                )
-                            )
+                            columns.map((column, colIndex) => (
+                              <td key={`${colIndex}test-case-col`} style={{ padding: '3px 8px' }}>
+                                {testCase[column.key]}
+                              </td>
+                            ))
                           )}
-                          {/* {tcIndex === testScenario.testCases.length - 1 &&
-                            testScenario.page < testScenario.totalPage - 1 && (
-                              <td colSpan={columns.length} style={{ height: 32 }} />
-                            )} */}
                         </tr>
                       ))}
                   </Fragment>

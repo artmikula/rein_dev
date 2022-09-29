@@ -71,6 +71,9 @@ class GridPanels extends Component {
               <div className="btn-actions">
                 <Button
                   className="icons-img icon-btn icon-add"
+                  disabled={
+                    this.props.generating === GENERATE_STATUS.START || this.props.generating === GENERATE_STATUS.SUCCESS
+                  }
                   onClick={() => this.handleGraphAction(GRAPH_ACTIONS.GENERATE)}
                 />
                 <Button
@@ -296,6 +299,7 @@ class GridPanels extends Component {
             </div>
           </div>
         )}
+
         {modifyWhileGenerated &&
           alert(Language.get('cancelgenerateprocess'), {
             closeText: 'cancel',
@@ -317,12 +321,14 @@ GridPanels.propTypes = {
   modifyWhileGenerated: PropTypes.bool.isRequired,
   setModifyWhileGenerated: PropTypes.func.isRequired,
   setGenerating: PropTypes.func.isRequired,
+  generating: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   testDatas: state.work.testDatas,
   loadedWork: state.work.loaded,
   modifyWhileGenerated: state.work.modifyWhileGenerated,
+  generating: state.work.generating,
 });
 
 const mapDispatchToProps = { setModifyWhileGenerated, setGenerating };
