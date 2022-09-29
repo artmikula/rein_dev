@@ -180,17 +180,15 @@ function TableTestScenarioAndCase(props) {
         receivers: [domainEvents.DES.TESTCOVERAGE],
       });
     } else if (generating === GENERATE_STATUS.SUCCESS) {
-      setTimeout(async () => {
-        const { rows, columns } = await _getDataFirstTime();
-        const groupRows = _getGroupByEffectNodes(rows);
-        setColumns(columns);
-        setRows(groupRows);
-        const eventData = rows.map(({ id, page, totalPage }) => ({ testScenarioId: id, page, totalPage }));
-        raiseEvent({
-          value: eventData,
-          receivers: [domainEvents.DES.TESTCOVERAGE],
-        });
-      }, 700);
+      const { rows, columns } = await _getDataFirstTime();
+      const groupRows = _getGroupByEffectNodes(rows);
+      setColumns(columns);
+      setRows(groupRows);
+      const eventData = rows.map(({ id, page, totalPage }) => ({ testScenarioId: id, page, totalPage }));
+      raiseEvent({
+        value: eventData,
+        receivers: [domainEvents.DES.TESTCOVERAGE],
+      });
     } else {
       setColumns([]);
       setRows([]);
