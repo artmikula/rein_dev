@@ -198,7 +198,9 @@ function TableTestScenarioAndCase(props) {
   }, [generating, graph.graphNodes, dbContext]);
 
   useEffect(async () => {
-    await _isCheckedAllTestScenarios();
+    if (rows.length > 0) {
+      await _isCheckedAllTestScenarios();
+    }
   }, [rows]);
 
   const _updateRows = (rowIndex, newRow) => {

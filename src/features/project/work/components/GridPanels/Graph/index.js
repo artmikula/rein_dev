@@ -156,7 +156,9 @@ class Graph extends Component {
     const { generating, setGenerating } = this.props;
     if (
       message.action !== domainEvents.ACTION.GRAPH_ALIGN &&
-      (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS)
+      (generating === GENERATE_STATUS.START ||
+        generating === GENERATE_STATUS.SUCCESS ||
+        generating === GENERATE_STATUS.INITIAL)
     ) {
       setGenerating(GENERATE_STATUS.RESET);
     }

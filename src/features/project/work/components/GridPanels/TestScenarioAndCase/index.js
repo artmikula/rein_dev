@@ -110,6 +110,7 @@ class TestScenarioAndCase extends Component {
     const { webWorker } = this.state;
     const { generating, dbContext, setDbContext } = this.props;
     if (prevProps.generating === GENERATE_STATUS.START && generating === GENERATE_STATUS.REQUEST_CANCEL) {
+      setGenerating(GENERATE_STATUS.RESET);
       webWorker.postMessage(generating);
     } else if (prevProps.generating === GENERATE_STATUS.START && generating === GENERATE_STATUS.SUCCESS) {
       // need recreate the dbcontext to load new IndexedDb data from worker
@@ -151,7 +152,7 @@ class TestScenarioAndCase extends Component {
 
   _calculateTestScenarioAndCase = async (domainAction) => {
     try {
-      const { graph, testDatas, setGraph, dbContext, match } = this.props;
+      const { graph, testDatas, setGraph, dbContext, match, generating } = this.props;
       const { webWorker, maxTestCase } = this.state;
       const { workId } = match.params;
 
@@ -189,13 +190,15 @@ class TestScenarioAndCase extends Component {
         table: TABLES.TEST_CASES,
       };
 
-      webWorker.postMessage({
-        dbInfo: JSON.stringify(_dbInfo),
-        testScenarios: JSON.stringify(testScenarios),
-        graphNodes: JSON.stringify(graphNodes),
-        testDatas: JSON.stringify(testDatas),
-        lastKey: maxTestCase,
-      });
+      if (generating === GENERATE_STATUS.START) {
+        webWorker.postMessage({
+          dbInfo: JSON.stringify(_dbInfo),
+          testScenarios: JSON.stringify(testScenarios),
+          graphNodes: JSON.stringify(graphNodes),
+          testDatas: JSON.stringify(testDatas),
+          lastKey: maxTestCase,
+        });
+      }
 
       await setGraph({ ...graph, graphNodes });
 
