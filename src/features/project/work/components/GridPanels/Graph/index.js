@@ -153,16 +153,11 @@ class Graph extends Component {
   }
 
   _raiseEvent = (message) => {
-    const { setGenerating } = this.props;
-    console.log('mess', message);
-    const { generating, setModifyWhileGenerated } = this.props;
+    const { generating, setGenerating } = this.props;
     if (
       message.action !== domainEvents.ACTION.GRAPH_ALIGN &&
       (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS)
     ) {
-      this.graphManager.updateBlockState(true);
-      setModifyWhileGenerated(true);
-    } else if (generating !== GENERATE_STATUS.START || generating !== GENERATE_STATUS.SUCCESS) {
       setGenerating(GENERATE_STATUS.RESET);
     }
     eventBus.publish(domainEvents.GRAPH_DOMAINEVENT, message);
@@ -174,35 +169,33 @@ class Graph extends Component {
   };
 
   _handleGraphChange = (graphAligning = false) => {
+    const { setGraph, graph } = this.props;
     if (graphAligning) {
       this._raiseEvenGraphAligning({ action: domainEvents.ACTION.GRAPH_ALIGN });
-    } else {
-      const { setGraph, graph } = this.props;
+    } else if (this.graphState && this.graphManager && !this.dataIniting) {
+      const currentState = this.graphManager.getState();
+      const data = covertGraphStateToSavedData(currentState);
+      this._updateInspectionPalettes(data);
+      // check remove graphNode
+      const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
+      const { graphNodes } = separateNodes(removeNodes);
 
-      if (this.graphState && this.graphManager && !this.dataIniting) {
-        const currentState = this.graphManager.getState();
-        const data = covertGraphStateToSavedData(currentState);
-        this._updateInspectionPalettes(data);
-        // check remove graphNode
-        const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
-        const { graphNodes } = separateNodes(removeNodes);
-
-        if (graphNodes.length > 0) {
-          this._raiseEvent({
-            action: domainEvents.ACTION.ACCEPTDELETE,
-            value: graphNodes,
-            'g-type': G_TYPE.NODE,
-            storeActions: this.storeActions,
-          });
-        }
-
-        // raise update event and save graph data
-        if (!this.isNodeMoved) {
-          this._raiseEventUpdate();
-        }
-        setGraph(data);
+      if (graphNodes.length > 0) {
+        this._raiseEvent({
+          action: domainEvents.ACTION.ACCEPTDELETE,
+          value: graphNodes,
+          'g-type': G_TYPE.NODE,
+          storeActions: this.storeActions,
+        });
       }
+
+      // raise update event and save graph data
+      if (!this.isNodeMoved) {
+        this._raiseEventUpdate();
+      }
+      setGraph(data);
     }
+
     this.storeActions = false;
   };
 

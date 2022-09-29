@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import ProjectLayout from 'features/project/components/ProjectLayout';
-import { defaultTestCoverageData, setWork, setDbContext } from 'features/project/work/slices/workSlice';
+import { defaultTestCoverageData, setWork, setDbContext, setGenerating } from 'features/project/work/slices/workSlice';
 import { ModalForm } from 'features/shared/components';
 import alert from 'features/shared/components/Alert';
 import {
@@ -292,7 +292,7 @@ class Workspace extends Component {
 
   render() {
     const { viewMode, isLockedPanel, gridPanelLayout, formName, openRenameWorkModal } = this.state;
-    const { workName, projectName, generating } = this.props;
+    const { workName, projectName, generating, setGenerating } = this.props;
     const isSplitView = viewMode === VIEW_MODE.SPLIT;
     const menus = <MenuContainer />;
 
@@ -324,12 +324,17 @@ class Workspace extends Component {
           <span>
             {(generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS) && (
               <>
-                <i
-                  className={`bi central bi-arrow-repeat ${generating ? 'spinner-border' : ''} generating-loader`}
-                  id="icon-generating"
-                />
-                <UncontrolledTooltip target="icon-generating">
-                  <small className="generating_text" />
+                <Button
+                  color="link"
+                  size="sm"
+                  className="icon-btn sm clear-text-decor"
+                  id="tooltip-cancel-generating"
+                  onClick={() => setGenerating(GENERATE_STATUS.REQUEST_CANCEL)}
+                >
+                  <i className="bi central bi-x-circle" id="icon-generating" />
+                </Button>
+                <UncontrolledTooltip target="tooltip-cancel-generating">
+                  <small>Cancel generating</small>
                 </UncontrolledTooltip>
               </>
             )}
@@ -337,7 +342,7 @@ class Workspace extends Component {
             <Button
               color="link"
               size="sm"
-              className="icon-btn sm"
+              className="icon-btn sm clear-text-decor"
               id="tooltip-view-mode"
               onClick={() => this._handleChangeViewMode(isSplitView ? VIEW_MODE.SINGLE : VIEW_MODE.SPLIT)}
             >
@@ -349,7 +354,7 @@ class Workspace extends Component {
             <Button
               color="link"
               size="sm"
-              className="icon-btn sm"
+              className="icon-btn sm clear-text-decor"
               id="tooltip-lock-panel"
               onClick={this._toggleLockPanel}
             >
@@ -401,6 +406,7 @@ Workspace.propTypes = {
   projectName: PropTypes.string.isRequired,
   loadedWork: PropTypes.bool.isRequired,
   setDbContext: PropTypes.func.isRequired,
+  setGenerating: PropTypes.func.isRequired,
   dbContext: PropTypes.oneOfType([PropTypes.object]),
   generating: PropTypes.string.isRequired,
 };
@@ -409,7 +415,7 @@ Workspace.defaultProps = {
   dbContext: null,
 };
 
-const mapDispatchToProps = { setWork, setDbContext };
+const mapDispatchToProps = { setWork, setDbContext, setGenerating };
 
 const mapStateToProps = (state) => ({
   loadedWork: state.work.loaded,

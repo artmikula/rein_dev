@@ -149,7 +149,7 @@ const workercode = () => {
 
   self.addEventListener('message', async function (e) {
     if (e.data === 'request cancel') {
-      e.target.postMessage('cancelled');
+      e.target.postMessage('reset');
       return;
     }
     const { testScenarios, graphNodes, testDatas, dbInfo, lastKey } = e.data;

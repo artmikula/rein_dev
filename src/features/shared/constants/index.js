@@ -463,7 +463,6 @@ export const GENERATE_STATUS = {
   RESET: 'reset',
   COMPLETE: 'complete',
   REQUEST_CANCEL: 'request cancel',
-  CANCELLED: 'cancelled',
 };
 
 export const FILTER_TYPE = {

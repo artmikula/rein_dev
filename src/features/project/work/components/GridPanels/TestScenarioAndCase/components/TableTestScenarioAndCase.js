@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { Table } from 'reactstrap';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import appConfig from 'features/shared/lib/appConfig';
 import domainEvents from 'features/shared/domainEvents';
@@ -10,6 +10,7 @@ import { FILTER_TYPE, GENERATE_STATUS, RESULT_TYPE } from 'features/shared/const
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import Language from 'features/shared/languages/Language';
 import { sortByString } from 'features/shared/lib/utils';
+import { setGenerating } from 'features/project/work/slices/workSlice';
 import Header from './TableHeader';
 import TableRow from './TableRow';
 
@@ -21,6 +22,7 @@ function TableTestScenarioAndCase(props) {
   const [isCheckAll, setIsCheckAll] = useState(false);
 
   const { dbContext, generating, graph } = useSelector((state) => state.work);
+  const dispatch = useDispatch();
 
   const { testCasePageSize } = appConfig.testScenarioAndCase;
 
@@ -162,11 +164,8 @@ function TableTestScenarioAndCase(props) {
   }, [filterSubmitType, filterOptions]);
 
   useEffect(async () => {
-    if (
-      generating === GENERATE_STATUS.START ||
-      generating === GENERATE_STATUS.RESET ||
-      generating === GENERATE_STATUS.CANCELLED
-    ) {
+    console.log('generating', generating);
+    if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.RESET) {
       setColumns([]);
       setRows([]);
     } else if (generating === GENERATE_STATUS.INITIAL) {
@@ -185,6 +184,7 @@ function TableTestScenarioAndCase(props) {
         const groupRows = _getGroupByEffectNodes(rows);
         setColumns(columns);
         setRows(groupRows);
+        dispatch(setGenerating(GENERATE_STATUS.COMPLETE));
         const eventData = rows.map(({ id, page, totalPage }) => ({ testScenarioId: id, page, totalPage }));
         raiseEvent({
           value: eventData,

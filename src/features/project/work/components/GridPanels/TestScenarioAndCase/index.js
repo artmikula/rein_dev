@@ -63,7 +63,7 @@ class TestScenarioAndCase extends Component {
         if (e.data === GENERATE_STATUS.SUCCESS) {
           setGenerating(e.data);
         }
-        if (e.data === GENERATE_STATUS.CANCELLED) {
+        if (e.data === GENERATE_STATUS.RESET) {
           setGenerating(e.data);
         }
       };
@@ -85,6 +85,8 @@ class TestScenarioAndCase extends Component {
 
     eventBus.subscribe(this, domainEvents.TEST_DATA_DOMAINEVENT, async (event) => {
       if (event.message.action === domainEvents.ACTION.UPDATE) {
+        setGenerating(GENERATE_STATUS.START);
+        this.setState({ filterOptions: structuredClone(defaultFilterOptions), filterSubmitType: '' });
         await this._calculateTestScenarioAndCase(domainEvents.ACTION.UPDATE);
       }
     });

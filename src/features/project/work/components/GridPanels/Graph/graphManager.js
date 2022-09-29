@@ -100,10 +100,6 @@ class GraphManager {
     this.graph.on('tapend', this._onTapEnd);
   };
 
-  updateBlockState = (isBlocked) => {
-    this.isBlocked = isBlocked;
-  };
-
   changeNodeId = (oldNodeId, newNodeId) => {
     const node = this.graph.nodes().find((x) => x.data().nodeId === oldNodeId);
 
