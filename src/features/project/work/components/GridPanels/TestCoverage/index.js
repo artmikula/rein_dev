@@ -183,7 +183,11 @@ class TestCoverage extends Component {
       const { generating, setGenerating } = this.props;
 
       const { action, receivers, value } = message;
-      if (receivers.includes(domainEvents.DES.TESTCOVERAGE) && !isPlanning && generating === GENERATE_STATUS.SUCCESS) {
+      if (
+        receivers.includes(domainEvents.DES.TESTCOVERAGE) &&
+        !isPlanning &&
+        (generating === GENERATE_STATUS.SUCCESS || generating === GENERATE_STATUS.INITIAL)
+      ) {
         const result = await this._calculate(action === domainEvents.ACTION.LOAD_MORE, value);
         if (result) {
           this._recalculate(result);
