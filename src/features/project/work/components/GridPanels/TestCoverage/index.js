@@ -1,6 +1,7 @@
-import { setTestCoverages } from 'features/project/work/slices/workSlice';
-import { COVERAGE_ASPECT } from 'features/shared/constants';
+import { defaultTestCoverageData, setTestCoverages } from 'features/project/work/slices/workSlice';
+import { COVERAGE_ASPECT, GENERATE_STATUS } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
+import appConfig from 'features/shared/lib/appConfig';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import cloneDeep from 'lodash.clonedeep';
@@ -34,15 +35,13 @@ class TestCoverage extends Component {
     super(props);
     this.state = { isPlanning: false };
     this.oldData = {};
+    this.testScenarios = [];
+    this.testCases = [];
   }
 
   componentDidMount() {
     eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
       this._handleEvents(event.message);
-    });
-
-    eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
-      this._handleWorkMenuEvents(event);
     });
   }
 
@@ -67,48 +66,51 @@ class TestCoverage extends Component {
     eventBus.publish(domainEvents.TEST_COVERAGE_DOMAINEVENT, message);
   };
 
-  _calculate = async () => {
+  _calculate = async (isLoadMore, testScenariosPaging) => {
     const { graph, testDatas, dbContext } = this.props;
     const coverageResult = {};
-
-    /* TODO: remove this after finish implement indexedDb
-    const testScenariosAndCases = testScenarioAnsCaseStorage.get();
-
-    const testCases = [];
-    testScenariosAndCases.forEach((testScenario) => {
-      testScenario.testCases.forEach((testCase) =>
-        testCases.push({
-          ...testCase,
-          testScenario: { ...testScenario },
-          testDatas: testCase.testDatas,
-          results: testCase.results,
-        })
-      );
-    });
-
-    testCoverage.initValue(graph.graphNodes, testCases, testScenariosAndCases, graph.graphLinks, testDatas);
-
-    const data = {};
-
-    Object.keys(COVERAGE_ASPECT).forEach((key) => {
-      const result = testCoverage.calculateCoverage(COVERAGE_ASPECT[key]);
-      data[COVERAGE_ASPECT[key]] = { actualPercent: toPercent(result), denominator: result.denominator };
-    });
-
-    return data;
-    */
+    const { testCasePageSize } = appConfig.testScenarioAndCase;
+    let allTestCases = structuredClone(this.testCases);
 
     if (dbContext && dbContext.db) {
       const { testScenarioSet, testCaseSet } = dbContext;
-      const testScenarios = await testScenarioSet.get();
-      const testCases = await testCaseSet.get();
-      const promises = testScenarios.map(async (testScenario) => {
-        const _testScenario = testScenario;
-        _testScenario.testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));
-        return _testScenario;
-      });
-      await Promise.all(promises);
-      testCoverage.initValue(graph.graphNodes, testCases, testScenarios, graph.graphLinks, testDatas);
+      this.testScenarios = await testScenarioSet.get();
+
+      if (!isLoadMore) {
+        // eslint-disable-next-line no-restricted-syntax
+        for await (const paging of testScenariosPaging) {
+          const testScenario = this.testScenarios.find((testScenario) => testScenario.id === paging.testScenarioId);
+          const _testCases = await testCaseSet.getWithPaging(
+            testCasePageSize,
+            paging.page,
+            testCaseSet.table.testScenarioId.eq(paging.testScenarioId)
+          );
+
+          if (_testCases.length > 0) {
+            testScenario.page = paging.page ?? 0;
+            testScenario.totalPage = paging.totalPage ?? 0;
+            const testCases = allTestCases.concat(_testCases);
+            allTestCases = testCases;
+          }
+        }
+      } else {
+        const testScenario = this.testScenarios.find(
+          (testScenario) => testScenario.id === testScenariosPaging.testScenarioId
+        );
+        if (testScenario.page < testScenariosPaging.totalPage - 1 && testScenario.page < testScenariosPaging.page) {
+          const _testCases = await testCaseSet.getWithPaging(
+            testCasePageSize,
+            testCasePageSize * testScenariosPaging.page,
+            testCaseSet.table.testScenarioId.eq(testScenariosPaging.testScenarioId)
+          );
+          const testCases = allTestCases.concat(_testCases);
+          allTestCases = testCases;
+        }
+      }
+
+      this.testCases = allTestCases;
+
+      testCoverage.initValue(graph.graphNodes, this.testCases, this.testScenarios, graph.graphLinks, testDatas);
 
       Object.keys(COVERAGE_ASPECT).forEach((key) => {
         const result = testCoverage.calculateCoverage(COVERAGE_ASPECT[key]);
@@ -123,20 +125,16 @@ class TestCoverage extends Component {
     return coverageResult;
   };
 
-  _recalculate = async () => {
-    const result = await this._calculate();
-    if (result) {
+  _recalculate = (result) => {
+    const _result = result;
+    if (_result) {
       const { data } = this.props;
 
-      if (!data) {
-        return;
-      }
-
-      Object.keys(result).forEach((key) => {
-        result[key].planPercent = data[key]?.planPercent;
+      Object.keys(_result).forEach((key) => {
+        _result[key].planPercent = data[key]?.planPercent;
       });
 
-      this._setTestCoverages(result);
+      this._setTestCoverages(_result);
     }
   };
 
@@ -164,39 +162,49 @@ class TestCoverage extends Component {
     this.setState({ isPlanning: !isPlanning });
   };
 
-  _handleEvents = (message) => {
-    const { isPlanning } = this.state;
-    if (message.action === domainEvents.ACTION.ACCEPTGENERATE && !isPlanning) {
-      this._recalculate();
-    }
-  };
-
-  _handleWorkMenuEvents = (event) => {
-    const { action } = event.message;
-    const { data } = this.props;
-
-    if (action === domainEvents.ACTION.REPORTWORK) {
-      this._raiseEvent({
-        action: domainEvents.ACTION.REPORTWORK,
-        value: { testCoverage: testCoverage.generateReportData(data) },
-        receivers: [domainEvents.DES.WORKMENU],
-      });
+  _handleEvents = async (message) => {
+    try {
+      const { isPlanning } = this.state;
+      const { generating } = this.props;
+      const { action, receivers, value } = message;
+      if (
+        receivers.includes(domainEvents.DES.TESTCOVERAGE) &&
+        !isPlanning &&
+        (generating === GENERATE_STATUS.COMPLETE || generating === GENERATE_STATUS.INITIAL)
+      ) {
+        this._setTestCoverages(structuredClone(defaultTestCoverageData));
+        this.testScenarios = [];
+        this.testCases = [];
+        const result = await this._calculate(action === domainEvents.ACTION.LOAD_MORE, value);
+        if (result) {
+          await this._recalculate(result);
+        }
+      }
+    } catch (error) {
+      console.log('err', error);
     }
   };
 
   render() {
     const { isPlanning } = this.state;
-    const { data } = this.props;
+    const { data, generating } = this.props;
+
+    const isGenerated = generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS;
 
     return (
       <div className="d-flex test-coverage-container pt-3 text-muted">
         <div className="d-flex flex-column align-items-center px-3">
-          <RefreshButton className="my-2" enable={!isPlanning} onClick={this._recalculate} />
+          <RefreshButton className="my-2" enable={!isPlanning} onClick={this._recalculate} isGenerated={isGenerated} />
           <div className="border-top my-1 divider" />
-          <PlanButton className="my-2" enable={isPlanning} onClick={this._handlePlan} />
+          <PlanButton className="my-2" enable={isPlanning} onClick={this._handlePlan} isGenerated={isGenerated} />
           <p className="mb-0 text-uppercase">{Language.get('planning')}</p>
           <div className="border-top mt-2 mb-1 divider" />
-          <RevertButton className="my-2" enable={this.isPlanDataChanging()} onClick={this._handleRevert} />
+          <RevertButton
+            className="my-2"
+            enable={this.isPlanDataChanging()}
+            onClick={this._handleRevert}
+            isGenerated={isGenerated}
+          />
         </div>
         <div className="d-flex flex-column flex-grow-1 pr-3 scrollbar-sm overflow-auto">
           <div className="d-flex flex-grow-1">
@@ -238,6 +246,7 @@ TestCoverage.propTypes = {
     graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
     constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
+  generating: PropTypes.string.isRequired,
   dbContext: PropTypes.oneOfType([PropTypes.object]),
 };
 
@@ -250,6 +259,7 @@ const mapStateToProps = (state) => ({
   graph: state.work.graph,
   testDatas: state.work.testDatas,
   dbContext: state.work.dbContext,
+  generating: state.work.generating,
 });
 const mapDispatchToProps = { setTestCoverages };
 

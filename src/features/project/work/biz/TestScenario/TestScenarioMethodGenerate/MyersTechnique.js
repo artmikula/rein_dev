@@ -88,18 +88,18 @@ class MyerTechnique {
 
     const testScenarios = originalTestScenarios.filter(
       (testScenario, index, testScenarioList) =>
-        testScenarioList.findIndex((testScenarioItem) =>
-          testScenario.testAssertions.every((testAssertion) =>
-            testScenarioItem.testAssertions.some(
-              (testAssertionItem) =>
-                testAssertion.graphNodeId === testAssertionItem.graphNodeId &&
-                testAssertion.result === testAssertionItem.result
+        testScenarioList.findIndex(
+          (testScenarioItem) =>
+            testScenarioItem.targetNodeId === testScenario.targetNodeId &&
+            testScenario.testAssertions.every((testAssertion) =>
+              testScenarioItem.testAssertions.some(
+                (testAssertionItem) =>
+                  testAssertion.graphNodeId === testAssertionItem.graphNodeId &&
+                  testAssertion.result === testAssertionItem.result
+              )
             )
-          )
         ) === index
     );
-
-    // testScenarios = testScenarios.filter((x) => x.expectedResults);
 
     console.log('testScenarios', testScenarios);
 

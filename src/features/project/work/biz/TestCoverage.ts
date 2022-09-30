@@ -1,4 +1,6 @@
 /* eslint-disable max-lines */
+import Enumerable from 'linq';
+import cloneDeep from 'lodash.clonedeep';
 import { COMPLEX_LOGICAL, COVERAGE_ASPECT, GRAPH_NODE_TYPE } from 'features/shared/constants';
 import {
   ITestDataDetail,
@@ -10,7 +12,6 @@ import {
   ITestCase,
 } from 'types/models';
 import appConfig from 'features/shared/lib/appConfig';
-import Enumerable from 'linq';
 import TestCase from './TestCase';
 
 interface ITestCoverageResult {
@@ -74,13 +75,17 @@ class TestCoverage {
     graphLinks: IGraphLink[] = [],
     testDatas: ITestDataDetail[] = []
   ) {
-    this.graphNodes = graphNodes.slice();
-    this.testCases = testCases.slice();
+    this.graphNodes = cloneDeep(graphNodes);
+    this.testCases = cloneDeep(testCases);
     this.causeNodes = this.graphNodes.filter((graphNode) => graphNode.type === GRAPH_NODE_TYPE.CAUSE);
     this.effectNodes = this.graphNodes.filter((graphNode) => graphNode.type === GRAPH_NODE_TYPE.EFFECT);
-    this.testScenarios = testScenarios.slice();
-    this.graphLinks = graphLinks.slice();
-    this.testDatas = testDatas.slice();
+    this.graphLinks = cloneDeep(graphLinks);
+    this.testDatas = cloneDeep(testDatas);
+    this.testScenarios = cloneDeep(testScenarios);
+    this.testScenarios.forEach((testScenario) => {
+      const _testScenario = testScenario;
+      _testScenario.testCases = testCases.filter((testCase) => testCase.testScenarioId === testScenario.id);
+    });
   }
 
   calculateCoverage(aspect: string): ITestCoverageResult {

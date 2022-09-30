@@ -61,6 +61,11 @@
       cursor: grab;
     }
 
+    .cause-effect-node-disabled {
+      @extend ._cause-effect-node;
+      cursor: default;
+    }
+
     .cause-id {
       color: var(--white);
       background-color: var(--primary);

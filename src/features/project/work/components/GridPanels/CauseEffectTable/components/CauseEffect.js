@@ -2,14 +2,22 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
-import { CLASSIFY } from '../../../../../../shared/constants';
+import { useSelector } from 'react-redux';
+import { CLASSIFY, GENERATE_STATUS } from '../../../../../../shared/constants';
 
 export default function CauseEffect({ id, node, type, isMerged, onEditNode, onDrop, onDragOver }) {
   const [isEditing, setEditing] = useState(false);
+  const { generating } = useSelector((state) => state.work);
 
   const editNodeTextboxId = `edit-${node}-text-box`;
 
-  const handleClickNode = () => setEditing(true);
+  const handleClickNode = () => {
+    if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS) {
+      setEditing(false);
+      return;
+    }
+    setEditing(true);
+  };
 
   const handleEditNode = (nodeNum) => {
     setEditing(false);
@@ -31,7 +39,11 @@ export default function CauseEffect({ id, node, type, isMerged, onEditNode, onDr
   const handleBlur = (e) => handleEditNode(e.target.value);
 
   let nodeClassName = type === CLASSIFY.CAUSE ? 'cause-id' : 'effect-id';
-  nodeClassName += ' cause-effect-node';
+  if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS) {
+    nodeClassName += ' cause-effect-node-disabled';
+  } else {
+    nodeClassName += ' cause-effect-node';
+  }
 
   const editBoxClassName = `edit-node-box ${nodeClassName}`;
 

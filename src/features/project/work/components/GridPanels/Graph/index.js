@@ -5,11 +5,11 @@ import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import { setGraph } from 'features/project/work/slices/workSlice';
+import { setGraph, setGenerating } from 'features/project/work/slices/workSlice';
 import {
   ACTIONS_STATE_NAME,
   FILE_NAME,
-  // GENERATE_STATUS,
+  GENERATE_STATUS,
   GRAPH_LINK_TYPE,
   GRAPH_NODE_TYPE,
   GRAPH_SHORTCUT,
@@ -153,6 +153,15 @@ class Graph extends Component {
   }
 
   _raiseEvent = (message) => {
+    const { generating, setGenerating } = this.props;
+    if (
+      message.action !== domainEvents.ACTION.GRAPH_ALIGN &&
+      (generating === GENERATE_STATUS.START ||
+        generating === GENERATE_STATUS.SUCCESS ||
+        generating === GENERATE_STATUS.INITIAL)
+    ) {
+      setGenerating(GENERATE_STATUS.RESET);
+    }
     eventBus.publish(domainEvents.GRAPH_DOMAINEVENT, message);
   };
 
@@ -162,35 +171,33 @@ class Graph extends Component {
   };
 
   _handleGraphChange = (graphAligning = false) => {
+    const { setGraph, graph } = this.props;
     if (graphAligning) {
       this._raiseEvenGraphAligning({ action: domainEvents.ACTION.GRAPH_ALIGN });
-    } else {
-      const { setGraph, graph } = this.props;
+    } else if (this.graphState && this.graphManager && !this.dataIniting) {
+      const currentState = this.graphManager.getState();
+      const data = covertGraphStateToSavedData(currentState);
+      this._updateInspectionPalettes(data);
+      // check remove graphNode
+      const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
+      const { graphNodes } = separateNodes(removeNodes);
 
-      if (this.graphState && this.graphManager && !this.dataIniting) {
-        const currentState = this.graphManager.getState();
-        const data = covertGraphStateToSavedData(currentState);
-        this._updateInspectionPalettes(data);
-        // check remove graphNode
-        const { removeNodes } = compareNodeArray(graph.graphNodes, data.graphNodes);
-        const { graphNodes } = separateNodes(removeNodes);
-
-        if (graphNodes.length > 0) {
-          this._raiseEvent({
-            action: domainEvents.ACTION.ACCEPTDELETE,
-            value: graphNodes,
-            'g-type': G_TYPE.NODE,
-            storeActions: this.storeActions,
-          });
-        }
-
-        // raise update event and save graph data
-        if (!this.isNodeMoved) {
-          this._raiseEventUpdate();
-        }
-        setGraph(data);
+      if (graphNodes.length > 0) {
+        this._raiseEvent({
+          action: domainEvents.ACTION.ACCEPTDELETE,
+          value: graphNodes,
+          'g-type': G_TYPE.NODE,
+          storeActions: this.storeActions,
+        });
       }
+
+      // raise update event and save graph data
+      if (!this.isNodeMoved) {
+        this._raiseEventUpdate();
+      }
+      setGraph(data);
     }
+
     this.storeActions = false;
   };
 
@@ -581,6 +588,8 @@ Graph.propTypes = {
   redoStates: PropTypes.oneOfType([PropTypes.array]).isRequired,
   pushUndoStates: PropTypes.func.isRequired,
   clearRedoStates: PropTypes.func.isRequired,
+  generating: PropTypes.string.isRequired,
+  setGenerating: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
@@ -590,6 +599,7 @@ const mapStateToProps = (state) => ({
   undoHandlers: state.undoHandlers.handlers,
   undoStates: state.undoHandlers.undoStates,
   redoStates: state.undoHandlers.redoStates,
+  generating: state.work.generating,
 });
 
 const mapDispatchToProps = {
@@ -601,6 +611,7 @@ const mapDispatchToProps = {
   pushRedoStates,
   popRedoStates,
   clearRedoStates,
+  setGenerating,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Graph));

@@ -458,8 +458,11 @@ export const GRAPH_ACTIONS = {
 export const GENERATE_STATUS = {
   INITIAL: 'initial',
   START: 'start',
-  COMPLETE: 'complete',
   FAIL: 'fail',
+  SUCCESS: 'success',
+  RESET: 'reset',
+  COMPLETE: 'complete',
+  REQUEST_CANCEL: 'request cancel',
 };
 
 export const FILTER_TYPE = {

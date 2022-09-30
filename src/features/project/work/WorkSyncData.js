@@ -95,7 +95,7 @@ class WorkSyncData extends Component {
           disabled={isSyncing}
         >
           {!isSyncing ? (
-            <img src={saveIcon} alt="" style={{ width: '15px', height: '15px' }} />
+            <img src={saveIcon} alt="" style={{ width: '15px', height: '15px', marginBottom: 3 }} />
           ) : (
             <i className={iconClassName} style={{ fontSize: '16px', width: '16px', height: '16px' }} />
           )}

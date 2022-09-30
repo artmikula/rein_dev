@@ -70,6 +70,7 @@ const en = {
   causeandeffectgraph: 'Cause and Effect Graph',
   testscenarioortestcase: 'Test Scenario/Case',
   testdata: 'Test Data',
+  cancelgenerating: 'Cancel generating',
   /* End Workspace */
   /* Account menu */
   viewaccount: 'View account',
@@ -158,8 +159,6 @@ const en = {
   apply: 'Apply',
   name: 'Name',
   expectedresults: 'Expected Results',
-  testscenarioreload: 'Test Scenario has been generated successfully. Reload to get new data',
-  reload: 'Reload',
   /* End Test scenario/case */
   /* Test data */
   type: 'Type',
@@ -238,7 +237,9 @@ const en = {
   info: 'Info',
   exitednodealert: 'newNode has been exited!',
   cannotaccessproject: 'You are not granted to access this project.',
-  workquotaexceed: 'Your browser storage is full, click ‘OK’ to clear cache.',
+  /* Work menu */
+  reportgenerated: 'Report is being generated',
+  /* End Work menu */
 };
 
 export default en;

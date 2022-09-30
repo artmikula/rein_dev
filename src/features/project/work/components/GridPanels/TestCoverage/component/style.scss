@@ -5,13 +5,13 @@
 
   &.disabled {
     .unit:hover {
-      cursor:default;
+      cursor: default;
     }
     .value:hover {
-      cursor:default;
+      cursor: default;
     }
     input[type='range'] {
-      cursor:default;
+      cursor: default;
     }
   }
 
@@ -63,7 +63,7 @@
     background-color: #eaeaea;
     border: solid 1px #0d7fd6;
     &::after {
-      content: "";
+      content: '';
       position: absolute;
       bottom: 1px;
       width: 7px;
@@ -85,7 +85,7 @@
     background-color: rgba(0, 120, 212, 0.8);
     border: solid 1px #fff;
     &::after {
-      content: "";
+      content: '';
       position: absolute;
       top: 2px;
       width: 7px;
@@ -173,6 +173,13 @@ $disable-color: #aeb5bd;
       margin-top: $planning-button-width;
     }
   }
+
+  &.disabled {
+    &:hover {
+      color: $disable-color;
+      border: 1px solid $disable-color;
+    }
+  }
 }
 
 .test-coverage-button {
@@ -198,5 +205,12 @@ $disable-color: #aeb5bd;
   &:hover {
     color: var(--primary);
     border-color: var(--primary);
+  }
+
+  &.disabled {
+    &:hover {
+      color: $disable-color;
+      border: 1px solid $disable-color;
+    }
   }
 }

@@ -49,11 +49,6 @@ class TestDataTable extends Component {
       this._handleShortCutEvents(code);
     });
 
-    eventBus.subscribe(this, domainEvents.WORK_MENU_DOMAINEVENT, (event) => {
-      const { message } = event;
-      this._handleWorkMenuEvents(message);
-    });
-
     TEST_DATA_SHORTCUT.forEach(({ code, shortcutKeys }) => {
       Mousetrap.bind(shortcutKeys.join('+'), (e) => {
         e.preventDefault();
@@ -127,7 +122,7 @@ class TestDataTable extends Component {
 
     const newTestDatas = TestData.update(testDatas, item, index);
 
-    this._setTestDatas(newTestDatas, true);
+    this._setTestDatas(newTestDatas);
   };
 
   _onTrueFalseDataChange = (nodeId, valueType, value) => {
@@ -241,19 +236,6 @@ class TestDataTable extends Component {
 
   _setDefaultData = () => {
     window.option({ optionType: OPTION_TYPE.TEST_DATA });
-  };
-
-  _handleWorkMenuEvents = (message) => {
-    const { action } = message;
-    const { testDatas } = this.props;
-
-    if (action === domainEvents.ACTION.REPORTWORK) {
-      this._raiseEvent({
-        action: domainEvents.ACTION.REPORTWORK,
-        value: { testData: testDatas },
-        receivers: [domainEvents.DES.WORKMENU],
-      });
-    }
   };
 
   _onBlurInputData = (nodeId) => {

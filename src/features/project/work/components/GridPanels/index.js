@@ -1,5 +1,12 @@
 import { connect } from 'react-redux';
-import { EVENT_LISTENER_LIST, GRAPH_ACTIONS, GRID_PANEL_SIZE, LAYOUT, VIEW_MODE } from 'features/shared/constants';
+import {
+  EVENT_LISTENER_LIST,
+  GENERATE_STATUS,
+  GRAPH_ACTIONS,
+  GRID_PANEL_SIZE,
+  LAYOUT,
+  VIEW_MODE,
+} from 'features/shared/constants';
 import Language from 'features/shared/languages/Language';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -8,6 +15,7 @@ import 'react-grid-layout/css/styles.css';
 import { Button } from 'reactstrap';
 import eventBus from 'features/shared/lib/eventBus';
 import domainEvents from 'features/shared/domainEvents';
+import { setGenerating } from 'features/project/work/slices/workSlice';
 import CauseEffectTable from './CauseEffectTable';
 import Graph from './Graph';
 import GridPanelItem from './GridPanelItem';
@@ -63,6 +71,9 @@ class GridPanels extends Component {
               <div className="btn-actions">
                 <Button
                   className="icons-img icon-btn icon-add"
+                  disabled={
+                    this.props.generating === GENERATE_STATUS.START || this.props.generating === GENERATE_STATUS.SUCCESS
+                  }
                   onClick={() => this.handleGraphAction(GRAPH_ACTIONS.GENERATE)}
                 />
                 <Button
@@ -126,12 +137,10 @@ class GridPanels extends Component {
   }
 
   _generateTestCase = () => {
-    const { testDatas } = this.props;
     const { isTestDataChanged } = this.state;
     if (isTestDataChanged) {
       eventBus.publish(domainEvents.TEST_DATA_DOMAINEVENT, {
         action: domainEvents.ACTION.UPDATE,
-        value: { ...testDatas },
         receivers: [domainEvents.DES.TESTSCENARIOS],
       });
     }
@@ -280,14 +289,19 @@ class GridPanels extends Component {
 }
 
 GridPanels.propTypes = {
-  testDatas: PropTypes.oneOfType([PropTypes.array]).isRequired,
   viewMode: PropTypes.string.isRequired,
   isLockedPanel: PropTypes.bool.isRequired,
   onLayoutChange: PropTypes.func.isRequired,
   layouts: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   loadedWork: PropTypes.bool.isRequired,
+  generating: PropTypes.string.isRequired,
 };
 
-const mapStateToProps = (state) => ({ testDatas: state.work.testDatas, loadedWork: state.work.loaded });
+const mapStateToProps = (state) => ({
+  loadedWork: state.work.loaded,
+  generating: state.work.generating,
+});
 
-export default connect(mapStateToProps)(GridPanels);
+const mapDispatchToProps = { setGenerating };
+
+export default connect(mapStateToProps, mapDispatchToProps)(GridPanels);

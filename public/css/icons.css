@@ -44,6 +44,9 @@ button.icons-img {
 .icon-btn.icon-add:hover {
   background-position: -61px -2px;
 }
+.icon-btn.icon-add:disabled {
+  background-color: none;
+}
 
 .icon-aline {
   background-position: -92px -2px;

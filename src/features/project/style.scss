@@ -33,34 +33,3 @@
   left: 50%;
   transform: translateX(-50%);
 }
-
-.generating_text {
-  &::after {
-    content: 'Generating';
-    font-style: italic;
-    animation: generating-text 3s infinite;
-  }
-}
-
-.generating-loader {
-  border: none !important;
-  display: inline-flex !important;
-  width: 16px;
-  height: 16px;
-  font-size: 16px;
-}
-
-@keyframes generating-text {
-  0% {
-    content: 'Generating';
-  }
-  25% {
-    content: 'Generating.';
-  }
-  50% {
-    content: 'Generating..';
-  }
-  75% {
-    content: 'Generating...';
-  }
-}

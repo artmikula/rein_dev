@@ -71,7 +71,26 @@ const workercode = () => {
               await _insertTestCase(testCase, nextAssertions, rawTestDatas, testDataLength, testCaseSet, maxTestCase);
             }
           }
-          if (existData && !existData?.data.includes(data)) {
+          if (existData && existData?.data === data) {
+            const newTestCase = {
+              id: getTestCaseId(),
+              testScenarioId: testCase.testScenarioId,
+              results: [...testCase.results],
+              testDatas: structuredClone(testCase.testDatas),
+              isSelected: false,
+            };
+            _updateTestData(newTestCase, newTestData, testAssertion.graphNodeId);
+            if (nextAssertions.length > 0) {
+              await _insertTestCase(
+                newTestCase,
+                nextAssertions,
+                rawTestDatas,
+                testDataLength,
+                testCaseSet,
+                maxTestCase
+              );
+            }
+          } else if (existData && existData?.data !== data) {
             const newTestCase = {
               id: getTestCaseId(),
               testScenarioId: testCase.testScenarioId,
@@ -104,10 +123,13 @@ const workercode = () => {
                   maxTestCase
                 );
               }
+              if (dataIndex < testData.length - 1) {
+                continue;
+              }
               if (dataIndex === testData.length - 1 || nextAssertions.length === 0) {
                 return;
               }
-            } else {
+            } else if (nextAssertions.length > 0) {
               await _insertTestCase(
                 newTestCase,
                 nextAssertions,
@@ -116,6 +138,8 @@ const workercode = () => {
                 testCaseSet,
                 maxTestCase
               );
+            } else {
+              continue;
             }
           }
         }
@@ -124,6 +148,10 @@ const workercode = () => {
   };
 
   self.addEventListener('message', async function (e) {
+    if (e.data === 'request cancel') {
+      e.target.postMessage('reset');
+      return;
+    }
     const { testScenarios, graphNodes, testDatas, dbInfo, lastKey } = e.data;
     const _testScenarios = JSON.parse(testScenarios);
     const _graphNodes = JSON.parse(graphNodes);
@@ -160,7 +188,7 @@ const workercode = () => {
 
         await _insertTestCase(testCase, testAssertions, _testDatas, testAssertions.length, objectStore, maxTestCase);
       }
-      e.target.postMessage('complete');
+      e.target.postMessage('success');
     };
   });
 

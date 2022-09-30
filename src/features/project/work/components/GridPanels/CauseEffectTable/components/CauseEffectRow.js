@@ -2,14 +2,25 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
-import { ORDER_POSITION } from '../../../../../../shared/constants';
+import { useSelector } from 'react-redux';
+import { GENERATE_STATUS, ORDER_POSITION } from '../../../../../../shared/constants';
 import CauseEffect from './CauseEffect';
 import ChildCauseEffect from './ChildCauseEffect';
 import IconButton from './IconButton';
 
 export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, onReorder, onEditNode }) {
+  const [isBlocked, setIsBlocked] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const { generating } = useSelector((state) => state.work);
   const { id, node, type, mergedChildren, mergedNodes, definition } = data;
+
+  React.useEffect(() => {
+    if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.SUCCESS) {
+      setIsBlocked(true);
+    } else {
+      setIsBlocked(false);
+    }
+  }, [generating]);
 
   const handleCollapseRow = (e) => {
     e.preventDefault();
@@ -113,7 +124,7 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, o
   return (
     <>
       <tr
-        draggable="true"
+        draggable={isBlocked ? 'false' : 'true'}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDrop={handleDropToReorder}
@@ -148,6 +159,7 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, o
             id={`delete${id}`}
             tooltip={`Delete ${node}`}
             onClick={handleOnDelete}
+            disabled={isBlocked}
             iconClassName="bi bi-trash delete-icon"
           />
         </td>

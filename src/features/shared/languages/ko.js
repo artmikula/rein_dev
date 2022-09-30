@@ -69,6 +69,7 @@ const ko = {
   causeandeffectgraph: '원인과 결과 그래프',
   testscenarioortestcase: '테스트 시나리오/케이스',
   testdata: '테스트 데이터',
+  cancelgenerating: '생성 취소',
   /* End Workspace */
   /* Account menu */
   viewaccount: '계정 보기',
@@ -157,8 +158,6 @@ const ko = {
   apply: '대다',
   name: '이름',
   expectedresults: '예상 결과',
-  testscenarioreload: '테스트 시나리오가 성공적으로 생성되었습니다. 새 데이터를 얻으려면 새로고침하세요.',
-  reload: '재장전',
   /* End Test scenario/case */
   /* Test data */
   type: '유형',
@@ -215,7 +214,9 @@ const ko = {
   info: '정보',
   exitednodealert: 'newNode가 종료되었습니다!',
   canaccessproject: '이 프로젝트에 액세스할 수 있는 권한이 없습니다.',
-  workquotaexceed: '브라우저 저장 공간이 가득 찼습니다. 캐시를 지우려면 ‘확인’ 을 클릭하세요.',
+  /* Work menu */
+  reportgenerated: '보고서 생성 중',
+  /* End Work menu */
 };
 
 export default ko;

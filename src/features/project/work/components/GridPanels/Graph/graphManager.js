@@ -52,6 +52,7 @@ class GraphManager {
     this.graph.on('dragfreeon', onDragFreeOn);
     this.storeActions = () => storeActionsWhenDelete();
     this._panSpeed = GRAPH_CONFIGS.AUTO_PAN_SPEED;
+    this.isBlocked = false;
   }
 
   _init = (container) => {
