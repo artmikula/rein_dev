@@ -38,7 +38,6 @@ export const workSlice = createSlice({
     testDatas: [],
     dbContext: null,
     generating: GENERATE_STATUS.INITIAL,
-    modifyWhileGenerated: false,
   } as IWorkSlice,
   reducers: {
     setWork: (state: IWorkSlice, action: PayloadAction<IWorkSlice>) => {
@@ -98,11 +97,6 @@ export const workSlice = createSlice({
       _state.generating = action.payload;
       return _state;
     },
-    setModifyWhileGenerated: (state: IWorkSlice, action: PayloadAction<boolean>) => {
-      const _state = state;
-      _state.modifyWhileGenerated = action.payload;
-      return _state;
-    },
   },
 });
 
@@ -116,7 +110,6 @@ export const {
   setTestDatas,
   setDbContext,
   setGenerating,
-  setModifyWhileGenerated,
 } = workSlice.actions;
 
 export default workSlice.reducer;

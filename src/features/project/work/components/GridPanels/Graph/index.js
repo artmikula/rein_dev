@@ -5,7 +5,7 @@ import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import { setGraph, setModifyWhileGenerated, setGenerating } from 'features/project/work/slices/workSlice';
+import { setGraph, setGenerating } from 'features/project/work/slices/workSlice';
 import {
   ACTIONS_STATE_NAME,
   FILE_NAME,
@@ -589,7 +589,6 @@ Graph.propTypes = {
   pushUndoStates: PropTypes.func.isRequired,
   clearRedoStates: PropTypes.func.isRequired,
   generating: PropTypes.string.isRequired,
-  setModifyWhileGenerated: PropTypes.func.isRequired,
   setGenerating: PropTypes.func.isRequired,
 };
 
@@ -612,7 +611,6 @@ const mapDispatchToProps = {
   pushRedoStates,
   popRedoStates,
   clearRedoStates,
-  setModifyWhileGenerated,
   setGenerating,
 };
 

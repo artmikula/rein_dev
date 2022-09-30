@@ -70,6 +70,7 @@ const en = {
   causeandeffectgraph: 'Cause and Effect Graph',
   testscenarioortestcase: 'Test Scenario/Case',
   testdata: 'Test Data',
+  cancelgenerating: 'Cancel generating',
   /* End Workspace */
   /* Account menu */
   viewaccount: 'View account',
@@ -236,11 +237,9 @@ const en = {
   info: 'Info',
   exitednodealert: 'newNode has been exited!',
   cannotaccessproject: 'You are not granted to access this project.',
-  workquotaexceed: 'Your browser storage is full, click ‘OK’ to clear cache.',
-  /* Grid panel */
-  cancelgenerateprocess:
-    'Test scenarios are generating...Click ‘OK’ will stop the process and clear all current Test scenarios and cases',
-  /* End Grid panel */
+  /* Work menu */
+  reportgenerated: 'Report is being generated',
+  /* End Work menu */
 };
 
 export default en;

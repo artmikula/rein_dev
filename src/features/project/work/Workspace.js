@@ -327,10 +327,10 @@ class Workspace extends Component {
                   id="tooltip-cancel-generating"
                   onClick={() => setGenerating(GENERATE_STATUS.REQUEST_CANCEL)}
                 >
-                  <i className="bi central bi-x-circle" id="icon-generating" />
+                  <i className="bi central bi-x-circle" />
                 </Button>
                 <UncontrolledTooltip target="tooltip-cancel-generating">
-                  <small>Cancel generating</small>
+                  <small>{Language.get('cancelgenerating')}</small>
                 </UncontrolledTooltip>
               </>
             )}

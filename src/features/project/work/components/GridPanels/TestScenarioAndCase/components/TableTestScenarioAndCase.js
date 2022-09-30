@@ -164,7 +164,6 @@ function TableTestScenarioAndCase(props) {
   }, [filterSubmitType, filterOptions]);
 
   useEffect(async () => {
-    console.log('generating', generating);
     if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.RESET) {
       setColumns([]);
       setRows([]);
