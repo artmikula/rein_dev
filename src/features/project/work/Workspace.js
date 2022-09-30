@@ -27,7 +27,6 @@ import CreateForm from './components';
 import AlertGenerateReport from './components/AlertGenerateReport';
 import GridPanels from './components/GridPanels';
 import MenuContainer from './components/Menu/MenuContainer';
-import testScenarioAnsCaseStorage from './services/TestScenarioAnsCaseStorage';
 import workService from './services/workService';
 import WorkSyncData from './WorkSyncData';
 
@@ -150,9 +149,6 @@ class Workspace extends Component {
     const { setWork, history, setDbContext } = this.props;
     const result = await workService.getAsync(projectId, workId);
     let workData = {};
-
-    /* TODO: check this after finish implement indexedDb */
-    testScenarioAnsCaseStorage.setId(workId);
 
     if (result.error) {
       let { message } = result.error;

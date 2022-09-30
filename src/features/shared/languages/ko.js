@@ -135,6 +135,7 @@ const ko = {
   arclevel: '아크 레벨',
   abridgedpercentage: '요약 백분율',
   duplication: '요약 백분율',
+  errorcalculate: 'SSMetric을 계산하는 동안 오류가 발생했습니다!',
   /* End SS metric */
   /* Test coverage */
   planning: '계획',

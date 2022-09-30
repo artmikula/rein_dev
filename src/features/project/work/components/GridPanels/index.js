@@ -127,12 +127,6 @@ class GridPanels extends Component {
   componentDidMount() {
     this._initLayoutSize();
     window.addEventListener(EVENT_LISTENER_LIST.RESIZE, this._onChangeLayoutSize);
-
-    // eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
-    //   if (event.message.action === domainEvents.ACTION.ACCEPTGENERATE) {
-    //     this.setState({ loading: false });
-    //   }
-    // });
   }
 
   componentWillUnmount() {

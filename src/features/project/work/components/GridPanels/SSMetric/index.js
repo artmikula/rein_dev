@@ -1,15 +1,11 @@
 /* eslint-disable max-lines */
-import SSMetricHelper from 'features/project/work/biz/SSMetric';
-import testScenarioAnsCaseStorage from 'features/project/work/services/TestScenarioAnsCaseStorage';
-// import { GENERATE_STATUS } from 'features/shared/constants';
-import domainEvents from 'features/shared/domainEvents';
-import eventBus from 'features/shared/lib/eventBus';
-import { debounce } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Label } from 'reactstrap';
+import SSMetricHelper from 'features/project/work/biz/SSMetric';
+import { GENERATE_STATUS, METRIC_KEYS } from 'features/shared/constants';
 import Language from '../../../../../shared/languages/Language';
 import CircleProgress from './CircleProgress';
 import RadarChart from './RadarChart';
@@ -19,27 +15,27 @@ class SSMertic extends Component {
   baseChartDatas = [
     {
       label: 'I',
-      key: 'inclusive',
+      key: METRIC_KEYS.INCLUSIVE,
       value: 0.8,
     },
     {
       label: 'O',
-      key: 'onlyOne',
+      key: METRIC_KEYS.ONLY_ONE,
       value: 0.5,
     },
     {
       label: 'R',
-      key: 'require',
+      key: METRIC_KEYS.REQUIRE,
       value: 0.4,
     },
     {
       label: 'M',
-      key: 'mask',
+      key: METRIC_KEYS.MASK,
       value: 0.6,
     },
     {
       label: 'E',
-      key: 'exclusive',
+      key: METRIC_KEYS.EXCLUSIVE,
       value: 1,
     },
   ];
@@ -47,21 +43,21 @@ class SSMertic extends Component {
   baseLeftCircles = [
     {
       label: 'A',
-      key: 'percentAnd',
+      key: METRIC_KEYS.PERCENT_AND,
       color: '#17a2b8',
       percent: 32,
       valueDisplay: '32',
     },
     {
       label: 'O',
-      key: 'percentOr',
+      key: METRIC_KEYS.PERCENT_OR,
       color: '#17a2b8',
       percent: 49,
       valueDisplay: '49',
     },
     {
       label: Language.get('brevity'),
-      key: 'brevity',
+      key: METRIC_KEYS.BREVITY,
       color: '#8D5393',
       percent: 63,
       valueDisplay: '63',
@@ -71,21 +67,21 @@ class SSMertic extends Component {
   baseRightCircles = [
     {
       label: Language.get('efferent'),
-      key: 'efferent',
+      key: METRIC_KEYS.EFFERENT,
       color: '#007bff',
       percent: 90,
       valueDisplay: '90',
     },
     {
       label: Language.get('afferent'),
-      key: 'afferent',
+      key: METRIC_KEYS.AFFERENT,
       color: '#007bff',
       percent: 25,
       valueDisplay: '25',
     },
     {
       label: Language.get('complexity'),
-      key: 'complexity',
+      key: METRIC_KEYS.COMPLEXITY,
       color: '#007bff',
       percent: 47,
       valueDisplay: '47',
@@ -94,52 +90,66 @@ class SSMertic extends Component {
 
   baseRecTangles = [
     {
-      key: 'sameSoundAmbiguity',
+      key: METRIC_KEYS.SAME_SOUND_AMBIGUITY,
       label: Language.get('samesoundambiguity'),
       color: 'blue',
       value: 1,
     },
     {
-      key: 'sameMeaningAmbiguity',
+      key: METRIC_KEYS.SAME_MEANING_AMBIGUITY,
       label: Language.get('samemeaningambiguity'),
       color: 'blue',
       value: 0,
     },
     {
-      key: 'orphanNode',
+      key: METRIC_KEYS.ORPHAN_NODE,
       label: Language.get('orphannode'),
       color: 'purple',
       value: 0,
     },
     {
-      key: 'arcLevel',
+      key: METRIC_KEYS.ARC_LEVEL,
       label: Language.get('arclevel'),
       color: 'purple',
       value: 1,
     },
   ];
 
-  _forceUpdate = debounce(() => this.forceUpdate(), 300);
-
   constructor() {
     super();
+    this.state = {
+      leftCircles: [],
+      rightCircles: [],
+      recTangles: [],
+      chartDatas: [],
+      duplication: 0,
+      abridged: 0,
+      conotationValue: '',
+      error: null,
+    };
     this.conotationValueRef = React.createRef(null);
   }
 
-  componentDidMount() {
-    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, async () => {
-      this._forceUpdate();
-    });
+  async componentDidMount() {
+    const { dbContext } = this.props;
+    if (dbContext && dbContext.db) {
+      await this._updateSSMetric();
+    }
   }
 
-  componentWillUnmount() {
-    eventBus.unsubscribe(this);
+  async componentDidUpdate(prevProps) {
+    const { generating, dbContext } = this.props;
+    if (
+      (prevProps.dbContext === null && dbContext && dbContext.db) ||
+      (prevProps.generating === GENERATE_STATUS.START && generating === GENERATE_STATUS.COMPLETE)
+    ) {
+      await this._updateSSMetric();
+    }
   }
 
-  _caculateSSMetricValue = () => {
+  _calculateSSMetricValue = async () => {
     try {
-      const { testBasis, causeEffects, graph } = this.props;
-      const testScenariosAndCases = testScenarioAnsCaseStorage.get();
+      const { testBasis, causeEffects, graph, dbContext } = this.props;
 
       SSMetricHelper.initValue(graph.graphNodes, graph.graphLinks, graph.constraints, causeEffects);
       const newChartDatas = this.baseChartDatas.map((x) => {
@@ -153,45 +163,54 @@ class SSMertic extends Component {
       const newConotationValue = SSMetricHelper.calculateConnotation(testBasis);
       this._setConotationPosition(newConotationValue);
 
-      const brevity = this.baseLeftCircles.find((x) => x.key === 'brevity');
-      brevity.percent = parseFloat(SSMetricHelper.calculateBrevity(testScenariosAndCases)) * 100;
-      brevity.valueDisplay = SSMetricHelper.calculateBrevity(testScenariosAndCases);
+      /** baseLeftCircles */
+      const newLeftCircles = structuredClone(this.baseLeftCircles);
+      const brevity = newLeftCircles.find((x) => x.key === METRIC_KEYS.BREVITY);
+      if (dbContext && dbContext.db) {
+        const { testScenarioSet } = dbContext;
+        const testScenariosAndCases = await testScenarioSet.get();
+        brevity.percent = parseFloat(SSMetricHelper.calculateBrevity(testScenariosAndCases)) * 100;
+        brevity.valueDisplay = SSMetricHelper.calculateBrevity(testScenariosAndCases);
+      }
 
-      const percentAnd = this.baseLeftCircles.find((x) => x.key === 'percentAnd');
+      const percentAnd = newLeftCircles.find((x) => x.key === METRIC_KEYS.PERCENT_AND);
       percentAnd.percent = parseFloat(logicGraphValue.percentAnd) * 100;
       percentAnd.valueDisplay = logicGraphValue.percentAnd;
 
-      const percentOr = this.baseLeftCircles.find((x) => x.key === 'percentOr');
+      const percentOr = newLeftCircles.find((x) => x.key === METRIC_KEYS.PERCENT_OR);
       percentOr.percent = parseFloat(logicGraphValue.percentOr) * 100;
       percentOr.valueDisplay = logicGraphValue.percentOr;
+      /** end baseLeftCircles */
 
-      const efferent = this.baseRightCircles.find((x) => x.key === 'efferent');
+      /** baseRightCircles */
+      const newRightCircles = structuredClone(this.baseRightCircles);
+      const efferent = newRightCircles.find((x) => x.key === METRIC_KEYS.EFFERENT);
       efferent.percent = parseFloat(SSMetricHelper.calculateEfferent()) * 100;
       efferent.valueDisplay = SSMetricHelper.calculateEfferent();
 
-      const afferent = this.baseRightCircles.find((x) => x.key === 'afferent');
+      const afferent = newRightCircles.find((x) => x.key === METRIC_KEYS.AFFERENT);
       afferent.percent = parseFloat(logicGraphValue.afferent) * 100;
       afferent.valueDisplay = logicGraphValue.afferent;
 
-      const complexity = this.baseRightCircles.find((x) => x.key === 'complexity');
+      const complexity = newRightCircles.find((x) => x.key === METRIC_KEYS.COMPLEXITY);
       complexity.percent = parseFloat(logicGraphValue.complexity) * 100;
       complexity.valueDisplay = logicGraphValue.complexity;
+      /** end baseRightCircles */
 
-      const sameSoundAmbiguity = this.baseRecTangles.find((x) => x.key === 'sameSoundAmbiguity');
+      /** baseRecTangles */
+      const newRecTangles = structuredClone(this.baseRecTangles);
+      const sameSoundAmbiguity = newRecTangles.find((x) => x.key === METRIC_KEYS.SAME_SOUND_AMBIGUITY);
       sameSoundAmbiguity.value = SSMetricHelper.countNodes().sameSoundAmbiguity;
 
-      const sameMeaningAmbiguity = this.baseRecTangles.find((x) => x.key === 'sameMeaningAmbiguity');
+      const sameMeaningAmbiguity = newRecTangles.find((x) => x.key === METRIC_KEYS.SAME_MEANING_AMBIGUITY);
       sameMeaningAmbiguity.value = SSMetricHelper.countNodes().sameMeaningAmbiguity;
 
-      const orphanNode = this.baseRecTangles.find((x) => x.key === 'orphanNode');
+      const orphanNode = newRecTangles.find((x) => x.key === METRIC_KEYS.ORPHAN_NODE);
       orphanNode.value = SSMetricHelper.countLinkedNodes().orphanNode;
 
-      const arcLevel = this.baseRecTangles.find((x) => x.key === 'arcLevel');
+      const arcLevel = newRecTangles.find((x) => x.key === METRIC_KEYS.ARC_LEVEL);
       arcLevel.value = SSMetricHelper.countLinkedNodes().arcLevel;
-
-      const newRightCircles = [...this.baseRightCircles];
-      const newLeftCircles = [...this.baseLeftCircles];
-      const newRecTangles = [...this.baseRecTangles];
+      /** end baseRecTangles */
 
       const newAbridgedValue = parseFloat(SSMetricHelper.calculateNodesPercentage().abridged) * 100;
       const newDuplicationValue = parseFloat(SSMetricHelper.calculateNodesPercentage().duplication) * 100;
@@ -200,9 +219,9 @@ class SSMertic extends Component {
 
       return {
         chartDatas: newChartDatas,
-        rightCircles: newRightCircles,
-        leftCircles: newLeftCircles,
-        recTangles: newRecTangles,
+        rightCircles: newRightCircles ?? [],
+        leftCircles: newLeftCircles ?? [],
+        recTangles: newRecTangles ?? [],
         abridged: newAbridgedValue,
         duplication: newDuplicationValue,
         conotationValue: newConotationValue,
@@ -213,15 +232,30 @@ class SSMertic extends Component {
 
       return {
         chartDatas: [],
-        rightCircles: [...this.baseRightCircles],
-        leftCircles: [...this.baseLeftCircles],
-        recTangles: [...this.baseRecTangles],
+        rightCircles: this.baseRightCircles,
+        leftCircles: this.baseLeftCircles,
+        recTangles: this.baseRecTangles,
         abridged: 0,
         duplication: 0,
         conotationValue: '',
-        error: 'Error calculcate SSMetric !',
+        error: Language.get('errorcalculate'),
       };
     }
+  };
+
+  _updateSSMetric = async () => {
+    const { leftCircles, rightCircles, recTangles, chartDatas, duplication, abridged, conotationValue, error } =
+      await this._calculateSSMetricValue();
+    this.setState({
+      leftCircles,
+      rightCircles,
+      recTangles,
+      chartDatas,
+      duplication,
+      abridged,
+      conotationValue,
+      error,
+    });
   };
 
   _setConotationPosition = (value) => {
@@ -235,7 +269,7 @@ class SSMertic extends Component {
 
   render() {
     const { leftCircles, rightCircles, recTangles, chartDatas, duplication, abridged, conotationValue, error } =
-      this._caculateSSMetricValue();
+      this.state;
 
     return (
       <div>
@@ -335,12 +369,20 @@ SSMertic.propTypes = {
     graphLinks: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
     constraints: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
   }).isRequired,
+  generating: PropTypes.string.isRequired,
+  dbContext: PropTypes.oneOfType([PropTypes.object]),
+};
+
+SSMertic.defaultProps = {
+  dbContext: null,
 };
 
 const mapStateToProps = (state) => ({
   testBasis: state.work.testBasis,
   causeEffects: state.work.causeEffects,
   graph: state.work.graph,
+  dbContext: state.work.dbContext,
+  generating: state.work.generating,
 });
 
 export default connect(mapStateToProps)(withRouter(SSMertic));
