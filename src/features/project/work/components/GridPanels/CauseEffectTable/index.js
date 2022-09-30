@@ -88,7 +88,7 @@ class CauseEffectTable extends Component {
       return;
     }
     const result = [];
-    let causeEffects = listData.slice();
+    let causeEffects = structuredClone(listData);
     this.needConfirm = false;
 
     for (let i = 0; i < data.length; i++) {
@@ -112,7 +112,7 @@ class CauseEffectTable extends Component {
         }
       }
       // create cause/effect item and set id
-      const newItem = CauseEffect.generateCauseEffectItem(listData, value, parent);
+      const newItem = CauseEffect.generateCauseEffectItem(causeEffects, value, parent);
       newItem.id = uuidv4();
       result.push(newItem);
       causeEffects = causeEffects.concat(newItem);

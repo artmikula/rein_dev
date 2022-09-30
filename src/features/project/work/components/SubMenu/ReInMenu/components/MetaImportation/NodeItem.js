@@ -27,6 +27,6 @@ export default function NodeItem({ data, onDoubleClick }) {
 }
 
 NodeItem.propTypes = {
-  data: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object)]).isRequired,
+  data: PropTypes.oneOfType([PropTypes.object]).isRequired,
   onDoubleClick: PropTypes.func.isRequired,
 };
