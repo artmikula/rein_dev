@@ -216,7 +216,7 @@ class TestScenarioAndCase extends Component {
     eventBus.publish(domainEvents.TEST_SCENARIO_DOMAINEVENT, message);
   };
 
-  _getTestScenarioAndCase = async () => {
+  _getTestScenarioAndCase = async (isFilter = true) => {
     const { dbContext, graph } = this.props;
     if (dbContext && dbContext.db) {
       const { testScenarioSet, testCaseSet } = dbContext;
@@ -230,6 +230,19 @@ class TestScenarioAndCase extends Component {
 
       const testScenariosAndCases = await Promise.all(promises);
       const rows = TestScenarioHelper.convertToRows(testScenariosAndCases, testScenarios, columns, graph.graphNodes);
+
+      if (isFilter) {
+        const selectedRows = rows.filter(
+          (row) => row.isSelected || row.testCases.some((testCase) => testCase.isSelected)
+        );
+        selectedRows.forEach((testScenario) => {
+          const _testScenario = testScenario;
+          _testScenario.testCases = testScenario.testCases.filter((testCase) => testCase.isSelected);
+          return _testScenario;
+        });
+
+        return { rows: selectedRows.length > 0 ? selectedRows : rows, columns };
+      }
       return { rows, columns };
     }
     return { rows: [], columns: [] };
@@ -316,18 +329,22 @@ class TestScenarioAndCase extends Component {
   async _exportTestScenario() {
     const { workName, graph } = this.props;
     const dataToConvert = [];
-    const { rows, columns } = await this._getTestScenarioAndCase();
+    const { rows, columns } = await this._getTestScenarioAndCase(false);
 
-    rows.forEach((row) => {
+    const selectedRows = rows.filter((row) => row.isSelected);
+
+    const _rows = selectedRows.length > 0 ? selectedRows : rows;
+
+    _rows.forEach((row) => {
       dataToConvert.push(this._createExportRowData(row, columns));
     });
     const csvFile = arrayToCsv(dataToConvert, graph.graphNodes, EXPORT_TYPE_NAME.TestCase);
     Download(csvFile, FILE_NAME.EXPORT_TEST_SCENARIO.replace('workname', workName), 'text/csv;charset=utf-8');
   }
 
-  _exportTestCase() {
+  async _exportTestCase() {
     const { workName } = this.props;
-    const csvFile = this._createTestCasesFile();
+    const csvFile = await this._createTestCasesFile();
 
     Download(csvFile, FILE_NAME.EXPORT_TEST_CASE.replace('workname', workName), 'text/csv;charset=utf-8');
   }
