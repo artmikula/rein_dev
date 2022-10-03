@@ -17,7 +17,11 @@ function FilterBar(props) {
   const [causeNodes, setCauseNodes] = React.useState([]);
 
   React.useEffect(async () => {
-    if ((generating === GENERATE_STATUS.COMPLETE || generating === GENERATE_STATUS.INITIAL) && dbContext) {
+    if (
+      (generating === GENERATE_STATUS.COMPLETE || generating === GENERATE_STATUS.INITIAL) &&
+      dbContext &&
+      dbContext.db
+    ) {
       const { testScenarioSet } = dbContext;
       const testScenarios = await testScenarioSet.get();
       const testAssertions = testScenarios.map((testScenario) => testScenario.testAssertions).flat();
