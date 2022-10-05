@@ -102,7 +102,7 @@ class MyerTechnique {
         ) === index
     );
 
-    // console.log('testScenarios', testScenarios);
+    console.log('testScenarios', testScenarios);
 
     return {
       scenarios: testScenarios,

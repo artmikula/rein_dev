@@ -19,7 +19,6 @@ class TestScenarioGenerator {
 
     const scenarioDictionary = new Map<string, ISimpleTestScenario>();
 
-    // currently we do not suppport relation "Effect to Effect", so remove this handle
     const effectToEffectRelationList = [];
 
     for (let i = 0; i < graphLinks.length; i++) {
@@ -112,9 +111,6 @@ class TestScenarioGenerator {
       });
     }
 
-    // console.log('RESULT SCENARIOS', resultList);
-    // resultList.forEach((value) => console.log(this.getExpressionString(value)));
-
     return resultList;
   }
 
@@ -144,11 +140,6 @@ class TestScenarioGenerator {
   }
 
   buildExpectedResultsOfTestScenario(scenario: ISimpleTestScenario, graphNodes: IGraphNode[]) {
-    // if (!scenario.result) {
-    //   return `!${scenario.targetNodeId}`;
-    // }
-
-    // return scenario.targetNodeId;
     const { testResults } = scenario;
     let result = '';
     const falseResults = testResults.filter((x) => x.type === RESULT_TYPE.False);
