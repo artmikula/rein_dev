@@ -60,6 +60,7 @@ class MyerTechnique {
       this.groupNodes,
       this.effectNodes,
       this.constraints,
+      this.graphLinks,
       tmpScenarioList,
       appConfig.general.viewOmmited
     );
@@ -104,7 +105,7 @@ class MyerTechnique {
     console.log('testScenarios', testScenarios);
 
     return {
-      scenarios: this._mapToOldScenarios(testScenarios),
+      scenarios: testScenarios,
       graphNodes: this.graphNodes,
     };
   }

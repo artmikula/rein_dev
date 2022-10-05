@@ -1,5 +1,5 @@
 /* eslint-disable no-bitwise */
-import { GRAPH_NODE_TYPE } from 'features/shared/constants';
+import { GRAPH_NODE_TYPE, RESULT_TYPE } from 'features/shared/constants';
 import {
   IGraphLink,
   ITestScenario,
@@ -19,19 +19,20 @@ class TestScenarioGenerator {
 
     const scenarioDictionary = new Map<string, ISimpleTestScenario>();
 
-    // currently we do not suppport relation "Effect to Effect", so remove this handle
-    // const effectToEffectRelationList = [];
+    const effectToEffectRelationList = [];
 
     for (let i = 0; i < graphLinks.length; i++) {
       const { source, target } = graphLinks[i];
 
-      const validLink = !!source && !!target && source.type !== GRAPH_NODE_TYPE.EFFECT;
+      const validLink = !!source && !!target;
 
       if (validLink) {
         const scenario = scenarioDictionary.get(target.id);
 
-        // add to exist scenario when has multiple link to 1 targets
-        if (scenario) {
+        if (source.type === GRAPH_NODE_TYPE.EFFECT) {
+          effectToEffectRelationList.push(graphLinks[i]);
+        } else if (scenario) {
+          // add to exist scenario when has multiple link to 1 targets
           const assertion = {
             // graphNode: source,
             graphNodeId: source.id,
@@ -49,6 +50,21 @@ class TestScenarioGenerator {
           scenarioDictionary.set(key, scenario);
         }
       }
+    }
+
+    for (let i = 0; i < effectToEffectRelationList.length; i++) {
+      const link = effectToEffectRelationList[i];
+      const { source, target } = link;
+
+      scenarioDictionary.forEach((scenario) => {
+        if (scenario.testResults.some((x) => x.graphNodeId === source.id)) {
+          const testResult = {
+            type: RESULT_TYPE.True,
+            graphNodeId: target.id,
+          };
+          scenario.testResults.push(testResult);
+        }
+      });
     }
 
     // Log for debug mode
@@ -95,9 +111,6 @@ class TestScenarioGenerator {
       });
     }
 
-    // console.log('RESULT SCENARIOS', resultList);
-    // resultList.forEach((value) => console.log(this.getExpressionString(value)));
-
     return resultList;
   }
 
@@ -126,12 +139,34 @@ class TestScenarioGenerator {
     };
   }
 
-  buildExpectedResultsOfTestScenario(scenario: ISimpleTestScenario) {
-    if (!scenario.result) {
-      return `!${scenario.targetNodeId}`;
+  buildExpectedResultsOfTestScenario(scenario: ISimpleTestScenario, graphNodes: IGraphNode[]) {
+    const { testResults } = scenario;
+    let result = '';
+    const falseResults = testResults.filter((x) => x.type === RESULT_TYPE.False);
+    const basicResults = testResults.filter((x) => x.type === RESULT_TYPE.None || x.type === RESULT_TYPE.True);
+    if (basicResults.length === 0) {
+      return null;
     }
 
-    return scenario.targetNodeId;
+    const firstBasicResultNode = graphNodes.find((x) => x.id === basicResults[0].graphNodeId);
+
+    if (firstBasicResultNode) {
+      result = result.concat(firstBasicResultNode.nodeId);
+    }
+
+    for (let i = 1; i < basicResults.length; i++) {
+      if (falseResults.some((x) => x.graphNodeId === basicResults[i].graphNodeId)) {
+        result = result.concat('!');
+      }
+
+      const basicResultNode = graphNodes.find((x) => x.id === basicResults[i].graphNodeId);
+
+      if (basicResultNode) {
+        result = `${result}, ${basicResultNode.nodeId}`;
+      }
+    }
+
+    return result;
   }
 
   /* TODO: need check again, because there's no references */

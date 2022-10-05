@@ -168,10 +168,14 @@ const workercode = () => {
       const objectStore = await transaction.objectStore(_dbInfo.table);
       await objectStore.clear();
       for await (const testScenario of _testScenarios) {
-        const { testAssertions, resultType, targetGraphNodeId } = testScenario;
+        const { testAssertions, resultType, expectedResults } = testScenario;
         const results = [];
-        const graphNode = _graphNodes.find((graphNode) => graphNode.id === targetGraphNodeId);
-        const nodeDefinition = graphNode ? graphNode.definition : '';
+        const _expectedResults = expectedResults.split(',').map((result) => result.trim());
+        const graphNode = _graphNodes
+          .filter((graphNode) => _expectedResults.some((result) => graphNode.nodeId === result))
+          .map((graphNode) => graphNode.definition)
+          .sort();
+        const nodeDefinition = graphNode ? graphNode.join(', ') : '';
         if (resultType === 'False') {
           results.push(`NOT(${nodeDefinition})`);
         } else {

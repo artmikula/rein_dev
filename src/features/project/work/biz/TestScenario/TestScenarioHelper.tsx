@@ -484,9 +484,19 @@ class TestScenarioHelper {
   ) {
     const rows: IRow[] = scenarios.map((scenario) => {
       const data = testCaseData.find((data) => data.id === scenario.id);
+      const testCasesDuplicated: any = data.testCases.filter(
+        (testCase: any, index: number, arrTestCases: any[]) =>
+          arrTestCases.findIndex((arrTestCase) =>
+            arrTestCase.testDatas.every((arrTestData: any) =>
+              testCase.testDatas.some(
+                (testData: any) => arrTestData.nodeId === testData.nodeId && arrTestData.data === testData.data
+              )
+            )
+          ) === index
+      );
       return {
         ...scenario,
-        testCases: data.testCases,
+        testCases: testCasesDuplicated,
         isSelected: !data.testCases
           .filter((testCase: ITestCase) => testCase.testScenarioId === scenario.id)
           .some((testCase: ITestCase) => !testCase.isSelected),
@@ -496,6 +506,13 @@ class TestScenarioHelper {
     });
 
     const testScenarios: ITestScenarioAndCaseRow[] = rows.map((testScenario, testScenarioIndex: number) => {
+      const _expectedResults = testScenario?.expectedResults?.split(',').map((item: any) => item.trim()) ?? [];
+      const effectDefinition =
+        graphNodes
+          .filter((graphNode) => _expectedResults.some((result) => graphNode.nodeId === result))
+          .map((graphNode) => graphNode.definition)
+          .sort()
+          .join(', ') ?? [];
       const testScenarioItem: ITestScenarioAndCaseRow = {
         Name: `TS#${testScenarioIndex + 1}(${testScenario?.scenarioType})`,
         isSelected: !!testScenario?.isSelected,
@@ -503,16 +520,14 @@ class TestScenarioHelper {
         isViolated: testScenario?.isViolated,
         sourceTargetType: testScenario?.sourceTargetType,
         resultType: testScenario?.resultType ?? RESULT_TYPE.True,
-        effectDefinition:
-          graphNodes.find((graphNode) => graphNode.nodeId === testScenario?.expectedResults)?.definition ?? '',
+        effectDefinition,
         totalPage: testScenario?.totalPage,
         page: testScenario?.page,
+        results: testScenario?.expectedResults,
       };
 
       columns.forEach((column) => {
-        if (column.key === 'results') {
-          testScenarioItem[column.key] = testScenario?.expectedResults;
-        } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
+        if (column.key === 'isValid' || column.key === 'isBaseScenario') {
           testScenarioItem[column.key] = !!testScenario[column.key];
         } else {
           const testAssertion = testScenario?.testAssertions.find((x: ITestAssertion) => x.graphNodeId === column.key);
@@ -541,12 +556,11 @@ class TestScenarioHelper {
           id: testCase?.id,
           Name: `TC#${testScenarioIndex + 1}-${testCaseIndex + 1}`,
           isSelected: !!testCase?.isSelected,
+          results: _expectedResults,
         };
 
         columns.forEach((column) => {
-          if (column.key === 'results') {
-            testCaseItem[column.key] = testCase[column.key].join(', ');
-          } else if (column.key === 'isValid' || column.key === 'isBaseScenario') {
+          if (column.key === 'isValid' || column.key === 'isBaseScenario') {
             testCaseItem[column.key] = '';
           } else {
             const testData = testCase?.testDatas.find((x: ITestData) => x.graphNodeId === column.key);
@@ -572,7 +586,7 @@ class TestScenarioHelper {
     return testScenarios;
   }
 
-  convertToColumns(graphNodes: IGraphNode[] = [], language: any): ITestScenarioAndCaseColumn[] {
+  convertToColumns(graphNodes: IGraphNode[] = []): ITestScenarioAndCaseColumn[] {
     const columns: ITestScenarioAndCaseColumn[] = [
       {
         headerName: 'V',
@@ -603,7 +617,7 @@ class TestScenarioHelper {
       };
     });
 
-    columns.push({ headerName: language.get('expectedresults'), key: 'results' });
+    // columns.push({ headerName: language.get('expectedresults'), key: 'results' });
     columns.push(...graphNodeHeaders);
 
     return columns;

@@ -208,7 +208,12 @@ export class SimpleTestScenario implements ISimpleTestScenario {
     this.isFeasible = true;
     this.result = true;
     this.resultType = RESULT_TYPE.True;
-    this.testResults = [];
+    this.testResults = [
+      {
+        type: RESULT_TYPE.True,
+        graphNodeId: target.id,
+      },
+    ];
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
