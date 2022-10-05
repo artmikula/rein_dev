@@ -220,7 +220,7 @@ class TestScenarioAndCase extends Component {
     const { dbContext, graph } = this.props;
     if (dbContext && dbContext.db) {
       const { testScenarioSet, testCaseSet } = dbContext;
-      const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
+      const columns = TestScenarioHelper.convertToColumns(graph.graphNodes);
       const testScenarios = await testScenarioSet.get();
       const promises = testScenarios.map(async (testScenario) => {
         const _testScenario = testScenario;

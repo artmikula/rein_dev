@@ -113,7 +113,7 @@ class WorkMenu extends Component {
         const causeEffectsReport = CauseEffect.generateReportData(causeEffects);
         const { testScenarioSet, testCaseSet } = dbContext;
         const _testScenarios = await testScenarioSet.get();
-        const dataColumns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
+        const dataColumns = TestScenarioHelper.convertToColumns(graph.graphNodes);
         const promises = _testScenarios.map(async (testScenario) => {
           const _testScenario = testScenario;
           _testScenario.testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));

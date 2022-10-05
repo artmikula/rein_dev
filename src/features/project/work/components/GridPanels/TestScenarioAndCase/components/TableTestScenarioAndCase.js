@@ -8,7 +8,6 @@ import appConfig from 'features/shared/lib/appConfig';
 import domainEvents from 'features/shared/domainEvents';
 import { FILTER_TYPE, GENERATE_STATUS, RESULT_TYPE } from 'features/shared/constants';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
-import Language from 'features/shared/languages/Language';
 import { sortByString } from 'features/shared/lib/utils';
 import { setGenerating } from 'features/project/work/slices/workSlice';
 import Header from './TableHeader';
@@ -48,7 +47,7 @@ function TableTestScenarioAndCase(props) {
         });
 
         const data = await Promise.all(promises);
-        const columns = TestScenarioHelper.convertToColumns(graph.graphNodes, Language);
+        const columns = TestScenarioHelper.convertToColumns(graph.graphNodes);
         return {
           rows: TestScenarioHelper.convertToRows(data, testScenarios, columns, graph.graphNodes) ?? [],
           columns: columns ?? [],

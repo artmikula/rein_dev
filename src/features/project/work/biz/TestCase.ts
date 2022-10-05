@@ -58,7 +58,7 @@ class TestCase {
         const testCaseItem: ITestCaseReport = {
           name: testCase.Name,
           expectedResults: testScenario.results,
-          definition: testCase.results,
+          definition: testScenario.effectDefinition,
           causes: [],
         };
         Object.keys(testCase).forEach((key: keyof ITestCaseReport) => {

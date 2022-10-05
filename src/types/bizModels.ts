@@ -10,7 +10,7 @@ interface ITestCaseRow {
   id: string;
   Name: string;
   isSelected: boolean;
-  results?: string;
+  results?: string[];
   isLastRow?: boolean;
 }
 

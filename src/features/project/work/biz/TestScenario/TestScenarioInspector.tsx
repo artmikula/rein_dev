@@ -1,7 +1,13 @@
 /* eslint-disable no-bitwise */
-import { CONSTRAINT_TYPE, NODE_INSPECTION, RESULT_TYPE, TEST_SCENARIO_TYPE } from 'features/shared/constants';
+import {
+  CONSTRAINT_TYPE,
+  GRAPH_NODE_TYPE,
+  NODE_INSPECTION,
+  RESULT_TYPE,
+  TEST_SCENARIO_TYPE,
+} from 'features/shared/constants';
 import Enumerable from 'linq';
-import { IConstraint, IGraphNode, INodeConstraint, ISimpleTestScenario } from 'types/models';
+import { IConstraint, IGraphLink, IGraphNode, INodeConstraint, ISimpleTestScenario } from 'types/models';
 import constraintHelper from '../Constraint';
 
 class TestScenarioInspector {
@@ -10,6 +16,7 @@ class TestScenarioInspector {
     groupNodes: IGraphNode[],
     effectNodes: IGraphNode[],
     constraints: IConstraint[],
+    graphLinks: IGraphLink[],
     tmpScenarioList: ISimpleTestScenario[],
     showReducedScenariosAndCases: boolean
   ) {
@@ -53,7 +60,12 @@ class TestScenarioInspector {
       }
     }
 
-    const scenarioInspection = this._inspectEffectRelation(testScenarios, constraints, inspectionDictionary);
+    const scenarioInspection = this._inspectEffectRelation(
+      testScenarios,
+      constraints,
+      graphLinks,
+      inspectionDictionary
+    );
 
     testScenarios = scenarioInspection.scenarios;
     inspectionDictionary = scenarioInspection.inspectionDictionary;
@@ -111,9 +123,54 @@ class TestScenarioInspector {
   _inspectEffectRelation(
     scenarios: ISimpleTestScenario[],
     originConstraints: IConstraint[],
+    graphLinks: IGraphLink[],
     inspectionDictionary = new Map()
   ) {
     // remove handle for effectToEffectLinks because currently we do not have this kind of links
+    const effectToEffectLinks = graphLinks.filter(
+      (x) => x.source.type === GRAPH_NODE_TYPE.EFFECT && x.target.type === GRAPH_NODE_TYPE.EFFECT
+    );
+    for (let i = 0; i < effectToEffectLinks.length; i++) {
+      const { source, target } = effectToEffectLinks[i];
+      const scenarioList = scenarios.filter((x) =>
+        x.testResults.some(
+          (y) => (y.graphNodeId === source.id && y.type === RESULT_TYPE.True) || y.type === RESULT_TYPE.None
+        )
+      );
+      for (let j = 0; j < scenarioList.length; j++) {
+        const isExistedTrueResult = scenarioList[j].testResults.some(
+          (x) => x.graphNodeId === target.id && x.type === RESULT_TYPE.True
+        );
+        const isExistedFalseResult = scenarioList[j].testResults.some(
+          (x) => x.graphNodeId === target.id && x.type === RESULT_TYPE.False
+        );
+
+        if (scenarioList[j].testResults.some((x) => x.type === RESULT_TYPE.False && x.graphNodeId === source.id)) {
+          if (!effectToEffectLinks[i].isNotRelation) {
+            if (!isExistedFalseResult) {
+              scenarioList[j].testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.False });
+            }
+
+            if (source.effectGroup === target.effectGroup) {
+              const inspection = inspectionDictionary.get(target.id) | NODE_INSPECTION.HasRelationInSameGroup;
+              inspectionDictionary.set(target.id, inspection);
+            }
+          } else if (!isExistedTrueResult) {
+            scenarioList[j].testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.True });
+          }
+        } else if (!effectToEffectLinks[i].isNotRelation) {
+          if (!isExistedTrueResult) {
+            scenarioList[j].testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.True });
+          }
+          if (source.effectGroup === target.effectGroup) {
+            const inspection = inspectionDictionary.get(target.id) | NODE_INSPECTION.HasRelationInSameGroup;
+            inspectionDictionary.set(target.id, inspection);
+          }
+        } else if (!isExistedFalseResult) {
+          scenarioList[j].testResults.push({ graphNodeId: target.id, type: RESULT_TYPE.False });
+        }
+      }
+    }
 
     const constraints = originConstraints.filter((x) => x.type === CONSTRAINT_TYPE.MASK);
     for (let i = 0; i < constraints.length; i++) {
