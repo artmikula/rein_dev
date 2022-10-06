@@ -302,7 +302,7 @@ class SSMertic extends Component {
       leftCircles,
       rightCircles,
       recTangles,
-      chartDatas: [],
+      chartDatas: structuredClone(baseChartDatas),
       abridged: 0,
       duplication: 0,
       conotationValue: '',

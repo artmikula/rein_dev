@@ -152,7 +152,7 @@ class TestScenarioAndCase extends Component {
 
   _calculateTestScenarioAndCase = async (domainAction) => {
     try {
-      const { graph, testDatas, setGraph, dbContext, match, generating } = this.props;
+      const { graph, testDatas, setGraph, dbContext, match } = this.props;
       const { webWorker, maxTestCase } = this.state;
       const { workId } = match.params;
 
@@ -190,15 +190,13 @@ class TestScenarioAndCase extends Component {
         table: TABLES.TEST_CASES,
       };
 
-      if (generating === GENERATE_STATUS.START) {
-        webWorker.postMessage({
-          dbInfo: JSON.stringify(_dbInfo),
-          testScenarios: JSON.stringify(testScenarios),
-          graphNodes: JSON.stringify(graphNodes),
-          testDatas: JSON.stringify(testDatas),
-          lastKey: maxTestCase,
-        });
-      }
+      webWorker.postMessage({
+        dbInfo: JSON.stringify(_dbInfo),
+        testScenarios: JSON.stringify(testScenarios),
+        graphNodes: JSON.stringify(graphNodes),
+        testDatas: JSON.stringify(testDatas),
+        lastKey: maxTestCase,
+      });
 
       await setGraph({ ...graph, graphNodes });
 
@@ -389,7 +387,6 @@ class TestScenarioAndCase extends Component {
           filterOptions={filterOptions}
           filterSubmitType={filterSubmitType}
           submitFilter={this._handleFilterTestScenario}
-          raiseEvent={this._raiseEvent}
         />
       </div>
     );

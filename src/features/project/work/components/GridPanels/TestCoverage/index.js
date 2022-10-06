@@ -39,21 +39,11 @@ class TestCoverage extends Component {
     this.testCases = [];
   }
 
-  componentDidMount() {
-    eventBus.subscribe(this, domainEvents.TEST_SCENARIO_DOMAINEVENT, (event) => {
-      this._handleEvents(event.message);
-    });
-  }
-
   componentDidUpdate(prevProps) {
     const { generating, setTestCoverages } = this.props;
     if (prevProps.generating !== GENERATE_STATUS.RESET && generating === GENERATE_STATUS.RESET) {
       setTestCoverages(structuredClone(defaultTestCoverageData));
     }
-  }
-
-  componentWillUnmount() {
-    eventBus.unsubscribe();
   }
 
   _setTestCoverages = (data) => {
@@ -73,49 +63,19 @@ class TestCoverage extends Component {
     eventBus.publish(domainEvents.TEST_COVERAGE_DOMAINEVENT, message);
   };
 
-  _calculate = async (isLoadMore, testScenariosPaging) => {
+  _calculate = async () => {
     const { graph, testDatas, dbContext } = this.props;
     const coverageResult = {};
-    const { testCasePageSize } = appConfig.testScenarioAndCase;
-    let allTestCases = structuredClone(this.testCases);
 
     if (dbContext && dbContext.db) {
       const { testScenarioSet, testCaseSet } = dbContext;
       this.testScenarios = await testScenarioSet.get();
-
-      if (!isLoadMore) {
-        // eslint-disable-next-line no-restricted-syntax
-        for await (const paging of testScenariosPaging) {
-          const testScenario = this.testScenarios.find((testScenario) => testScenario.id === paging.testScenarioId);
-          const _testCases = await testCaseSet.getWithPaging(
-            testCasePageSize,
-            paging.page,
-            testCaseSet.table.testScenarioId.eq(paging.testScenarioId)
-          );
-
-          if (_testCases.length > 0) {
-            testScenario.page = paging.page ?? 0;
-            testScenario.totalPage = paging.totalPage ?? 0;
-            const testCases = allTestCases.concat(_testCases);
-            allTestCases = testCases;
-          }
-        }
-      } else {
-        const testScenario = this.testScenarios.find(
-          (testScenario) => testScenario.id === testScenariosPaging.testScenarioId
-        );
-        if (testScenario.page < testScenariosPaging.totalPage - 1 && testScenario.page < testScenariosPaging.page) {
-          const _testCases = await testCaseSet.getWithPaging(
-            testCasePageSize,
-            testCasePageSize * testScenariosPaging.page,
-            testCaseSet.table.testScenarioId.eq(testScenariosPaging.testScenarioId)
-          );
-          const testCases = allTestCases.concat(_testCases);
-          allTestCases = testCases;
-        }
+      this.testCases = await testCaseSet.get();
+      // eslint-disable-next-line no-restricted-syntax
+      for await (const testScenario of this.testScenarios) {
+        const testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));
+        testScenario.testCases = testCases;
       }
-
-      this.testCases = allTestCases;
 
       testCoverage.initValue(graph.graphNodes, this.testCases, this.testScenarios, graph.graphLinks, testDatas);
 
@@ -169,27 +129,11 @@ class TestCoverage extends Component {
     this.setState({ isPlanning: !isPlanning });
   };
 
-  _handleEvents = async (message) => {
-    try {
-      const { isPlanning } = this.state;
-      const { generating } = this.props;
-      const { action, receivers, value } = message;
-      if (
-        receivers.includes(domainEvents.DES.TESTCOVERAGE) &&
-        !isPlanning &&
-        (generating === GENERATE_STATUS.COMPLETE || generating === GENERATE_STATUS.INITIAL)
-      ) {
-        this._setTestCoverages(structuredClone(defaultTestCoverageData));
-        this.testScenarios = [];
-        this.testCases = [];
-        const result = await this._calculate(action === domainEvents.ACTION.LOAD_MORE, value);
-        if (result) {
-          await this._recalculate(result);
-        }
-      }
-    } catch (error) {
-      console.log('err', error);
-    }
+  _refreshButton = async () => {
+    this.testScenarios = [];
+    this.testCases = [];
+    const result = await this._calculate();
+    await this._recalculate(result);
   };
 
   render() {
@@ -201,7 +145,12 @@ class TestCoverage extends Component {
     return (
       <div className="d-flex test-coverage-container pt-3 text-muted">
         <div className="d-flex flex-column align-items-center px-3">
-          <RefreshButton className="my-2" enable={!isPlanning} onClick={this._recalculate} isGenerated={isGenerated} />
+          <RefreshButton
+            className="my-2"
+            enable={!isPlanning}
+            onClick={this._refreshButton}
+            isGenerated={isGenerated}
+          />
           <div className="border-top my-1 divider" />
           <PlanButton className="my-2" enable={isPlanning} onClick={this._handlePlan} isGenerated={isGenerated} />
           <p className="mb-0 text-uppercase">{Language.get('planning')}</p>
