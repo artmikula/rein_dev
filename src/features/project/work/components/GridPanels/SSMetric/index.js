@@ -128,6 +128,7 @@ class SSMertic extends Component {
       error: null,
     };
     this.conotationValueRef = React.createRef(null);
+    this.isCalculated = false;
   }
 
   async componentDidMount() {
@@ -141,9 +142,15 @@ class SSMertic extends Component {
     const { generating, dbContext } = this.props;
     if (
       (prevProps.dbContext === null && dbContext && dbContext.db) ||
-      (prevProps.generating === GENERATE_STATUS.START && generating === GENERATE_STATUS.COMPLETE)
+      (prevProps.generating === GENERATE_STATUS.SUCCESS && generating === GENERATE_STATUS.COMPLETE)
     ) {
       await this._updateSSMetric();
+    } else if (
+      prevProps.generating !== GENERATE_STATUS.RESET &&
+      generating === GENERATE_STATUS.RESET &&
+      this.isCalculated
+    ) {
+      await this._updateSSMetric('reset');
     }
   }
 
@@ -243,19 +250,25 @@ class SSMertic extends Component {
     }
   };
 
-  _updateSSMetric = async () => {
-    const { leftCircles, rightCircles, recTangles, chartDatas, duplication, abridged, conotationValue, error } =
-      await this._calculateSSMetricValue();
-    this.setState({
-      leftCircles,
-      rightCircles,
-      recTangles,
-      chartDatas,
-      duplication,
-      abridged,
-      conotationValue,
-      error,
-    });
+  _updateSSMetric = async (type = 'default') => {
+    if (type === 'reset') {
+      this.isCalculated = false;
+      this._resetMetricValue();
+    } else if (type === 'default') {
+      const { leftCircles, rightCircles, recTangles, chartDatas, duplication, abridged, conotationValue, error } =
+        await this._calculateSSMetricValue();
+      this.isCalculated = true;
+      this.setState({
+        leftCircles,
+        rightCircles,
+        recTangles,
+        chartDatas,
+        duplication,
+        abridged,
+        conotationValue,
+        error,
+      });
+    }
   };
 
   _setConotationPosition = (value) => {
@@ -265,6 +278,36 @@ class SSMertic extends Component {
       this.conotationValueRef.current.style.left =
         percent > 10 ? `calc(${percent}% - 20px)` : `calc(${percent}% - 7px)`;
     }
+  };
+
+  _resetMetricValue = () => {
+    const rightCircles = this.baseRightCircles.map((data) => {
+      const _data = data;
+      _data.percent = 0;
+      _data.valueDisplay = '0';
+      return _data;
+    });
+    const leftCircles = this.baseLeftCircles.map((data) => {
+      const _data = data;
+      _data.percent = 0;
+      _data.valueDisplay = '0';
+      return _data;
+    });
+    const recTangles = this.baseRecTangles.map((data) => {
+      const _data = data;
+      _data.value = 0;
+      return _data;
+    });
+    this.setState({
+      leftCircles,
+      rightCircles,
+      recTangles,
+      chartDatas: [],
+      abridged: 0,
+      duplication: 0,
+      conotationValue: '',
+      error: null,
+    });
   };
 
   render() {

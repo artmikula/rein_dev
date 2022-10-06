@@ -157,9 +157,7 @@ class Graph extends Component {
     if (
       message.action !== domainEvents.ACTION.GRAPH_ALIGN &&
       message.action !== domainEvents.ACTION.REPORTWORK &&
-      (generating === GENERATE_STATUS.START ||
-        generating === GENERATE_STATUS.SUCCESS ||
-        generating === GENERATE_STATUS.INITIAL)
+      generating !== GENERATE_STATUS.RESET
     ) {
       setGenerating(GENERATE_STATUS.RESET);
     }

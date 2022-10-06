@@ -45,6 +45,13 @@ class TestCoverage extends Component {
     });
   }
 
+  componentDidUpdate(prevProps) {
+    const { generating, setTestCoverages } = this.props;
+    if (prevProps.generating !== GENERATE_STATUS.RESET && generating === GENERATE_STATUS.RESET) {
+      setTestCoverages(structuredClone(defaultTestCoverageData));
+    }
+  }
+
   componentWillUnmount() {
     eventBus.unsubscribe();
   }
