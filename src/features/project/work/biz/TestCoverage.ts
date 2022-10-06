@@ -82,10 +82,6 @@ class TestCoverage {
     this.graphLinks = cloneDeep(graphLinks);
     this.testDatas = cloneDeep(testDatas);
     this.testScenarios = cloneDeep(testScenarios);
-    this.testScenarios.forEach((testScenario) => {
-      const _testScenario = testScenario;
-      _testScenario.testCases = testCases.filter((testCase) => testCase.testScenarioId === testScenario.id);
-    });
   }
 
   calculateCoverage(aspect: string): ITestCoverageResult {

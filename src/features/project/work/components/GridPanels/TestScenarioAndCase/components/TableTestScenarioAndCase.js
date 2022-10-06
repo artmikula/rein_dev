@@ -5,7 +5,6 @@ import { Table } from 'reactstrap';
 import { useDispatch, useSelector } from 'react-redux';
 
 import appConfig from 'features/shared/lib/appConfig';
-import domainEvents from 'features/shared/domainEvents';
 import { FILTER_TYPE, GENERATE_STATUS, RESULT_TYPE } from 'features/shared/constants';
 import TestScenarioHelper from 'features/project/work/biz/TestScenario/TestScenarioHelper';
 import { sortByString } from 'features/shared/lib/utils';
@@ -14,7 +13,7 @@ import Header from './TableHeader';
 import TableRow from './TableRow';
 
 function TableTestScenarioAndCase(props) {
-  const { filterOptions, filterSubmitType, submitFilter, raiseEvent } = props;
+  const { filterOptions, filterSubmitType, submitFilter } = props;
 
   const [columns, setColumns] = useState([]);
   const [rows, setRows] = useState([]);
@@ -171,11 +170,6 @@ function TableTestScenarioAndCase(props) {
       const groupRows = _getGroupByEffectNodes(rows);
       setColumns(columns);
       setRows(groupRows);
-      const eventData = rows.map(({ id, page, totalPage }) => ({ testScenarioId: id, page, totalPage }));
-      raiseEvent({
-        value: eventData,
-        receivers: [domainEvents.DES.TESTCOVERAGE],
-      });
     } else if (generating === GENERATE_STATUS.SUCCESS) {
       setTimeout(async () => {
         const { rows, columns } = await _getDataFirstTime();
@@ -183,11 +177,6 @@ function TableTestScenarioAndCase(props) {
         setColumns(columns);
         setRows(groupRows);
         dispatch(setGenerating(GENERATE_STATUS.COMPLETE));
-        const eventData = rows.map(({ id, page, totalPage }) => ({ testScenarioId: id, page, totalPage }));
-        raiseEvent({
-          value: eventData,
-          receivers: [domainEvents.DES.TESTCOVERAGE],
-        });
       }, 700);
     } else {
       setColumns([]);
@@ -276,15 +265,6 @@ function TableTestScenarioAndCase(props) {
               tsRow.testCases.splice(-1, 1);
             }
             setRows(newRows);
-            raiseEvent({
-              action: domainEvents.ACTION.LOAD_MORE,
-              value: {
-                testScenarioId: tsRow.id,
-                page: tsRow.page,
-                totalPage: tsRow.totalPage,
-              },
-              receivers: [domainEvents.DES.TESTCOVERAGE],
-            });
           }
         }
       }
@@ -321,7 +301,6 @@ TableTestScenarioAndCase.propTypes = {
   }).isRequired,
   filterSubmitType: PropTypes.string.isRequired,
   submitFilter: PropTypes.func.isRequired,
-  raiseEvent: PropTypes.func.isRequired,
 };
 
 export default TableTestScenarioAndCase;

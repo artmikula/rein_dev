@@ -8,16 +8,16 @@ export default function RefreshButton({ enable, onClick, className, isGenerated 
     'rounded-circle outlint-0 test-coverage-button',
     className,
     enable && !isGenerated && 'enable',
-    isGenerated && 'disabled'
+    (!enable || isGenerated) && 'disabled'
   );
   return (
     <>
       <button
         id="test-coverage-refresh-btn"
         type="button"
-        disabled={isGenerated}
+        disabled={isGenerated || !enable}
         className={_className}
-        onClick={() => enable && onClick(!enable)}
+        onClick={onClick}
       >
         <div className="content p-1 w-100 h-100 rounded-circle d-flex align-items-center justify-content-center">
           <i className="bi bi-arrow-clockwise d-flex justify-content-center" />
