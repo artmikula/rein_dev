@@ -11,117 +11,117 @@ import CircleProgress from './CircleProgress';
 import RadarChart from './RadarChart';
 import './style.scss';
 
+const baseChartDatas = [
+  {
+    label: 'I',
+    key: METRIC_KEYS.INCLUSIVE,
+    value: 0.0,
+  },
+  {
+    label: 'O',
+    key: METRIC_KEYS.ONLY_ONE,
+    value: 0.0,
+  },
+  {
+    label: 'R',
+    key: METRIC_KEYS.REQUIRE,
+    value: 0.0,
+  },
+  {
+    label: 'M',
+    key: METRIC_KEYS.MASK,
+    value: 0.0,
+  },
+  {
+    label: 'E',
+    key: METRIC_KEYS.EXCLUSIVE,
+    value: 0.0,
+  },
+];
+
+const baseLeftCircles = [
+  {
+    label: 'A',
+    key: METRIC_KEYS.PERCENT_AND,
+    color: '#17a2b8',
+    percent: 32,
+    valueDisplay: '32',
+  },
+  {
+    label: 'O',
+    key: METRIC_KEYS.PERCENT_OR,
+    color: '#17a2b8',
+    percent: 49,
+    valueDisplay: '49',
+  },
+  {
+    label: Language.get('brevity'),
+    key: METRIC_KEYS.BREVITY,
+    color: '#8D5393',
+    percent: 63,
+    valueDisplay: '63',
+  },
+];
+
+const baseRightCircles = [
+  {
+    label: Language.get('efferent'),
+    key: METRIC_KEYS.EFFERENT,
+    color: '#007bff',
+    percent: 90,
+    valueDisplay: '90',
+  },
+  {
+    label: Language.get('afferent'),
+    key: METRIC_KEYS.AFFERENT,
+    color: '#007bff',
+    percent: 25,
+    valueDisplay: '25',
+  },
+  {
+    label: Language.get('complexity'),
+    key: METRIC_KEYS.COMPLEXITY,
+    color: '#007bff',
+    percent: 47,
+    valueDisplay: '47',
+  },
+];
+
+const baseRecTangles = [
+  {
+    key: METRIC_KEYS.SAME_SOUND_AMBIGUITY,
+    label: Language.get('samesoundambiguity'),
+    color: 'blue',
+    value: 1,
+  },
+  {
+    key: METRIC_KEYS.SAME_MEANING_AMBIGUITY,
+    label: Language.get('samemeaningambiguity'),
+    color: 'blue',
+    value: 0,
+  },
+  {
+    key: METRIC_KEYS.ORPHAN_NODE,
+    label: Language.get('orphannode'),
+    color: 'purple',
+    value: 0,
+  },
+  {
+    key: METRIC_KEYS.ARC_LEVEL,
+    label: Language.get('arclevel'),
+    color: 'purple',
+    value: 1,
+  },
+];
+
 class SSMertic extends Component {
-  baseChartDatas = [
-    {
-      label: 'I',
-      key: METRIC_KEYS.INCLUSIVE,
-      value: 0.8,
-    },
-    {
-      label: 'O',
-      key: METRIC_KEYS.ONLY_ONE,
-      value: 0.5,
-    },
-    {
-      label: 'R',
-      key: METRIC_KEYS.REQUIRE,
-      value: 0.4,
-    },
-    {
-      label: 'M',
-      key: METRIC_KEYS.MASK,
-      value: 0.6,
-    },
-    {
-      label: 'E',
-      key: METRIC_KEYS.EXCLUSIVE,
-      value: 1,
-    },
-  ];
-
-  baseLeftCircles = [
-    {
-      label: 'A',
-      key: METRIC_KEYS.PERCENT_AND,
-      color: '#17a2b8',
-      percent: 32,
-      valueDisplay: '32',
-    },
-    {
-      label: 'O',
-      key: METRIC_KEYS.PERCENT_OR,
-      color: '#17a2b8',
-      percent: 49,
-      valueDisplay: '49',
-    },
-    {
-      label: Language.get('brevity'),
-      key: METRIC_KEYS.BREVITY,
-      color: '#8D5393',
-      percent: 63,
-      valueDisplay: '63',
-    },
-  ];
-
-  baseRightCircles = [
-    {
-      label: Language.get('efferent'),
-      key: METRIC_KEYS.EFFERENT,
-      color: '#007bff',
-      percent: 90,
-      valueDisplay: '90',
-    },
-    {
-      label: Language.get('afferent'),
-      key: METRIC_KEYS.AFFERENT,
-      color: '#007bff',
-      percent: 25,
-      valueDisplay: '25',
-    },
-    {
-      label: Language.get('complexity'),
-      key: METRIC_KEYS.COMPLEXITY,
-      color: '#007bff',
-      percent: 47,
-      valueDisplay: '47',
-    },
-  ];
-
-  baseRecTangles = [
-    {
-      key: METRIC_KEYS.SAME_SOUND_AMBIGUITY,
-      label: Language.get('samesoundambiguity'),
-      color: 'blue',
-      value: 1,
-    },
-    {
-      key: METRIC_KEYS.SAME_MEANING_AMBIGUITY,
-      label: Language.get('samemeaningambiguity'),
-      color: 'blue',
-      value: 0,
-    },
-    {
-      key: METRIC_KEYS.ORPHAN_NODE,
-      label: Language.get('orphannode'),
-      color: 'purple',
-      value: 0,
-    },
-    {
-      key: METRIC_KEYS.ARC_LEVEL,
-      label: Language.get('arclevel'),
-      color: 'purple',
-      value: 1,
-    },
-  ];
-
   constructor() {
     super();
     this.state = {
       leftCircles: [],
       rightCircles: [],
       recTangles: [],
-      chartDatas: [],
+      chartDatas: [...baseChartDatas],
       duplication: 0,
       abridged: 0,
       conotationValue: '',
@@ -159,7 +159,7 @@ class SSMertic extends Component {
       const { testBasis, causeEffects, graph, dbContext } = this.props;
 
       SSMetricHelper.initValue(graph.graphNodes, graph.graphLinks, graph.constraints, causeEffects);
-      const newChartDatas = this.baseChartDatas.map((x) => {
+      const newChartDatas = baseChartDatas.map((x) => {
         const constraintValue = SSMetricHelper.calculateConstraints();
         return {
           ...x,
@@ -171,7 +171,7 @@ class SSMertic extends Component {
       this._setConotationPosition(newConotationValue);
 
       /** baseLeftCircles */
-      const newLeftCircles = structuredClone(this.baseLeftCircles);
+      const newLeftCircles = structuredClone(baseLeftCircles);
       const brevity = newLeftCircles.find((x) => x.key === METRIC_KEYS.BREVITY);
       if (dbContext && dbContext.db) {
         const { testScenarioSet } = dbContext;
@@ -190,7 +190,7 @@ class SSMertic extends Component {
       /** end baseLeftCircles */
 
       /** baseRightCircles */
-      const newRightCircles = structuredClone(this.baseRightCircles);
+      const newRightCircles = structuredClone(baseRightCircles);
       const efferent = newRightCircles.find((x) => x.key === METRIC_KEYS.EFFERENT);
       efferent.percent = parseFloat(SSMetricHelper.calculateEfferent()) * 100;
       efferent.valueDisplay = SSMetricHelper.calculateEfferent();
@@ -205,7 +205,7 @@ class SSMertic extends Component {
       /** end baseRightCircles */
 
       /** baseRecTangles */
-      const newRecTangles = structuredClone(this.baseRecTangles);
+      const newRecTangles = structuredClone(baseRecTangles);
       const sameSoundAmbiguity = newRecTangles.find((x) => x.key === METRIC_KEYS.SAME_SOUND_AMBIGUITY);
       sameSoundAmbiguity.value = SSMetricHelper.countNodes().sameSoundAmbiguity;
 
@@ -239,9 +239,9 @@ class SSMertic extends Component {
 
       return {
         chartDatas: [],
-        rightCircles: this.baseRightCircles,
-        leftCircles: this.baseLeftCircles,
-        recTangles: this.baseRecTangles,
+        rightCircles: baseRightCircles,
+        leftCircles: baseLeftCircles,
+        recTangles: baseRecTangles,
         abridged: 0,
         duplication: 0,
         conotationValue: '',
@@ -281,19 +281,19 @@ class SSMertic extends Component {
   };
 
   _resetMetricValue = () => {
-    const rightCircles = this.baseRightCircles.map((data) => {
+    const rightCircles = baseRightCircles.map((data) => {
       const _data = data;
       _data.percent = 0;
       _data.valueDisplay = '0';
       return _data;
     });
-    const leftCircles = this.baseLeftCircles.map((data) => {
+    const leftCircles = baseLeftCircles.map((data) => {
       const _data = data;
       _data.percent = 0;
       _data.valueDisplay = '0';
       return _data;
     });
-    const recTangles = this.baseRecTangles.map((data) => {
+    const recTangles = baseRecTangles.map((data) => {
       const _data = data;
       _data.value = 0;
       return _data;
