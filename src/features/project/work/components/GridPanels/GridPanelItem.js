@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import { useSelector } from 'react-redux';
 import { Button, TabContent, TabPane, UncontrolledTooltip } from 'reactstrap';
 import Language from 'features/shared/languages/Language';
 import './style.scss';
+import { GENERATE_STATUS } from 'features/shared/constants';
 
 export default function GridPanelItem(props) {
   const {
@@ -18,6 +20,7 @@ export default function GridPanelItem(props) {
     isShowGenerateButton,
   } = props;
   const [activeTab, setActiveTab] = useState(0);
+  const { generating } = useSelector((state) => state.work);
 
   const innerRenderTitle = () => {
     if (renderTitle) {
@@ -69,7 +72,7 @@ export default function GridPanelItem(props) {
                 </span>
               ))}
             </div>
-            {isShowGenerateButton && (
+            {isShowGenerateButton && generating !== GENERATE_STATUS.START && (
               <Button
                 color="transparent"
                 size="sm"

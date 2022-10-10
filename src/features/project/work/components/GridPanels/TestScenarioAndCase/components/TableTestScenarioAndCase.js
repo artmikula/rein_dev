@@ -155,14 +155,18 @@ function TableTestScenarioAndCase(props) {
   };
 
   useEffect(async () => {
-    if (filterSubmitType !== FILTER_TYPE.DEFAULT) {
+    if (Boolean(filterSubmitType) && filterSubmitType !== FILTER_TYPE.DEFAULT) {
       await _onChangeFilterOptions();
       submitFilter(FILTER_TYPE.DEFAULT);
     }
   }, [filterSubmitType, filterOptions]);
 
   useEffect(async () => {
-    if (generating === GENERATE_STATUS.START || generating === GENERATE_STATUS.RESET) {
+    if (
+      generating === GENERATE_STATUS.START ||
+      generating === GENERATE_STATUS.RESET ||
+      generating === GENERATE_STATUS.FAIL
+    ) {
       setColumns([]);
       setRows([]);
     } else if (generating === GENERATE_STATUS.INITIAL) {
@@ -178,9 +182,6 @@ function TableTestScenarioAndCase(props) {
         setRows(groupRows);
         dispatch(setGenerating(GENERATE_STATUS.COMPLETE));
       }, 700);
-    } else {
-      setColumns([]);
-      setRows([]);
     }
   }, [generating, graph.graphNodes, dbContext]);
 

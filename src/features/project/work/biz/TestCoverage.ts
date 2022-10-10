@@ -76,12 +76,26 @@ class TestCoverage {
     testDatas: ITestDataDetail[] = []
   ) {
     this.graphNodes = cloneDeep(graphNodes);
-    this.testCases = cloneDeep(testCases);
+    const _testCases = testCases.filter(
+      (testCase: any, index: number, arrTestCases: any[]) =>
+        arrTestCases.findIndex((arrTestCase) =>
+          arrTestCase.testDatas.every((arrTestData: any) =>
+            testCase.testDatas.some(
+              (testData: any) => arrTestData.nodeId === testData.nodeId && arrTestData.data === testData.data
+            )
+          )
+        ) === index
+    );
+    this.testCases = cloneDeep(_testCases);
     this.causeNodes = this.graphNodes.filter((graphNode) => graphNode.type === GRAPH_NODE_TYPE.CAUSE);
     this.effectNodes = this.graphNodes.filter((graphNode) => graphNode.type === GRAPH_NODE_TYPE.EFFECT);
     this.graphLinks = cloneDeep(graphLinks);
     this.testDatas = cloneDeep(testDatas);
     this.testScenarios = cloneDeep(testScenarios);
+    this.testScenarios.forEach((testScenario) => {
+      const _testScenario = testScenario;
+      _testScenario.testCases = _testCases.filter((testCase) => testCase.testScenarioId === testScenario.id);
+    });
   }
 
   calculateCoverage(aspect: string): ITestCoverageResult {
