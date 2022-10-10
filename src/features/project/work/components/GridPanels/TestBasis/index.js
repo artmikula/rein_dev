@@ -228,6 +228,7 @@ class TestBasis extends Component {
 
     const currentContent = newEditorState.getCurrentContent();
     const drawContent = convertToRaw(currentContent);
+    console.log('drawContent', drawContent);
 
     if (!this.ready) {
       return;
@@ -355,10 +356,17 @@ class TestBasis extends Component {
     if (cutState.entities.length > 0) {
       isContainsText = cutState.entities.every((entity) => texts.includes(entity.definition));
     }
-    if (isContainsText) {
-      this._handlePasteEvent();
-      this.setState({ type: TEST_BASIS_EVENT_TYPE.DEFAULT });
+    if (!isContainsText) {
+      alert('Cannot pasted because of non-existed text or duplicated!', {
+        title: 'Cannot pasted text',
+        error: true,
+      });
+      this.setState({ cutState: { entities: [], selection: null } });
+      return true;
     }
+
+    this._handlePasteEvent();
+    this.setState({ type: TEST_BASIS_EVENT_TYPE.DEFAULT });
     return false;
   };
 
