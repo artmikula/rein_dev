@@ -228,7 +228,6 @@ class TestBasis extends Component {
 
     const currentContent = newEditorState.getCurrentContent();
     const drawContent = convertToRaw(currentContent);
-    console.log('drawContent', drawContent);
 
     if (!this.ready) {
       return;
