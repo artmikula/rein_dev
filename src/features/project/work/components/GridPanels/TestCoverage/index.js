@@ -1,7 +1,6 @@
 import { defaultTestCoverageData, setTestCoverages } from 'features/project/work/slices/workSlice';
 import { COVERAGE_ASPECT, GENERATE_STATUS } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
-import appConfig from 'features/shared/lib/appConfig';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
 import cloneDeep from 'lodash.clonedeep';
@@ -71,11 +70,6 @@ class TestCoverage extends Component {
       const { testScenarioSet, testCaseSet } = dbContext;
       this.testScenarios = await testScenarioSet.get();
       this.testCases = await testCaseSet.get();
-      // eslint-disable-next-line no-restricted-syntax
-      for await (const testScenario of this.testScenarios) {
-        const testCases = await testCaseSet.get(testCaseSet.table.testScenarioId.eq(testScenario.id));
-        testScenario.testCases = testCases;
-      }
 
       testCoverage.initValue(graph.graphNodes, this.testCases, this.testScenarios, graph.graphLinks, testDatas);
 

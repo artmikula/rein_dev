@@ -46,55 +46,47 @@ const workercode = () => {
     }
   };
 
-  const _insertTestCase = async (testCase, testAssertions, rawTestDatas, testDataLength, testCaseSet, maxTestCase) => {
+  const _insertTestCase = (testCase, testAssertions, rawTestDatas, testDataLength, testCaseSet, maxTestCase) => {
     if (testCaseId <= maxTestCase) {
-      for await (const testAssertion of testAssertions) {
+      testAssertions.forEach((testAssertion) => {
         const index = testAssertions.findIndex((assertion) => testAssertion.graphNodeId === assertion.graphNodeId);
         const nextAssertions = testAssertions.slice(index + 1);
         const { testDatas, type } = _getTestData(rawTestDatas, testAssertion);
         const testData = _convertTestDataToList(testDatas, type);
-        for await (const data of testData) {
-          const dataIndex = testData.indexOf(data);
+        for (let i = 0; i < testData.length; i++) {
           const newTestData = {
             graphNodeId: testAssertion.graphNodeId,
-            data,
+            data: testData[i],
             nodeId: testAssertion.nodeId ?? '',
           };
           const existData = testCase.testDatas.find((testData) => testData.graphNodeId === testAssertion.graphNodeId);
 
           if (!existData) {
-            await testCase.testDatas.push(newTestData);
+            testCase.testDatas.push(newTestData);
             if (nextAssertions.length === 0 && testCaseId <= maxTestCase) {
-              await testCaseSet.add({ id: testCaseId, value: testCase });
+              testCaseSet.add({ id: testCaseId, value: testCase });
               continue;
             } else {
-              await _insertTestCase(testCase, nextAssertions, rawTestDatas, testDataLength, testCaseSet, maxTestCase);
+              _insertTestCase(testCase, nextAssertions, rawTestDatas, testDataLength, testCaseSet, maxTestCase);
             }
           }
-          if (existData && existData?.data === data) {
+          if (existData && existData?.data === testData[i]) {
             const newTestCase = {
               id: getTestCaseId(),
               testScenarioId: testCase.testScenarioId,
-              results: [...testCase.results],
+              results: structuredClone(testCase.results),
               testDatas: structuredClone(testCase.testDatas),
               isSelected: false,
             };
             _updateTestData(newTestCase, newTestData, testAssertion.graphNodeId);
             if (nextAssertions.length > 0) {
-              await _insertTestCase(
-                newTestCase,
-                nextAssertions,
-                rawTestDatas,
-                testDataLength,
-                testCaseSet,
-                maxTestCase
-              );
+              _insertTestCase(newTestCase, nextAssertions, rawTestDatas, testDataLength, testCaseSet, maxTestCase);
             }
-          } else if (existData && existData?.data !== data) {
+          } else if (existData && existData?.data !== testData[i]) {
             const newTestCase = {
               id: getTestCaseId(),
               testScenarioId: testCase.testScenarioId,
-              results: [...testCase.results],
+              results: structuredClone(testCase.results),
               testDatas: testCase.testDatas
                 .filter((testData) => testData.graphNodeId !== testAssertion.graphNodeId)
                 .sort((a, b) => {
@@ -112,63 +104,42 @@ const workercode = () => {
             };
             _updateTestData(newTestCase, newTestData, testAssertion.graphNodeId);
             if (newTestCase.testDatas.length === testDataLength && testCaseId <= maxTestCase) {
-              await testCaseSet.add({ id: testCaseId, value: newTestCase });
+              testCaseSet.add({ id: testCaseId, value: newTestCase });
               if (nextAssertions.length > 0) {
-                await _insertTestCase(
-                  newTestCase,
-                  nextAssertions,
-                  rawTestDatas,
-                  testDataLength,
-                  testCaseSet,
-                  maxTestCase
-                );
+                _insertTestCase(newTestCase, nextAssertions, rawTestDatas, testDataLength, testCaseSet, maxTestCase);
               }
-              if (dataIndex < testData.length - 1) {
+              if (i < testData.length - 1) {
                 continue;
               }
-              if (dataIndex === testData.length - 1 || nextAssertions.length === 0) {
+              if (i === testData.length - 1 || nextAssertions.length === 0) {
                 return;
               }
             } else if (nextAssertions.length > 0) {
-              await _insertTestCase(
-                newTestCase,
-                nextAssertions,
-                rawTestDatas,
-                testDataLength,
-                testCaseSet,
-                maxTestCase
-              );
+              _insertTestCase(newTestCase, nextAssertions, rawTestDatas, testDataLength, testCaseSet, maxTestCase);
             } else {
               continue;
             }
           }
         }
-      }
+      });
     }
   };
 
-  self.addEventListener('message', async function (e) {
-    if (e.data === 'request cancel') {
-      e.target.postMessage('reset');
-      return;
-    }
-    const { testScenarios, graphNodes, testDatas, dbInfo, lastKey } = e.data;
+  const _initTestCase = (self, data, db) => {
+    const { testScenarios, graphNodes, testDatas, dbInfo, lastKey } = data;
     const _testScenarios = JSON.parse(testScenarios);
     const _graphNodes = JSON.parse(graphNodes);
     const _testDatas = JSON.parse(testDatas);
     const _dbInfo = JSON.parse(dbInfo);
-    const indexedDb = e.target.indexedDB;
-    const request = await indexedDb.open(_dbInfo.name, _dbInfo.version);
     const maxTestCaseNumber = 100000;
     const _lastKey = lastKey === 0 ? testCaseId : lastKey + 5000 + _testScenarios.length;
     testCaseId = _lastKey;
-    request.onsuccess = async function ({ target }) {
-      const db = target.result;
-      const transaction = await db.transaction([_dbInfo.table], 'readwrite');
-      const objectStore = await transaction.objectStore(_dbInfo.table);
-      await objectStore.clear();
-      for await (const testScenario of _testScenarios) {
-        const { testAssertions, resultType, expectedResults } = testScenario;
+    const transaction = db.transaction([_dbInfo.table], 'readwrite');
+    const objectStore = transaction.objectStore(_dbInfo.table);
+    objectStore.clear();
+    _testScenarios.forEach((testScenario) => {
+      const { testAssertions, resultType, expectedResults, isViolated } = testScenario;
+      if (!isViolated) {
         const results = [];
         const _expectedResults = expectedResults.split(',').map((result) => result.trim());
         const graphNode = _graphNodes
@@ -190,10 +161,29 @@ const workercode = () => {
         };
         const maxTestCase = testCaseId + maxTestCaseNumber;
 
-        await _insertTestCase(testCase, testAssertions, _testDatas, testAssertions.length, objectStore, maxTestCase);
+        _insertTestCase(testCase, testAssertions, _testDatas, testAssertions.length, objectStore, maxTestCase);
       }
-      e.target.postMessage('success');
-    };
+    });
+    self.postMessage('success');
+  };
+
+  self.addEventListener('message', function (e) {
+    if (e.data === 'request cancel') {
+      e.target.postMessage('reset');
+      return;
+    }
+    const { dbInfo } = e.data;
+    const _dbInfo = JSON.parse(dbInfo);
+    const indexedDb = e.target.indexedDB;
+    const promise = new Promise((res) => res(indexedDb.open(_dbInfo.name, _dbInfo.version)));
+    promise.then((res) => {
+      if (res) {
+        res.onsuccess = function () {
+          const db = res.result;
+          _initTestCase(e.target, e.data, db);
+        };
+      }
+    });
   });
 
   self.addEventListener('messageerror', function (e) {

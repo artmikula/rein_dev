@@ -129,11 +129,19 @@ class GridPanels extends Component {
     window.addEventListener(EVENT_LISTENER_LIST.RESIZE, this._onChangeLayoutSize);
   }
 
+  componentDidUpdate() {
+    const { generating } = this.props;
+    const { isTestDataChanged } = this.state;
+    if (generating === GENERATE_STATUS.START && isTestDataChanged) {
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ isTestDataChanged: false });
+    }
+  }
+
   componentWillUnmount() {
     window.removeEventListener(EVENT_LISTENER_LIST.RESIZE, () =>
       this.setState({ wrapperHeight: 0, panelWidth: 0, panelHeight: 0 })
     );
-    eventBus.unsubscribe(this);
   }
 
   _generateTestCase = () => {

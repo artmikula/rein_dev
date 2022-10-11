@@ -109,7 +109,10 @@ class TestScenarioAndCase extends Component {
   async componentDidUpdate(prevProps) {
     const { webWorker } = this.state;
     const { generating, dbContext, setDbContext } = this.props;
-    if (prevProps.generating === GENERATE_STATUS.START && generating === GENERATE_STATUS.REQUEST_CANCEL) {
+    if (
+      (prevProps.generating === GENERATE_STATUS.START || prevProps.generating === GENERATE_STATUS.SUCCESS) &&
+      generating === GENERATE_STATUS.REQUEST_CANCEL
+    ) {
       setGenerating(GENERATE_STATUS.RESET);
       webWorker.postMessage(generating);
     } else if (prevProps.generating === GENERATE_STATUS.START && generating === GENERATE_STATUS.SUCCESS) {

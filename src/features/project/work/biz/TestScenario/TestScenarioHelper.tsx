@@ -477,13 +477,13 @@ class TestScenarioHelper {
   }
 
   convertToRows(
-    testCaseData: any[] = [],
+    testScenariosAndCases: any[] = [],
     scenarios: ISimpleTestScenario[] = [],
     columns: ITestScenarioAndCaseColumn[] = [],
     graphNodes: IGraphNode[] = []
   ) {
     const rows: IRow[] = scenarios.map((scenario) => {
-      const data = testCaseData.find((data) => data.id === scenario.id);
+      const data = testScenariosAndCases.find((data) => data.id === scenario.id);
       const testCasesDuplicated: any = data.testCases.filter(
         (testCase: any, index: number, arrTestCases: any[]) =>
           arrTestCases.findIndex((arrTestCase) =>
