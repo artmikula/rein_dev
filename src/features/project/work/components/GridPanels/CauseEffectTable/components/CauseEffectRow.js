@@ -172,6 +172,7 @@ export default function CauseEffectRow({ data, onDelete, onMerge, onUnabridge, o
             key={mergedRow.id}
             onUnabridge={onUnabridge}
             onEditNode={onEditNode}
+            disabled={isBlocked}
           />
         );
       })}

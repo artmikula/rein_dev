@@ -3,7 +3,7 @@ import React from 'react';
 import CauseEffect from './CauseEffect';
 import IconButton from './IconButton';
 
-export default function ChildCauseEffect({ data, onEditNode, collapsed, onUnabridge }) {
+export default function ChildCauseEffect({ data, onEditNode, collapsed, onUnabridge, disabled }) {
   const { id, node, type, definition } = data;
   const handleUnabridge = () => onUnabridge(id);
 
@@ -21,6 +21,7 @@ export default function ChildCauseEffect({ data, onEditNode, collapsed, onUnabri
           tooltip={`Unabridge ${node}`}
           onClick={handleUnabridge}
           iconClassName="bi bi-subtract delete-icon"
+          disabled={disabled}
         />
       </td>
     </tr>
@@ -37,9 +38,11 @@ ChildCauseEffect.propTypes = {
   collapsed: PropTypes.bool,
   onUnabridge: PropTypes.func,
   onEditNode: PropTypes.func.isRequired,
+  disabled: PropTypes.bool,
 };
 
 ChildCauseEffect.defaultProps = {
   collapsed: false,
   onUnabridge: () => {},
+  disabled: false,
 };
