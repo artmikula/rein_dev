@@ -71,9 +71,6 @@ class Workspace extends Component {
       const newProjectId = routes.pop();
 
       if (projectId !== newProjectId || workId !== newWorkid) {
-        const { dbContext, setDbContext } = this.props;
-        dbContext.close();
-        setDbContext(null);
         window.location.reload();
       }
     });
@@ -87,6 +84,9 @@ class Workspace extends Component {
   }
 
   componentWillUnmount() {
+    const { dbContext, setDbContext } = this.props;
+    dbContext.close();
+    setDbContext(null);
     this.unlisten();
   }
 
@@ -275,10 +275,9 @@ class Workspace extends Component {
         await this._getWorkById(projectId, workId);
         this._closeRenameWorkModal();
       } else {
-        const { Name } = result.error;
-        const errorMessage = Name.join(' ');
+        const { message } = result.error.data;
         setErrors({
-          _summary_: errorMessage,
+          _summary_: message,
         });
       }
     } else {
