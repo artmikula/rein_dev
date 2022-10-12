@@ -24,7 +24,7 @@ function TableTestScenarioAndCase(props) {
 
   const { testCasePageSize } = appConfig.testScenarioAndCase;
 
-  const _getDataFirstTime = async (defaultData = undefined) => {
+  const _getData = async (defaultData = undefined) => {
     if (dbContext && dbContext.db) {
       try {
         const { testScenarioSet, testCaseSet } = dbContext;
@@ -138,7 +138,7 @@ function TableTestScenarioAndCase(props) {
         return true;
       });
 
-      const { rows } = await _getDataFirstTime(filterSubmitType === FILTER_TYPE.SUBMIT ? filterRows : undefined);
+      const { rows } = await _getData(filterSubmitType === FILTER_TYPE.SUBMIT ? filterRows : undefined);
       const groupRows = _getGroupByEffectNodes(rows);
       setRows(groupRows);
     }
@@ -170,20 +170,20 @@ function TableTestScenarioAndCase(props) {
       setColumns([]);
       setRows([]);
     } else if (generating === GENERATE_STATUS.INITIAL) {
-      const { rows, columns } = await _getDataFirstTime();
+      const { rows, columns } = await _getData();
       const groupRows = _getGroupByEffectNodes(rows);
       setColumns(columns);
       setRows(groupRows);
     } else if (generating === GENERATE_STATUS.SUCCESS) {
       setTimeout(async () => {
-        const { rows, columns } = await _getDataFirstTime();
+        const { rows, columns } = await _getData();
         const groupRows = _getGroupByEffectNodes(rows);
         setColumns(columns);
         setRows(groupRows);
         dispatch(setGenerating(GENERATE_STATUS.COMPLETE));
-      }, 700);
+      }, 5000);
     }
-  }, [generating, graph.graphNodes, dbContext]);
+  }, [generating, graph.graphNodes]);
 
   useEffect(async () => {
     if (rows.length > 0) {

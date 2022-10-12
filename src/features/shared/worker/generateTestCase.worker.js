@@ -131,7 +131,7 @@ const workercode = () => {
     const _graphNodes = JSON.parse(graphNodes);
     const _testDatas = JSON.parse(testDatas);
     const _dbInfo = JSON.parse(dbInfo);
-    const maxTestCaseNumber = 100000;
+    const maxTestCaseNumber = 300000;
     const _lastKey = lastKey === 0 ? testCaseId : lastKey + 5000 + _testScenarios.length;
     testCaseId = _lastKey;
     const transaction = db.transaction([_dbInfo.table], 'readwrite');
@@ -167,6 +167,13 @@ const workercode = () => {
     self.postMessage('success');
   };
 
+  /**
+   * Worker cannot use lovefield lib (indexedDb lib) so we need to adjust data so that
+   * we can use lovefield to get data.
+   * Keypath represent for id in indexedDb stores need to differ to each other, otherwise lovefield will get data
+   * match the id even the stores is different.
+   * Therefor, we need to use custom id so that the id in TestCases store must differ with id in TestScenarios stores
+   */
   self.addEventListener('message', function (e) {
     if (e.data === 'request cancel') {
       e.target.postMessage('reset');
