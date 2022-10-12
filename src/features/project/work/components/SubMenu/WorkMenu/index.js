@@ -13,6 +13,7 @@ import { FILE_NAME } from 'features/shared/constants';
 import domainEvents from 'features/shared/domainEvents';
 import Language from 'features/shared/languages/Language';
 import eventBus from 'features/shared/lib/eventBus';
+import projectService from 'features/project/services/projectService';
 import debounce from 'lodash.debounce';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -48,13 +49,20 @@ class WorkMenu extends Component {
     eventBus.unsubscribe(this);
   }
 
-  _confirmDelete = () => {
+  _confirmDelete = async () => {
     const { match, history } = this.props;
     const { projectId, workId } = match.params;
 
-    workService.deleteAsync(projectId, workId).then(() => {
-      history.push(`/project/${projectId}/works`);
-    });
+    const result = await workService.deleteAsync(projectId, workId);
+    if (!result.error) {
+      const works = await workService.listAsync(projectId, 1, 1);
+      if (works?.items?.length > 0) {
+        history.replace(`/project/${projectId}/work/${works.items[0].id}`);
+      } else {
+        await projectService.deleteAsync(projectId);
+        history.replace(`/projects`);
+      }
+    }
   };
 
   _handleReportWork = async (data) => {
