@@ -181,7 +181,7 @@ function TableTestScenarioAndCase(props) {
         setColumns(columns);
         setRows(groupRows);
         dispatch(setGenerating(GENERATE_STATUS.COMPLETE));
-      }, 5000);
+      }, 10000);
     }
   }, [generating, graph.graphNodes]);
 
