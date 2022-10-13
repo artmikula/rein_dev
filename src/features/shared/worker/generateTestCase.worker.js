@@ -131,7 +131,7 @@ const workercode = () => {
     const _graphNodes = JSON.parse(graphNodes);
     const _testDatas = JSON.parse(testDatas);
     const _dbInfo = JSON.parse(dbInfo);
-    const maxTestCaseNumber = 300000;
+    const maxTestCaseNumber = 200000;
     const _lastKey = lastKey === 0 ? testCaseId : lastKey + 5000 + _testScenarios.length;
     testCaseId = _lastKey;
     const transaction = db.transaction([_dbInfo.table], 'readwrite');
