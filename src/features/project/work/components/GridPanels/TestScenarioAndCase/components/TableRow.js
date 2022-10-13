@@ -13,7 +13,7 @@ function TableRow(props) {
   const [expandId, setExpandId] = useState({});
   const [rowSpan, setRowSpan] = useState({});
 
-  const { dbContext } = useSelector((state) => state.work);
+  const { dbContext, generating } = useSelector((state) => state.work);
 
   useEffect(() => {
     // handle get row span by group
@@ -43,7 +43,7 @@ function TableRow(props) {
 
   useEffect(() => {
     setExpandId({});
-  }, [isFilter]);
+  }, [isFilter, generating]);
 
   const _toggleRow = useCallback(
     (e, id) => {

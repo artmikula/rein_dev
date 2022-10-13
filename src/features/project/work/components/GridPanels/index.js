@@ -15,7 +15,6 @@ import 'react-grid-layout/css/styles.css';
 import { Button } from 'reactstrap';
 import eventBus from 'features/shared/lib/eventBus';
 import domainEvents from 'features/shared/domainEvents';
-import { setGenerating } from 'features/project/work/slices/workSlice';
 import CauseEffectTable from './CauseEffectTable';
 import Graph from './Graph';
 import GridPanelItem from './GridPanelItem';
@@ -310,6 +309,4 @@ const mapStateToProps = (state) => ({
   generating: state.work.generating,
 });
 
-const mapDispatchToProps = { setGenerating };
-
-export default connect(mapStateToProps, mapDispatchToProps)(GridPanels);
+export default connect(mapStateToProps)(GridPanels);

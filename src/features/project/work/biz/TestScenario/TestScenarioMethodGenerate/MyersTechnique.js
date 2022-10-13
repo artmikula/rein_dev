@@ -102,7 +102,9 @@ class MyerTechnique {
         ) === index
     );
 
-    console.log('testScenarios', testScenarios);
+    if (window.isDebugMode) {
+      console.log('testScenarios', testScenarios);
+    }
 
     return {
       scenarios: testScenarios,

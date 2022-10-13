@@ -116,7 +116,8 @@ class TestScenarioAndCase extends Component {
       setGenerating(GENERATE_STATUS.RESET);
       webWorker.postMessage(generating);
     } else if (prevProps.generating === GENERATE_STATUS.START && generating === GENERATE_STATUS.SUCCESS) {
-      // need recreate the dbcontext to load new IndexedDb data from worker
+      // need recreate the dbContext to load new IndexedDb data from worker
+      setDbContext(null);
       const newContext = new DbContext();
       await newContext.init(dbContext.name);
       setDbContext(newContext);
